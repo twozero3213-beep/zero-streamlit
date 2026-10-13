@@ -137,6 +137,17 @@ class BuildTests(unittest.TestCase):
         for path in list((ROOT / 'ui').rglob('*.js')) + list((ROOT / 'ui').rglob('*.html')) + list((ROOT / 'ui').rglob('*.css')):
             self.assertIsNone(re.search(r"""['"`(]/(api|assets)/""", path.read_text(encoding='utf-8')), path.name)
 
+    def test_install_guide_is_installable_from_this_site(self):
+        html = (ROOT / 'ui' / 'index.html').read_text(encoding='utf-8')
+        self.assertIn('assets/install.js', html)
+        script = (ROOT / 'ui' / 'assets' / 'install.js').read_text(encoding='utf-8')
+        self.assertIn('beforeinstallprompt', script)
+        self.assertIn('로그인은 필요 없습니다', script)
+        manifest = json.loads((ROOT / 'ui' / 'assets' / 'manifest.webmanifest').read_text(encoding='utf-8'))
+        self.assertEqual((manifest['display'], manifest['start_url'], manifest['scope']), ('standalone', '../', '../'))
+        for icon in manifest['icons']:
+            self.assertTrue((ROOT / 'ui' / 'assets' / icon['src']).is_file(), icon['src'])
+
     def test_ui_files_are_revalidated_on_every_load(self):
         scope = {'type': 'http', 'method': 'GET', 'path': '/index.html', 'root_path': '', 'query_string': b'', 'headers': []}
         app = zero_proxy._UI(directory=zero_proxy.UI, html=True)
