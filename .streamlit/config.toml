@@ -6,3 +6,7 @@ gatherUsageStats = false
 
 [client]
 toolbarMode = "viewer"
+
+[theme]
+base = "light"
+backgroundColor = "#f7f8fa"

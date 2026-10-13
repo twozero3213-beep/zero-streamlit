@@ -92,6 +92,14 @@ class BuildTests(unittest.TestCase):
         response = asyncio.run(app.get_response('index.html', scope))
         self.assertEqual(response.headers['Cache-Control'], 'no-cache')
 
+    def test_frame_is_pinned_to_the_viewport_so_no_dark_band_shows(self):
+        from streamlit.testing.v1 import AppTest
+        app = AppTest.from_file(str(ROOT / 'zero_page.py'), default_timeout=240).run()
+        css = ''.join(block.value for block in app.markdown)
+        for rule in ('position:fixed!important', 'inset:0!important', 'height:100dvh!important', 'overflow:hidden!important',
+                     'background:#f7f8fa!important'):
+            self.assertIn(rule, css)
+
     def test_page_script_renders(self):
         from streamlit.testing.v1 import AppTest
         app = AppTest.from_file(str(ROOT / 'zero_page.py'), default_timeout=240).run()
