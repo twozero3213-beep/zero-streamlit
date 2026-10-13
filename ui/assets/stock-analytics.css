@@ -1,0 +1,30 @@
+.stock-analytics-controls,.stock-comparison-controls{display:flex;align-items:center;flex-wrap:wrap;gap:12px;width:100%}
+.stock-analytics-controls label,.stock-comparison-controls label,.stock-currency-label{display:flex;align-items:center;gap:8px;color:var(--text-secondary,#6b7684);font-size:13px}
+.stock-analytics-controls select,.stock-comparison-controls select,.stock-currency-label select{min-height:40px;max-width:100%;padding:8px 12px;border:1px solid var(--border,#e5e8eb);border-radius:10px;background:var(--surface,#fff);color:var(--text,#191f28);font:inherit}
+.stock-mdd{padding:20px 0;border-top:1px solid var(--border,#e5e8eb);margin-top:16px}
+.stock-mdd h3{font-size:16px;margin:0 0 14px}
+.stock-comparison-result{margin-top:20px;min-width:0}
+.stock-comparison-table{max-width:100%;overflow:auto}
+.stock-comparison-plot{display:block;width:100%;max-height:300px;margin-top:16px;background:#f8fafc;border-radius:12px}
+.stock-comparison-legend{font-size:13px;color:var(--text-secondary,#6b7684)}
+.stock-comparison-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.stock-opinion-verdict{font-weight:700;font-size:18px;color:#3182f6}
+.stock-research-request{display:grid;gap:12px;margin:24px 0}
+.stock-research-request label{display:grid;gap:8px;font-size:14px}
+.stock-research-request textarea{box-sizing:border-box;width:100%;min-height:80px;border:1px solid var(--border,#e5e8eb);border-radius:12px;padding:12px;font:inherit;resize:vertical}
+.stock-research-request button{justify-self:start}
+.stock-detail-tabs{flex-wrap:wrap}
+.stock-analytics-controls button:focus-visible,.stock-comparison-controls select:focus-visible,.stock-currency-label select:focus-visible,.stock-research-request textarea:focus-visible{outline:3px solid #3182f6;outline-offset:3px}
+@media(max-width:600px){.stock-comparison-cards{grid-template-columns:1fr;gap:0}.stock-comparison-controls label{display:grid;flex:1;min-width:0}.stock-comparison-controls select{width:100%}.stock-currency-label{margin-left:auto}.stock-header{flex-wrap:wrap}.stock-analytics-controls{gap:8px}.stock-analytics-controls label{flex-wrap:wrap}.stock-mdd .stock-financials{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Give the company name its own row; a currency selector must not compress it to one letter. */
+@media(max-width:600px){.stock-header{display:grid;grid-template-columns:minmax(0,1fr)44px;gap:12px}.stock-header>div{min-width:0}.stock-title{overflow-wrap:anywhere}.stock-favorite{grid-column:2;grid-row:1;width:44px;min-width:44px;box-sizing:border-box}.stock-favorite span{display:none}.stock-currency-label{grid-column:1/-1;grid-row:2;justify-self:start;margin-left:0}.stock-favorite-notice{grid-column:1/-1}}
+
+.stock-company-news-brief{font-size:13px;line-height:1.6;color:var(--text-secondary,#6b7684);margin:8px 0}
+.stock-company-news-notes,.stock-company-news-references{margin:12px 0;border:1px solid var(--border,#e5e8eb);border-radius:12px;padding:12px 16px}
+.stock-company-news-notes>summary,.stock-company-news-references>summary,.stock-company-news-item-details>summary{cursor:pointer;font-size:13px;line-height:1.5;color:var(--text-secondary,#6b7684)}
+.stock-company-news-item-details{margin-top:6px}
+.stock-company-news-notes>summary:focus-visible,.stock-company-news-references>summary:focus-visible,.stock-company-news-item-details>summary:focus-visible{outline:3px solid #3182f6;outline-offset:3px;border-radius:3px}
+.stock-company-news-references .stock-company-news-item:last-child{margin-bottom:0}
+@media(max-width:600px){.stock-company-news-notes,.stock-company-news-references{padding:10px 12px}.stock-company-news-item h3{font-size:16px;line-height:1.55}.stock-company-news-item-details[open] .stock-company-news-meta{line-height:1.6}.stock-quote-range{overflow-wrap:anywhere}}
+
+@media(max-width:600px){body:has(#stock-tab-news[aria-selected="true"]) #notice{display:none}}
