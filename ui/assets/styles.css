@@ -118,6 +118,14 @@ tbody tr:hover { background: #f5f8fd; }
 .mobile-sort { display: none; border: 1px solid var(--line); background: #fff; color: var(--secondary); border-radius: 7px; padding: 8px 12px; font-size: 14px; }
 .benchmark-panel { padding: 24px; margin-top: 24px; }
 .benchmark-panel > .muted-note { margin-top: 12px; }
+/* Global table rules set nowrap; fixed columns and wrapping keep this table inside a 320px phone panel. */
+.risk-table table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 16px; font-variant-numeric: tabular-nums; }
+.risk-table th, .risk-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+.risk-table th:first-child { width: 44%; }
+@media (max-width: 600px) { .risk-table th, .risk-table td { padding: 10px 4px; font-size: 14px; } }
+.risk-table th:first-child, .risk-table td:first-child { text-align: left; color: var(--secondary); font-weight: 500; }
+.risk-table caption { text-align: left; color: var(--secondary); font-size: 14px; padding-bottom: 4px; white-space: normal; }
+.risk-exceed { margin-top: 12px; color: var(--secondary); line-height: 1.7; }
 .benchmark-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 24px 0 16px; }
 .benchmark-metrics .metric-note { white-space: pre-line; }
 #benchmark-fx-period { font-weight: 550; }

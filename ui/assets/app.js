@@ -1,6 +1,6 @@
 'use strict';
 const $ = (selector) => document.querySelector(selector);
-const state = {data: null, market: 'ALL', currency: 'KRW', chart: 'bars', search: '', descending: true, sortMetric:'value',selected: null, fingerprint: null, benchmarkFingerprint: null};
+const state = {data: null, market: 'ALL', currency: 'KRW', chart: 'bars', search: '', descending: true, sortMetric:'value',selected: null, fingerprint: null, benchmarkFingerprint: null, reference: null};
 const hostedView = document.documentElement?.dataset?.zeroHosted === 'true';
 const colors = {US: '#dce9fb', KR: '#f9e4df', RESERVE: '#d8efeb'};
 const number = (value) => value === null || value === undefined || value === '' ? NaN : Number(value);
@@ -61,6 +61,8 @@ function render(data) {
     && Math.abs(number(scope.gross_return_percent) - number(scope.gross_gain_krw) / number(scope.capital_krw) * 100) < 0.00000001;
   // Every primary table/chart uses the same budget scope. No whole-account fallback.
   const holdings = referenceAvailable ? scope.holdings : [];
+  // The risk panel may use only the reference this screen itself validated.
+  state.reference = referenceAvailable ? scope : null;
   const summary = {...connectedSummary, holdings_value_krw: referenceAvailable ? scope.holdings_value_krw : null,
     holdings_performance: referenceAvailable ? scope.holdings_performance || {} : {}};
   state.data = {...data, summary, holdings, allocations: referenceAvailable ? scope.allocations : {}, history: []};
@@ -430,6 +432,50 @@ async function loadReferences() {
     }));
     status.textContent = rows.length + '개 공개 저장소를 고정 커밋으로 연결했습니다. 설치·실행한 코드나 검증된 전략이 아니라 가상 팀이 참고하는 자료입니다.';
   } catch (_) { referencesLoaded = false; status.textContent = '연구 참고 저장소 목록을 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.'; }
+}
+// The owner's loss-limit decision needs evidence first; this computes reference figures only.
+async function runRisk() {
+  const math = window.ZEROExploreMath, button = $('#risk-run'), basis = $('#risk-basis'), table = $('#risk-table');
+  const scope = state.reference, total = number(scope?.total_value_krw);
+  if (!math?.portfolioRisk || !scope?.holdings?.length || !(total > 0)) { table.replaceChildren(); basis.textContent = 'ZERO 참고 배분을 확인한 뒤 계산할 수 있습니다.'; return; }
+  // Stale figures never stay beside a new status line.
+  button.disabled = true; table.replaceChildren(); basis.textContent = '5년 일별 종가를 불러오는 중입니다.';
+  try {
+    // One retry per series absorbs a provider hiccup; a series is fetched once even if it is both a holding and the benchmark.
+    const loaded = new Map();
+    const load = async (market, symbol) => {
+      const identity = market + ':' + symbol;
+      if (loaded.has(identity)) return loaded.get(identity);
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const response = await fetch('api/chart?identity=' + identity + '&range=5Y', {cache: 'no-store'}).catch(() => null);
+        const chart = response?.ok ? await response.json().catch(() => null) : null;
+        if (math.stockChartValid(chart, identity, '5Y') && chart.status !== 'UNAVAILABLE') { loaded.set(identity, chart.bars); return chart.bars; }
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
+      throw new Error('CHART_UNAVAILABLE');
+    };
+    const series = [];
+    for (const row of scope.holdings) series.push({market: row.market, weight: number(row.market_value_krw) / total, bars: await load(row.market, row.symbol)});
+    const zero = math.portfolioRisk(series, number(scope.remaining_funds_krw) / total, math.stockSessionDate);
+    const spy = math.portfolioRisk([{market: 'US', weight: 1, bars: await load('US', 'SPY')}], 0, math.stockSessionDate);
+    if (zero.status !== 'AVAILABLE') throw new Error('RISK_UNAVAILABLE');
+    // One fixed decimal keeps the columns aligned; format() would print 20 for 20.0.
+    const pct = (value, sign = '') => Number.isFinite(value) ? sign + Math.abs(value).toFixed(1) + '%' : '—';
+    const rows = [['연평균 수익률', 'cagr_percent', ''], ['변동성(연 환산)', 'volatility_percent', ''], ['최대 낙폭', 'max_drawdown_percent', '−'],
+      ['1년 안 낙폭 · 보통 해(중간값)', 'one_year_drawdown_p50_percent', '−'], ['1년 안 낙폭 · 나쁜 해(95%)', 'one_year_drawdown_p95_percent', '−'],
+      ['1년 안 낙폭 · 매우 나쁜 해(99%)', 'one_year_drawdown_p99_percent', '−'], ['최악의 1년 수익률', 'worst_one_year_return_percent', null], ['하루 손실 꼬리 평균(CVaR 95%)', 'cvar95_daily_percent', '−']];
+    const grid = node('table'), caption = node('caption', '', 'ZERO = ZERO 참고 배분 · SPY = S&P 500 · 같은 기간 ' + zero.start_date + ' ~ ' + zero.end_date), head = node('tr');
+    head.append(node('th', '', '지표'), node('th', '', 'ZERO'), node('th', '', 'SPY'));
+    grid.append(caption, head);
+    for (const [label, key, sign] of rows) {
+      const line = node('tr'), show = (data) => sign === null ? (data[key] > 0 ? '+' : '−') + Math.abs(data[key]).toFixed(1) + '%' : pct(data[key], sign);
+      line.append(node('td', '', label), node('td', '', show(zero)), node('td', '', spy.status === 'AVAILABLE' ? show(spy) : '—'));
+      grid.append(line);
+    }
+    table.replaceChildren(grid, node('p', 'risk-exceed', '1년 안에 이만큼 떨어진 구간의 비율(ZERO 참고 배분): ' + Object.entries(zero.exceed_share_percent).map(([limit, share]) => limit + '% 이상 ' + format(share, 0) + '%').join(' · ')));
+    basis.textContent = '거래일 ' + format(zero.sessions) + '일, 1년 구간 ' + format(zero.windows) + '개로 계산했습니다. 현재 비중을 처음부터 그대로 들고 있었다고 가정한 가격 기준 참고 자료이며, 검증된 백테스트나 제안값이 아닙니다. 어떤 값도 적용되지 않습니다.';
+  } catch (_) { basis.textContent = '5년 가격을 모두 확인하지 못해 계산을 보류했습니다. 잠시 뒤 다시 눌러 주세요.'; }
+  finally { button.disabled = false; }
 }
 let teamLoaded = false;
 let teamRequest = 0;
@@ -834,6 +880,7 @@ function sortValue(forceValue=false) {
 $('#sort-value').addEventListener('click',()=>sortValue(true));
 $('#sort-value-mobile').addEventListener('click',()=>sortValue(false));
 $('#refresh').addEventListener('click', refresh);
+$('#risk-run').addEventListener('click', runRisk);
 let layoutWidth = 0;
 new ResizeObserver(() => {
   const width = Math.round($('#portfolio-view').clientWidth);

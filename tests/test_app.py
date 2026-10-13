@@ -1,5 +1,6 @@
 """Bridge guards: allowlisted reads only, writes stay on the owner's PC, secrets never leave, UI build intact."""
 import asyncio
+from datetime import datetime, timedelta, timezone
 import json
 import re
 import sys
@@ -12,6 +13,7 @@ from starlette.requests import Request
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import zero_proxy  # noqa: E402
+import zero_headlines  # noqa: E402
 
 SECRET = 'SECRET-TOKEN-XYZ-31415'
 
@@ -75,6 +77,55 @@ class BridgeTests(unittest.TestCase):
     def test_dashboard_prefix_is_stripped_from_secrets(self):
         with mock.patch.dict('os.environ', {'ZERO_CF_ACCESS_CLIENT_ID': 'CF-Access-Client-Id: abc.access'}):
             self.assertEqual(zero_proxy._secret('CF_ACCESS_CLIENT_ID'), 'abc.access')
+
+
+def feed(*items):
+    body = ''.join(f'<item><title>{t}</title><link>{l}</link><pubDate>{p}</pubDate><source url="https://x.example">{s}</source></item>' for t, l, p, s in items)
+    return ('<?xml version="1.0"?><rss><channel>' + body + '</channel></rss>').encode()
+
+
+class HeadlineTests(unittest.TestCase):
+    NOW = datetime(2026, 10, 13, 9, 0, tzinfo=timezone.utc)
+
+    def setUp(self):
+        zero_proxy._cache.clear()
+
+    def stamp(self, hours):
+        return (self.NOW - timedelta(hours=hours)).strftime('%a, %d %b %Y %H:%M:%S GMT')
+
+    def test_fresh_https_titles_only_newest_first_with_the_publisher_suffix_removed(self):
+        body = feed(('Old - Wire', 'https://n.example/o', self.stamp(5), 'Wire'), ('New - Wire', 'https://n.example/n', self.stamp(1), 'Wire'),
+                    ('Stale - Wire', 'https://n.example/s', self.stamp(60), 'Wire'), ('Plain http - Wire', 'http://n.example/p', self.stamp(1), 'Wire'))
+        value = zero_headlines.collect(self.NOW, fetch=lambda url: body)
+        self.assertEqual(value['failed'], [])
+        self.assertEqual([row['title'] for row in value['items'][:2]], ['New', 'Old'])
+        self.assertTrue(all(row['url'].startswith('https://') and row['publisher'] == 'Wire' for row in value['items']))
+
+    def test_a_failing_feed_is_reported_by_market(self):
+        def fetch(url):
+            raise OSError('SECRET-TOKEN-XYZ-31415')
+        value = zero_headlines.collect(self.NOW, fetch=fetch)
+        self.assertEqual((value['items'], value['failed']), ([], ['미국', '한국']))
+        self.assertNotIn('SECRET', json.dumps(value))
+
+    def test_route_serves_cached_headlines_and_never_caches_total_failure(self):
+        good = {'schema_version': 1, 'items': [{'title': 'T'}], 'failed': []}
+        with mock.patch.object(zero_headlines, 'collect', return_value=good) as collect:
+            first, second = call(zero_proxy.api, 'GET', 'api/headlines'), call(zero_proxy.api, 'GET', 'api/headlines')
+        self.assertEqual((json.loads(first.body), second.body), (good, first.body))
+        collect.assert_called_once()
+        zero_proxy._cache.clear()
+        with mock.patch.object(zero_headlines, 'collect', return_value={'items': [], 'failed': ['미국', '한국']}):
+            response = call(zero_proxy.api, 'GET', 'api/headlines')
+        self.assertEqual((response.status_code, json.loads(response.body)), (503, {'error': 'HEADLINES_UNAVAILABLE'}))
+        self.assertNotIn('headlines', zero_proxy._cache)
+        self.assertEqual(call(zero_proxy.api, 'POST', 'api/headlines').status_code, 403)
+
+    def test_panel_script_is_injected_and_never_writes_html(self):
+        self.assertIn('<script src="assets/headlines.js" defer></script>', (ROOT / 'ui' / 'index.html').read_text(encoding='utf-8'))
+        script = (ROOT / 'ui' / 'assets' / 'headlines.js').read_text(encoding='utf-8')
+        self.assertNotIn('innerHTML', script)
+        self.assertIn("fetch('api/headlines'", script)
 
 
 class BuildTests(unittest.TestCase):

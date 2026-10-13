@@ -21,6 +21,8 @@ from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
+import zero_headlines
+
 DEFAULT_SITE = 'https://zero-portfolio.zero-cloudflare.workers.dev'
 UI = Path(__file__).parent / 'ui'
 RANGES = {'1D', '1W', '1M', '3M', '1Y', '5Y'}
@@ -30,6 +32,7 @@ EVENT = re.compile(r'[A-Z][A-Z_]{0,39}')
 PLAIN = {'/api/portfolio': 60, '/api/team': 300, '/api/office': 60, '/api/research': 1800, '/api/desk': 1800,
          '/api/funds': 1800, '/api/tqqq': 1800, '/api/institutions': 1800, '/api/live-quotes': 20}
 MAX_BYTES = 12_000_000
+HEADLINES_SECONDS = 300  # live news-search titles; collected here, not on the Cloudflare site
 
 _cache, _lock = {}, threading.Lock()
 
@@ -111,6 +114,22 @@ def get_public(path, query):
     return body
 
 
+def get_headlines():
+    """Fresh public headlines, cached briefly; all feeds failing is an error, never a cached empty list."""
+    now = time.monotonic()
+    with _lock:
+        hit = _cache.get('headlines')
+        if hit and hit[0] > now:
+            return hit[1]
+    value = zero_headlines.collect()
+    if not value['items'] and len(value['failed']) == len(zero_headlines.FEEDS):
+        raise Unavailable('HEADLINES_UNAVAILABLE')
+    body = json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    with _lock:
+        _cache['headlines'] = (now + HEADLINES_SECONDS, body)
+    return body
+
+
 async def api(request):
     path = '/api/' + request.path_params['path']
     if request.method != 'GET':
@@ -120,7 +139,7 @@ async def api(request):
     if len(query) != len(request.query_params.multi_items()):
         return JSONResponse({'error': 'NOT_PUBLIC'}, status_code=404)
     try:
-        body = await run_in_threadpool(get_public, path, query)
+        body = await run_in_threadpool(get_headlines) if path == '/api/headlines' and not query else await run_in_threadpool(get_public, path, query)
     except Unavailable as error:
         code = str(error)
         return JSONResponse({'error': code}, status_code=404 if code == 'NOT_PUBLIC' else 503)

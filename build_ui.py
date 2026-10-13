@@ -2,7 +2,7 @@
 
 usage: python build_ui.py <path-to-zero-cloudflare/public> [<zero checkout for the latest committed research list>]
 
-The UI is unchanged except that absolute '/api/' and '/assets/' become relative, so it works under
+The UI is unchanged except that extras/*.js are added (live headlines) and that absolute '/api/' and '/assets/' become relative, so it works under
 /zero/ and Community Cloud's /~/+/ prefix. The build keeps data-zero-hosted, so the refresh button
 reprices with public quotes (account refresh and office requests stay on the owner's PC).
 """
@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 OUT = Path(__file__).parent / 'ui'
+EXTRAS = Path(__file__).parent / 'extras'  # hosted-only scripts added to the unchanged ZERO UI
 
 
 def relative(text):
@@ -35,6 +36,9 @@ def build(source, checkout=None):
     html = relative((source / 'index.html').read_text(encoding='utf-8'))
     if 'data-zero-hosted="true"' not in html:
         raise SystemExit('HOSTED_FLAG_MISSING: build from the hosted (Cloudflare/Sites) public folder')
+    for extra in sorted(EXTRAS.glob('*.js')):
+        shutil.copy(extra, OUT / 'assets' / extra.name)
+        html = html.replace('</body>', f'  <script src="assets/{extra.name}" defer></script>\n</body>', 1)
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     if checkout:  # committed content only, so uncommitted work in the checkout never ships
         refs = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/data/research_connections.json'],

@@ -19,6 +19,32 @@ function stockDrawdown(bars){
   const recovery=trough?bars.find(bar=>bar.time>trough.time&&bar.close>=maximumPeak.close):null;
   return {status:'AVAILABLE',sample_count:bars.length,start_time:bars[0].time,end_time:bars.at(-1).time,mdd_percent:maximum,peak_time:maximumPeak?.time||null,trough_time:trough?.time||null,recovery_time:recovery?.time||null};
 }
+// Loss-limit reference for the owner, after the forked quantstats/empyrical formulas (CAGR,
+// annualized volatility, max drawdown, daily CVaR) and Riskfolio-style drawdown at risk over
+// rolling one-year windows. Price only, buy and hold at today's weights from the first shared
+// session; never a proposal, backtest verification or applied limit.
+function portfolioRisk(series,cashWeight,sessionDate){
+  const empty={status:'UNAVAILABLE',reason:'INSUFFICIENT_COMMON_HISTORY'};
+  if(!Array.isArray(series)||!series.length||!(cashWeight>=0)||cashWeight>=1||!series.every(row=>row.weight>0&&Array.isArray(row.bars)))return empty;
+  if(Math.abs(series.reduce((sum,row)=>sum+row.weight,cashWeight)-1)>1e-6)return {...empty,reason:'WEIGHTS_INVALID'};
+  const maps=series.map(row=>new Map(row.bars.filter(bar=>bar.close>0).map(bar=>[sessionDate(bar.time,row.market),bar.close])));
+  const dates=[...maps[0].keys()].filter(date=>maps.every(map=>map.has(date))).sort();
+  if(dates.length<260)return empty;
+  const base=maps.map(map=>map.get(dates[0])),index=dates.map(date=>cashWeight+series.reduce((sum,row,i)=>sum+row.weight*maps[i].get(date)/base[i],0));
+  const returns=index.slice(1).map((value,i)=>value/index[i]-1),mean=returns.reduce((a,b)=>a+b,0)/returns.length;
+  const years=(Date.parse(dates.at(-1))-Date.parse(dates[0]))/(365.25*86400000);
+  const drawdown=values=>{let peak=values[0],worst=0;for(const v of values){if(v>peak)peak=v;worst=Math.max(worst,1-v/peak);}return worst;};
+  const tail=[...returns].sort((a,b)=>a-b).slice(0,Math.max(1,Math.floor(returns.length*0.05)));
+  const windows=[];for(let i=0;i+252<=index.length;i+=5)windows.push(index.slice(i,i+252));
+  const rolling=windows.map(drawdown).sort((a,b)=>a-b),quantile=q=>rolling[Math.min(rolling.length-1,Math.floor(q*(rolling.length-1)))]*100;
+  return {status:'AVAILABLE',start_date:dates[0],end_date:dates.at(-1),sessions:dates.length,windows:windows.length,
+    cagr_percent:(Math.pow(index.at(-1),1/years)-1)*100,
+    volatility_percent:Math.sqrt(returns.reduce((a,b)=>a+(b-mean)**2,0)/(returns.length-1))*Math.sqrt(252)*100,
+    max_drawdown_percent:drawdown(index)*100,cvar95_daily_percent:-tail.reduce((a,b)=>a+b,0)/tail.length*100,
+    one_year_drawdown_p50_percent:quantile(0.5),one_year_drawdown_p95_percent:quantile(0.95),one_year_drawdown_p99_percent:quantile(0.99),
+    worst_one_year_return_percent:Math.min(...windows.map(w=>w.at(-1)/w[0]-1))*100,
+    exceed_share_percent:Object.fromEntries([5,10,15,20,25].map(limit=>[limit,rolling.filter(value=>value*100>=limit).length/rolling.length*100]))};
+}
 function stockSessionDate(time,market){return new Intl.DateTimeFormat('en-CA',{timeZone:market==='KR'?'Asia/Seoul':'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(time*1000));}
 function stockChartValid(data,identity,range,now=Date.now()){
   if(!data||data.schema_version!==1||data.identity!==identity||data.range!==range||!['1D','1W','1M','3M','1Y','5Y'].includes(range)||!['AVAILABLE','STALE','UNAVAILABLE'].includes(data.status)||!Array.isArray(data.bars)||data.bars.length>2200||data.basis!=='UNADJUSTED_PROVIDER_COMPLETED_OHLCV'||!['1m','60m','1d'].includes(data.interval)||!['US','KR'].includes(data.market)||data.currency!==({US:'USD',KR:'KRW'}[data.market])||!identity.startsWith(data.market+':'))return false;
@@ -178,9 +204,9 @@ function companyNewsValid(data,identity){
   const dayAt=value=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(value));
   return new Set(data.items.map(item=>item?.url)).size===data.items.length&&data.items.every(item=>exact(item,itemKeys)&&/^news:[a-f0-9]{24}$/.test(item.id)&&typeof item.title==='string'&&item.title.trim()&&Array.from(item.title).length<=500&&companyNewsURL(item.url)&&item.publisher==='Yahoo Finance RSS'&&item.access==='INDEX_ONLY'&&item.association==='PROVIDER_SYMBOL_QUERY'&&item.summary===null&&item.syndication_group===null&&clock(item.retrieved_at)&&Date.parse(item.retrieved_at)<=Date.parse(data.collected_at)&&(item.published_at===null||clock(item.published_at)&&Date.parse(item.published_at)<=Date.parse(item.retrieved_at))&&(item.published_date===null||typeof item.published_date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(item.published_date)&&Number.isFinite(Date.parse(item.published_date))&&new Date(item.published_date).toISOString().slice(0,10)===item.published_date&&(item.published_at?item.published_date===item.published_at.slice(0,10):item.published_date<=dayAt(item.retrieved_at))));
 }
-if(typeof module!=='undefined'&&module.exports)module.exports={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,parseStockRoute,stockRouteHash,chartLesson,candleColor,companyNewsValid,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion};
+if(typeof module!=='undefined'&&module.exports)module.exports={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,parseStockRoute,stockRouteHash,chartLesson,candleColor,companyNewsValid,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion,portfolioRisk};
 if(typeof window!=='undefined') {
-  window.ZEROExploreMath={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion};
+  window.ZEROExploreMath={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion,portfolioRisk};
   (()=>{
     const explore={catalog:[],identity:null,tab:'chart',range:'5Y',interval:'1d',kind:'candle',averages:new Set([20]),chart:null,loading:false,count:100,start:0,cursor:null,sequence:0,searchSequence:0,compareSequence:0,compareIdentity:null,compareRange:'5Y',currency:'NATIVE'};
     const favoritesKey='zero-watchlist-v1',knownETF=new Set(['SPY','BIL','UUP','VNQ','GLD','TQQQ','QQQ','TMF','SCHD','JEPQ','JEPI','SPYD','HDV','VYM','NOBL','069500','148020']);
