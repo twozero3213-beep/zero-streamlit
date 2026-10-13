@@ -11,7 +11,9 @@ ZERO 포트폴리오 화면(로컬 `127.0.0.1:8765`와 같은 화면)을 Streaml
 - `ui/` — 원래 ZERO 웹 화면(Cloudflare 빌드 `public/`의 사본, 경로만 상대경로로 변환). `/zero/`에서 서빙.
 - `zero_proxy.py` — `/zero/api/*`를 ZERO Cloudflare 사이트에서 서버가 대신 읽는다(허용 목록 GET만, 짧은 캐시).
   `/zero/status`는 키 설정 모양과 연결 결과만 알려준다(키 값 없음, 항상 200).
-- `build_ui.py` — `ui/`를 다시 만든다.
+- `zero_headlines.py` — `/zero/api/headlines`: 뉴스 검색 결과 제목만 요청 때 모아 5분 캐시(https 링크만, 전부 실패하면 캐시하지 않고 503).
+- `extras/headlines.js` — 주요 뉴스 화면 위에 "실시간 헤드라인" 패널. 경로가 없거나 실패하면 숨겨져 원래 화면과 같다.
+- `build_ui.py` — `ui/`를 다시 만들고 `extras/*.js`를 `index.html`에 붙인다.
 
 ## 배포 (Streamlit Community Cloud)
 New app → 저장소 `twozero3213-beep/zero-streamlit`, 브랜치 `main`, 파일 `streamlit_app.py`, Python 3.13.
@@ -24,6 +26,8 @@ CF_ACCESS_CLIENT_SECRET = "..."
 Community Cloud는 앱의 오류 상태를 일반 500으로 바꾸므로, 데이터가 비면 `<앱 주소>/~/+/zero/status`로 원인을 본다.
 
 ## 갱신·검사
+- 화면(`zero_page.py`, `ui/`)은 푸시하면 바로 반영된다. **프록시(`zero_proxy.py`)·`zero_headlines.py`를 고치면 앱 프로세스를 다시 시작해야** 새 경로가 보인다:
+  `requirements.txt` 맨 아래 날짜 주석을 바꿔 푸시하거나 Manage app → Reboot.
 ```
 python build_ui.py <...\d\sites\zero-cloudflare\public> <...\outputs\zero-v2>
 python -m unittest discover -s tests
