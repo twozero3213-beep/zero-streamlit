@@ -868,6 +868,34 @@
       "metadata_source": "https://api.github.com/repos/TA-Lib/ta-lib-python"
     },
     {
+      "upstream": "statsmodels/statsmodels",
+      "fork": "twozero3213-beep/zero-research-statsmodels",
+      "source_url": "https://github.com/statsmodels/statsmodels/tree/35a8e0b7483211f5be7e60926be082136263cac3",
+      "source_release_at_review": null,
+      "purpose": "계량경제·시계열 통계 모형 표준 구현 대조",
+      "stars": 11682,
+      "upstream_url": "https://github.com/statsmodels/statsmodels",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-13T15:11:04Z",
+      "pinned_commit": "35a8e0b7483211f5be7e60926be082136263cac3",
+      "license_url": "https://github.com/statsmodels/statsmodels/blob/35a8e0b7483211f5be7e60926be082136263cac3/LICENSE.txt",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-statsmodels",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "STATISTICAL_INFERENCE_VALIDATOR",
+        "PIT_MACRO_LIQUIDITY_ANALYST"
+      ],
+      "id": "statsmodels",
+      "actions_enabled": false,
+      "license": "BSD-3-Clause",
+      "metadata_source": "https://api.github.com/repos/statsmodels/statsmodels"
+    },
+    {
       "upstream": "yutiansut/QUANTAXIS",
       "fork": "twozero3213-beep/zero-research-quantaxis",
       "source_url": "https://github.com/yutiansut/QUANTAXIS/tree/232aa7ac9869966108f02a8fff85f1f7b09a9ce2",
@@ -1453,6 +1481,34 @@
       "metadata_source": "https://api.github.com/repos/hudson-and-thames/mlfinlab"
     },
     {
+      "upstream": "Nixtla/statsforecast",
+      "fork": "twozero3213-beep/zero-research-statsforecast",
+      "source_url": "https://github.com/Nixtla/statsforecast/tree/acb038e34c38876102a10a6fcefccc1bbaadaa1a",
+      "source_release_at_review": null,
+      "purpose": "통계·계량 시계열 예측(ARIMA·ETS) 고속 구현 대조",
+      "stars": 4930,
+      "upstream_url": "https://github.com/Nixtla/statsforecast",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-13T01:01:06Z",
+      "pinned_commit": "acb038e34c38876102a10a6fcefccc1bbaadaa1a",
+      "license_url": "https://github.com/Nixtla/statsforecast/blob/acb038e34c38876102a10a6fcefccc1bbaadaa1a/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-statsforecast",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "STATISTICAL_INFERENCE_VALIDATOR",
+        "PIT_MACRO_LIQUIDITY_ANALYST"
+      ],
+      "id": "statsforecast",
+      "actions_enabled": false,
+      "license": "Apache-2.0",
+      "metadata_source": "https://api.github.com/repos/Nixtla/statsforecast"
+    },
+    {
       "upstream": "py-why/EconML",
       "fork": "twozero3213-beep/zero-research-econml",
       "source_url": "https://github.com/py-why/EconML/tree/d625dd696ea28c62e6e4d8baea6e4154b98c30b4",
@@ -1479,6 +1535,34 @@
       "actions_enabled": false,
       "license": "MIT",
       "metadata_source": "https://api.github.com/repos/py-why/EconML"
+    },
+    {
+      "upstream": "brycewang-stanford/Auto-Empirical-Research-Skills",
+      "fork": "twozero3213-beep/zero-research-auto-empirical-research-skills",
+      "source_url": "https://github.com/brycewang-stanford/Auto-Empirical-Research-Skills/tree/a6daaf2f27f49ec7814db69bafd5239a022ad5ae",
+      "source_release_at_review": null,
+      "purpose": "실증 경제·국제관계 연구용 에이전트 스킬 모음 참고",
+      "stars": 4606,
+      "upstream_url": "https://github.com/brycewang-stanford/Auto-Empirical-Research-Skills",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-12T14:38:48Z",
+      "pinned_commit": "a6daaf2f27f49ec7814db69bafd5239a022ad5ae",
+      "license_url": "https://github.com/brycewang-stanford/Auto-Empirical-Research-Skills/blob/a6daaf2f27f49ec7814db69bafd5239a022ad5ae/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-auto-empirical-research-skills",
+      "limits": [
+        "LLM 호출 비용·키는 오너 승인 전 사용하지 않으며 실제 주문 모듈은 연결하지 않는다.",
+        "에이전트 결론을 검증된 투자 판단이나 수익 근거로 부르지 않는다."
+      ],
+      "responsible_staff": [
+        "LLM_RESEARCH_AGENT_ENGINEER",
+        "STATISTICAL_INFERENCE_VALIDATOR"
+      ],
+      "id": "auto-empirical-research-skills",
+      "actions_enabled": false,
+      "license": "NOASSERTION (custom LICENSE file)",
+      "metadata_source": "https://api.github.com/repos/brycewang-stanford/Auto-Empirical-Research-Skills"
     },
     {
       "upstream": "dcajasn/Riskfolio-Lib",
@@ -1537,6 +1621,35 @@
       "metadata_source": "https://api.github.com/repos/quantopian/alphalens"
     },
     {
+      "upstream": "hipcityreg/situation-monitor",
+      "fork": "twozero3213-beep/zero-research-situation-monitor",
+      "source_url": "https://github.com/hipcityreg/situation-monitor/tree/74ad5c086da0258636269423e65b008ad6bfc614",
+      "source_release_at_review": null,
+      "purpose": "세계 뉴스·시장·지정학 상황 실시간 대시보드 구성 참고",
+      "stars": 4214,
+      "upstream_url": "https://github.com/hipcityreg/situation-monitor",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-01-13T02:43:37Z",
+      "pinned_commit": "74ad5c086da0258636269423e65b008ad6bfc614",
+      "license_url": "https://github.com/hipcityreg/situation-monitor/tree/74ad5c086da0258636269423e65b008ad6bfc614",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-situation-monitor",
+      "limits": [
+        "지정학 사건·뉴스 집계는 출처 확인 전 투자 판단 근거로 쓰지 않는다.",
+        "원천 뉴스·데이터 이용조건은 코드 라이선스와 별도다.",
+        "라이선스 미표기라 코드 재사용 권리가 없으며 읽기 참고만 한다."
+      ],
+      "responsible_staff": [
+        "NEWS_SENTIMENT_ANALYST",
+        "PIT_MACRO_LIQUIDITY_ANALYST"
+      ],
+      "id": "situation-monitor",
+      "actions_enabled": false,
+      "license": "UNSPECIFIED",
+      "metadata_source": "https://api.github.com/repos/hipcityreg/situation-monitor"
+    },
+    {
       "upstream": "pst-group/pysystemtrade",
       "fork": "twozero3213-beep/zero-research-pysystemtrade",
       "source_url": "https://github.com/pst-group/pysystemtrade/tree/bbe29e19dab73271570c94b4ee7e2f182d4b9ef1",
@@ -1564,6 +1677,34 @@
       "actions_enabled": false,
       "license": "GPL-3.0",
       "metadata_source": "https://api.github.com/repos/pst-group/pysystemtrade"
+    },
+    {
+      "upstream": "matheusfacure/python-causality-handbook",
+      "fork": "twozero3213-beep/zero-research-python-causality-handbook",
+      "source_url": "https://github.com/matheusfacure/python-causality-handbook/tree/4df1445987d3b6f9824d508863a1a2f0a503e888",
+      "source_release_at_review": null,
+      "purpose": "인과추론(차분의 차분·도구변수 등) 교재 참고",
+      "stars": 3486,
+      "upstream_url": "https://github.com/matheusfacure/python-causality-handbook",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-06T13:52:09Z",
+      "pinned_commit": "4df1445987d3b6f9824d508863a1a2f0a503e888",
+      "license_url": "https://github.com/matheusfacure/python-causality-handbook/blob/4df1445987d3b6f9824d508863a1a2f0a503e888/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-python-causality-handbook",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "STATISTICAL_INFERENCE_VALIDATOR",
+        "INDEPENDENT_MODEL_GOVERNANCE_REVIEWER"
+      ],
+      "id": "python-causality-handbook",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/matheusfacure/python-causality-handbook"
     },
     {
       "upstream": "tradytics/eiten",
@@ -1792,6 +1933,92 @@
       "metadata_source": "https://api.github.com/repos/ProsusAI/finBERT"
     },
     {
+      "upstream": "cuemacro/findatapy",
+      "fork": "twozero3213-beep/zero-research-findatapy",
+      "source_url": "https://github.com/cuemacro/findatapy/tree/3c40bc3a065115e750b5cf3236ef2cdc3aa162b3",
+      "source_release_at_review": null,
+      "purpose": "여러 시장 데이터 제공처 통합 수집 인터페이스 참고",
+      "stars": 2130,
+      "upstream_url": "https://github.com/cuemacro/findatapy",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-07-02T14:29:12Z",
+      "pinned_commit": "3c40bc3a065115e750b5cf3236ef2cdc3aa162b3",
+      "license_url": "https://github.com/cuemacro/findatapy/blob/3c40bc3a065115e750b5cf3236ef2cdc3aa162b3/LICENCE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-findatapy",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다."
+      ],
+      "responsible_staff": [
+        "MARKET_REFERENCE_COVERAGE_ANALYST",
+        "COMPLIANCE_TERMS_REVIEWER"
+      ],
+      "id": "findatapy",
+      "actions_enabled": false,
+      "license": "Apache-2.0",
+      "metadata_source": "https://api.github.com/repos/cuemacro/findatapy"
+    },
+    {
+      "upstream": "unicodeveloper/globalthreatmap",
+      "fork": "twozero3213-beep/zero-research-globalthreatmap",
+      "source_url": "https://github.com/unicodeveloper/globalthreatmap/tree/0fa056e6e2d7bd9a231deaf811ec20cdc48ab199",
+      "source_release_at_review": null,
+      "purpose": "전쟁·분쟁·군사기지 세계 위협 지도 구성 참고",
+      "stars": 1847,
+      "upstream_url": "https://github.com/unicodeveloper/globalthreatmap",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-07-02T17:22:42Z",
+      "pinned_commit": "0fa056e6e2d7bd9a231deaf811ec20cdc48ab199",
+      "license_url": "https://github.com/unicodeveloper/globalthreatmap/tree/0fa056e6e2d7bd9a231deaf811ec20cdc48ab199",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-globalthreatmap",
+      "limits": [
+        "지정학 사건·뉴스 집계는 출처 확인 전 투자 판단 근거로 쓰지 않는다.",
+        "원천 뉴스·데이터 이용조건은 코드 라이선스와 별도다.",
+        "라이선스 미표기라 코드 재사용 권리가 없으며 읽기 참고만 한다."
+      ],
+      "responsible_staff": [
+        "NEWS_SENTIMENT_ANALYST",
+        "EXPOSURE_STRESS_ANALYST"
+      ],
+      "id": "globalthreatmap",
+      "actions_enabled": false,
+      "license": "UNSPECIFIED",
+      "metadata_source": "https://api.github.com/repos/unicodeveloper/globalthreatmap"
+    },
+    {
+      "upstream": "antontarasenko/awesome-economics",
+      "fork": "twozero3213-beep/zero-research-awesome-economics",
+      "source_url": "https://github.com/antontarasenko/awesome-economics/tree/dbf48fe12bde278d23b0ad823b5fa94d00c2f96b",
+      "source_release_at_review": null,
+      "purpose": "경제학 자료·데이터·도구 큐레이션 목록",
+      "stars": 1755,
+      "upstream_url": "https://github.com/antontarasenko/awesome-economics",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2023-08-26T11:53:52Z",
+      "pinned_commit": "dbf48fe12bde278d23b0ad823b5fa94d00c2f96b",
+      "license_url": "https://github.com/antontarasenko/awesome-economics/tree/dbf48fe12bde278d23b0ad823b5fa94d00c2f96b",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-awesome-economics",
+      "limits": [
+        "목록에 실린 도구는 개별 검토 전 설치·사용하지 않는다.",
+        "목록 자체는 품질·수익성 보증이 아니다.",
+        "라이선스 미표기라 코드 재사용 권리가 없으며 읽기 참고만 한다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "STATISTICAL_INFERENCE_VALIDATOR"
+      ],
+      "id": "awesome-economics",
+      "actions_enabled": false,
+      "license": "UNSPECIFIED",
+      "metadata_source": "https://api.github.com/repos/antontarasenko/awesome-economics"
+    },
+    {
       "upstream": "mortada/fredapi",
       "fork": "twozero3213-beep/zero-research-fredapi",
       "source_url": "https://github.com/mortada/fredapi/tree/d0a0ba3001ebbbceafdcbdd3eb23828f0537cdff",
@@ -1818,6 +2045,63 @@
       "actions_enabled": false,
       "license": "Apache-2.0",
       "metadata_source": "https://api.github.com/repos/mortada/fredapi"
+    },
+    {
+      "upstream": "koreainvestment/open-trading-api",
+      "fork": "twozero3213-beep/zero-research-open-trading-api",
+      "source_url": "https://github.com/koreainvestment/open-trading-api/tree/208279102f43fd0c0f15fcf66c9e5a5adda27050",
+      "source_release_at_review": null,
+      "purpose": "한국투자증권 공식 Open API 샘플(ZERO가 쓰는 KIS 모의투자 API) 대조",
+      "stars": 1642,
+      "upstream_url": "https://github.com/koreainvestment/open-trading-api",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-08T03:06:57Z",
+      "pinned_commit": "208279102f43fd0c0f15fcf66c9e5a5adda27050",
+      "license_url": "https://github.com/koreainvestment/open-trading-api/tree/208279102f43fd0c0f15fcf66c9e5a5adda27050",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-open-trading-api",
+      "limits": [
+        "실계좌 주문 기능은 연결하지 않으며 ZERO는 KIS_MOCK만 유지한다.",
+        "증권사 API 키·계좌는 이 참고에 사용하지 않았다.",
+        "라이선스 미표기라 코드 재사용 권리가 없으며 읽기 참고만 한다."
+      ],
+      "responsible_staff": [
+        "KOREA_MARKET_STRUCTURE_ANALYST",
+        "FILL_LEDGER_RECONCILER"
+      ],
+      "id": "open-trading-api",
+      "actions_enabled": false,
+      "license": "UNSPECIFIED",
+      "metadata_source": "https://api.github.com/repos/koreainvestment/open-trading-api"
+    },
+    {
+      "upstream": "dbrojas/optlib",
+      "fork": "twozero3213-beep/zero-research-optlib",
+      "source_url": "https://github.com/dbrojas/optlib/tree/c6a975da96be816b8a6f607e393b996fb2dcac24",
+      "source_release_at_review": null,
+      "purpose": "옵션 가격결정(블랙숄즈 등) 파이썬 구현 대조",
+      "stars": 1635,
+      "upstream_url": "https://github.com/dbrojas/optlib",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2022-11-18T19:12:59Z",
+      "pinned_commit": "c6a975da96be816b8a6f607e393b996fb2dcac24",
+      "license_url": "https://github.com/dbrojas/optlib/blob/c6a975da96be816b8a6f607e393b996fb2dcac24/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-optlib",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "EXPOSURE_STRESS_ANALYST",
+        "STATISTICAL_INFERENCE_VALIDATOR"
+      ],
+      "id": "optlib",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/dbrojas/optlib"
     },
     {
       "upstream": "FinanceData/FinanceDataReader",
@@ -1848,6 +2132,90 @@
       "metadata_source": "https://api.github.com/repos/FinanceData/FinanceDataReader"
     },
     {
+      "upstream": "quantopian/empyrical",
+      "fork": "twozero3213-beep/zero-research-empyrical",
+      "source_url": "https://github.com/quantopian/empyrical/tree/40f61b4f229df10898d46d08f7b1bdc543c0f99c",
+      "source_release_at_review": null,
+      "purpose": "샤프·소르티노·최대낙폭 등 성과·위험 지표 산식 대조",
+      "stars": 1514,
+      "upstream_url": "https://github.com/quantopian/empyrical",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2024-07-26T06:19:42Z",
+      "pinned_commit": "40f61b4f229df10898d46d08f7b1bdc543c0f99c",
+      "license_url": "https://github.com/quantopian/empyrical/blob/40f61b4f229df10898d46d08f7b1bdc543c0f99c/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-empyrical",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "TOTAL_RETURN_BENCHMARK_ANALYST",
+        "RISK_LIMIT_DESIGN_ANALYST"
+      ],
+      "id": "empyrical",
+      "actions_enabled": false,
+      "license": "Apache-2.0",
+      "metadata_source": "https://api.github.com/repos/quantopian/empyrical"
+    },
+    {
+      "upstream": "sec-edgar/sec-edgar",
+      "fork": "twozero3213-beep/zero-research-sec-edgar",
+      "source_url": "https://github.com/sec-edgar/sec-edgar/tree/97db601615ebedd49637fb4ed847b3f714114720",
+      "source_release_at_review": null,
+      "purpose": "SEC EDGAR 정기보고서·공시 일괄 내려받기 방식 참고",
+      "stars": 1416,
+      "upstream_url": "https://github.com/sec-edgar/sec-edgar",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2025-12-09T12:31:38Z",
+      "pinned_commit": "97db601615ebedd49637fb4ed847b3f714114720",
+      "license_url": "https://github.com/sec-edgar/sec-edgar/blob/97db601615ebedd49637fb4ed847b3f714114720/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-sec-edgar",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다."
+      ],
+      "responsible_staff": [
+        "PIT_FINANCIAL_ENGINEER",
+        "COMPLIANCE_TERMS_REVIEWER"
+      ],
+      "id": "sec-edgar",
+      "actions_enabled": false,
+      "license": "Apache-2.0",
+      "metadata_source": "https://api.github.com/repos/sec-edgar/sec-edgar"
+    },
+    {
+      "upstream": "rsvp/fecon235",
+      "fork": "twozero3213-beep/zero-research-fecon235",
+      "source_url": "https://github.com/rsvp/fecon235/tree/1c04a9abb68254752353cfcf5ea4eace089676c7",
+      "source_release_at_review": null,
+      "purpose": "연준 자료 기반 금융경제 분석 노트북 참고",
+      "stars": 1279,
+      "upstream_url": "https://github.com/rsvp/fecon235",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2023-01-20T06:53:24Z",
+      "pinned_commit": "1c04a9abb68254752353cfcf5ea4eace089676c7",
+      "license_url": "https://github.com/rsvp/fecon235/blob/1c04a9abb68254752353cfcf5ea4eace089676c7/LICENSE.md",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-fecon235",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "STATISTICAL_INFERENCE_VALIDATOR"
+      ],
+      "id": "fecon235",
+      "actions_enabled": false,
+      "license": "NOASSERTION (custom LICENSE file)",
+      "metadata_source": "https://api.github.com/repos/rsvp/fecon235"
+    },
+    {
       "upstream": "sharebook-kr/pykrx",
       "fork": "twozero3213-beep/zero-research-pykrx",
       "source_url": "https://github.com/sharebook-kr/pykrx/tree/36ef124c0bbb932870fd1581f39f45e903547bc8",
@@ -1874,6 +2242,315 @@
       "actions_enabled": false,
       "license": "MIT (pyproject.toml; no LICENSE file)",
       "metadata_source": "https://api.github.com/repos/sharebook-kr/pykrx"
+    },
+    {
+      "upstream": "Finnhub-Stock-API/finnhub-python",
+      "fork": "twozero3213-beep/zero-research-finnhub-python",
+      "source_url": "https://github.com/Finnhub-Stock-API/finnhub-python/tree/d33712afa962c99907aba9b833ea28e62fab0c3b",
+      "source_release_at_review": null,
+      "purpose": "Finnhub 시장·기관 보유·실적 자료 API 클라이언트 참고",
+      "stars": 1091,
+      "upstream_url": "https://github.com/Finnhub-Stock-API/finnhub-python",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-06-24T07:15:10Z",
+      "pinned_commit": "d33712afa962c99907aba9b833ea28e62fab0c3b",
+      "license_url": "https://github.com/Finnhub-Stock-API/finnhub-python/blob/d33712afa962c99907aba9b833ea28e62fab0c3b/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-finnhub-python",
+      "limits": [
+        "유료·계정 기반 서비스 키는 연결하지 않았으며 이용조건은 별도다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "MARKET_REFERENCE_COVERAGE_ANALYST",
+        "COMPLIANCE_TERMS_REVIEWER"
+      ],
+      "id": "finnhub-python",
+      "actions_enabled": false,
+      "license": "Apache-2.0",
+      "metadata_source": "https://api.github.com/repos/Finnhub-Stock-API/finnhub-python"
+    },
+    {
+      "upstream": "h9zdev/GeoSentinel",
+      "fork": "twozero3213-beep/zero-research-geosentinel",
+      "source_url": "https://github.com/h9zdev/GeoSentinel/tree/edd81b10369cee30861025b77519c85503e16e84",
+      "source_release_at_review": null,
+      "purpose": "지리공간 기반 지정학 사건 모니터링 구조 참고",
+      "stars": 1087,
+      "upstream_url": "https://github.com/h9zdev/GeoSentinel",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-09-03T18:13:12Z",
+      "pinned_commit": "edd81b10369cee30861025b77519c85503e16e84",
+      "license_url": "https://github.com/h9zdev/GeoSentinel/blob/edd81b10369cee30861025b77519c85503e16e84/LICENSE.md",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-geosentinel",
+      "limits": [
+        "지정학 사건·뉴스 집계는 출처 확인 전 투자 판단 근거로 쓰지 않는다.",
+        "원천 뉴스·데이터 이용조건은 코드 라이선스와 별도다."
+      ],
+      "responsible_staff": [
+        "NEWS_SENTIMENT_ANALYST",
+        "EXPOSURE_STRESS_ANALYST"
+      ],
+      "id": "geosentinel",
+      "actions_enabled": false,
+      "license": "NOASSERTION (custom LICENSE file)",
+      "metadata_source": "https://api.github.com/repos/h9zdev/GeoSentinel"
+    },
+    {
+      "upstream": "FRBNY-DSGE/DSGE.jl",
+      "fork": "twozero3213-beep/zero-research-dsge-jl",
+      "source_url": "https://github.com/FRBNY-DSGE/DSGE.jl/tree/c09dfe881f8809f65b8c0f08a761ec6cc456a6fb",
+      "source_release_at_review": null,
+      "purpose": "뉴욕 연준 DSGE 거시모형 추정·예측 방식 참고",
+      "stars": 962,
+      "upstream_url": "https://github.com/FRBNY-DSGE/DSGE.jl",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-09-21T17:17:34Z",
+      "pinned_commit": "c09dfe881f8809f65b8c0f08a761ec6cc456a6fb",
+      "license_url": "https://github.com/FRBNY-DSGE/DSGE.jl/blob/c09dfe881f8809f65b8c0f08a761ec6cc456a6fb/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-dsge-jl",
+      "limits": [
+        "모형 예측은 독립 검증 전 투자 판단 근거로 쓰지 않는다.",
+        "모형·데이터 이용조건은 코드 라이선스와 별도다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "STATISTICAL_INFERENCE_VALIDATOR"
+      ],
+      "id": "dsge-jl",
+      "actions_enabled": false,
+      "license": "BSD-3-Clause",
+      "metadata_source": "https://api.github.com/repos/FRBNY-DSGE/DSGE.jl"
+    },
+    {
+      "upstream": "aeturrell/coding-for-economists",
+      "fork": "twozero3213-beep/zero-research-coding-for-economists",
+      "source_url": "https://github.com/aeturrell/coding-for-economists/tree/fead8db51e101925f40bf36ebfcfb2323992ff65",
+      "source_release_at_review": null,
+      "purpose": "경제학자용 데이터 분석 코딩 교재 참고",
+      "stars": 943,
+      "upstream_url": "https://github.com/aeturrell/coding-for-economists",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-06-04T17:19:31Z",
+      "pinned_commit": "fead8db51e101925f40bf36ebfcfb2323992ff65",
+      "license_url": "https://github.com/aeturrell/coding-for-economists/blob/fead8db51e101925f40bf36ebfcfb2323992ff65/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-coding-for-economists",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "RESEARCH_STATISTICS_ENGINEER"
+      ],
+      "id": "coding-for-economists",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/aeturrell/coding-for-economists"
+    },
+    {
+      "upstream": "marc-shade/world-intel-mcp",
+      "fork": "twozero3213-beep/zero-research-world-intel-mcp",
+      "source_url": "https://github.com/marc-shade/world-intel-mcp/tree/eb2f4fee199cde9f5b247016a12ccd05839bea9d",
+      "source_release_at_review": null,
+      "purpose": "공개 자료 기반 세계 정세 MCP 도구 구성 참고",
+      "stars": 942,
+      "upstream_url": "https://github.com/marc-shade/world-intel-mcp",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-12T19:11:43Z",
+      "pinned_commit": "eb2f4fee199cde9f5b247016a12ccd05839bea9d",
+      "license_url": "https://github.com/marc-shade/world-intel-mcp/blob/eb2f4fee199cde9f5b247016a12ccd05839bea9d/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-world-intel-mcp",
+      "limits": [
+        "지정학 사건·뉴스 집계는 출처 확인 전 투자 판단 근거로 쓰지 않는다.",
+        "원천 뉴스·데이터 이용조건은 코드 라이선스와 별도다."
+      ],
+      "responsible_staff": [
+        "LLM_RESEARCH_AGENT_ENGINEER",
+        "NEWS_SENTIMENT_ANALYST"
+      ],
+      "id": "world-intel-mcp",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/marc-shade/world-intel-mcp"
+    },
+    {
+      "upstream": "opensanctions/opensanctions",
+      "fork": "twozero3213-beep/zero-research-opensanctions",
+      "source_url": "https://github.com/opensanctions/opensanctions/tree/d1619f4c4f92a8f3335bf50d9fd6b0f4e281a005",
+      "source_release_at_review": null,
+      "purpose": "국제 제재 대상·정치적 주요 인물 공개 데이터베이스 구조 참고",
+      "stars": 845,
+      "upstream_url": "https://github.com/opensanctions/opensanctions",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-13T17:09:31Z",
+      "pinned_commit": "d1619f4c4f92a8f3335bf50d9fd6b0f4e281a005",
+      "license_url": "https://github.com/opensanctions/opensanctions/blob/d1619f4c4f92a8f3335bf50d9fd6b0f4e281a005/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-opensanctions",
+      "limits": [
+        "지정학 사건·뉴스 집계는 출처 확인 전 투자 판단 근거로 쓰지 않는다.",
+        "원천 뉴스·데이터 이용조건은 코드 라이선스와 별도다."
+      ],
+      "responsible_staff": [
+        "COMPLIANCE_TERMS_REVIEWER",
+        "EXPOSURE_STRESS_ANALYST"
+      ],
+      "id": "opensanctions",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/opensanctions/opensanctions"
+    },
+    {
+      "upstream": "erikgahner/PolData",
+      "fork": "twozero3213-beep/zero-research-poldata",
+      "source_url": "https://github.com/erikgahner/PolData/tree/325b179023ca5245e7d297e54c29749ba379f9a7",
+      "source_release_at_review": null,
+      "purpose": "정치학·국제관계 데이터셋 목록 참고",
+      "stars": 756,
+      "upstream_url": "https://github.com/erikgahner/PolData",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-08-01T12:14:47Z",
+      "pinned_commit": "325b179023ca5245e7d297e54c29749ba379f9a7",
+      "license_url": "https://github.com/erikgahner/PolData/blob/325b179023ca5245e7d297e54c29749ba379f9a7/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-poldata",
+      "limits": [
+        "목록에 실린 도구는 개별 검토 전 설치·사용하지 않는다.",
+        "목록 자체는 품질·수익성 보증이 아니다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "STATISTICAL_INFERENCE_VALIDATOR"
+      ],
+      "id": "poldata",
+      "actions_enabled": false,
+      "license": "CC0-1.0",
+      "metadata_source": "https://api.github.com/repos/erikgahner/PolData"
+    },
+    {
+      "upstream": "jadchaar/sec-edgar-downloader",
+      "fork": "twozero3213-beep/zero-research-sec-edgar-downloader",
+      "source_url": "https://github.com/jadchaar/sec-edgar-downloader/tree/185a5548e49fd37afb9871df8aa9485075f21e21",
+      "source_release_at_review": null,
+      "purpose": "SEC EDGAR 공시 내려받기 도구의 요청 제한·식별 처리 참고",
+      "stars": 716,
+      "upstream_url": "https://github.com/jadchaar/sec-edgar-downloader",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-06-22T02:13:06Z",
+      "pinned_commit": "185a5548e49fd37afb9871df8aa9485075f21e21",
+      "license_url": "https://github.com/jadchaar/sec-edgar-downloader/blob/185a5548e49fd37afb9871df8aa9485075f21e21/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-sec-edgar-downloader",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다."
+      ],
+      "responsible_staff": [
+        "PIT_FINANCIAL_ENGINEER",
+        "COMPLIANCE_TERMS_REVIEWER"
+      ],
+      "id": "sec-edgar-downloader",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/jadchaar/sec-edgar-downloader"
+    },
+    {
+      "upstream": "NoblerWorks-HQ/IRONSIGHT",
+      "fork": "twozero3213-beep/zero-research-ironsight",
+      "source_url": "https://github.com/NoblerWorks-HQ/IRONSIGHT/tree/5dc42d725e8ff7022a7321da374381ff4a79795d",
+      "source_release_at_review": null,
+      "purpose": "이란·이스라엘·러시아·우크라이나 분쟁 공개정보 상황판 구성 참고",
+      "stars": 663,
+      "upstream_url": "https://github.com/NoblerWorks-HQ/IRONSIGHT",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-10T06:31:07Z",
+      "pinned_commit": "5dc42d725e8ff7022a7321da374381ff4a79795d",
+      "license_url": "https://github.com/NoblerWorks-HQ/IRONSIGHT/blob/5dc42d725e8ff7022a7321da374381ff4a79795d/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-ironsight",
+      "limits": [
+        "지정학 사건·뉴스 집계는 출처 확인 전 투자 판단 근거로 쓰지 않는다.",
+        "원천 뉴스·데이터 이용조건은 코드 라이선스와 별도다."
+      ],
+      "responsible_staff": [
+        "NEWS_SENTIMENT_ANALYST",
+        "EXPOSURE_STRESS_ANALYST"
+      ],
+      "id": "ironsight",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/NoblerWorks-HQ/IRONSIGHT"
+    },
+    {
+      "upstream": "WooilJeong/PublicDataReader",
+      "fork": "twozero3213-beep/zero-research-publicdatareader",
+      "source_url": "https://github.com/WooilJeong/PublicDataReader/tree/274d76dde922719d8f0b94b2600054a8e09c7d7a",
+      "source_release_at_review": null,
+      "purpose": "공공데이터포털·KOSIS·한국은행 ECOS 등 한국 공공·경제 통계 조회 참고",
+      "stars": 602,
+      "upstream_url": "https://github.com/WooilJeong/PublicDataReader",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-01-08T03:44:08Z",
+      "pinned_commit": "274d76dde922719d8f0b94b2600054a8e09c7d7a",
+      "license_url": "https://github.com/WooilJeong/PublicDataReader/blob/274d76dde922719d8f0b94b2600054a8e09c7d7a/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-publicdatareader",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "KOREA_MARKET_STRUCTURE_ANALYST"
+      ],
+      "id": "publicdatareader",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/WooilJeong/PublicDataReader"
+    },
+    {
+      "upstream": "lefterisloukas/edgar-crawler",
+      "fork": "twozero3213-beep/zero-research-edgar-crawler",
+      "source_url": "https://github.com/lefterisloukas/edgar-crawler/tree/84a8d0c5dd7dd6769526e5ccec534c4e0880d56f",
+      "source_release_at_review": null,
+      "purpose": "10-K 등 EDGAR 공시 본문 항목별 추출 방식 참고",
+      "stars": 551,
+      "upstream_url": "https://github.com/lefterisloukas/edgar-crawler",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2025-07-18T11:11:00Z",
+      "pinned_commit": "84a8d0c5dd7dd6769526e5ccec534c4e0880d56f",
+      "license_url": "https://github.com/lefterisloukas/edgar-crawler/blob/84a8d0c5dd7dd6769526e5ccec534c4e0880d56f/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-edgar-crawler",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다.",
+        "GPL-3.0 코드라 ZERO에 코드를 복사하지 않고 구조만 참고한다."
+      ],
+      "responsible_staff": [
+        "PIT_FINANCIAL_ENGINEER",
+        "BUSINESS_QUALITY_ANALYST"
+      ],
+      "id": "edgar-crawler",
+      "actions_enabled": false,
+      "license": "GPL-3.0",
+      "metadata_source": "https://api.github.com/repos/lefterisloukas/edgar-crawler"
     },
     {
       "upstream": "FinanceData/OpenDartReader",
@@ -1904,6 +2581,176 @@
       "metadata_source": "https://api.github.com/repos/FinanceData/OpenDartReader"
     },
     {
+      "upstream": "toddwschneider/sec-13f-filings",
+      "fork": "twozero3213-beep/zero-research-sec-13f-filings",
+      "source_url": "https://github.com/toddwschneider/sec-13f-filings/tree/0a45eb3c62b5cf55d9928905f3f95ee69cc45c46",
+      "source_release_at_review": null,
+      "purpose": "SEC 13F 기관 보유 공시 정리·비교 화면 참고",
+      "stars": 441,
+      "upstream_url": "https://github.com/toddwschneider/sec-13f-filings",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2024-08-01T11:51:19Z",
+      "pinned_commit": "0a45eb3c62b5cf55d9928905f3f95ee69cc45c46",
+      "license_url": "https://github.com/toddwschneider/sec-13f-filings/blob/0a45eb3c62b5cf55d9928905f3f95ee69cc45c46/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-sec-13f-filings",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다."
+      ],
+      "responsible_staff": [
+        "ETF_HOLDINGS_FLOW_ANALYST",
+        "PIT_FINANCIAL_ENGINEER"
+      ],
+      "id": "sec-13f-filings",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/toddwschneider/sec-13f-filings"
+    },
+    {
+      "upstream": "josw123/dart-fss",
+      "fork": "twozero3213-beep/zero-research-dart-fss",
+      "source_url": "https://github.com/josw123/dart-fss/tree/46d9c1d1038d12a334e68256f0fa10cea804df71",
+      "source_release_at_review": null,
+      "purpose": "DART 재무제표 추출·XBRL 처리 방식 참고(한국 재무)",
+      "stars": 382,
+      "upstream_url": "https://github.com/josw123/dart-fss",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-07-10T01:13:55Z",
+      "pinned_commit": "46d9c1d1038d12a334e68256f0fa10cea804df71",
+      "license_url": "https://github.com/josw123/dart-fss/blob/46d9c1d1038d12a334e68256f0fa10cea804df71/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-dart-fss",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다."
+      ],
+      "responsible_staff": [
+        "ACCOUNTING_FORMULA_REVIEWER",
+        "KOREA_MARKET_STRUCTURE_ANALYST"
+      ],
+      "id": "dart-fss",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/josw123/dart-fss"
+    },
+    {
+      "upstream": "stefanoamorelli/sec-edgar-mcp",
+      "fork": "twozero3213-beep/zero-research-sec-edgar-mcp",
+      "source_url": "https://github.com/stefanoamorelli/sec-edgar-mcp/tree/86646eb0e23f84eb2b2d1a793c888ad63a8a82bc",
+      "source_release_at_review": null,
+      "purpose": "SEC EDGAR MCP 서버의 공시 조회 도구 구성 참고",
+      "stars": 372,
+      "upstream_url": "https://github.com/stefanoamorelli/sec-edgar-mcp",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-03T09:11:21Z",
+      "pinned_commit": "86646eb0e23f84eb2b2d1a793c888ad63a8a82bc",
+      "license_url": "https://github.com/stefanoamorelli/sec-edgar-mcp/blob/86646eb0e23f84eb2b2d1a793c888ad63a8a82bc/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-sec-edgar-mcp",
+      "limits": [
+        "LLM 호출 비용·키는 오너 승인 전 사용하지 않으며 실제 주문 모듈은 연결하지 않는다.",
+        "에이전트 결론을 검증된 투자 판단이나 수익 근거로 부르지 않는다.",
+        "AGPL-3.0 코드라 ZERO에 코드를 복사하지 않고 구조만 참고한다."
+      ],
+      "responsible_staff": [
+        "LLM_RESEARCH_AGENT_ENGINEER",
+        "PIT_FINANCIAL_ENGINEER"
+      ],
+      "id": "sec-edgar-mcp",
+      "actions_enabled": false,
+      "license": "AGPL-3.0",
+      "metadata_source": "https://api.github.com/repos/stefanoamorelli/sec-edgar-mcp"
+    },
+    {
+      "upstream": "attack68/rateslib",
+      "fork": "twozero3213-beep/zero-research-rateslib",
+      "source_url": "https://github.com/attack68/rateslib/tree/1c4e6f060e1b251f166221a03323336c295ba68a",
+      "source_release_at_review": null,
+      "purpose": "채권·금리 곡선·국채선물 가격결정 계산 대조",
+      "stars": 366,
+      "upstream_url": "https://github.com/attack68/rateslib",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-05-20T19:52:54Z",
+      "pinned_commit": "1c4e6f060e1b251f166221a03323336c295ba68a",
+      "license_url": "https://github.com/attack68/rateslib/blob/1c4e6f060e1b251f166221a03323336c295ba68a/LICENCE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-rateslib",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "EXPOSURE_STRESS_ANALYST",
+        "PIT_MACRO_LIQUIDITY_ANALYST"
+      ],
+      "id": "rateslib",
+      "actions_enabled": false,
+      "license": "NOASSERTION (custom LICENSE file)",
+      "metadata_source": "https://api.github.com/repos/attack68/rateslib"
+    },
+    {
+      "upstream": "Soju06/python-kis",
+      "fork": "twozero3213-beep/zero-research-python-kis",
+      "source_url": "https://github.com/Soju06/python-kis/tree/3be3d012a4398cded24edf761351516a0d7d7083",
+      "source_release_at_review": null,
+      "purpose": "한국투자증권 REST 파이썬 라이브러리의 인증·시세·잔고 모델 대조",
+      "stars": 288,
+      "upstream_url": "https://github.com/Soju06/python-kis",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-02-21T11:56:23Z",
+      "pinned_commit": "3be3d012a4398cded24edf761351516a0d7d7083",
+      "license_url": "https://github.com/Soju06/python-kis/blob/3be3d012a4398cded24edf761351516a0d7d7083/LICENCE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-python-kis",
+      "limits": [
+        "실계좌 주문 기능은 연결하지 않으며 ZERO는 KIS_MOCK만 유지한다.",
+        "증권사 API 키·계좌는 이 참고에 사용하지 않았다."
+      ],
+      "responsible_staff": [
+        "KOREA_MARKET_STRUCTURE_ANALYST",
+        "FILL_LEDGER_RECONCILER"
+      ],
+      "id": "python-kis",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/Soju06/python-kis"
+    },
+    {
+      "upstream": "linwoodc3/gdeltPyR",
+      "fork": "twozero3213-beep/zero-research-gdeltpyr",
+      "source_url": "https://github.com/linwoodc3/gdeltPyR/tree/8762db7f5aaa4f30eda0c9e72b2039ddb68ad593",
+      "source_release_at_review": null,
+      "purpose": "GDELT 사건·언어·어조 데이터 조회 파이썬 도구 참고",
+      "stars": 259,
+      "upstream_url": "https://github.com/linwoodc3/gdeltPyR",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2023-11-30T12:01:01Z",
+      "pinned_commit": "8762db7f5aaa4f30eda0c9e72b2039ddb68ad593",
+      "license_url": "https://github.com/linwoodc3/gdeltPyR/blob/8762db7f5aaa4f30eda0c9e72b2039ddb68ad593/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-gdeltpyr",
+      "limits": [
+        "지정학 사건·뉴스 집계는 출처 확인 전 투자 판단 근거로 쓰지 않는다.",
+        "원천 뉴스·데이터 이용조건은 코드 라이선스와 별도다.",
+        "GPL-3.0 코드라 ZERO에 코드를 복사하지 않고 구조만 참고한다."
+      ],
+      "responsible_staff": [
+        "NEWS_SENTIMENT_ANALYST",
+        "PIT_MACRO_LIQUIDITY_ANALYST"
+      ],
+      "id": "gdeltpyr",
+      "actions_enabled": false,
+      "license": "GPL-3.0",
+      "metadata_source": "https://api.github.com/repos/linwoodc3/gdeltPyR"
+    },
+    {
       "upstream": "alex9smith/gdelt-doc-api",
       "fork": "twozero3213-beep/zero-research-gdelt-doc-api",
       "source_url": "https://github.com/alex9smith/gdelt-doc-api/tree/41220163fbab99982e4dca3a05d25a95b49896d7",
@@ -1930,6 +2777,316 @@
       "actions_enabled": false,
       "license": "MIT",
       "metadata_source": "https://api.github.com/repos/alex9smith/gdelt-doc-api"
+    },
+    {
+      "upstream": "eddmpython/dartlab",
+      "fork": "twozero3213-beep/zero-research-dartlab",
+      "source_url": "https://github.com/eddmpython/dartlab/tree/db6d3119a39e2c1d7de18a3669fbce7dfc726217",
+      "source_release_at_review": null,
+      "purpose": "DART·SEC EDGAR 공시를 같은 구조로 정리하는 방식 참고",
+      "stars": 224,
+      "upstream_url": "https://github.com/eddmpython/dartlab",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-12T22:17:57Z",
+      "pinned_commit": "db6d3119a39e2c1d7de18a3669fbce7dfc726217",
+      "license_url": "https://github.com/eddmpython/dartlab/blob/db6d3119a39e2c1d7de18a3669fbce7dfc726217/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-dartlab",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다."
+      ],
+      "responsible_staff": [
+        "ACCOUNTING_FORMULA_REVIEWER",
+        "PIT_FINANCIAL_ENGINEER"
+      ],
+      "id": "dartlab",
+      "actions_enabled": false,
+      "license": "Apache-2.0",
+      "metadata_source": "https://api.github.com/repos/eddmpython/dartlab"
+    },
+    {
+      "upstream": "elbakramer/koapy",
+      "fork": "twozero3213-beep/zero-research-koapy",
+      "source_url": "https://github.com/elbakramer/koapy/tree/6140934767fbbd9e0b351156ea4896903141f4cc",
+      "source_release_at_review": null,
+      "purpose": "키움 OpenAPI 파이썬 래퍼 구조 참고",
+      "stars": 222,
+      "upstream_url": "https://github.com/elbakramer/koapy",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2023-02-11T02:04:58Z",
+      "pinned_commit": "6140934767fbbd9e0b351156ea4896903141f4cc",
+      "license_url": "https://github.com/elbakramer/koapy/blob/6140934767fbbd9e0b351156ea4896903141f4cc/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-koapy",
+      "limits": [
+        "실계좌 주문 기능은 연결하지 않으며 ZERO는 KIS_MOCK만 유지한다.",
+        "증권사 API 키·계좌는 이 참고에 사용하지 않았다."
+      ],
+      "responsible_staff": [
+        "KOREA_MARKET_STRUCTURE_ANALYST",
+        "COMPLIANCE_TERMS_REVIEWER"
+      ],
+      "id": "koapy",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/elbakramer/koapy"
+    },
+    {
+      "upstream": "OliverSherouse/wbdata",
+      "fork": "twozero3213-beep/zero-research-wbdata",
+      "source_url": "https://github.com/OliverSherouse/wbdata/tree/97349ea867d90349c19f6a2cb8587ee8937d13c2",
+      "source_release_at_review": null,
+      "purpose": "세계은행 국가별 경제 지표 조회 방식 참고",
+      "stars": 213,
+      "upstream_url": "https://github.com/OliverSherouse/wbdata",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-07-27T04:08:58Z",
+      "pinned_commit": "97349ea867d90349c19f6a2cb8587ee8937d13c2",
+      "license_url": "https://github.com/OliverSherouse/wbdata/blob/97349ea867d90349c19f6a2cb8587ee8937d13c2/LICENSE.txt",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-wbdata",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다.",
+        "GPL-2.0 코드라 ZERO에 코드를 복사하지 않고 구조만 참고한다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "COMPLIANCE_TERMS_REVIEWER"
+      ],
+      "id": "wbdata",
+      "actions_enabled": false,
+      "license": "GPL-2.0",
+      "metadata_source": "https://api.github.com/repos/OliverSherouse/wbdata"
+    },
+    {
+      "upstream": "dkgaraujo/OpenSourcedMacroModels",
+      "fork": "twozero3213-beep/zero-research-opensourcedmacromodels",
+      "source_url": "https://github.com/dkgaraujo/OpenSourcedMacroModels/tree/bf693cfb7ffa48fbd5a2b9afb4ea169ae9082c52",
+      "source_release_at_review": null,
+      "purpose": "중앙은행·연구기관이 공개한 거시경제 모형 목록 참고",
+      "stars": 201,
+      "upstream_url": "https://github.com/dkgaraujo/OpenSourcedMacroModels",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2025-07-16T23:33:09Z",
+      "pinned_commit": "bf693cfb7ffa48fbd5a2b9afb4ea169ae9082c52",
+      "license_url": "https://github.com/dkgaraujo/OpenSourcedMacroModels/blob/bf693cfb7ffa48fbd5a2b9afb4ea169ae9082c52/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-opensourcedmacromodels",
+      "limits": [
+        "목록에 실린 도구는 개별 검토 전 설치·사용하지 않는다.",
+        "목록 자체는 품질·수익성 보증이 아니다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "INDEPENDENT_MODEL_GOVERNANCE_REVIEWER"
+      ],
+      "id": "opensourcedmacromodels",
+      "actions_enabled": false,
+      "license": "Apache-2.0",
+      "metadata_source": "https://api.github.com/repos/dkgaraujo/OpenSourcedMacroModels"
+    },
+    {
+      "upstream": "jjlabsio/korea-stock-mcp",
+      "fork": "twozero3213-beep/zero-research-korea-stock-mcp",
+      "source_url": "https://github.com/jjlabsio/korea-stock-mcp/tree/210595eec73a39cd04e2fb175f6e69b1516f0dd4",
+      "source_release_at_review": null,
+      "purpose": "한국 주식 분석 MCP 서버의 DART·시세 도구 구성 참고",
+      "stars": 177,
+      "upstream_url": "https://github.com/jjlabsio/korea-stock-mcp",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-13T02:23:13Z",
+      "pinned_commit": "210595eec73a39cd04e2fb175f6e69b1516f0dd4",
+      "license_url": "https://github.com/jjlabsio/korea-stock-mcp/blob/210595eec73a39cd04e2fb175f6e69b1516f0dd4/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-korea-stock-mcp",
+      "limits": [
+        "LLM 호출 비용·키는 오너 승인 전 사용하지 않으며 실제 주문 모듈은 연결하지 않는다.",
+        "에이전트 결론을 검증된 투자 판단이나 수익 근거로 부르지 않는다."
+      ],
+      "responsible_staff": [
+        "LLM_RESEARCH_AGENT_ENGINEER",
+        "KOREA_MARKET_STRUCTURE_ANALYST"
+      ],
+      "id": "korea-stock-mcp",
+      "actions_enabled": false,
+      "license": "ISC",
+      "metadata_source": "https://api.github.com/repos/jjlabsio/korea-stock-mcp"
+    },
+    {
+      "upstream": "uncomtrade/comtradeapicall",
+      "fork": "twozero3213-beep/zero-research-comtradeapicall",
+      "source_url": "https://github.com/uncomtrade/comtradeapicall/tree/0848a3f1cf63234a93fb5635b9b19b2265afab71",
+      "source_release_at_review": null,
+      "purpose": "UN Comtrade 공식 국제 무역 통계 API 호출 방식 참고",
+      "stars": 163,
+      "upstream_url": "https://github.com/uncomtrade/comtradeapicall",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-06-11T18:28:40Z",
+      "pinned_commit": "0848a3f1cf63234a93fb5635b9b19b2265afab71",
+      "license_url": "https://github.com/uncomtrade/comtradeapicall/blob/0848a3f1cf63234a93fb5635b9b19b2265afab71/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-comtradeapicall",
+      "limits": [
+        "코드 라이선스와 원천 데이터 이용조건은 별도다.",
+        "수집 값은 공식 원천과 독립 대조 전 판단 근거로 쓰지 않는다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "COMPLIANCE_TERMS_REVIEWER"
+      ],
+      "id": "comtradeapicall",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/uncomtrade/comtradeapicall"
+    },
+    {
+      "upstream": "chrisryugj/korean-dart-mcp",
+      "fork": "twozero3213-beep/zero-research-korean-dart-mcp",
+      "source_url": "https://github.com/chrisryugj/korean-dart-mcp/tree/86cfd96a81ff9cbf1a44c593159e6b170d6f5151",
+      "source_release_at_review": null,
+      "purpose": "OpenDART 83개 API를 묶은 공시·재무·지분 MCP 도구 참고",
+      "stars": 113,
+      "upstream_url": "https://github.com/chrisryugj/korean-dart-mcp",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-10-11T06:18:02Z",
+      "pinned_commit": "86cfd96a81ff9cbf1a44c593159e6b170d6f5151",
+      "license_url": "https://github.com/chrisryugj/korean-dart-mcp/blob/86cfd96a81ff9cbf1a44c593159e6b170d6f5151/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-korean-dart-mcp",
+      "limits": [
+        "LLM 호출 비용·키는 오너 승인 전 사용하지 않으며 실제 주문 모듈은 연결하지 않는다.",
+        "에이전트 결론을 검증된 투자 판단이나 수익 근거로 부르지 않는다."
+      ],
+      "responsible_staff": [
+        "ACCOUNTING_FORMULA_REVIEWER",
+        "LLM_RESEARCH_AGENT_ENGINEER"
+      ],
+      "id": "korean-dart-mcp",
+      "actions_enabled": false,
+      "license": "MIT",
+      "metadata_source": "https://api.github.com/repos/chrisryugj/korean-dart-mcp"
+    },
+    {
+      "upstream": "gtfintechlab/fomc-hawkish-dovish",
+      "fork": "twozero3213-beep/zero-research-fomc-hawkish-dovish",
+      "source_url": "https://github.com/gtfintechlab/fomc-hawkish-dovish/tree/98646987452b326507479cf641571b33814bb73f",
+      "source_release_at_review": null,
+      "purpose": "FOMC 문서의 매파·비둘기파 분류 NLP 연구 참고",
+      "stars": 76,
+      "upstream_url": "https://github.com/gtfintechlab/fomc-hawkish-dovish",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2024-12-17T01:00:53Z",
+      "pinned_commit": "98646987452b326507479cf641571b33814bb73f",
+      "license_url": "https://github.com/gtfintechlab/fomc-hawkish-dovish/blob/98646987452b326507479cf641571b33814bb73f/LICENSE.md",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-fomc-hawkish-dovish",
+      "limits": [
+        "모형 예측은 독립 검증 전 투자 판단 근거로 쓰지 않는다.",
+        "모형·데이터 이용조건은 코드 라이선스와 별도다."
+      ],
+      "responsible_staff": [
+        "NEWS_SENTIMENT_ANALYST",
+        "PIT_MACRO_LIQUIDITY_ANALYST"
+      ],
+      "id": "fomc-hawkish-dovish",
+      "actions_enabled": false,
+      "license": "NOASSERTION (custom LICENSE file)",
+      "metadata_source": "https://api.github.com/repos/gtfintechlab/fomc-hawkish-dovish"
+    },
+    {
+      "upstream": "Kiwoom-Securities/Kiwoom-REST-API",
+      "fork": "twozero3213-beep/zero-research-kiwoom-rest-api",
+      "source_url": "https://github.com/Kiwoom-Securities/Kiwoom-REST-API/tree/953e5dbff123f437ab4d11a78a95191a685eb51f",
+      "source_release_at_review": null,
+      "purpose": "키움증권 공식 REST API 클라이언트·샘플 대조",
+      "stars": 59,
+      "upstream_url": "https://github.com/Kiwoom-Securities/Kiwoom-REST-API",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2026-09-15T06:12:19Z",
+      "pinned_commit": "953e5dbff123f437ab4d11a78a95191a685eb51f",
+      "license_url": "https://github.com/Kiwoom-Securities/Kiwoom-REST-API/blob/953e5dbff123f437ab4d11a78a95191a685eb51f/LICENSE.md",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-kiwoom-rest-api",
+      "limits": [
+        "실계좌 주문 기능은 연결하지 않으며 ZERO는 KIS_MOCK만 유지한다.",
+        "증권사 API 키·계좌는 이 참고에 사용하지 않았다."
+      ],
+      "responsible_staff": [
+        "KOREA_MARKET_STRUCTURE_ANALYST",
+        "COMPLIANCE_TERMS_REVIEWER"
+      ],
+      "id": "kiwoom-rest-api",
+      "actions_enabled": false,
+      "license": "NOASSERTION (custom LICENSE file)",
+      "metadata_source": "https://api.github.com/repos/Kiwoom-Securities/Kiwoom-REST-API"
+    },
+    {
+      "upstream": "ARahimiQuant/pyfedwatch",
+      "fork": "twozero3213-beep/zero-research-pyfedwatch",
+      "source_url": "https://github.com/ARahimiQuant/pyfedwatch/tree/aa6d69bf1ecd92eec185791e71fa35e5424dc6ba",
+      "source_release_at_review": null,
+      "purpose": "CME FedWatch 방식의 금리 결정 확률 계산 참고",
+      "stars": 55,
+      "upstream_url": "https://github.com/ARahimiQuant/pyfedwatch",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2023-09-20T09:22:23Z",
+      "pinned_commit": "aa6d69bf1ecd92eec185791e71fa35e5424dc6ba",
+      "license_url": "https://github.com/ARahimiQuant/pyfedwatch/blob/aa6d69bf1ecd92eec185791e71fa35e5424dc6ba/LICENSE",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-pyfedwatch",
+      "limits": [
+        "산식 대조용 참고이며 생산 코드에 연결하지 않았다.",
+        "운영 환경 설치·호환성 검증은 수행하지 않았다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "STATISTICAL_INFERENCE_VALIDATOR"
+      ],
+      "id": "pyfedwatch",
+      "actions_enabled": false,
+      "license": "Apache-2.0",
+      "metadata_source": "https://api.github.com/repos/ARahimiQuant/pyfedwatch"
+    },
+    {
+      "upstream": "FRBNY-RG/New-York-Nowcast",
+      "fork": "twozero3213-beep/zero-research-new-york-nowcast",
+      "source_url": "https://github.com/FRBNY-RG/New-York-Nowcast/tree/48eccd5865437b9bdfdbfd37d30580bacfbf3a2d",
+      "source_release_at_review": null,
+      "purpose": "뉴욕 연준 GDP 나우캐스트 모형 참고",
+      "stars": 13,
+      "upstream_url": "https://github.com/FRBNY-RG/New-York-Nowcast",
+      "runtime_install": "NOT_INSTALLED",
+      "pushed_at": "2025-07-08T18:09:54Z",
+      "pinned_commit": "48eccd5865437b9bdfdbfd37d30580bacfbf3a2d",
+      "license_url": "https://github.com/FRBNY-RG/New-York-Nowcast/tree/48eccd5865437b9bdfdbfd37d30580bacfbf3a2d",
+      "production_import": false,
+      "mode": "PUBLIC_SOURCE_FORK_REFERENCE",
+      "fork_url": "https://github.com/twozero3213-beep/zero-research-new-york-nowcast",
+      "limits": [
+        "모형 예측은 독립 검증 전 투자 판단 근거로 쓰지 않는다.",
+        "모형·데이터 이용조건은 코드 라이선스와 별도다.",
+        "라이선스 미표기라 코드 재사용 권리가 없으며 읽기 참고만 한다."
+      ],
+      "responsible_staff": [
+        "PIT_MACRO_LIQUIDITY_ANALYST",
+        "STATISTICAL_INFERENCE_VALIDATOR"
+      ],
+      "id": "new-york-nowcast",
+      "actions_enabled": false,
+      "license": "UNSPECIFIED",
+      "metadata_source": "https://api.github.com/repos/FRBNY-RG/New-York-Nowcast"
     }
   ],
   "limits": [
@@ -1940,7 +3097,7 @@
   "not_forked": [
     {
       "repository": "stefan-jansen/zipline-reloaded",
-      "reason": "Additional engine duplicates the selected comparison references; no need for another executable engine."
+      "reason": "Same GitHub fork network as quantopian/zipline, which is already forked; GitHub allows one fork per network per account."
     },
     {
       "repository": "pandas-dev/pandas",
@@ -1949,10 +3106,6 @@
     {
       "repository": "scipy/scipy",
       "reason": "General dependency; manage packages through isolated hash locks rather than additional source forks."
-    },
-    {
-      "repository": "statsmodels/statsmodels",
-      "reason": "General dependency; specialist investment source references take priority over another library fork."
     }
   ]
 }
