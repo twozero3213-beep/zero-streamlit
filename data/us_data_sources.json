@@ -1,0 +1,67 @@
+{
+ "schema_version": 1,
+ "verified_on": "2026-10-10",
+ "scope": "PUBLIC_RESEARCH_NOT_TRADING_OR_VALIDATED_PROFIT",
+ "sources": {
+  "NASDAQCOM": {
+   "unit": "INDEX_1971_02_05_100",
+   "definition": "NASDAQ Composite closing price index; not ETF total return",
+   "currency": null,
+   "adjustment_kind": "PRICE_INDEX_NOT_TOTAL_RETURN"
+  },
+  "SP500": {
+   "unit": "INDEX",
+   "definition": "S&P 500 closing price index; excludes dividends; FRED history is limited",
+   "currency": null,
+   "adjustment_kind": "PRICE_INDEX_NOT_TOTAL_RETURN"
+  },
+  "VIXCLS": {
+   "unit": "INDEX",
+   "definition": "CBOE VIX closing volatility index; not an investible asset",
+   "currency": null,
+   "adjustment_kind": "VOLATILITY_INDEX"
+  },
+  "DGS2": {
+   "unit": "PERCENT",
+   "definition": "US Treasury constant maturity 2-year yield; not bond total return",
+   "currency": null,
+   "adjustment_kind": "YIELD"
+  },
+  "DGS10": {
+   "unit": "PERCENT",
+   "definition": "US Treasury constant maturity 10-year yield; not bond total return",
+   "currency": null,
+   "adjustment_kind": "YIELD"
+  },
+  "BAMLH0A0HYM2": {
+   "unit": "PERCENT",
+   "definition": "ICE BofA US High Yield option-adjusted spread; percentage points, not basis points",
+   "currency": null,
+   "adjustment_kind": "CREDIT_SPREAD"
+  },
+  "DEXKOUS": {
+   "unit": "KRW_PER_USD",
+   "definition": "New York noon buying rate; not executable broker FX",
+   "currency": "KRW",
+   "adjustment_kind": "REFERENCE_FX"
+  },
+  "DCOILBRENTEU": {
+   "unit": "USD_PER_BARREL",
+   "definition": "Brent Europe spot crude oil price; not ETF total return",
+   "currency": "USD",
+   "adjustment_kind": "SPOT_COMMODITY"
+  }
+ },
+ "source_url_template": "https://fred.stlouisfed.org/series/{series_id}",
+ "documentation": [
+  "https://fred.stlouisfed.org/docs/api/fred/",
+  "https://fred.stlouisfed.org/docs/api/fred/realtime_period.html",
+  "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+  "https://www.sec.gov/about/developer-resources"
+ ],
+ "limits": [
+  "Current CSV has no historical vintage verification",
+  "Provider data rights vary by series; do not publish collected datasets in Git",
+  "SEC normalized facts are not validated EBIT/ROC or investment recommendations"
+ ]
+}
