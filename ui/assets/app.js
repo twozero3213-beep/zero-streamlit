@@ -1,7 +1,6 @@
 'use strict';
 const $ = (selector) => document.querySelector(selector);
 const state = {data: null, market: 'ALL', currency: 'KRW', chart: 'bars', search: '', descending: true, sortMetric:'value',selected: null, fingerprint: null, benchmarkFingerprint: null};
-const ZERO_PUBLIC = document.documentElement?.dataset?.zeroPublic === 'true';
 const hostedView = document.documentElement?.dataset?.zeroHosted === 'true';
 const colors = {US: '#dce9fb', KR: '#f9e4df', RESERVE: '#d8efeb'};
 const number = (value) => value === null || value === undefined || value === '' ? NaN : Number(value);
@@ -13,7 +12,7 @@ const format = (value, decimals = 0) => {
   if (!numberFormatters.has(decimals)) numberFormatters.set(decimals, new Intl.NumberFormat('ko-KR', {maximumFractionDigits: decimals}));
   return numberFormatters.get(decimals).format(numeric);
 };
-const money = (value, currency = 'KRW') => ZERO_PUBLIC && Number.isFinite(number(value)) ? '비공개' : Number.isFinite(number(value)) ? (currency === 'USD' ? '$' + format(value, 2) : format(value) + '원') : '—';
+const money = (value, currency = 'KRW') => Number.isFinite(number(value)) ? (currency === 'USD' ? '$' + format(value, 2) : format(value) + '원') : '—';
 const stamp = (value, short = false) => {
   if (!value || !Number.isFinite(Date.parse(value))) return '미확인';
   const variant = Boolean(short);
@@ -53,7 +52,7 @@ function render(data) {
   const scope = connectedSummary.zero_portfolio || {};
   const finite = (value) => (typeof value === 'number' || typeof value === 'string' && value.trim() !== '') && Number.isFinite(number(value));
   const amount = (value) => finite(value) && number(value) >= 0;
-  const referenceAvailable = ZERO_PUBLIC ? scope.state === 'REFERENCE' && Array.isArray(scope.holdings) : scope.state === 'REFERENCE' && scope.scope === 'ZERO_100M_FROZEN_PLAN_GROSS_REFERENCE'
+  const referenceAvailable = scope.state === 'REFERENCE' && scope.scope === 'ZERO_100M_FROZEN_PLAN_GROSS_REFERENCE'
     && number(scope.capital_krw) === 100000000 && Array.isArray(scope.holdings)
     && [scope.total_value_krw, scope.remaining_funds_krw, scope.holdings_value_krw].every(amount)
     && [scope.gross_return_percent, scope.gross_gain_krw].every(finite)
@@ -180,7 +179,7 @@ function renderRows() {
   const body = $('#holdings-body'), list = $('#holding-list'); body.replaceChildren(); list.replaceChildren();
   rows.forEach((row) => {
     // Both layouts show these same values; format each once before building either.
-    const quantityText = ZERO_PUBLIC ? '비공개' : format(row.quantity, 6), averageText = money(row.average_price, row.currency), currentText = money(row.current_price, row.currency);
+    const quantityText = format(row.quantity, 6), averageText = money(row.average_price, row.currency), currentText = money(row.current_price, row.currency);
     const displayed = state.currency === 'KRW' ? row.market_value_krw : row.market_value;
     const displayCurrency = state.currency === 'KRW' ? 'KRW' : row.currency, valueText = money(displayed, displayCurrency);
     const tr = node('tr', state.selected === positionKey(row) ? 'selected' : '');
