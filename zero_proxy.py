@@ -56,8 +56,11 @@ def _secret(name):
 
 
 def fetch(path):
-    client_id, secret = _secret('CF_ACCESS_CLIENT_ID'), _secret('CF_ACCESS_CLIENT_SECRET')
-    if not (client_id and secret):
+    try:
+        client_id, secret = _secret('CF_ACCESS_CLIENT_ID'), _secret('CF_ACCESS_CLIENT_SECRET')
+    except Exception:
+        raise Unavailable('SECRETS_INVALID') from None
+    if not (isinstance(client_id, str) and isinstance(secret, str) and client_id and secret):
         raise Unavailable('NOT_CONFIGURED')
     base = (_secret('SITE_URL') or DEFAULT_SITE).rstrip('/')
     if not base.startswith('https://'):
@@ -176,6 +179,8 @@ async def api(request):
     except Unavailable as error:
         code = str(error)
         return JSONResponse({'error': code}, status_code=404 if code == 'NOT_PUBLIC' else 503)
+    except Exception as error:  # report the exception class only, never its message
+        return JSONResponse({'error': 'BRIDGE_ERROR', 'kind': type(error).__name__}, status_code=500)
     return Response(body, media_type='application/json; charset=utf-8', headers={'Cache-Control': 'no-store'})
 
 
