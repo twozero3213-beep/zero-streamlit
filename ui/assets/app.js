@@ -152,7 +152,9 @@ function render(data) {
     ['US', 'KR'].forEach((market) => { const part = node('span'); part.style.flex = String(Math.max(0, number(split[market]))); bar.append(part); });
   }
   if (changed) { renderAllocation(holdings, summary.holdings_value_krw); renderRows(); renderHistory([]); }
-  renderBenchmark(data.benchmark);
+  // Hosted refresh: the saved comparison is repriced with the live S&P 500 quote when one is available.
+  const repriced = window.ZEROExploreMath?.liveBenchmark;
+  renderBenchmark(hostedView && state.live && repriced ? repriced(data.benchmark, state.live, 'SP500', 'index_close') : data.benchmark);
 }
 function holdingSortValue(row,key){
   if(key==='quantity')return number(row.quantity);if(key==='return')return number(row.computed_unrealized_return_percent);if(key==='value')return number(row.market_value_krw);
@@ -228,20 +230,21 @@ function renderBenchmark(benchmark) {
   $('#benchmark-title').textContent = available ? new Intl.NumberFormat('ko-KR', {notation: 'compact', maximumFractionDigits: 2}).format(capital) + '원을 S&P 500에 투자했다면' : 'S&P 500에 투자했다면';
   $('#benchmark-content').hidden = !available; $('#benchmark-empty').hidden = available;
   $('#benchmark-empty').textContent = benchmark?.state === 'INVALID' ? '비교 자료의 기준을 확인하지 못해 계산 표시를 보류합니다.' : '비교 자료를 아직 확인하지 못했습니다.';
-  $('#benchmark-basis').textContent = available ? '첫 매수 기록 기준 · 미국 해당 거래일 종가 가정 · 실제 체결 시각 미확인' : '첫 매수 기록과 지수·환율의 기준일을 확인한 뒤 표시합니다.';
+  const live = benchmark?.live;
+  $('#benchmark-basis').textContent = available ? (live ? '첫 매수 기록 기준 · 공개 지연 시세로 새로고침 · 시세 확인 ' + stamp(live.checked_at) + ' KST · 실제 체결 시각 미확인' : '첫 매수 기록 기준 · 미국 해당 거래일 종가 가정 · 실제 체결 시각 미확인') : '첫 매수 기록과 지수·환율의 기준일을 확인한 뒤 표시합니다.';
   if (!available) return;
   const date = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value.replaceAll('-', '.') : '미확인';
   const signedPercent = (value) => (number(value) > 0 ? '+' : '') + format(value, 2) + '%';
   // These are provider-validated reference calculations, not account or ETF returns.
   $('#benchmark-price-return').textContent = signedPercent(latest.return_percent);
   $('#benchmark-price-return').className = number(latest.return_percent) > 0 ? 'gain' : number(latest.return_percent) < 0 ? 'loss' : '';
-  $('#benchmark-price-period').textContent = date(start.market_date) + ' → ' + date(latest.market_date) + ' 미국 종가';
+  $('#benchmark-price-period').textContent = date(start.market_date) + ' → ' + date(latest.market_date) + (live ? ' 미국 시세(지연 가능)' : ' 미국 종가');
   $('#benchmark-fixed-value').textContent = money(latest.reference_value_krw);
   $('#benchmark-fixed-gain').textContent = '참고 평가이익 ' + (number(latest.gain_krw) > 0 ? '+' : '') + money(latest.gain_krw) + '\n' + date(latest.market_date) + ' 기준 · 환율 고정';
   $('#benchmark-krw-value').textContent = money(common.reference_value_krw);
   $('#benchmark-krw-return').textContent = '원화 가격수익률 ' + signedPercent(common.return_percent);
-  $('#benchmark-fx-period').textContent = '공식 공통 관측일 ' + date(common.market_date) + '\n최신 미국 지수일과 다를 수 있습니다.';
-  $('#benchmark-assumptions').textContent = '첫 매수 기록 ' + stamp(start.recorded_at) + ' KST에 대응하는 미국 ' + date(start.market_date) + ' 종가를 시작값으로 사용합니다. 정확한 첫 체결가격·시각은 미확인입니다. 지수 가격과 공식 환율이 모두 있는 공통 날짜까지만 원화 참고값을 계산합니다. 지수 시작값 ' + format(latest.start_index_close, 2) + ', 최신 종가 ' + format(latest.index_close, 2) + '. 공통 관측일 지수 ' + format(common.index_close, 2) + ', 원·달러 환율 ' + format(common.start_usd_krw, 2) + '원 → ' + format(common.end_usd_krw, 2) + '원.';
+  $('#benchmark-fx-period').textContent = live ? '공개 지연 환율 ' + format(common.end_usd_krw, 2) + '원 반영 · 공식 환율 아님\n시세 시각 ' + stamp(live.market_time) + ' KST' : '공식 공통 관측일 ' + date(common.market_date) + '\n최신 미국 지수일과 다를 수 있습니다.';
+  $('#benchmark-assumptions').textContent = '첫 매수 기록 ' + stamp(start.recorded_at) + ' KST에 대응하는 미국 ' + date(start.market_date) + ' 종가를 시작값으로 사용합니다. 정확한 첫 체결가격·시각은 미확인입니다. ' + (live ? '새로고침 때 공개 지연 지수 시세와 지연 환율로 다시 계산했으며 공식 환율이 아닙니다.' : '지수 가격과 공식 환율이 모두 있는 공통 날짜까지만 원화 참고값을 계산합니다.') + ' 지수 시작값 ' + format(latest.start_index_close, 2) + ', ' + (live ? '현재 시세 ' : '최신 종가 ') + format(latest.index_close, 2) + '. ' + (live ? '시세 지수 ' : '공통 관측일 지수 ') + format(common.index_close, 2) + ', 원·달러 환율 ' + format(common.start_usd_krw, 2) + '원 → ' + format(common.end_usd_krw, 2) + '원.';
   const sources = $('#benchmark-sources'); sources.replaceChildren();
   [['index', 'S&P 500 지수 출처'], ['fx', '공식 원·달러 환율 출처']].forEach(([key, label]) => {
     try {
@@ -379,6 +382,9 @@ async function loadLiveQuotes() {
   const response = await fetch('api/live-quotes', {cache: 'no-store'});
   const live = response.ok ? await response.json() : null;
   state.live = live?.schema_version === 1 && live.state === 'AVAILABLE' && Array.isArray(live.quotes) ? live : null;
+  // Other screens (the TQQQ comparison) reprice from the same quotes instead of fetching them again.
+  window.ZEROLive = state.live;
+  if (typeof CustomEvent === 'function') document.dispatchEvent?.(new CustomEvent('zero-live-quotes'));
   return Boolean(state.live);
 }
 async function loadPortfolio() {

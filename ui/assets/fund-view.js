@@ -150,20 +150,26 @@ function fundBenchmarkValid(data) {
     &&fundNumber(data.latest_usd.reference_value_krw)>0&&fundNumber(data.krw_common.reference_value_krw)>0
     &&fundPublicURL(data.sources?.prices)!==null&&fundPublicURL(data.sources?.fx)!==null;
 }
+// On a hosted refresh the saved TQQQ comparison is repriced with the live quote the main screen already fetched.
+function liveFundBenchmark(data) {
+  const reprice=window.ZEROExploreMath?.liveBenchmark;
+  return reprice&&window.ZEROLive?reprice(data,window.ZEROLive,'TQQQ','etf_close'):data;
+}
 function renderFundBenchmark(data) {
   if(!fund$('tqqq-panel'))return;
   const available=fundBenchmarkValid(data);fund$('tqqq-content').hidden=!available;fund$('tqqq-empty').hidden=available;
   if(!available){fund$('tqqq-empty').textContent='TQQQ의 가격·환율 비교 근거 없음. 공개 기록을 확인한 뒤 페이지를 다시 열어 주세요.';fund$('tqqq-basis').textContent='확인되지 않은 가격·환율로 참고 평가액을 채우지 않습니다.';return;}
-  const latest=data.latest_usd,common=data.krw_common,first=data.start;
-  fund$('tqqq-basis').textContent='소수점 수량을 가정한 전액 투자 참고값 · 시작 미국 거래일 '+first.market_date+' · 공개 자료 기록 '+stamp(data.as_of)+' KST · 금액·수익률은 소수 둘째 자리까지 표시';
+  data=liveFundBenchmark(data);
+  const live=data.live,latest=data.latest_usd,common=data.krw_common,first=data.start;
+  fund$('tqqq-basis').textContent='소수점 수량을 가정한 전액 투자 참고값 · 시작 미국 거래일 '+first.market_date+(live?' · 공개 지연 시세로 새로고침 · 시세 확인 '+stamp(live.checked_at)+' KST':' · 공개 자료 기록 '+stamp(data.as_of)+' KST')+' · 금액·수익률은 소수 둘째 자리까지 표시';
   fund$('tqqq-price-return').textContent=format(latest.return_percent,2)+'%';
-  fund$('tqqq-price-period').textContent=first.market_date+' → '+latest.market_date+' 미국 거래일 · ETF 종가 가격수익률';
+  fund$('tqqq-price-period').textContent=first.market_date+' → '+latest.market_date+(live?' 미국 시세(지연 가능) · ETF 현재 가격수익률':' 미국 거래일 · ETF 종가 가격수익률');
   fund$('tqqq-fixed-value').textContent=format(latest.reference_value_krw,2)+'원';
   fund$('tqqq-fixed-gain').textContent='환율 고정 참고 차액 '+format(latest.gain_krw,2)+'원';
   fund$('tqqq-krw-value').textContent=format(common.reference_value_krw,2)+'원';
-  fund$('tqqq-krw-return').textContent='공식 환율 반영 참고 수익률 '+format(common.return_percent,2)+'%';
-  fund$('tqqq-fx-period').textContent='가격·공식 환율 공통 관측일 '+common.market_date+' · 달러 가격의 최근 거래일과 다릅니다.';
-  fund$('tqqq-assumptions').textContent='기존 ZERO 첫 매수 기록 '+stamp(first.recorded_at)+' KST의 미국 날짜 종가를 시작점으로 삼습니다. 그날 ZERO가 TQQQ를 매수·보유했다는 뜻은 아닙니다. 시작 종가 '+fundExact(latest.start_etf_close)+' USD, 최근 종가 '+fundExact(latest.etf_close)+' USD입니다. 공통 관측일 계산은 시작 환율 '+fundExact(common.start_usd_krw)+'원/USD와 해당일 환율 '+fundExact(common.end_usd_krw)+'원/USD를 사용합니다.';
+  fund$('tqqq-krw-return').textContent=(live?'지연 환율 반영 참고 수익률(공식 환율 아님) ':'공식 환율 반영 참고 수익률 ')+format(common.return_percent,2)+'%';
+  fund$('tqqq-fx-period').textContent=(live?'공개 지연 환율 '+format(common.end_usd_krw,2)+'원 반영 · 시세 시각 '+stamp(live.market_time)+' KST':'가격·공식 환율 공통 관측일 '+common.market_date+' · 달러 가격의 최근 거래일과 다릅니다.');
+  fund$('tqqq-assumptions').textContent='기존 ZERO 첫 매수 기록 '+stamp(first.recorded_at)+' KST의 미국 날짜 종가를 시작점으로 삼습니다. 그날 ZERO가 TQQQ를 매수·보유했다는 뜻은 아닙니다. 시작 종가 '+fundExact(latest.start_etf_close)+' USD, '+(live?'현재 시세 ':'최근 종가 ')+fundExact(latest.etf_close)+' USD입니다. '+(live?'새로고침 때 공개 지연 시세와 지연 환율(공식 환율 아님)로 다시 계산했으며, 시작 환율 ':'공통 관측일 계산은 시작 환율 ')+fundExact(common.start_usd_krw)+'원/USD와 '+(live?'현재 지연 환율 ':'해당일 환율 ')+fundExact(common.end_usd_krw)+'원/USD를 사용합니다.';
   const sources=fund$('tqqq-sources');sources.replaceChildren();
   sources.append(node('p','muted-note','시작 가격 자료 확인 '+stamp(first.price_retrieved_at)+' KST · 시작 공식 환율 자료 확인 '+stamp(first.fx_retrieved_at)+' KST'));
   [['ETF 종가 원문',data.sources.prices,'가격 확인 '+stamp(latest.price_retrieved_at)+' KST'],['공식 원·달러 환율',data.sources.fx,'공통 가격 확인 '+stamp(common.price_retrieved_at)+' KST · 환율 확인 '+stamp(common.fx_retrieved_at)+' KST']].forEach(([label,url,time])=>{const p=node('p','fund-source');p.append(fundSource(label,url),node('span','muted-note',time));sources.append(p);});
@@ -333,4 +339,6 @@ async function institutionSection() {
 }
 window.ZEROFunds={loadBenchmark:loadFundBenchmark,section:fundSection,institutions:institutionSection};
 if(fund$('tqqq-panel'))loadFundBenchmark();
+// A refresh on the main screen fetched new quotes: reprice the already loaded TQQQ comparison with them.
+document.addEventListener?.('zero-live-quotes',()=>{if(fundUI.benchmark)renderFundBenchmark(fundUI.benchmark);});
 if(fund$('institution-panel'))institutionSection().then((section)=>fund$('institution-panel')?.replaceChildren(section)).catch(()=>{fund$('institution-panel')?.replaceChildren(node('p','muted-note','국민연금 연간 공시 자료를 표시하지 못했습니다.'));});

@@ -19,6 +19,19 @@ function stockDrawdown(bars){
   const recovery=trough?bars.find(bar=>bar.time>trough.time&&bar.close>=maximumPeak.close):null;
   return {status:'AVAILABLE',sample_count:bars.length,start_time:bars[0].time,end_time:bars.at(-1).time,mdd_percent:maximum,peak_time:maximumPeak?.time||null,trough_time:trough?.time||null,recovery_time:recovery?.time||null};
 }
+// Reprice a saved "if you had held it since the first buy" comparison (S&P 500 index or TQQQ) with a live
+// public quote and FX rate. The saved record stays the fallback: any missing or invalid input returns it as is.
+// Fixed-FX value = principal x price ratio; the won value uses the live (not official) FX rate.
+function liveBenchmark(saved,live,key,closeKey){
+  const quote=live?.benchmarks?.[key],capital=Number(saved?.capital_krw),start=Number(saved?.latest_usd?.['start_'+closeKey]),startFx=Number(saved?.krw_common?.start_usd_krw);
+  const price=Number(quote?.price),rate=Number(live?.fx?.usd_krw),at=Date.parse(quote?.market_time);
+  if(saved?.state!=='AVAILABLE'||!(capital>0&&start>0&&startFx>0&&price>0&&rate>0)||!Number.isFinite(at))return saved;
+  const ratio=price/start,krwRatio=ratio*rate/startFx,usDay=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date(at));
+  const values=r=>({reference_value_krw:capital*r,gain_krw:capital*r-capital,return_percent:(r-1)*100});
+  return {...saved,live:{checked_at:live.checked_at||null,market_time:quote.market_time,fx_time:live.fx?.market_time||null},
+    latest_usd:{...saved.latest_usd,market_date:usDay,[closeKey]:price,...values(ratio),basis:'LIVE_PUBLIC_DELAYED_QUOTE_FIXED_FX'},
+    krw_common:{...saved.krw_common,market_date:usDay,[closeKey]:price,end_usd_krw:rate,...values(krwRatio),basis:'LIVE_PUBLIC_DELAYED_QUOTE_AND_FX'}};
+}
 // Loss-limit reference for the owner, after the forked quantstats/empyrical formulas (CAGR,
 // annualized volatility, max drawdown, daily CVaR) and Riskfolio-style drawdown at risk over
 // rolling one-year windows. Price only, buy and hold at today's weights from the first shared
@@ -204,9 +217,9 @@ function companyNewsValid(data,identity){
   const dayAt=value=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(value));
   return new Set(data.items.map(item=>item?.url)).size===data.items.length&&data.items.every(item=>exact(item,itemKeys)&&/^news:[a-f0-9]{24}$/.test(item.id)&&typeof item.title==='string'&&item.title.trim()&&Array.from(item.title).length<=500&&companyNewsURL(item.url)&&item.publisher==='Yahoo Finance RSS'&&item.access==='INDEX_ONLY'&&item.association==='PROVIDER_SYMBOL_QUERY'&&item.summary===null&&item.syndication_group===null&&clock(item.retrieved_at)&&Date.parse(item.retrieved_at)<=Date.parse(data.collected_at)&&(item.published_at===null||clock(item.published_at)&&Date.parse(item.published_at)<=Date.parse(item.retrieved_at))&&(item.published_date===null||typeof item.published_date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(item.published_date)&&Number.isFinite(Date.parse(item.published_date))&&new Date(item.published_date).toISOString().slice(0,10)===item.published_date&&(item.published_at?item.published_date===item.published_at.slice(0,10):item.published_date<=dayAt(item.retrieved_at))));
 }
-if(typeof module!=='undefined'&&module.exports)module.exports={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,parseStockRoute,stockRouteHash,chartLesson,candleColor,companyNewsValid,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion,portfolioRisk};
+if(typeof module!=='undefined'&&module.exports)module.exports={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,parseStockRoute,stockRouteHash,chartLesson,candleColor,companyNewsValid,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion,portfolioRisk,liveBenchmark};
 if(typeof window!=='undefined') {
-  window.ZEROExploreMath={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion,portfolioRisk};
+  window.ZEROExploreMath={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion,portfolioRisk,liveBenchmark};
   (()=>{
     const explore={catalog:[],identity:null,tab:'chart',range:'5Y',interval:'1d',kind:'candle',averages:new Set([20]),chart:null,loading:false,count:100,start:0,cursor:null,sequence:0,searchSequence:0,compareSequence:0,compareIdentity:null,compareRange:'5Y',currency:'NATIVE'};
     const favoritesKey='zero-watchlist-v1',knownETF=new Set(['SPY','BIL','UUP','VNQ','GLD','TQQQ','QQQ','TMF','SCHD','JEPQ','JEPI','SPYD','HDV','VYM','NOBL','069500','148020']);
