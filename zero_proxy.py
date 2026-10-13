@@ -151,9 +151,17 @@ async def to_ui(request):
     return RedirectResponse('zero/', status_code=307)
 
 
+class _UI(StaticFiles):
+    # Revalidate every load (cheap 304 via ETag) so a redeploy is seen at once, not after heuristic caching.
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers['Cache-Control'] = 'no-cache'
+        return response
+
+
 routes = [
     Route('/zero/status', status),
     Route('/zero/api/{path:path}', api, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
     Route('/zero', to_ui),
-    Mount('/zero', app=StaticFiles(directory=UI, html=True)),
+    Mount('/zero', app=_UI(directory=UI, html=True)),
 ]
