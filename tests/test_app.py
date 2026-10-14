@@ -93,13 +93,28 @@ class HeadlineTests(unittest.TestCase):
     def stamp(self, hours):
         return (self.NOW - timedelta(hours=hours)).strftime('%a, %d %b %Y %H:%M:%S GMT')
 
-    def test_fresh_https_titles_only_newest_first_with_the_publisher_suffix_removed(self):
-        body = feed(('Old - Wire', 'https://n.example/o', self.stamp(5), 'Wire'), ('New - Wire', 'https://n.example/n', self.stamp(1), 'Wire'),
-                    ('Stale - Wire', 'https://n.example/s', self.stamp(60), 'Wire'), ('Plain http - Wire', 'http://n.example/p', self.stamp(1), 'Wire'))
+    def test_only_trusted_fresh_https_politics_economy_titles_survive_with_one_line_per_story(self):
+        body = feed(('Fed holds rates steady - Reuters', 'https://n.example/r', self.stamp(1), 'Reuters'),
+                    ('Fed holds interest rates steady as inflation cools - Bloomberg.com', 'https://n.example/b', self.stamp(2), 'Bloomberg.com'),
+                    ('Celebrity gossip of the day - Daily Gossip', 'https://n.example/g', self.stamp(1), 'Daily Gossip'),
+                    ('Old Reuters story - Reuters', 'https://n.example/o', self.stamp(60), 'Reuters'),
+                    ('Plain http - Reuters', 'http://n.example/p', self.stamp(1), 'Reuters'),
+                    ('금리 동결 한은 총재 발언 - 연합뉴스', 'https://n.example/y', self.stamp(3), '연합뉴스'))
         value = zero_headlines.collect(self.NOW, fetch=lambda url: body)
         self.assertEqual(value['failed'], [])
-        self.assertEqual([row['title'] for row in value['items'][:2]], ['New', 'Old'])
-        self.assertTrue(all(row['url'].startswith('https://') and row['publisher'] == 'Wire' for row in value['items']))
+        titles = {row['title'] for row in value['items']}
+        self.assertEqual(titles, {'Fed holds rates steady', '금리 동결 한은 총재 발언'}, 'duplicates collapse to the best-ranked publisher; untrusted, stale and http rows are dropped')
+        self.assertEqual({row['publisher'] for row in value['items']}, {'Reuters', '연합뉴스'})
+        self.assertTrue(all(row['url'].startswith('https://') for row in value['items']))
+
+    def test_dedupe_keeps_the_higher_ranked_publisher_even_when_it_is_older(self):
+        rows = [{'title': '신현송 한은 총재 중·일 중앙은행 총재와 경제동향 논의', 'publisher': '연합뉴스', 'published_at': '2026-10-13T08:00:00+00:00'},
+                {'title': '신현송 총재 日 우에다 中 판궁성과 경제 금융 동향 논의', 'publisher': '연합인포맥스', 'published_at': '2026-10-13T08:30:00+00:00'},
+                {'title': 'Bearish Bets Dominate Treasuries Before Key Inflation Data', 'publisher': 'Bloomberg.com', 'published_at': '2026-10-13T08:10:00+00:00'},
+                {'title': 'ECB Not Seeing Second-Round Inflation Effects, Lagarde Says', 'publisher': 'Bloomberg.com', 'published_at': '2026-10-13T08:20:00+00:00'}]
+        kept = zero_headlines.dedupe(rows)
+        self.assertEqual(len(kept), 3)
+        self.assertEqual([row['publisher'] for row in kept if '신현송' in row['title']], ['연합뉴스'])
 
     def test_a_failing_feed_is_reported_by_market(self):
         def fetch(url):

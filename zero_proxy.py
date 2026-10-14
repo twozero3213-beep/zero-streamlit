@@ -122,7 +122,7 @@ def get_headlines():
         if hit and hit[0] > now:
             return hit[1]
     value = zero_headlines.collect()
-    if not value['items'] and len(value['failed']) == len(zero_headlines.FEEDS):
+    if not value['items'] and len(value['failed']) == len(zero_headlines.QUERIES):
         raise Unavailable('HEADLINES_UNAVAILABLE')
     body = json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     with _lock:

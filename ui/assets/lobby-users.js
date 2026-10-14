@@ -1,0 +1,149 @@
+/* Accounts for the office: nickname sign-up, own company and practice portfolio, leaderboard, visits.
+   Talks to the public lobby API (meta zero-lobby-api). Without it the screen stays the single-visitor office. */
+(() => {
+  'use strict';
+  const ALLOWED = ['SPY', 'QQQ', 'TQQQ', 'TLT', 'GLD', 'VNQ', 'BIL', 'UUP'];
+  const LABELS = {SPY: 'S&P 500 (SPY)', QQQ: '나스닥100 (QQQ)', TQQQ: '나스닥100 3배 (TQQQ)', TLT: '미국 장기국채 (TLT)', GLD: '금 (GLD)', VNQ: '미국 리츠 (VNQ)', BIL: '단기국채 (BIL)', UUP: '달러 (UUP)'};
+  // Pure helpers, shared with Node tests.
+  const NICK = /^[0-9A-Za-z_가-힣]{2,12}$/;
+  const nickProblem = (nick) => !NICK.test(nick) ? '2~12자의 한글·영문·숫자·밑줄만 쓸 수 있어요.' : /^\d+$/.test(nick) ? '숫자만으로는 만들 수 없어요.' : null;
+  function weightTotal(inputs) { return Object.values(inputs).reduce((sum, value) => sum + (Number.isFinite(value) && value > 0 ? value : 0), 0); }
+  function weightsFrom(inputs) { const weights = Object.fromEntries(Object.entries(inputs).filter(([symbol, value]) => ALLOWED.includes(symbol) && Number.isFinite(value) && value > 0)); return Object.keys(weights).length && Math.abs(weightTotal(weights) - 100) < 1e-6 ? weights : null; }
+  if (typeof module !== 'undefined' && module.exports) module.exports = {nickProblem, weightTotal, weightsFrom, ALLOWED};
+  if (typeof document === 'undefined' || !document.getElementById('lobby-view')) return;
+
+  const meta = document.querySelector('meta[name="zero-lobby-api"]'), BASE = (meta?.content || '').replace(/\/+$/, '');
+  const $ = (id) => document.getElementById(id);
+  const node = (tag, className = '', text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
+  const KEY = 'zero-lobby-token';
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* private mode */ } }, del(k) { try { localStorage.removeItem(k); } catch (_) { /* private mode */ } } };
+  const messages = {NICK_TAKEN: '이미 쓰는 닉네임이에요.', NICK_INVALID: '2~12자의 한글·영문·숫자·밑줄만 쓸 수 있어요.', NICK_RESERVED: '쓸 수 없는 닉네임이에요.', SIGNUP_LIMIT: '오늘은 가입이 많아요. 내일 다시 시도해 주세요.', QUOTES_UNAVAILABLE: '가격을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.',
+    REBALANCE_TOO_SOON: '배분은 20시간에 한 번만 바꿀 수 있어요.', WEIGHTS_MUST_SUM_TO_100: '비중의 합이 100이 되어야 해요.', WEIGHTS_INVALID: '비중을 확인해 주세요.', TEAM_INVALID: '팀 구성을 확인해 주세요(직원 60명까지).', UNAUTHORIZED: '저장된 로그인 정보가 맞지 않아요.'};
+  async function api(path, {method = 'GET', body, token} = {}) {
+    // A template literal on purpose: the Streamlit build rewrites quote-led slash-api paths into relative ones, which would break this absolute address.
+    const response = await fetch(`${BASE}/api/lobby${path}`, {method, headers: {...(body ? {'Content-Type': 'application/json'} : {}), ...(token ? {Authorization: 'Bearer ' + token} : {})}, body: body ? JSON.stringify(body) : undefined, cache: 'no-store'});
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw Object.assign(new Error(data.error || 'LOBBY_ERROR'), {code: data.error || 'LOBBY_ERROR'});
+    return data;
+  }
+  const say = (error) => messages[error?.code] || '지금은 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
+
+  const U = {token: store.get(KEY), me: null};
+  const button = $('lobby-profile-btn');
+  if (!BASE) { button.hidden = false; button.textContent = '닉네임 가입(준비 중)'; button.disabled = true; button.title = '공개 서버 연결 전이에요'; return; }
+  button.hidden = false;
+
+  // ---- dialog -----------------------------------------------------------------------------------
+  const dialog = document.createElement('dialog'); dialog.className = 'lobby-chat lobby-profile'; dialog.setAttribute('aria-labelledby', 'profile-title');
+  dialog.innerHTML = '<div class="chat-head"><div><h2 id="profile-title"></h2><p id="profile-sub"></p></div><button type="button" class="secondary-button" id="profile-close">닫기</button></div><div id="profile-body" class="profile-body"></div>';
+  $('lobby-view').append(dialog);
+  $('profile-close').addEventListener('click', () => dialog.close());
+  const body = $('profile-body');
+  const field = (label, input) => { const wrap = node('label', 'profile-field'); wrap.append(node('span', '', label), input); return wrap; };
+  const input = (type, attrs = {}) => Object.assign(node('input'), {type, ...attrs});
+  const status = () => { const p = node('p', 'profile-status'); p.setAttribute('role', 'status'); return p; };
+
+  function viewSignup() {
+    $('profile-title').textContent = '닉네임으로 시작하기'; $('profile-sub').textContent = '닉네임은 다른 사람과 겹치면 안 돼요. 가입하면 연습용 1억원이 생겨요(가상).';
+    const nick = input('text', {maxLength: 12, placeholder: '예: 아침팀장', autocomplete: 'off'}), note = status(), go = node('button', 'primary-button', '이 닉네임으로 시작'); go.type = 'button'; go.disabled = true;
+    let timer = 0;
+    nick.addEventListener('input', () => {
+      clearTimeout(timer); go.disabled = true; const value = nick.value.trim(), problem = nickProblem(value);
+      if (problem) { note.textContent = value ? problem : ''; return; }
+      note.textContent = '확인 중…';
+      timer = setTimeout(async () => { try { const result = await api('/nick?nick=' + encodeURIComponent(value)); if (nick.value.trim() !== value) return; note.textContent = result.available ? '사용할 수 있어요.' : (messages[result.reason] || '이미 쓰는 닉네임이에요.'); go.disabled = !result.available; } catch (error) { note.textContent = say(error); } }, 350);
+    });
+    go.addEventListener('click', async () => {
+      go.disabled = true; note.textContent = '가입 중…';
+      try { const result = await api('/register', {method: 'POST', body: {nick: nick.value.trim()}}); U.token = result.token; store.set(KEY, result.token); viewToken(result.token); await refreshMe(); }
+      catch (error) { note.textContent = say(error); go.disabled = false; }
+    });
+    const social = node('div', 'profile-social'); social.append(node('p', 'muted-note', '네이버·카카오·구글 연동 로그인은 각 서비스에 앱 등록이 끝나면 여기에 열려요.'));
+    ['네이버로 시작', '카카오로 시작', '구글로 시작'].forEach((label) => { const b = node('button', 'secondary-button', label); b.type = 'button'; b.disabled = true; social.append(b); });
+    const have = node('button', 'secondary-button', '이미 가입했어요(복구 코드 입력)'); have.type = 'button'; have.addEventListener('click', viewRecover);
+    body.replaceChildren(field('닉네임', nick), note, go, social, have);
+  }
+  function viewToken(token) {
+    $('profile-title').textContent = '가입 완료!'; $('profile-sub').textContent = '아래 복구 코드는 지금 한 번만 보여 드려요.';
+    const code = node('code', 'profile-code', token), copy = node('button', 'secondary-button', '복사'), done = node('button', 'primary-button', '사무실로 가기'); copy.type = done.type = 'button';
+    copy.addEventListener('click', async () => { try { await navigator.clipboard.writeText(token); copy.textContent = '복사됨'; } catch (_) { copy.textContent = '길게 눌러 직접 복사하세요'; } });
+    done.addEventListener('click', () => viewHome());
+    body.replaceChildren(code, copy, node('p', 'muted-note', '다른 기기에서 같은 캐릭터로 들어오거나 브라우저를 지웠을 때 이 코드가 필요해요. 코드를 아는 사람은 누구나 내 계정을 쓸 수 있으니 공개하지 마세요.'), done);
+  }
+  function viewRecover() {
+    $('profile-title').textContent = '복구 코드로 들어가기'; $('profile-sub').textContent = '가입할 때 받은 코드를 붙여 넣어 주세요.';
+    const code = input('password', {autocomplete: 'off', placeholder: '복구 코드'}), note = status(), go = node('button', 'primary-button', '들어가기'); go.type = 'button';
+    go.addEventListener('click', async () => { note.textContent = '확인 중…'; try { const token = code.value.trim(); await api('/me', {token}); U.token = token; store.set(KEY, token); await refreshMe(); viewHome(); } catch (error) { note.textContent = say(error); } });
+    const back = node('button', 'secondary-button', '돌아가기'); back.type = 'button'; back.addEventListener('click', viewSignup);
+    body.replaceChildren(field('복구 코드', code), note, go, back);
+  }
+
+  function viewHome() {
+    if (!U.me) return viewSignup();
+    $('profile-title').textContent = U.me.nick + '의 사무실'; $('profile-sub').textContent = '직원 ' + U.me.staff_count + '명 · 연습 수익률 ' + (U.me.portfolio.return_percent === null ? '집계 전' : (U.me.portfolio.return_percent > 0 ? '+' : '') + U.me.portfolio.return_percent.toFixed(2) + '%');
+    const team = node('button', 'primary-button', '팀·직원 구성하기'), portfolio = node('button', 'secondary-button', '연습 포트폴리오 배분'), see = node('button', 'secondary-button', '내 사무실 보기'), out = node('button', 'secondary-button', '로그아웃(이 기기에서)');
+    [team, portfolio, see, out].forEach((b) => { b.type = 'button'; });
+    team.addEventListener('click', viewTeam); portfolio.addEventListener('click', viewPortfolio); see.addEventListener('click', () => { dialog.close(); window.ZEROLobby.showOwn({nick: U.me.nick, team: U.me.team}); });
+    out.addEventListener('click', () => { store.del(KEY); U.token = null; U.me = null; window.ZEROLobby.setPlayerName('나'); dialog.close(); render(); });
+    body.replaceChildren(node('p', 'muted-note', '직원 구성과 맡은 일은 나만 볼 수 있어요. 다른 사람에게는 직원 수와 수익률만 보여요.'), team, portfolio, see, out);
+  }
+
+  function viewTeam() {
+    $('profile-title').textContent = '내 회사 만들기'; $('profile-sub').textContent = '팀을 만들고 팀장과 팀원 이름을 정하세요. 최대 8팀·직원 60명까지예요.';
+    const model = JSON.parse(JSON.stringify(U.me.team || {company: '', teams: []})), company = input('text', {maxLength: 20, value: model.company || '', placeholder: '회사 이름'}), list = node('div', 'profile-teams'), note = status();
+    const redraw = () => {
+      list.replaceChildren(...model.teams.map((team, index) => {
+        const box = node('fieldset', 'profile-team'), name = input('text', {maxLength: 12, value: team.name, placeholder: '팀 이름'}), leader = input('text', {maxLength: 12, value: team.leader, placeholder: '팀장 이름'});
+        const members = input('text', {value: team.members.join(', '), placeholder: '팀원 이름(쉼표로 구분, 최대 10명)'}), drop = node('button', 'secondary-button', '이 팀 지우기'); drop.type = 'button';
+        name.addEventListener('input', () => { team.name = name.value; }); leader.addEventListener('input', () => { team.leader = leader.value; });
+        members.addEventListener('input', () => { team.members = members.value.split(/[,，]/).map((v) => v.trim()).filter(Boolean).slice(0, 10); });
+        drop.addEventListener('click', () => { model.teams.splice(index, 1); redraw(); });
+        box.append(node('legend', '', (index + 1) + '번째 팀'), field('팀 이름', name), field('팀장', leader), field('팀원', members), drop); return box;
+      }));
+    };
+    redraw();
+    const add = node('button', 'secondary-button', '팀 추가'), save = node('button', 'primary-button', '저장'), back = node('button', 'secondary-button', '돌아가기'); [add, save, back].forEach((b) => { b.type = 'button'; });
+    add.addEventListener('click', () => { if (model.teams.length < 8) { model.teams.push({name: '', leader: '', members: []}); redraw(); } });
+    save.addEventListener('click', async () => {
+      note.textContent = '저장 중…';
+      try { await api('/me/team', {method: 'PUT', token: U.token, body: {company: company.value, teams: model.teams}}); await refreshMe(); note.textContent = '저장했어요.'; viewHome(); } catch (error) { note.textContent = say(error); }
+    });
+    back.addEventListener('click', viewHome);
+    body.replaceChildren(field('회사 이름', company), list, add, note, save, back);
+  }
+
+  function viewPortfolio() {
+    $('profile-title').textContent = '연습 포트폴리오'; $('profile-sub').textContent = '가상의 1억원을 ETF 8종에 나눠 담아요. 가격만 반영한 연습이고 실제 투자가 아니에요.';
+    const values = Object.fromEntries(ALLOWED.map((symbol) => [symbol, Number(U.me.portfolio.weights[symbol] || 0)])), total = node('p', 'profile-status'), note = status();
+    const rows = ALLOWED.map((symbol) => { const box = input('number', {min: 0, max: 100, step: 5, value: values[symbol]}); box.addEventListener('input', () => { values[symbol] = Number(box.value) || 0; total.textContent = '합계 ' + weightTotal(values) + '% (100이 되어야 해요)'; }); return field(LABELS[symbol] + ' %', box); });
+    total.textContent = '합계 ' + weightTotal(values) + '%';
+    const save = node('button', 'primary-button', '배분 바꾸기'), back = node('button', 'secondary-button', '돌아가기'); save.type = back.type = 'button';
+    save.addEventListener('click', async () => {
+      const weights = weightsFrom(values); if (!weights) { note.textContent = messages.WEIGHTS_MUST_SUM_TO_100; return; }
+      note.textContent = '저장 중…';
+      try { await api('/me/portfolio', {method: 'PUT', token: U.token, body: {weights}}); await refreshMe(); viewHome(); } catch (error) { note.textContent = say(error); }
+    });
+    back.addEventListener('click', viewHome);
+    body.replaceChildren(...rows, total, node('p', 'muted-note', '바꾸면 지금까지의 수익은 그대로 두고 앞으로의 움직임만 새 배분을 따라가요. 20시간에 한 번만 바꿀 수 있어요.'), note, save, back);
+  }
+
+  // ---- state ------------------------------------------------------------------------------------
+  async function refreshMe() {
+    if (!U.token) { U.me = null; return render(); }
+    try { U.me = await api('/me', {token: U.token}); window.ZEROLobby.setPlayerName(U.me.nick); }
+    catch (error) { if (error.code === 'UNAUTHORIZED') { store.del(KEY); U.token = null; } U.me = null; }
+    render();
+  }
+  function render() { button.textContent = U.me ? '내 사무실' : '닉네임으로 시작'; $('lobby-name-chip').textContent = U.me?.nick || '나'; }
+  button.addEventListener('click', () => { U.me ? viewHome() : viewSignup(); if (!dialog.open) dialog.showModal?.(); });
+
+  async function loadBoard() {
+    try { const data = await api('/leaderboard'); window.ZEROLobby.setUserBoard(data.state === 'AVAILABLE' ? data.items : []); } catch (_) { /* the board keeps the ZERO line */ }
+  }
+  async function visit(nick) {
+    try { const data = await api('/office?nick=' + encodeURIComponent(nick)); window.ZEROLobby.visit({nick: data.nick, staffCount: data.staff_count, returnPercent: data.return_percent}); }
+    catch (_) { /* a missing office leaves the current scene */ }
+  }
+  window.ZEROLobbyUsers = {visit, refresh: refreshMe};
+  render(); refreshMe(); loadBoard(); setInterval(() => { if (!document.hidden) loadBoard(); }, 60000);
+})();

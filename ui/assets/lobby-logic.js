@@ -1,0 +1,165 @@
+/* Pure logic of the ZERO office home screen: Korean clock, holidays, weather phrases, chatter, replies,
+   movement and layout. No DOM and no network here, so every rule is unit-testable in Node. */
+(() => {
+  'use strict';
+  const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // Reference table used when the public holiday API is unreachable (substitute holidays included).
+  const KR_HOLIDAYS = new Set(['2026-01-01', '2026-02-16', '2026-02-17', '2026-02-18', '2026-03-01', '2026-03-02', '2026-05-05', '2026-05-24', '2026-05-25',
+    '2026-06-03', '2026-08-15', '2026-08-17', '2026-09-24', '2026-09-25', '2026-09-26', '2026-10-03', '2026-10-05', '2026-10-09', '2026-12-25']);
+  const STAGE = {w: 160, h: 100};
+  const clock = new Intl.DateTimeFormat('en-GB', {timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hourCycle: 'h23'});
+
+  function kstParts(date) {
+    const p = Object.fromEntries(clock.formatToParts(date).map((part) => [part.type, part.value]));
+    return {date: p.year + '-' + p.month + '-' + p.day, hour: Number(p.hour), minute: Number(p.minute), weekday: WEEKDAY.indexOf(p.weekday)};
+  }
+  const shiftDay = (day, offset) => new Date(Date.parse(day + 'T00:00:00Z') + offset * 86400000).toISOString().slice(0, 10);
+  const weekdayOf = (day) => new Date(Date.parse(day + 'T00:00:00Z')).getUTCDay();
+  const isRestDay = (day, holidays = KR_HOLIDAYS) => weekdayOf(day) === 0 || weekdayOf(day) === 6 || holidays.has(day);
+
+  // "Tomorrow is a holiday" style note, or null when nothing is worth saying.
+  function holidayNote(now, holidays = KR_HOLIDAYS) {
+    const today = kstParts(now).date;
+    if (isRestDay(today, holidays)) return holidays.has(today) ? '오늘은 공휴일인데도 나와서 일하는 중이에요.' : '주말에도 나와 있다니, 우리 정말 열심이네요.';
+    if (!isRestDay(shiftDay(today, 1), holidays)) return null;
+    let run = 0;
+    while (isRestDay(shiftDay(today, 1 + run), holidays) && run < 10) run++;
+    return run >= 3 ? '내일부터 ' + run + '일 연휴예요! 연휴 전에 자료부터 정리해요.' : '내일은 쉬는 날이에요. 오늘만 버티면 돼요.';
+  }
+
+  function weatherKind(code) {
+    if (!Number.isFinite(code)) return null;
+    if (code === 0) return 'clear';
+    if (code <= 3) return 'cloud';
+    if (code <= 48) return 'fog';
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'rain';
+    if (code >= 71 && code <= 77) return 'snow';
+    if (code >= 95) return 'storm';
+    return null;
+  }
+  function weatherLines(weather) {
+    const kind = weatherKind(weather?.code), temp = Number(weather?.temp), lines = [];
+    const text = {clear: ['창밖 하늘이 맑아요. 점심에 산책 어때요?', '날씨가 좋아서 기분까지 맑아져요.'], cloud: ['구름이 많아서 하늘이 조금 무거워 보여요.'], fog: ['안개가 껴서 창밖이 뿌옇네요. 운전 조심하세요.'],
+      rain: ['비가 오네요. 우산 챙기셨어요?', '빗소리 들으면서 일하니 커피가 더 당겨요.'], snow: ['눈이 와요! 퇴근길 미끄러우니 조심하세요.'], storm: ['밖에 천둥이 쳐요. 오늘은 일찍 들어가는 게 좋겠어요.']}[kind] || [];
+    lines.push(...text);
+    if (Number.isFinite(temp)) {
+      if (temp >= 29) lines.push('지금 서울 ' + Math.round(temp) + '도래요. 시원한 아이스 음료가 필요해요.');
+      else if (temp <= 3) lines.push('지금 서울 ' + Math.round(temp) + '도래요. 따뜻한 커피가 간절해요.');
+      else lines.push('지금 서울 기온은 ' + Math.round(temp) + '도예요.');
+    }
+    return lines;
+  }
+  function timeLines(parts) {
+    const h = parts.hour;
+    if (h >= 6 && h < 9) return ['아침이에요. 커피부터 한 잔 하고 시작할게요.', '출근길 지하철이 꽉 찼어요.'];
+    if (h >= 9 && h < 11) return ['오전 집중 시간이에요. 방해 금지!', '한국장이 열렸어요. 자료 업데이트부터 확인해요.'];
+    if (h >= 11 && h < 14) return ['슬슬 점심 뭐 먹을지 고민이에요.', '배가 고파서 숫자가 눈에 안 들어와요.', '오늘 점심은 국밥 어때요?'];
+    if (h >= 14 && h < 17) return ['식곤증이 오네요. 커피 한 잔 더?', '오후엔 자료 검수 시간이에요.'];
+    if (h >= 17 && h < 20) return ['퇴근 전에 오늘 기록부터 정리할게요.', '저녁 메뉴를 벌써부터 고민 중이에요.'];
+    if (h >= 20 && h < 24) return ['야근 각이네요… 미국장 전에 데이터를 점검해요.', '밤에도 불이 켜진 사무실, 우리 팀이에요.'];
+    return ['새벽 근무는 커피가 연료예요.', '다들 자는 시간에 숫자는 계속 움직여요.'];
+  }
+  const PERSONA = {
+    ZERO_FINAL_MANAGER: ['오늘 근거 목록을 정리하는 중이에요.', '제출된 자료와 아직 없는 자료를 구분해서 보고 있어요.'],
+    GREENBLATT: ['이 회사 이익에 비해 가격이 어떤지 살펴보고 있어요.', '숫자 하나로 싸다고 단정하지 않으려고 해요.'],
+    THORP: ['낙폭 기준 표를 다시 점검하고 있어요.', '근거 없는 확률은 쓰지 않는 게 원칙이에요.'],
+    BOGLE: ['수수료와 세금이 수익에 주는 영향을 보고 있어요.', '비용은 확실한 숫자라서 먼저 봐요.'],
+    WALL_STREET_CHIEF_ANALYST: ['금리와 환율이 기업에 주는 영향을 연결해 보고 있어요.'],
+    QUANT_RESEARCH_CHIEF: ['가설이 우연이 아닌지 검증 중이에요.', '백테스트 결과를 곧이곧대로 믿지 않아요.'],
+    GLOBAL_MACRO_CHIEF: ['오늘 나온 경제 지표를 확인하고 있어요.', '금리 발표 일정부터 체크해요.'],
+    PORTFOLIO_CONSTRUCTION_CHIEF: ['중복 투자가 없는지 비중표를 보고 있어요.'],
+    EXECUTION_OPERATIONS_CHIEF: ['모의 계좌 체결 기록을 대조 중이에요. 실제 주문은 없어요.'],
+    DATA_ENGINEERING_CHIEF: ['데이터가 언제 공개됐는지 날짜부터 확인해요.', '수집 파이프라인이 잘 도는지 점검 중이에요.'],
+    MODEL_VALIDATION_CHIEF: ['다른 사람이 만든 결과를 일부러 의심해 보는 중이에요.'],
+    PRODUCT_QUALITY_TEAM: ['버튼이 손가락으로 누르기 충분히 큰지 재고 있어요.', '화면이 폰에서도 잘 보이는지 확인 중이에요.']
+  };
+  const GENERIC = ['커피 한 잔만 더 마시고 올게요.', '오늘 기록은 오늘 정리해요.', '모르는 건 모른다고 적는 게 우리 규칙이에요.', '여기 사무실 분위기 좋죠?', '근거가 없으면 판단을 미뤄요.'];
+
+  // Candidate pool for one chat bubble; `rng` returns [0,1) so tests can pin the result.
+  function chatterLine(context, persona, rng = Math.random) {
+    const now = context.now || new Date(), parts = kstParts(now), pool = [];
+    pool.push(...timeLines(parts), ...timeLines(parts));
+    pool.push(...weatherLines(context.weather));
+    const note = holidayNote(now, context.holidays || KR_HOLIDAYS);
+    if (note) pool.push(note, note);
+    if (persona?.length) pool.push(...persona, ...persona);
+    pool.push(...GENERIC);
+    return pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))];
+  }
+  const personaFor = (department) => PERSONA[department] || [];
+
+  // A speaker that is idle and far enough from every active speaker, so bubbles never overlap.
+  function pickSpeaker(candidates, active, minDistance, rng = Math.random) {
+    const ok = candidates.filter((npc) => !active.some((other) => other.id === npc.id || Math.hypot(other.pos.x - npc.pos.x, other.pos.y - npc.pos.y) < minDistance));
+    return ok.length ? ok[Math.min(ok.length - 1, Math.floor(rng() * ok.length))] : null;
+  }
+
+  const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
+  function moveToward(pos, target, distance) {
+    const dx = target.x - pos.x, dy = target.y - pos.y, length = Math.hypot(dx, dy);
+    return length <= distance ? {x: target.x, y: target.y, arrived: true} : {x: pos.x + dx / length * distance, y: pos.y + dy / length * distance, arrived: false};
+  }
+  const KEY_VECTOR = {ArrowLeft: [-1, 0], a: [-1, 0], A: [-1, 0], ArrowRight: [1, 0], d: [1, 0], D: [1, 0], ArrowUp: [0, -1], w: [0, -1], W: [0, -1], ArrowDown: [0, 1], s: [0, 1], S: [0, 1]};
+  function keyDirection(keys) {
+    let x = 0, y = 0;
+    for (const key of keys) { const v = KEY_VECTOR[key]; if (v) { x += v[0]; y += v[1]; } }
+    const length = Math.hypot(x, y);
+    return length ? {x: x / length, y: y / length} : null;
+  }
+  const FLOOR = {minX: 3, maxX: STAGE.w - 3, minY: 20, maxY: STAGE.h - 3};
+  const clampToFloor = (pos) => ({x: clamp(pos.x, FLOOR.minX, FLOOR.maxX), y: clamp(pos.y, FLOOR.minY, FLOOR.maxY)});
+  const nearest = (npcs, pos, radius) => npcs.reduce((best, npc) => { const d = Math.hypot(npc.pos.x - pos.x, npc.pos.y - pos.y); return d <= radius && (!best || d < best.d) ? {npc, d} : best; }, null)?.npc || null;
+
+  // ZERO's own roster: manager at the top, ten departments in two rows of five pods, product staff beside the manager.
+  const POD_X = [16, 48, 80, 112, 144], POD_Y = [44, 76];
+  const STAFF_OFFSET = [[-9, 7], [9, 7], [-9, 14], [9, 14], [0, 13], [-17, 7], [17, 7], [-17, 14], [17, 14], [0, 19]];
+  function layoutZero(chiefs, staffByChief, product) {
+    const spots = new Map();
+    spots.set('manager', {x: 80, y: 27});
+    chiefs.forEach((id, index) => {
+      const x = POD_X[index % 5], y = POD_Y[Math.floor(index / 5)];
+      spots.set(id, {x, y});
+      (staffByChief[id] || []).slice(0, STAFF_OFFSET.length).forEach((staffId, n) => spots.set(staffId, {x: x + STAFF_OFFSET[n][0], y: y + STAFF_OFFSET[n][1]}));
+    });
+    const productX = [26, 42, 118, 134];
+    product.slice(0, 4).forEach((id, n) => spots.set(id, {x: productX[n], y: 27}));
+    return spots;
+  }
+  // Anonymous visit layout: N identical workers on a grid of up to eight columns.
+  function layoutGrid(count) {
+    const columns = Math.min(8, Math.max(1, count)), gap = columns > 1 ? 128 / (columns - 1) : 0, start = columns > 1 ? 16 : 80;
+    const rows = Math.ceil(count / columns), rowGap = rows > 1 ? Math.min(16, 50 / (rows - 1)) : 0;
+    return Array.from({length: count}, (_, i) => ({x: start + (i % columns) * gap, y: 44 + Math.floor(i / columns) * rowGap}));
+  }
+
+  const SYSTEM_TEXT = 'ZERO는 1억원으로 시작한 "가상 참고 포트폴리오"를 보여 주고, 주식·경제·뉴스 자료를 쉽게 읽게 돕는 시스템이에요. 계좌에서 실제 주문을 내지 않고(모의 계좌 기준), 근거가 없는 숫자는 "미확인"이라고 적어요. 위쪽 전광판은 속보, 아래 메뉴는 내 자산·주식 탐색·뉴스·경제 지표예요.';
+  // Scripted (not AI) answers: keyword routing over the department's real mandate text.
+  function reply(npc, input, context = {}) {
+    const text = String(input || '').trim(), has = (re) => re.test(text);
+    const who = npc.name + '입니다. ';
+    if (!text) return '궁금한 걸 물어보세요. 아래 질문 버튼을 눌러도 돼요.';
+    if (has(/(사도|사야|살까|살래|팔까|팔아|팔래|매수|매도|종목|추천|투자해|오를|떨어질|수익 나)/)) return '저는 가상의 직원이라 투자 권유나 매수·매도 판단은 하지 않아요. 제 담당 자료는 "' + npc.mandate + '"까지예요. 숫자를 읽는 법은 알려 드릴게요.';
+    if (has(/(제로|ZERO|시스템|튜토리얼|설명|뭐하는 곳|여긴)/i)) return npc.id === 'ZERO_FINAL_MANAGER' ? SYSTEM_TEXT : who + SYSTEM_TEXT.split('. ')[0] + '. 제 역할은 "' + npc.role + '"예요.';
+    if (has(/(일 맡|맡기|요청|부탁)/)) return '일을 맡기려면 위 메뉴의 "ZERO 팀" 화면에서 저를 골라 요청서를 남기면 돼요. 제출 기록은 그곳에 남고, 결과가 없으면 "아직 없음"으로 보여 드려요.';
+    if (has(/(날씨|비|눈|덥|춥)/)) return weatherLines(context.weather)[0] || '창밖 날씨를 아직 못 불러왔어요.';
+    if (has(/(점심|배고|커피|밥|저녁)/)) return timeLines(kstParts(context.now || new Date()))[0];
+    if (has(/(오늘|지금|요즘|뭐해|근황)/)) return (personaFor(npc.department)[0] || GENERIC[0]) + ' (정해진 대본 속 대화예요.)';
+    if (has(/(뭐|무슨|역할|업무|담당|누구|맡)/)) return who + npc.role + '. ' + npc.mandate;
+    return '그건 제가 답할 근거가 없어요. 제 담당은 "' + npc.mandate + '"예요. 질문 버튼을 눌러 보세요.';
+  }
+  const TOPICS = [['무슨 일을 하세요?', '무슨 일을 하세요'], ['오늘은 뭘 하고 있어요?', '오늘 뭐해요'], ['ZERO가 뭐예요?', 'ZERO 시스템 설명'], ['일을 맡기려면요?', '일 맡기기'], ['날씨는요?', '날씨'], ['점심 뭐 먹죠?', '점심']];
+
+  // First-time guide: each step names what the visitor must do and how it is detected.
+  const TUTORIAL = [
+    {id: 'move', title: '1. 걸어 보기', text: '방향키·WASD, 화면 방향 버튼, 또는 바닥을 눌러 내 캐릭터를 움직여 보세요.'},
+    {id: 'manager', title: '2. 총괄과 대화', text: '맨 위 가운데 "총괄 합의 관리자"를 눌러 ZERO가 무엇인지 물어보세요.'},
+    {id: 'chief', title: '3. 수석에게 묻기', text: '큰 캐릭터(수석) 아무나 눌러 "무슨 일을 하세요?"를 물어보세요.'},
+    {id: 'board', title: '4. 전광판 보기', text: '위 전광판의 속보를 눌러 보세요. 정치·경제 분야의 공신력 있는 기관 기사만 모아요.'},
+    {id: 'done', title: '5. 둘러보기 끝', text: '이제 아래 메뉴에서 내 자산·주식 탐색·뉴스·경제 지표를 열어 보세요. 튜토리얼은 언제든 다시 볼 수 있어요.'}
+  ];
+
+  const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, chatterLine, personaFor, pickSpeaker, clamp,
+    moveToward, keyDirection, clampToFloor, nearest, layoutZero, layoutGrid, reply, TOPICS, TUTORIAL, SYSTEM_TEXT};
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  if (typeof window !== 'undefined') window.ZEROLobbyLogic = api;
+})();

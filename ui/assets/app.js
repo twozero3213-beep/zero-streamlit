@@ -791,6 +791,7 @@ async function loadTeam(event, force = false) {
 }
 $('#team-event').addEventListener('change', () => loadTeam($('#team-event').value));
 const views = {
+  lobby: ['ZERO 사무실', '지금 일하는 ZERO 팀을 보고, 내 캐릭터로 직원과 이야기해 보세요.'],
   portfolio: ['내 자산', '1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.'],
   research: ['주식 탐색', '미국 100 · 코스피 50 · 코스닥 50 기업을 찾아보세요.'],
   workbench: ['종목과 차트', '시세와 차트, 기업 정보를 한 화면에서 확인하세요.'],
@@ -833,6 +834,8 @@ function navigate(view, updateAddress = true) {
   if (view === 'research') window.ZEROResearch?.load();
   if (view === 'workbench') window.ZEROExplore?.init();
   if (view === 'guide') loadReferences();
+  window.ZEROLobby?.setActive(view === 'lobby');
+  if (view === 'lobby') window.ZEROLobby?.open();
   if (view === 'team') loadTeam($('#team-event').value === 'ONBOARDING' ? undefined : $('#team-event').value, true);
   if (view === 'portfolio' && state.data) { renderAllocation(state.data.holdings, state.data.summary.holdings_value_krw); renderHistory(state.data.history || []); }
   return true;
@@ -869,6 +872,9 @@ window.addEventListener?.('hashchange', restoreRoute);
 
 document.addEventListener?.('DOMContentLoaded', () => {
   restoreRoute();
+  // The hosted site opens on the office; the owner's local app keeps opening on the portfolio.
+  const route = window.location?.hash?.slice(1).split('?')[0];
+  if (hostedView && !Object.hasOwn(views, route || '')) navigate('lobby', false);
 });
 $('#mobile-view')?.addEventListener('change', (event) => navigate(event.target.value));
 document.querySelectorAll('[data-market]').forEach((button) => button.addEventListener('click', () => { state.market = button.dataset.market; setActive('[data-market]', 'market', state.market); renderRows(); }));
@@ -894,7 +900,7 @@ new ResizeObserver(() => {
     layoutWidth = width; renderAllocation(state.data.holdings, state.data.summary.holdings_value_krw); renderHistory(state.data.history || []);
   }
 }).observe($('#portfolio-view'));
-loadPortfolio().catch(() => notice('조회 서버에 연결하지 못했습니다. ZERO 포트폴리오를 실행한 뒤 새로 열어 주세요.'));
+loadPortfolio().catch(() => notice('조회 서버에 연결하지 못했습니다. ZERO 포트폴리오를 실행한 뒤 새로 열어 주세요.')).finally(() => document.dispatchEvent?.(new CustomEvent('zero-ready')));
 // Opening or reloading the hosted page also shows current public quotes.
 if (hostedView) loadLiveQuotes().then((live) => live && loadPortfolio()).catch(() => {});
 // Poll cached display state only; background observation never requests broker refresh.
