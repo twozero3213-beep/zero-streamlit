@@ -49,13 +49,13 @@
       <div id="portfolio-empty" class="portfolio-empty" hidden><h2>대표님의 자산 화면을 준비했어요</h2><p>계좌를 조회하거나 시연 화면으로 사용 방법을 살펴보세요. 시연 자료는 실제 계좌에 저장되지 않습니다.</p><div class="empty-actions"><button id="empty-query" type="button" class="secondary-button">계좌 조회하기</button><button id="demo-toggle" type="button" class="secondary-button">시연 모드 보기</button></div><p id="empty-query-note" class="muted-note" hidden></p></div><button id="demo-exit" type="button" class="secondary-button" hidden>시연 종료 · 저장 자료로 돌아가기</button><h2 class="account-scope">총자산과 수익률 <span>시작 원금 1억원 · ZERO 참고 원장</span></h2>
       <dl class="account-metrics">
         <div class="total-metric"><dt>ZERO 총자산 <small>참고</small></dt><dd id="observed-assets-total">미확인</dd><dd class="metric-note">보유종목 평가액 + 잔여자금</dd></div>
-        <div class="performance-metric"><dt>ZERO 누적수익률 <small>참고</small></dt><dd id="zero-total-return">미확인</dd><dd class="metric-note">시작 원금 1억원 대비 · 비용 미반영</dd><dd class="holdings-pnl"><span>참고 평가손익</span><strong id="zero-total-gain">미확인</strong></dd></div>
+        <div class="performance-metric"><dt>ZERO 누적수익률 <small>참고</small></dt><dd id="zero-total-return">미확인</dd><dd class="metric-note">시작 원금 1억원 대비 · 비용 미반영</dd></div>
         <div class="secondary-metric"><dt>보유종목 평가액</dt><dd id="holdings-value">—</dd><dd class="metric-note">ZERO 계획 수량 · 원화 환산</dd></div>
         <div class="secondary-metric"><dt>잔여자금 <small>참고</small></dt><dd id="observed-cash-total">미확인</dd><dd class="metric-note">매매대금 반영 · 실제 결제 현금 미확정</dd></div>
       </dl>
       <p class="account-reference-note">참고 계산 · 세금·수수료·배당 미반영 · 실제 결제 현금 미확정</p>
       <details class="summary-evidence"><summary>계산 기준과 계좌 범위 확인</summary><p class="muted-note">동결 계획과 확정 체결로 계산한 참고 원장입니다. 실제 결제 현금과 검증된 세후 순자산은 별도 대조가 필요합니다.</p>
-      <p id="observed-assets-status" class="muted-note">1억원 계획·확정 체결·현재 보유분 대조 후 표시합니다.</p>
+      <p class="holdings-pnl"><span>참고 평가손익</span><strong id="zero-total-gain">미확인</strong></p><p id="observed-assets-status" class="muted-note">1억원 계획·확정 체결·현재 보유분 대조 후 표시합니다.</p>
       <dl class="performance-cost"><div><dt>ZERO 시작 원금</dt><dd id="policy-principal"><span id="investment-capital">1억원</span></dd></div><div><dt>보유분 매입금액 <small>증권사 평균 단가 · 현재환율 참고</small></dt><dd id="holdings-cost">—</dd></div></dl>
       <p id="holdings-performance-status" class="muted-note" hidden></p>
       <section class="evidence-group"><h3>1억원 범위·잔여자금의 계산 근거</h3><p id="reference-funds-basis" class="muted-note"></p><p class="muted-note">시작 보유분을 당시 계획의 기준가격으로 평가해 1억원에 배정한 가상 참고 계산입니다. 현재 보유분의 매입금액을 1억원에서 빼서 현금을 맞추지 않습니다. 거래비용·세금·배당·결제와 실제 환전 내역이 미확정이므로 검증된 순자산·세후 수익률로 해석하지 않습니다. 별도 종목과 같은 종목의 초과 수량은 제외합니다.</p></section>
