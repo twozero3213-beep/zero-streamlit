@@ -395,7 +395,7 @@ function loadLiveQuotes() {
   return livePending;
 }
 async function loadPortfolio() {
-  const response = await fetch('api/portfolio', {cache: 'no-store'});
+  const response = await fetch('api/portfolio', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
   if (!response.ok) throw new Error('CACHE_UNAVAILABLE');
   const data = await response.json();
   if (data.schema_version !== 1 || !Array.isArray(data.holdings)) throw new Error('CACHE_INVALID');

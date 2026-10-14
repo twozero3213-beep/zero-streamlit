@@ -1,7 +1,7 @@
 """Entry point. `streamlit run streamlit_app.py` detects `app` (st.App) and serves:
 - /           a Streamlit page that shows the ZERO UI full-screen,
 - /zero/      the original ZERO web UI (ui/, built by build_ui.py),
-- /zero/api/  a read-only bridge to the ZERO Cloudflare site with account figures masked (zero_proxy.py).
+- /zero/api/  a read-only bridge to the ZERO Cloudflare site with owner-approved reference figures; write requests are refused (zero_proxy.py).
 """
 from pathlib import Path
 

@@ -180,7 +180,7 @@ def _status():
         site = 'OK'
     except Unavailable as error:
         site = str(error)
-    return {**shape, 'site': site}
+    return {**shape, 'site': site, 'bridge_version': '0.6.44'}
 
 
 async def status(request):
