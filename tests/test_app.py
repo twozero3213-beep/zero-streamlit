@@ -195,6 +195,19 @@ class HeadlineTests(unittest.TestCase):
 
 
 class BuildTests(unittest.TestCase):
+    def test_invalid_build_source_preserves_current_output(self):
+        import tempfile
+        import build_ui
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'ui'
+            output.mkdir()
+            marker = output / 'keeper.txt'
+            marker.write_text('keep', encoding='utf-8')
+            with mock.patch.object(build_ui, 'OUT', output):
+                with self.assertRaisesRegex(ValueError, 'HOSTED_SOURCE_MISSING'):
+                    build_ui.build(Path(tmp) / 'missing')
+                self.assertEqual(marker.read_text(encoding='utf-8'), 'keep')
+
     def test_ui_is_the_hosted_original_with_relative_paths(self):
         html = (ROOT / 'ui' / 'index.html').read_text(encoding='utf-8')
         self.assertIn('data-zero-hosted="true"', html)

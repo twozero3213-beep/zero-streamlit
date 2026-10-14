@@ -1,6 +1,7 @@
 /* Private company research controls. Proposals never execute an account order. */
 (() => {
   'use strict';
+  const REVIEW_NOTICE='사용자 확인은 검토 기록이며 주문 승인·체결이 아닙니다. 다른 계좌를 자동 추종하지 않으며 가상 실험만 제공합니다.';
   const PERSONAS={VALUE:'가치투자형',TREND:'추세추종형',DIVIDEND:'고배당형',VOLATILITY:'변동성 제어형'};
   function staffProblem(rows){
     if(!Array.isArray(rows)||!rows.length||rows.length>20)return '직원을 1~20명 배치해 주세요.';
@@ -49,14 +50,14 @@
       hires.append(button('직원 고용',()=>{if(staff.length>=20){note.textContent='최대 20명이에요.';return;}staff.push({name:'연구원 '+(staff.length+1),team:'전략팀',persona:'TREND',weight:staff.length?0:100,params:{lookback:60,vol_target:0.15,rebalance_days:20}});drawStaff(list);}),button('전략 가중치 저장',async()=>{const error=staffProblem(staff);if(error){note.textContent=error;return;}try{const saved=await request('/me/staff',{method:'PUT',body:{staff}});if(generation!==epoch)return;if(Array.isArray(saved.staff)){staff=structuredClone(saved.staff);drawStaff(list);}note.textContent='전략 배치를 저장했어요.';await U().refresh();}catch(e){note.textContent=reason(e.code);}}),button('직원을 내 사무실에 배치',()=>{const error=staffProblem(staff);if(error){note.textContent=error;return;}window.ZERO?.navigate('lobby');window.ZEROLobby?.showOwn({nick:U().session().nick,team:staffOffice(company,staff),space:company.space});}));
       const research=el('section','panel'),range=field('검증 기간','select',''),fees=field('수수료 가정(bps)','number',10,0,100),slip=field('슬리피지 가정(bps)','number',5,0,100),result=el('div','company-result');
       [['5Y','최근 5년 자료 · 준비 구간 제외']].forEach(([value,text])=>{const option=el('option','',text);option.value=value;range.input.append(option);});range.input.value='5Y';
-      let runId=null;const run=button('직원 조합 백테스트',async()=>{const error=staffProblem(staff);if(error){result.textContent=error;return;}run.disabled=true;runId=null;result.replaceChildren(el('p','','공개 가격으로 전략을 검증하고 있어요…'));
+      let runId=null;const run=button('직원 조합 백테스트',async()=>{const error=staffProblem(staff);if(error){result.textContent=error;return;}run.disabled=true;run.textContent='직원 조합 백테스트';runId=null;result.replaceChildren(el('p','','공개 가격으로 전략을 검증하고 있어요…'));
         try{const data=await request('/me/backtests',{method:'POST',body:{range:range.input.value,fee_bps:Number(fees.input.value),slippage_bps:Number(slip.input.value)}});if(generation!==epoch)return;const output=data.run||data;runId=output.id||data.id;
           if(output.state!=='AVAILABLE'){result.replaceChildren(el('p','',reason(output.reason)));return;}
           result.replaceChildren(el('h3','','과거 데이터 연구 결과 · 실제 운용 수익 아님'),el('p','',(output.start_date||output.period?.start_date||'')+' ~ '+(output.end_date||output.period?.end_date||'')),el('p','','참고 수익률 '+pct(output.metrics?.return_percent)+' · 최대 낙폭 '+pct(output.metrics?.max_drawdown_percent)));
           (output.signals||[]).slice(0,16).forEach(signal=>result.append(el('p','','검토 신호 '+signal.symbol+' · '+signal.action+' · 목표 '+pct(signal.target_weight_percent))));
-          result.append(el('p','muted-note','시점 이후 자료를 과거 판단에 쓰지 않는 연구 계산입니다. 배당·환율·세금 제외 가정은 결과에서 확인하세요. 신호는 승인 대기 제안이며 계좌 주문·리밸런싱을 실행하지 않습니다.'));
-        }catch(e){if(generation===epoch)result.replaceChildren(el('p','',reason(e.code)));}finally{if(generation===epoch)run.disabled=false;}});
-      research.append(el('h2','','백테스트·리밸런싱 신호'),range.wrap,fees.wrap,slip.wrap,run,button('오늘의 운용 검토 완료',async()=>{if(!runId){result.append(el('p','','먼저 서버에 저장된 전략 검증 결과를 확인해 주세요.'));return;}try{await request('/me/daily-review',{method:'POST',body:{run_id:runId}});if(generation!==epoch)return;await U().refresh();result.append(el('p','','서버에서 일일 검토 기록을 확인했어요. 같은 기록은 중복 보상하지 않아요.'));}catch(e){result.append(el('p','',reason(e.code)));}}),result);
+          result.append(el('p','muted-note','시점 이후 자료를 과거 판단에 쓰지 않는 연구 계산입니다. 배당·환율·세금 제외 가정은 결과에서 확인하세요. 신호는 가상 실험의 검토 제안입니다. '+REVIEW_NOTICE+' 계좌 주문·리밸런싱을 실행하지 않습니다.'));
+        }catch(e){if(generation===epoch){result.replaceChildren(el('p','',reason(e.code)));run.textContent='백테스트 다시 시도';}}finally{if(generation===epoch)run.disabled=false;}});
+      research.append(el('h2','','백테스트·리밸런싱 신호'),el('p','muted-note',REVIEW_NOTICE),range.wrap,fees.wrap,slip.wrap,run,button('오늘의 운용 검토 완료',async()=>{if(!runId){result.append(el('p','','먼저 서버에 저장된 전략 검증 결과를 확인해 주세요.'));return;}try{await request('/me/daily-review',{method:'POST',body:{run_id:runId}});if(generation!==epoch)return;await U().refresh();result.append(el('p','','서버에서 일일 검토 기록을 확인했어요. 같은 기록은 중복 보상하지 않아요. '+REVIEW_NOTICE));}catch(e){result.append(el('p','',reason(e.code)));}}),result);
       target.replaceChildren(settings,hires,research);drawStaff(list);
     }catch(e){if(generation===epoch)target.replaceChildren(el('p','',reason(e.code)),button('다시 불러오기',open));}
   }
@@ -70,7 +71,10 @@
       const calendar=el('section');calendar.append(el('h3','','배당·실적 일정'));if(!data.calendar.events.length)calendar.append(el('p','muted-note','확인된 발표 일정이 없습니다. 추정 날짜를 일정으로 표시하지 않습니다.'));
       if(data.calendar.reason==='FUTURE_EARNINGS_UNAVAILABLE'||data.calendar.events.some(event=>event.basis==='HISTORICAL_EX_DIVIDEND_DATE'))calendar.append(el('p','muted-note','아래는 확인된 과거 배당락일입니다. 미래 배당·실적 일정 제공 연결은 아직 없습니다.'));
       data.calendar.events.slice(0,20).forEach(event=>{const row=el('p','',event.date+' · '+(event.kind==='DIVIDEND'?'배당':'실적')+(event.confirmed===false?' · 예정/변경 가능':''));if(/^https:\/\//.test(event.source_url||'')){const link=el('a','','원문');link.href=event.source_url;link.target='_blank';link.rel='noopener noreferrer';row.append(link);}calendar.append(row);});card.append(calendar,button('시장 속보·주요 뉴스',()=>window.ZERO?.navigate('news')));
-    }catch(_){if(generation===marketEpoch&&card.isConnected)status.textContent='시장 정보 연결을 확인하지 못했습니다. 종목 차트와 기존 저장 자료를 확인해 주세요.';}
+    }catch(_){if(generation===marketEpoch&&card.isConnected){
+      status.textContent='시장 정보 연결을 확인하지 못했습니다. 종목 차트와 기존 저장 자료는 그대로 사용할 수 있어요.';
+      const retry=button('시장 정보 다시 시도',async()=>{if(retry.disabled)return;retry.disabled=true;card.remove();await openMarketCard(company,target);});card.append(retry);
+    }}
   }
   function officeFor(info){
     const team=structuredClone(info.team||{company:'',teams:[]});

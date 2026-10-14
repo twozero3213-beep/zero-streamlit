@@ -22,9 +22,16 @@ def relative(text):
 
 
 def build(source, checkout=None):
-    source = Path(source)
+    source = Path(source).resolve()
+    output = OUT.resolve()
+    if not (source / 'assets').is_dir() or not (source / 'index.html').is_file():
+        raise ValueError('HOSTED_SOURCE_MISSING')
+    if output == source or output in source.parents or source in output.parents or OUT.is_symlink() or OUT.is_junction():
+        raise ValueError('BUILD_SOURCE_OUTPUT_OVERLAP')
+    if 'data-zero-hosted="true"' not in (source / 'index.html').read_text(encoding='utf-8'):
+        raise ValueError('HOSTED_FLAG_MISSING')
     if OUT.exists():
-        shutil.rmtree(OUT)
+        shutil.rmtree(output)
     shutil.copytree(source / 'assets', OUT / 'assets')
     for js in (OUT / 'assets').glob('*.js'):
         # Reviewed vendor bytes and licenses are copied intact, including line endings.

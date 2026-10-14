@@ -6,7 +6,7 @@
   const make = (tag, cls = '', text) => { const e = document.createElement(tag); e.className = cls; if (text !== undefined) e.textContent = text; return e; };
   const button = (text, action, cls = 'secondary-button') => { const b = make('button', cls, text); b.type = 'button'; b.addEventListener('click', action); return b; };
   const stamp = value => { const d = new Date(value); return Number.isFinite(d.getTime()) ? d.toLocaleString('ko-KR', {timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'}) + ' KST' : '시각 미확인'; };
-  const errors = {UNAUTHORIZED: '닉네임으로 로그인한 뒤 이용해 주세요.', RATE_LIMIT: '잠시 쉬었다가 다시 시도해 주세요.', CONTENT_INVALID: '글자 수와 입력 내용을 확인해 주세요.', APPEARANCE_LOCKED: '아직 잠긴 꾸미기예요.', STORAGE_UNAVAILABLE: '서버에 연결하지 못했어요.', QUOTES_UNAVAILABLE: '수익률을 확인하지 못해 경험치를 보류했어요.'};
+  const errors = {UNAUTHORIZED: '닉네임으로 로그인한 뒤 이용해 주세요.', RATE_LIMIT: '잠시 쉬었다가 다시 시도해 주세요.', CHAT_TOO_FAST: '대화는 2초 간격으로 보낼 수 있어요.', POST_LIMIT: '글은 3초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', COMMENT_LIMIT: '댓글은 2초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', CONTENT_INVALID: '글자 수와 입력 내용을 확인해 주세요.', APPEARANCE_LOCKED: '아직 잠긴 꾸미기예요.', STORAGE_UNAVAILABLE: '서버에 연결하지 못했어요.', QUOTES_UNAVAILABLE: '시세를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'};
   const message = error => errors[error?.code || error?.error] || '지금은 처리하지 못했어요. 잠시 후 다시 시도해 주세요.';
   const request = (path, options) => U()?.request(path, options) || Promise.reject({code: 'STORAGE_UNAVAILABLE'});
   let sessionEpoch = 0, loaded = false, cursor = null, previous = [], posting = false;
@@ -37,7 +37,7 @@
           const entry = make('article', 'guestbook-entry'); entry.append(button(item.nick, () => U()?.visit(item.nick), 'social-nick'), make('small', '', stamp(item.created_at)), make('p', 'social-text', item.body)); return entry;
         }));
         note.textContent = list.children.length ? '' : '아직 댓글이 없어요.';
-      } catch (error) { if (epoch === sessionEpoch) note.textContent = message(error); }
+      } catch (error) { if (epoch === sessionEpoch) note.replaceChildren(make('span', '', message(error)), button('댓글 다시 불러오기', refresh)); }
     };
     form.addEventListener('submit', async event => {
       event.preventDefault(); if (!requireNick(note) || send.disabled) return;
@@ -90,7 +90,7 @@
       note.textContent = rows.length ? '이용자가 직접 공유한 글이며 수익·전략이 검증됐다는 뜻은 아니에요.' : '아직 표시할 글이 없어요. 첫 운영 경험을 나눠 보세요.';
       $('community-prev').disabled = !previous.length; $('community-next').disabled = data.next_cursor == null;
       $('community-next').onclick = () => { previous.push(cursor); cursor = data.next_cursor; openCommunity(false); }; loaded = true;
-    } catch (error) { if (epoch === sessionEpoch) note.textContent = message(error); }
+    } catch (error) { if (epoch === sessionEpoch) note.replaceChildren(make('span', '', message(error)), button('게시판 다시 불러오기', () => openCommunity(false))); }
   }
   $('community-prev')?.addEventListener('click', () => { cursor = previous.pop() ?? null; openCommunity(false); });
   $('community-reload')?.addEventListener('click', () => openCommunity(true));
@@ -124,7 +124,7 @@
       prev.disabled=!pageHistory.length;older.disabled=data.next_cursor==null;older.onclick=()=>{pageHistory.push(pageCursor);pageCursor=data.next_cursor;refresh();};
       list.replaceChildren(...safeRows(data).filter(row=>!blocked(row.nick)).map(row=>{const entry=make('article','guestbook-entry'),status=make('p','muted-note');entry.append(make('b','',row.nick+(row.secret?' · 비밀':' · 공개')),make('small','',stamp(row.created_at)),make('p','social-text',row.text));
         entry.append(button('신고',()=>report('guestbook',row.id,status)));if(row.can_delete)entry.append(button('삭제',async()=>{if(!confirm('이 방명록 글을 삭제할까요?'))return;try{await request('/me/guestbook/'+row.id,{method:'DELETE'});refresh();}catch(error){status.textContent=message(error);}}));entry.append(status);return entry;}));note.textContent=list.children.length?'':'아직 방명록이 없어요.';
-    }catch(error){if(generation===guestGeneration&&epoch===sessionEpoch)note.textContent=message(error);}};
+    }catch(error){if(generation===guestGeneration&&epoch===sessionEpoch&&seq===refreshSeq)note.replaceChildren(make('span','',message(error)),button('방명록 다시 불러오기',refresh));}};
     form.addEventListener('submit',async e=>{e.preventDefault();if(!requireNick(note)||send.disabled)return;send.disabled=true;try{await request('/me/guestbook',{method:'POST',body:{nick,text:content.input.value,secret:secret.checked}});if(epoch!==sessionEpoch)return;content.input.value='';pageCursor=null;pageHistory=[];await refresh();}catch(error){if(epoch===sessionEpoch)note.textContent=message(error);}finally{send.disabled=false;}});refresh();
   }
 
@@ -275,17 +275,27 @@
     if (moving || plaza.dirty) plaza.raf = requestAnimationFrame(plazaFrame);
   }
   function startPlazaMove() { if (active && plaza.ready && !plaza.raf && !document.hidden) { plaza.last = 0; plaza.raf = requestAnimationFrame(plazaFrame); } }
+  function showLoungeRetry() {
+    let retry = $('lounge-retry');
+    if (!retry) {
+      retry = button('광장 다시 연결', () => {
+        if (!U()?.session()?.nick) { U()?.openProfile(); return; }
+        closeSocket(); loungeGeneration++; active = true; retries = 0; connectLounge();
+      }); retry.id = 'lounge-retry'; lounge.append(retry);
+    }
+    retry.hidden = false;
+  }
   function connectLounge() {
     if (!active || document.hidden) return;
     const generation = loungeGeneration; $('lounge-status').textContent = '공용 광장에 접속하고 있어요'; $('lounge-loading').hidden = false; $('lounge-send').disabled = true;
     try { socket = U().openLoungeSocket(); }
-    catch (error) { $('lounge-status').textContent = message(error); $('lounge-loading').hidden = true; return; }
+    catch (error) { $('lounge-status').textContent = message(error); $('lounge-loading').hidden = true; showLoungeRetry(); return; }
     const connection = socket;
     connection.addEventListener('message', event => {
       if (generation !== loungeGeneration || !active || socket !== connection) return;
       let data; try { data = JSON.parse(event.data); } catch { return; }
       if (data.type === 'ready') {
-        retries = 0; plaza.nick = data.nick; plaza.seq = 0; plaza.sentAt = -Infinity; plaza.people.forEach(removePet); plaza.people.clear(); $('lounge-people').replaceChildren();
+        retries = 0; if ($('lounge-retry')) $('lounge-retry').hidden = true; plaza.nick = data.nick; plaza.seq = 0; plaza.sentAt = -Infinity; plaza.people.forEach(removePet); plaza.people.clear(); $('lounge-people').replaceChildren();
         roomPeople(data.participants); plaza.ready = plaza.people.has(data.nick);
         const own = plaza.people.get(data.nick); if (own) plaza.seq = Math.max(0, own.seq);
         $('lounge-loading').hidden = true; $('lounge-status').textContent = plaza.ready ? '연결됨 · 바닥·방향키·이동 버튼으로 걸어 보세요 · 대화는 최대 24시간 보관' : '대화 연결됨 · 서버의 캐릭터 위치를 기다리고 있어요';
@@ -305,9 +315,14 @@
       }
       if (data.type === 'reported') $('lounge-status').textContent = '신고를 접수했어요.';
     });
+    connection.addEventListener('error', () => {
+      if (generation !== loungeGeneration || !active || socket !== connection) return;
+      stopPlaza(); $('lounge-send').disabled = true; $('lounge-loading').hidden = true;
+      $('lounge-status').textContent = '광장 연결을 확인하지 못했어요. 다른 화면은 계속 사용할 수 있습니다.'; showLoungeRetry();
+    });
     connection.addEventListener('close', () => {
       if (generation !== loungeGeneration || !active || socket !== connection) return;
-      clearInterval(heartbeat); stopPlaza(); $('lounge-send').disabled = true; $('lounge-loading').hidden = true; $('lounge-status').textContent = '연결이 끊겼어요.';
+      clearInterval(heartbeat); stopPlaza(); $('lounge-send').disabled = true; $('lounge-loading').hidden = true; $('lounge-status').textContent = '연결이 끊겼어요.'; showLoungeRetry();
       if (!document.hidden && retries < 3) { retries++; reconnect = setTimeout(connectLounge, Math.min(15000, 1000 * 2 ** retries)); }
     });
   }
@@ -403,7 +418,13 @@
     const progress=session.progress||{},form=make('form','social-form'),note=make('p','social-status'),values={...session.appearance},labels={outfit:'옷',hair:'헤어스타일',shoes:'신발',accessory:'장신구',pet:'펫'};
     const confirmed = serverProgress(progress);
     closet.append(make('p', '', confirmed ? '회사 Lv.' + progress.level + ' · ' + progress.xp + ' XP' : '회사 XP · 서버 확인 전'),
-      make('p', 'muted-note', '회사 경험치는 서버가 검증한 학교 답안·검토된 운용 기록·검증된 성과 이벤트만 반영합니다. 가상 연습 수익률과 이 기기의 학습 XP는 꾸미기 권한에 쓰지 않습니다.'));
+      make('p', 'muted-note', '교육·운용 점검 XP와 성과 XP는 별도입니다. 성과 XP는 최소 30일(달력 기준)·완료된 일별 수익률 20개와 Sharpe·MDD 근거, KRW 전체 계좌 순자산 100만원 이상·총레버리지 최대 1배가 필요합니다. 게임 보상 기준이며 투자 위험 한도가 아닙니다. 가상 연습 수익률·로컬 학습 XP로 꾸미기를 해제하지 않습니다.'));
+    const policy = make('details'); policy.append(make('summary', '', '성과 XP 게임 보상 기준 · risk-v1'),
+      make('p', 'muted-note', '원장·입출금·전체 계좌·상품 위험을 대조한 검증 근거가 필요합니다. MDD(최대 낙폭) 30% 이상은 0점입니다.'),
+      make('p', 'muted-note', '목표점수 = floor(500 × min(순수익률%/20, 1) × min(Sharpe/2, 1) × (1 − MDD/0.30) × min(기간일수/365, 1)). MDD는 비율로 계산합니다.'),
+      make('p', 'muted-note', '성과 XP는 평생 최고 기록 기준 최대 500점이며 같은 기록을 중복 보상하지 않습니다. 잔고 금액 배율·소액 보너스는 없고 전액 출금 후에도 이력을 초기화하지 않습니다.'));
+    closet.append(policy);
+    if (Number.isSafeInteger(progress.legacy_return_xp) && progress.legacy_return_xp > 0) closet.append(make('p', 'muted-note', '이전 성과 XP ' + progress.legacy_return_xp + ' · 기록 열람용 · 새 꾸미기 해제에서 제외'));
     const events = Array.isArray(progress.events) ? progress.events : [];
     if (events.length) {
       const history = make('ul', 'company-xp-events');
