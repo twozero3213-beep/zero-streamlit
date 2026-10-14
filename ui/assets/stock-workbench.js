@@ -290,6 +290,7 @@ if(typeof window!=='undefined') {
       [['chart','차트'],['compare','두 종목 비교'],['opinion','ZERO 의견'],['company','기업정보'],['financials','재무'],...(company.kind==='ETF'?[['fund','ETF 구성']]:[]),['news','관련 뉴스']].forEach(([key,label])=>{const b=button(label,()=>switchTab(key));b.id='stock-tab-'+key;b.dataset.stockTab=key;b.setAttribute('role','tab');b.setAttribute('aria-controls','stock-tab-pane');b.setAttribute('aria-selected',String(key===explore.tab));tabs.append(b);});
       tabs.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const list=[...tabs.querySelectorAll('button')],index=list.indexOf(document.activeElement),next=event.key==='Home'?0:event.key==='End'?list.length-1:(index+(event.key==='ArrowRight'?1:-1)+list.length)%list.length;list[next]?.focus();list[next]?.click();});
       const pane=el('section','stock-tab-pane');pane.id='stock-tab-pane';pane.setAttribute('role','tabpanel');target.replaceChildren(header,quote,tabs,pane);
+      window.ZEROCompany?.openMarketCard(company,target);
       if(explore.tab!=='chart')loadChart();
       await switchTab(explore.tab,false);
     }

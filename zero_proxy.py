@@ -101,6 +101,8 @@ def _upstream(path, query):
         return f"/api/chart?identity={quote(query['identity'], safe='')}&range={query['range']}", 300
     if path == '/api/company-news' and set(query) == {'identity'} and IDENTITY.fullmatch(query['identity']):
         return f"/api/company-news?identity={quote(query['identity'], safe='')}", 900
+    if path == '/api/market-card' and set(query) == {'identity'} and IDENTITY.fullmatch(query['identity']):
+        return f"/api/market-card?identity={quote(query['identity'], safe='')}", 60
     raise Unavailable('NOT_PUBLIC')
 
 
@@ -198,7 +200,7 @@ def _status():
         site = 'OK'
     except Unavailable as error:
         site = str(error)
-    return {**shape, 'site': site, 'bridge_version': '0.6.47', 'translation_diagnostic': zero_discovery.get_diagnostic()}
+    return {**shape, 'site': site, 'bridge_version': '0.6.49', 'translation_diagnostic': zero_discovery.get_diagnostic()}
 
 
 async def status(request):

@@ -13,7 +13,7 @@
 
   const S = {active: false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
     chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: (store.get('zero-lobby-name') === '나' ? null : store.get('zero-lobby-name')) || '대표님', tutorial: null,
-    motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolRank: '입문 전', boardMeta: null};
+    motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolLevel: 1, characterAuthenticated: false, schoolRank: '입문 전', boardMeta: null};
 
   const shortName = (full) => String(full).split(' · ')[0].replace(/^가상\s*/, '').replace(/\s*담당$/, '');
   function rosterFrom(team) {
@@ -56,11 +56,14 @@
     entity.el.style.transform = 'translate(' + (entity.pos.x / L.STAGE.w * size.w) + 'px, ' + (entity.pos.y / L.STAGE.h * size.h) + 'px) translate(-50%, -100%)';
     entity.el.style.zIndex = String(Math.round(entity.pos.y * 10));
     entity.el.classList.toggle('edge-left', entity.pos.x < 24); entity.el.classList.toggle('edge-right', entity.pos.x > 136);
+    if (entity === S.player) window.ZEROSocial?.updatePet(entity);
   }
 
   function buildStage() {
     S.motions.forEach(motion => motion.cancel()); S.motions.clear(); S.speaker = []; S.target = null;
     S.viewport = {w: stage.clientWidth, h: stage.clientHeight}; S.world = W.createWorld(S.npcs, S.space || L.DEFAULT_SPACE, {...L.FLOOR, minX: 9, maxX: 151, minY: 30});
+    if (S.player) window.ZEROSocial?.removePet(S.player);
+    S.portalBusy = false; S.portalLatch = false; stage.classList.remove('portal-travel');
     stage.replaceChildren();
     const wall = node('div', 'lobby-wall');
     const windowBox = node('div', 'lobby-window'); windowBox.id = 'lobby-weather'; windowBox.append(node('b', '', '창밖'), node('span', '', '날씨 확인 중'));
@@ -71,17 +74,17 @@
     const EMOJI = {plant: '🪴', coffee: '☕', sofa: '🛋️', books: '📚', fish: '🐠', poster: '🖼️', clock: '🕰️'};
     space.props.forEach((name) => { if (EMOJI[name]) { const prop = node('div', 'prop ' + name, EMOJI[name]); prop.dataset.prop = name; stage.append(prop); } });
     if (space.props.includes('plant')) stage.append(node('div', 'prop plant right', '🪴'));
-    const portal = node('button', 'floor-portal', '라운지'); portal.type = 'button'; portal.setAttribute('aria-label', '문을 열고 공용 라운지 입장');
-    portal.addEventListener('click', event => { event.stopPropagation(); window.ZEROSocial?.openLounge(); }); stage.append(portal);
+    const portal = node('button', 'floor-portal', '광장'); portal.type = 'button'; portal.setAttribute('aria-label', '문까지 걸어가 공용 광장 입장');
+    portal.addEventListener('click', event => { event.stopPropagation(); if (!S.portalBusy) walkTo({x: 144, y: 32}, enterPlaza); }); stage.append(portal);
     S.npcs.forEach(buildNpc);
     S.player = {id: 'player', pos: {x: 64, y: 96}, el: node('div', 'npc player')};
-    S.player.el.append(figure('player', {eyes: 1, mouth: 1}), node('span', 'npc-name', S.playerName), node('span', 'player-level', 'Lv.' + S.level), node('span', 'npc-bubble')); place(S.player); stage.append(S.player.el);
-    $('lobby-player-level').textContent = 'Lv.' + S.level;
+    S.player.el.append(figure('player', {eyes: 1, mouth: 1}), node('span', 'npc-name', S.playerName), node('span', 'player-level', (S.characterAuthenticated ? 'Lv.' : '학교 Lv.') + S.level), node('span', 'npc-bubble')); place(S.player); stage.append(S.player.el);
+    $('lobby-player-level').textContent = (S.characterAuthenticated ? 'Lv.' : '학교 Lv.') + S.level;
   }
 
   // ---- movement -------------------------------------------------------------------------------
   function frame(timestamp) {
-    S.rafId = 0; if (!S.active || !S.player) return;
+    S.rafId = 0; if (!S.active || !S.player || S.portalBusy || document.hidden) return;
     const dt = Math.min(0.05, (timestamp - (S.last || timestamp)) / 1000); S.last = timestamp;
     const speed = 34 * dt, direction = L.keyDirection(S.keys);
     let next = null, arrived = null;
@@ -100,15 +103,32 @@
     if (next) {
       const dx = next.x - S.player.pos.x, dy = next.y - S.player.pos.y;
       S.walked += Math.hypot(dx, dy); S.player.pos = {x: next.x, y: next.y}; facing(S.player, dx, dy); place(S.player); S.player.el.dataset.walking = 'true';
-      followPlayer(); proximity(); if (S.walked > 12) advanceTutorial('move');
+      followPlayer(); proximity(); checkPortal(); if (S.walked > 12) advanceTutorial('move');
     } else S.player.el.dataset.walking = 'false';
     if (arrived) arrived();
-    if (S.target || S.keys.size) S.rafId = requestAnimationFrame(frame);
+    if (!S.portalBusy && (S.target || S.keys.size)) S.rafId = requestAnimationFrame(frame);
     else S.player.el.dataset.walking = 'false';
   }
   function facing(entity, dx, dy) {
     if (Math.abs(dx) + Math.abs(dy) < .01) return;
     entity.el.dataset.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+  }
+  function checkPortal() {
+    const distance = Math.hypot(S.player.pos.x - 144, S.player.pos.y - 32);
+    if (distance > 9) S.portalLatch = false;
+    if (distance <= 6 && !S.portalLatch) enterPlaza();
+  }
+  function enterPlaza() {
+    if (S.portalBusy || S.portalLatch || !S.active || !window.ZEROSocial) return;
+    S.portalLatch = true; S.keys.clear(); S.target = null;
+    if (!window.ZEROLobbyUsers?.session()?.nick) { window.ZEROLobbyUsers?.openProfile(); return; }
+    S.portalBusy = true; S.player.el.dataset.walking = 'false'; stage.classList.add('portal-travel');
+    $('lobby-near').textContent = '광장으로 이동하고 있습니다…';
+    const player = S.player;
+    setTimeout(() => {
+      if (!S.active || S.player !== player || !S.portalBusy) return;
+      if (!window.ZEROSocial.openLounge()) { S.portalBusy = false; stage.classList.remove('portal-travel'); }
+    }, reduceMotion ? 0 : 180);
   }
   function followPlayer() {
     const scroller = stage.parentElement; if (!scroller || scroller.scrollWidth <= scroller.clientWidth + 2) return;
@@ -126,7 +146,7 @@
     if (!path.length) { if (Math.hypot(pos.x - S.player.pos.x, pos.y - S.player.pos.y) < 1) after?.(); else $('lobby-near').textContent = '가구 사이로 갈 수 있는 바닥을 눌러 주세요.'; return; }
     S.target = {path, after}; ensureLoop();
   }
-  function ensureLoop() { if (S.active && S.player && !S.rafId) { S.last = 0; S.rafId = requestAnimationFrame(frame); } }
+  function ensureLoop() { if (S.active && S.player && !S.portalBusy && !S.rafId) { S.last = 0; S.rafId = requestAnimationFrame(frame); } }
   function talkTo(npc) {
     const stand = L.clampToFloor({x: npc.pos.x + (S.player.pos.x < npc.pos.x ? -6 : 6), y: npc.pos.y + 6});
     // A nearby person's standing point may be inside a desk/table; do not require walking into furniture to talk.
@@ -463,17 +483,20 @@
     S.npcs = list; setBanner(list.length ? (info.team.company || info.nick + '의 회사') + ' · 직원 ' + list.length + '명 · 이 화면은 나만 볼 수 있어요' : '아직 직원이 없어요. "내 사무실" 창에서 팀을 만들어 보세요.', true);
     $('lobby-count').textContent = '직원 ' + list.length + '명'; buildStage(); finish();
   }
-  // Another user's office: only the head count is public; names, teams and duties are never shown.
+  // Visits use only the public projection; roles, conditions and allocation never enter this scene.
   function visitOffice(info) {
     invalidateRoster();
-    S.visit = info; S.mode = 'visit'; S.space = info.space || L.DEFAULT_SPACE; const count = Math.max(0, Math.min(40, Number(info.staffCount) || 0));
-    const spots = L.layoutGrid(count);
-    S.npcs = spots.map((spot, index) => ({id: 'guest-' + index, department: 'GUEST', kind: 'staff', name: '직원', role: '비공개', mandate: '', hue: (index * 47 + 20) % 360, home: spot, pos: {...spot}, face: L.faceAt(index + 3)}));
+    const teams = Array.isArray(info.teams) ? info.teams.filter(name => typeof name === 'string').slice(0, 8).map(name => name.slice(0, 12)) : [];
+    const count = Number.isSafeInteger(info.staffCount) && info.staffCount >= 0 ? info.staffCount : 0;
+    S.visit = {nick: info.nick, staffCount: count, teams, space: {floor: L.SPACE.floor.includes(info.space?.floor) ? info.space.floor : L.DEFAULT_SPACE.floor, wall: L.SPACE.wall.includes(info.space?.wall) ? info.space.wall : L.DEFAULT_SPACE.wall, props: Array.isArray(info.space?.props) ? info.space.props.filter(name => L.SPACE.props.includes(name)) : L.DEFAULT_SPACE.props}, appearance: info.appearance ? {outfit: /^(suit|vest|cardigan|hoodie|shirt|jacket|knit|polo)$/.test(info.appearance.outfit) ? info.appearance.outfit : 'suit', hair: Number.isInteger(info.appearance.hair) && info.appearance.hair >= 0 && info.appearance.hair <= 3 ? info.appearance.hair : 0, shoes: ['dark', 'white', 'blue', 'red'].includes(info.appearance.shoes) ? info.appearance.shoes : 'dark', accessory: ['none', 'glasses', 'cap', 'headphones'].includes(info.appearance.accessory) ? info.appearance.accessory : 'none', pet: ['cat', 'dog', 'bird'].includes(info.appearance.pet) ? info.appearance.pet : 'none'} : null, level: Number.isInteger(info.level) && info.level >= 1 ? info.level : null};
+    S.mode = 'visit'; S.space = S.visit.space;
+    const spots = L.layoutGrid(Math.min(40, count));
+    S.npcs = spots.map((spot, index) => ({id: 'guest-' + index, department: 'GUEST', kind: 'staff', name: '직원', role: '🔒 역할 비공개', mandate: '', hue: (index * 47 + 20) % 360, home: spot, pos: {...spot}, face: L.faceAt(index + 3)}));
     S.npcs.push({id: 'host', department: 'HOST', kind: 'manager', name: info.nick, role: '사무실 주인', mandate: '', hue: 40, face: {eyes: 1, mouth: 1}, home: {x: 80, y: 27}, pos: {x: 80, y: 27}});
-    setBanner(info.nick + '님의 사무실 · 직원 ' + count + '명 · 수익률 ' + (typeof info.returnPercent === 'number' && Number.isFinite(info.returnPercent) ? money(info.returnPercent) : '집계 전') + ' · 팀 이름: ' + (Array.isArray(info.teams) && info.teams.length ? info.teams.join(' · ') : '미등록') + ' · 직원 역할은 비공개예요', true);
+    setBanner(info.nick + '님의 사무실 · 직원 ' + count + '명 · 수익률 ' + (typeof info.returnPercent === 'number' && Number.isFinite(info.returnPercent) ? money(info.returnPercent) : '집계 전') + ' · 공개 팀 이름: ' + (teams.length ? teams.join(' · ') : '🔒 비공개 또는 미등록') + ' · 🔒 역할·조건·배분 비중 비공개', true);
     $('lobby-title').textContent = info.nick + '님의 사무실';
-    const teams = Array.isArray(info.teams) ? info.teams.filter(name => typeof name === 'string').slice(0, 8) : [];
-    $('lobby-sub').textContent = teams.length ? '공개 팀 이름: ' + teams.join(' · ') + ' · 직원 역할은 비공개' : '직원 수와 근무 모습만 볼 수 있어요.'; $('lobby-sub').textContent = '직원 수와 근무 모습만 볼 수 있어요.'; $('lobby-count').textContent = '직원 ' + count + '명';
+    $('lobby-sub').textContent = (teams.length ? '공개 팀 이름: ' + teams.join(' · ') : '공개된 팀 이름이 없어요.') + ' · 장식·직원 수·일반 잡담만 보여요. 🔒 상세 역할·조건·비중 비공개';
+    $('lobby-count').textContent = '직원 ' + count + '명' + (count > 40 ? ' · 40명 연출' : '');
     buildStage(); finish();
   }
   function finish() {
@@ -491,7 +514,7 @@
     const box = stage.getBoundingClientRect(); walkTo({x: (event.clientX - box.left) / box.width * L.STAGE.w, y: (event.clientY - box.top) / box.height * L.STAGE.h});
   });
   window.addEventListener('keydown', (event) => {
-    if (!S.active || chat.dialog.open || event.target.closest?.('input, textarea, select, dialog') || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (!S.active || S.portalBusy || chat.dialog.open || event.target.closest?.('input, textarea, select, dialog') || event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.key === 'Enter' && S.nearNpc && event.target === document.body) { event.preventDefault(); openChat(S.nearNpc); return; }
     if (L.keyDirection(new Set([event.key]))) { event.preventDefault(); S.keys.add(event.key); ensureLoop(); }
   });
@@ -518,6 +541,16 @@
     loadSceneResources();
     S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000), setInterval(loadMarket, 60000), setInterval(loadTrends, 600000), setInterval(loadWeather, 1800000));
     clockTick(); heroTick(); ensureLoop(); [900, 1800, 2700].forEach((ms) => setTimeout(chatterTick, ms)); setTimeout(greet, 400);
+  }
+  function setCharacterProgress(progress) {
+    const confirmed = progress?.basis === 'SERVER_CONFIRMED_LEARNING_REVIEW_AND_TRUSTED_PERFORMANCE' && Number.isSafeInteger(progress.xp) && progress.xp >= 0 && Number.isSafeInteger(progress.level) && progress.level >= 1;
+    S.characterAuthenticated = confirmed; S.level = confirmed ? progress.level : (S.schoolLevel || 1);
+    const label = (confirmed ? 'Lv.' : '학교 Lv.') + S.level;
+    $('lobby-player-level').textContent = label;
+    if (S.player) {
+      S.player.el.querySelector('.player-level').textContent = label;
+      S.player.el.setAttribute('aria-label', S.playerName + ' · ' + label + (confirmed ? ' · 서버 검증 회사 경험치' : ' · 이 기기의 학습 기록'));
+    }
   }
   function setPlayerName(name) { S.playerName = name && name !== '나' ? name : '대표님'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
   function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; if (S.active && S.player) loadReturns(); }
@@ -547,7 +580,12 @@
   S.tutorial = initialTutorial || {step: 0, done: false};
   if (!initialTutorial) store.set(TUT_KEY, JSON.stringify(S.tutorial));
   retryButton.addEventListener('click', () => open(true));
-  window.ZEROLobby = {showOwn, open: () => { setActive(true); if (!S.team || !S.player || S.mode !== 'zero') return open(); }, close: () => setActive(false), setActive, visit: visitOffice, setPlayerName, setUserBoard, state: S};
+  window.ZEROLobby = {showOwn, open: () => { setActive(true); if (!S.team || !S.player || S.mode !== 'zero') return open(); }, close: () => setActive(false), setActive, visit: visitOffice, setPlayerName, setCharacterProgress, setUserBoard, state: S};
+  document.addEventListener('zero-plaza-closed', () => {
+    S.portalBusy = false; S.keys.clear(); S.target = null; stage.classList.remove('portal-travel');
+    if (S.player && S.portalLatch) { S.player.pos = {x: 136, y: 40}; place(S.player); }
+    S.portalLatch = false; proximity();
+  });
   document.addEventListener('zero-lobby-open', () => window.ZEROLobby.open());
   if (document.documentElement.dataset.zeroView === 'lobby') window.ZEROLobby.open();
   document.addEventListener('visibilitychange', () => {
@@ -565,7 +603,11 @@
   });
   document.addEventListener('zero-academy-progress', event => {
     const detail = event.detail; if (!detail || !Number.isInteger(detail.level) || detail.level < 1 || detail.level > 7) return;
-    const before = S.level; S.level = detail.level; S.schoolRank = detail.rank; $('lobby-player-level').textContent = 'Lv.' + S.level;
-    if (S.player) { S.player.el.querySelector('.player-level').textContent = 'Lv.' + S.level; S.player.el.setAttribute('aria-label', S.playerName + ' · Lv.' + S.level + ' · ' + S.schoolRank); if (detail.celebrate && S.level > before) gesture(S.player, 'level'); }
+    const before = S.level; S.schoolLevel = detail.level; S.schoolRank = detail.rank;
+    let schoolChip = $('lobby-school-level');
+    if (!schoolChip) { schoolChip = node('span', 'muted-note'); schoolChip.id = 'lobby-school-level'; document.querySelector('.lobby-meta').append(schoolChip); }
+    schoolChip.textContent = '학교 Lv.' + S.schoolLevel + ' · 이 기기 학습';
+    setCharacterProgress(window.ZEROLobbyUsers?.session()?.progress);
+    if (S.player && !S.characterAuthenticated && detail.celebrate && S.level > before) gesture(S.player, 'level');
   });
 })();

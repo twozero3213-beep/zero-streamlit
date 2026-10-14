@@ -9,6 +9,8 @@
   const button = (label, className, onClick) => { const element = node('button', className, label); element.type = 'button'; element.addEventListener('click', onClick); return element; };
   const store = {get() { try { return localStorage.getItem(KEY); } catch (_) { return null; } }, set(value) { try { localStorage.setItem(KEY, value); } catch (_) { /* private mode: progress lasts for this visit only */ } }};
 
+  let accountEpoch = 0;
+  document.addEventListener('zero-session-changed', () => { accountEpoch++; });
   let progress = A.normalize(store.get()), view = {name: 'map'}, session = null;
   const save = (celebrate = false) => { store.set(JSON.stringify(progress)); paintBadges(celebrate); };
 
@@ -98,9 +100,29 @@
     paint(...parts);
   }
 
+  function quizAnswers(level, picks) {
+    return level.quiz.map((question, index) => question.choices.indexOf(A.shuffled(question).choices[picks[index]]));
+  }
+  async function awardQuiz(finished) {
+    const users = window.ZEROLobbyUsers, nick = users?.session()?.nick, epoch = accountEpoch;
+    if (!nick) { finished.serverNote = '이 기기의 학습 기록만 저장했어요. 회사 XP는 로그인 후 서버가 확인한 학습에만 반영됩니다.'; if (session === finished && view.name === 'result') renderResult(); return; }
+    finished.serverNote = '서버가 학습 답안을 확인하고 있어요. 회사 XP는 확인 전까지 지급되지 않습니다.';
+    try {
+      const result = await users.request('/me/quiz', {method: 'POST', body: {lesson_id: finished.level.id, answers: quizAnswers(finished.level, finished.picks)}});
+      if (epoch !== accountEpoch || users.session()?.nick !== nick || session !== finished) return;
+      if (typeof result?.passed !== 'boolean' || result.total !== finished.level.quiz.length || !Number.isInteger(result.correct) || result.correct < 0 || result.correct > result.total || !Number.isSafeInteger(result.gained) || result.gained < 0 || result.progress?.basis !== 'SERVER_CONFIRMED_LEARNING_REVIEW_AND_TRUSTED_PERFORMANCE') throw new Error('QUIZ_UNVERIFIED');
+      await users.refresh();
+      if (epoch !== accountEpoch || users.session()?.nick !== nick || session !== finished) return;
+      finished.serverNote = result.passed ? (result.gained ? '서버 검증 통과 · 회사 XP +' + result.gained : '서버 검증 통과 · 이미 반영한 학습이라 회사 XP를 중복 지급하지 않았어요.') : '서버가 답안을 확인했어요. 통과 기준에 못 미쳐 회사 XP는 지급하지 않았습니다.';
+    } catch (_) {
+      if (epoch !== accountEpoch || users.session()?.nick !== nick || session !== finished) return;
+      finished.serverNote = '서버 검증을 완료하지 못했어요. 이 기기의 학습 기록은 보존했으며 회사 XP 지급은 확인되지 않았습니다.';
+    }
+    if (session === finished && view.name === 'result') renderResult();
+  }
   function finishQuiz() {
     const before = A.playerLevel(progress), outcome = A.submit(progress, session.level, session.picks);
-    progress = outcome.progress; save(outcome.leveledUp); session.outcome = outcome; session.levelBefore = before; go({name: 'result'});
+    progress = outcome.progress; save(outcome.leveledUp); session.outcome = outcome; session.levelBefore = before; go({name: 'result'}); awardQuiz(session);
   }
   function renderResult() {
     const {level, outcome} = session, {result, gained, leveledUp} = outcome, index = A.LEVELS.indexOf(level), nextLevel = A.LEVELS[index + 1];
@@ -111,7 +133,8 @@
       panel.append(node('span', 'academy-burst', level.badge), node('strong', '', reached > A.LEVELS.length ? '졸업! 🎓' : '레벨 업! Lv.' + reached), node('p', '', '새 칭호 "' + level.rank + '"' + objectParticle(level.rank) + ' 얻었어요.'));
       parts.push(panel);
     }
-    parts.push(node('p', 'academy-xp', gained ? '+' + gained + ' XP 얻었어요 (총 ' + progress.xp + ' XP)' : '이미 받은 점수라 XP는 늘지 않아요. 복습으로 충분해요.'));
+    parts.push(node('p', 'academy-xp', gained ? '이 기기의 학습 XP +' + gained + ' (총 ' + progress.xp + ' XP) · 회사 XP와 별도' : '이 기기의 복습 기록이에요. 학습 XP는 중복 지급하지 않습니다.'));
+    parts.push(node('p', 'academy-warn', session.serverNote || '회사 XP는 서버 검증 전까지 지급되지 않습니다.'));
     const nav = node('div', 'academy-nav');
     if (!result.passed) nav.append(button('설명 다시 보기', 'secondary-button', () => { session.page = 0; session.picks = []; session.index = 0; go({name: 'page'}); }), button('퀴즈 다시', 'primary-button', () => { session.picks = []; session.index = 0; go({name: 'quiz'}); }));
     else nav.append(button('지도로', 'secondary-button', () => go({name: 'map'})), nextLevel ? button('다음 레벨 시작', 'primary-button', () => { session = {level: nextLevel, page: 0, picks: [], index: 0, practice: A.practiceStart()}; go({name: 'page'}); }) : button('마치기', 'primary-button', () => dialog.close()));
