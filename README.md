@@ -14,6 +14,7 @@ ZERO 포트폴리오 화면(로컬 `127.0.0.1:8765`와 같은 화면)을 Streaml
 - `zero_headlines.py` — `/zero/api/headlines`: 뉴스 검색 결과 제목만 요청 때 모아 5분 캐시(https 링크만, 전부 실패하면 캐시하지 않고 503).
 - `extras/headlines.js` — 주요 뉴스 화면 위에 "실시간 헤드라인" 패널. 경로가 없거나 실패하면 숨겨져 원래 화면과 같다.
 - `build_ui.py` — `ui/`를 다시 만들고 `extras/*.js`를 `index.html`에 붙인다.
+  닉네임 계정 서버 주소는 환경변수 `ZERO_LOBBY_API`로 주입한다(현재 `https://zero-lobby.zero-cloudflare.workers.dev`, zero-bot의 `scripts/build_lobby_worker.py`로 만든 Worker). 비우면 가입 버튼은 "준비 중"이다. 빌드 때 이 값을 빼먹으면 가입이 꺼지니 주의.
 
 ## 배포 (Streamlit Community Cloud)
 New app → 저장소 `twozero3213-beep/zero-streamlit`, 브랜치 `main`, 파일 `streamlit_app.py`, Python 3.13.
