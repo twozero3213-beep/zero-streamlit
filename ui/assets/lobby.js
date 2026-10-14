@@ -106,11 +106,11 @@
   function ask(question) {
     if (!S.chatNpc) return;
     say('me', question);
-    say('npc', S.visit ? '이 사무실의 직원 구성과 맡은 일은 주인이 공개하지 않았어요. 제가 아는 건 오늘 날씨 이야기 정도예요.' : L.reply(S.chatNpc, question, {now: new Date(), weather: S.weather}));
+    say('bot', S.visit ? '이 사무실의 직원 구성과 맡은 일은 주인이 공개하지 않았어요. 제가 아는 건 오늘 날씨 이야기 정도예요.' : L.reply(S.chatNpc, question, {now: new Date(), weather: S.weather}));
   }
   function openChat(npc) {
     S.chatNpc = npc; chat.title.textContent = npc.name; chat.role.textContent = S.visit ? '이 사무실의 직원' : npc.role;
-    chat.log.replaceChildren(); say('npc', S.visit ? '안녕하세요! 이 사무실에 오신 걸 환영해요.' : '안녕하세요, ' + npc.name + '입니다. 가상 직원이라 정해진 대본으로 답해요. 무엇이든 물어보세요.');
+    chat.log.replaceChildren(); say('bot', S.visit ? '안녕하세요! 이 사무실에 오신 걸 환영해요.' : '안녕하세요, ' + npc.name + '입니다. 가상 직원이라 정해진 대본으로 답해요. 무엇이든 물어보세요.');
     chat.topics.replaceChildren(...L.TOPICS.map(([label, question]) => { const chip = node('button', 'chat-chip', label); chip.type = 'button'; chip.addEventListener('click', () => ask(question)); return chip; }));
     if (!chat.dialog.open) chat.dialog.showModal?.();
     if (npc.id === 'ZERO_FINAL_MANAGER') advanceTutorial('manager'); else if (npc.kind === 'chief') advanceTutorial('chief');
@@ -121,20 +121,29 @@
 
   // ---- chatter and roaming --------------------------------------------------------------------
   function speak(entity, text, ms = 6500) {
+    if (S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || S.speaker.some((item) => item.id === entity.id)) return;
     const bubble = entity.el.querySelector('.npc-bubble'); bubble.textContent = text; entity.el.classList.add('speaking');
+    const box = bubble.getBoundingClientRect();
+    const overlaps = S.speaker.some((item) => {
+      const other = S.npcs.find((npc) => npc.id === item.id)?.el.querySelector('.npc-bubble').getBoundingClientRect();
+      return other && box.left < other.right + 14 && box.right > other.left - 14 && box.top < other.bottom + 14 && box.bottom > other.top - 14;
+    });
+    if (overlaps) { entity.el.classList.remove('speaking'); return; }
     const record = {id: entity.id, pos: entity.pos}; S.speaker.push(record);
     setTimeout(() => { entity.el.classList.remove('speaking'); S.speaker = S.speaker.filter((item) => item !== record); }, ms);
   }
   const MAX_BUBBLES = 4, BUBBLE_GAP = 26;
+  // On a phone-sized stage fewer, more distant bubbles keep the small scene readable.
+  const narrow = () => stage.clientWidth < 560;
   function chatterTick() {
-    if (!S.active || document.hidden || S.speaker.length >= MAX_BUBBLES || !S.npcs.length) return;
+    if (!S.active || document.hidden || S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || !S.npcs.length) return;
     const active = S.speaker.map((item) => ({id: item.id, pos: item.pos}));
-    const npc = L.pickSpeaker(S.npcs.filter((item) => item.kind !== 'staff' || Math.random() < 0.7), active, BUBBLE_GAP);
+    const npc = L.pickSpeaker(S.npcs.filter((item) => !item.away && (item.kind !== 'staff' || Math.random() < 0.7)), active, narrow() ? 44 : BUBBLE_GAP);
     if (!npc) return;
     const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), weather: S.weather, holidays: S.holidays};
     speak(npc, npc.duty && Math.random() < 0.3 ? '저는 ' + npc.duty + ' 담당이에요.' : L.chatterLine(context, persona));
     // A neighbour answers a moment later, so it reads as a small conversation, not isolated captions.
-    const buddy = L.nearest(S.npcs.filter((item) => item !== npc && !item.el.classList.contains('speaking')), npc.pos, 24);
+    const buddy = L.nearest(S.npcs.filter((item) => item !== npc && !item.away && !item.el.classList.contains('speaking')), npc.pos, 24);
     if (buddy && Math.random() < 0.7) setTimeout(() => { if (S.active) speak(buddy, L.replyLine()); }, 2800);
   }
   function greet() {
@@ -144,7 +153,7 @@
   const WAYPOINTS = [{x: 12, y: 30}, {x: 80, y: 36}, {x: 148, y: 30}];
   function roamTick() {
     if (!S.active || document.hidden || reduceMotion) return;
-    const movers = S.npcs.filter((npc) => npc.kind === 'chief' && !npc.away); if (!movers.length || Math.random() > 0.6) return;
+    const movers = S.npcs.filter((npc) => npc.kind === 'chief' && !npc.away && !npc.el.classList.contains('speaking')); if (!movers.length || Math.random() > 0.6) return;
     const npc = movers[Math.floor(Math.random() * movers.length)], spot = WAYPOINTS[Math.floor(Math.random() * WAYPOINTS.length)];
     npc.away = true; npc.el.dataset.walking = 'true'; npc.pos = {x: spot.x + (Math.random() * 6 - 3), y: spot.y}; place(npc);
     setTimeout(() => { npc.el.dataset.walking = 'false'; }, 4200);
@@ -226,7 +235,6 @@
   }
   function startTutorial() { S.tutorial = {step: 0, done: false}; store.set(TUT_KEY, JSON.stringify(S.tutorial)); renderTutorial(); }
   $('lobby-tutorial-btn').addEventListener('click', startTutorial);
-  $('hero-tour').addEventListener('click', startTutorial);
   $('hero-talk').addEventListener('click', () => { const host = S.npcs.find((item) => item.kind === 'manager'); if (host) talkTo(host); });
   $('lobby-tutorial').querySelector('.tut-next').addEventListener('click', () => {
     const state = S.tutorial; if (!state) return; if (L.TUTORIAL[state.step].id === 'done') state.done = true; else state.step++;

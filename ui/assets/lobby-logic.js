@@ -198,7 +198,7 @@
     {id: 'manager', title: '2. 총괄과 대화', text: '맨 위 가운데 "총괄 합의 관리자"를 눌러 ZERO가 무엇인지 물어보세요.'},
     {id: 'chief', title: '3. 수석에게 묻기', text: '큰 캐릭터(수석) 아무나 눌러 "무슨 일을 하세요?"를 물어보세요.'},
     {id: 'board', title: '4. 전광판 보기', text: '위 전광판의 속보를 눌러 보세요. 정치·경제 분야의 공신력 있는 기관 기사만 모아요.'},
-    {id: 'done', title: '5. 둘러보기 끝', text: '이제 아래 메뉴에서 내 자산·주식 탐색·뉴스·경제 지표를 열어 보세요. 튜토리얼은 언제든 다시 볼 수 있어요.'}
+    {id: 'done', title: '5. 길잡이 끝', text: '주식이 처음이라면 "주식 입문 학교"에서 문제를 풀며 레벨을 올려 보세요. 메뉴에서 내 자산·주식 탐색·뉴스·경제 지표도 열어 볼 수 있어요. 이 길잡이는 "사무실 길잡이" 버튼으로 다시 볼 수 있어요.'}
   ];
 
   const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, chatterLine, personaFor, pickSpeaker, clamp,
