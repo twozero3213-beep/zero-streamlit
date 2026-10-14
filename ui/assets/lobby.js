@@ -70,7 +70,7 @@
 
   // ---- movement -------------------------------------------------------------------------------
   function frame(timestamp) {
-    S.rafId = 0; if (!S.active) return;
+    S.rafId = 0; if (!S.active || !S.player) return;
     const dt = Math.min(0.05, (timestamp - (S.last || timestamp)) / 1000); S.last = timestamp;
     const speed = 34 * dt, direction = L.keyDirection(S.keys);
     let next = null;
@@ -94,7 +94,7 @@
     S.nearNpc = close;
   }
   function walkTo(pos, after) { S.target = {pos: L.clampToFloor(pos), after}; ensureLoop(); }
-  function ensureLoop() { if (S.active && !S.rafId) { S.last = 0; S.rafId = requestAnimationFrame(frame); } }
+  function ensureLoop() { if (S.active && S.player && !S.rafId) { S.last = 0; S.rafId = requestAnimationFrame(frame); } }
   function talkTo(npc) {
     const stand = L.clampToFloor({x: npc.pos.x + (S.player.pos.x < npc.pos.x ? -6 : 6), y: npc.pos.y + 6});
     if (Math.hypot(S.player.pos.x - stand.x, S.player.pos.y - stand.y) < 3) openChat(npc); else walkTo(stand, () => openChat(npc));
