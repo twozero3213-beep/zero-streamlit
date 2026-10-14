@@ -28,6 +28,9 @@ RSS = b'<rss xmlns:ht="https://trends.google.com/trending/rss"><channel><item><t
 class DiscoveryTests(unittest.TestCase):
     def setUp(self):
         proxy._cache.clear()
+        self.diag_patch = mock.patch.dict(discovery._diagnostic, {'last_errorcode':None,'provider_state':'NOT_PROBED','store_state':'UNKNOWN'}, clear=True)
+        self.diag_patch.start()
+        self.addCleanup(self.diag_patch.stop)
         self.tmp = TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.store = Path(self.tmp.name) / 'translations.json'
@@ -302,6 +305,40 @@ class DiscoveryTests(unittest.TestCase):
                         time.sleep(0.005)
                 self.assertFalse(headlines._collect_lock.locked())
                 self.assertEqual(json.dumps(value,ensure_ascii=False),before,'late translation must not mutate returned/cached snapshot')
+
+    def test_public_diagnostic_codes_store_network_quota_invalid_and_success(self):
+        cases = [('STORE_UNAVAILABLE', OSError('PRIVATE path token'), None),
+                 ('NETWORK_UNAVAILABLE', None, OSError('PRIVATE network body')),
+                 ('QUOTA', None, HTTPError('https://api.mymemory.translated.net/get',429,'PRIVATE',{},None)),
+                 ('INVALID_RESPONSE', None, b'{"responseStatus":200,"quotaFinished":false,"responseData":{"translatedText":"invalid"}}')]
+        for code, store_error, response in cases:
+            with self.subTest(code=code):
+                self.store.write_text(json.dumps({'schema_version':1,'charges':[],'cache':{},'blocked_until':0}))
+                fetch=mock.Mock(side_effect=response) if isinstance(response,Exception) else mock.Mock(return_value=response)
+                if store_error:
+                    with mock.patch.object(discovery,'_save_state',side_effect=store_error):
+                        self.assertIsNone(self.translate(fetch=fetch))
+                    fetch.assert_not_called()
+                else:
+                    self.assertIsNone(self.translate(fetch=fetch))
+                    fetch.assert_called_once()
+                diag=discovery.get_diagnostic()
+                self.assertEqual(set(diag),{'last_errorcode','provider_state','store_state'})
+                self.assertEqual(diag['last_errorcode'],code)
+                self.assertNotIn('PRIVATE',json.dumps(diag))
+                self.assertNotIn(str(self.store),json.dumps(diag))
+                diag['last_errorcode']='mutated'
+                self.assertEqual(discovery.get_diagnostic()['last_errorcode'],code)
+        self.store.write_text(json.dumps({'schema_version':1,'charges':[],'cache':{},'blocked_until':0}))
+        self.assertIsNotNone(self.translate())
+        self.assertEqual(discovery.get_diagnostic(),{'last_errorcode':None,'provider_state':'AVAILABLE','store_state':'READABLE'})
+
+    def test_headlines_and_status_include_diagnostic_without_new_provider_requests(self):
+        discovery._diagnostic.update({'last_errorcode':'STORE_UNAVAILABLE','provider_state':'NOT_PROBED','store_state':'UNAVAILABLE'})
+        value=headlines.collect(NOW,fetch=lambda url:b'<rss><channel/></rss>')
+        self.assertEqual(value['translation_diagnostic']['last_errorcode'],'STORE_UNAVAILABLE')
+        with mock.patch.object(proxy,'_secret',return_value=None), mock.patch.object(discovery,'_fetch_translation',side_effect=AssertionError('diagnostic must not probe')):
+            self.assertEqual(proxy._status()['translation_diagnostic']['last_errorcode'],'STORE_UNAVAILABLE')
 
     def test_original_prefix_classification_only(self):
         for title, kind in (('[속보] 정부 발표','BREAKING'), ('BREAKING: Senate vote','BREAKING'), ('Exclusive: Treasury plan','EXCLUSIVE'), ('[단독] 국회 협상','EXCLUSIVE'), ('Senate discusses breaking news','GENERAL'), ('Government says exclusive talks','GENERAL')):

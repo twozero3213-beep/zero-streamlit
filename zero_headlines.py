@@ -115,7 +115,7 @@ def _collect(now, *, fetch, translate, cached, deadline, snapshot):
         row['translation_status'] = 'PENDING' if zero_discovery.is_public_english(row) else 'NOT_APPLICABLE'
     # Serialized before optional translation: the returned fallback never shares mutable rows.
     snapshot.set_result(json.dumps({'schema_version': 1, 'scope': 'PUBLIC_POLITICS_ECONOMY_HEADLINES',
-                                   'checked_at': now.astimezone(timezone.utc).isoformat(), 'items': items, 'failed': failed},
+                                   'checked_at': now.astimezone(timezone.utc).isoformat(), 'items': items, 'failed': failed, 'translation_diagnostic': zero_discovery.get_diagnostic()},
                                   ensure_ascii=False).encode('utf-8'))
     attempts = 0
     for row in items:
@@ -130,7 +130,7 @@ def _collect(now, *, fetch, translate, cached, deadline, snapshot):
         if title_ko:
             row['translation_status'] = 'TRANSLATED'
     return {'schema_version': 1, 'scope': 'PUBLIC_POLITICS_ECONOMY_HEADLINES', 'checked_at': now.astimezone(timezone.utc).isoformat(),
-            'items': items, 'failed': failed}
+            'items': items, 'failed': failed, 'translation_diagnostic': zero_discovery.get_diagnostic()}
 
 
 def collect(now=None, *, fetch=_fetch, translate=zero_discovery.translate_public_headline,
@@ -143,7 +143,7 @@ def collect(now=None, *, fetch=_fetch, translate=zero_discovery.translate_public
     now = now or datetime.now(timezone.utc)
     unavailable = {'schema_version': 1, 'scope': 'PUBLIC_POLITICS_ECONOMY_HEADLINES',
                    'checked_at': now.astimezone(timezone.utc).isoformat(), 'items': [],
-                   'failed': list(dict.fromkeys(query[0] for query in QUERIES))}
+                   'failed': list(dict.fromkeys(query[0] for query in QUERIES)), 'translation_diagnostic': zero_discovery.get_diagnostic()}
     if not _collect_lock.acquire(blocking=False):
         return unavailable
     deadline = time.monotonic() + COLLECT_SECONDS

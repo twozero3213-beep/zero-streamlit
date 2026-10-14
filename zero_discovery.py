@@ -23,6 +23,19 @@ WINDOW = 86400
 CACHE_LIMIT = 1000
 STORE = Path.home() / '.cache' / 'zero-streamlit' / 'public-headline-translations.json'
 _translation_lock = threading.Lock()
+_diagnostic_lock = threading.Lock()
+_diagnostic = {'last_errorcode': None, 'provider_state': 'NOT_PROBED', 'store_state': 'UNKNOWN'}
+
+
+def _record_diagnostic(**values):
+    with _diagnostic_lock:
+        _diagnostic.update(values)
+
+
+def get_diagnostic():
+    """Process-local fixed enums only; no storage access, probe, paths or provider bodies."""
+    with _diagnostic_lock:
+        return {key: _diagnostic[key] for key in ('last_errorcode', 'provider_state', 'store_state')}
 
 
 class _NoRedirect(HTTPRedirectHandler):
@@ -162,8 +175,10 @@ def cached_public_headline(row, *, store=None, now=None):
     try:
         state = _read_state(store, time.time() if now is None else now)
         key = 'en|ko:' + row['title']
+        _record_diagnostic(store_state='READABLE')
         return key in state['cache'], state['cache'].get(key)
     except (OSError, ValueError, TypeError):
+        _record_diagnostic(last_errorcode='STORE_UNAVAILABLE', store_state='UNAVAILABLE')
         return False, None
 
 
@@ -188,10 +203,12 @@ def translate_public_headline(row, *, store=None, fetch=_fetch_translation, now=
             os.close(fd)
             acquired = True
             state = _read_state(store, now)
+            _record_diagnostic(store_state='READABLE')
             if key in state['cache']:
                 return state['cache'][key]
             size = title_bytes(title)
             if state['blocked_until'] > now or sum(event[1] for event in state['charges']) + size > TRANSLATION_BUDGET:
+                _record_diagnostic(last_errorcode='QUOTA', provider_state='LIMIT_BLOCKED')
                 return None
             state['charges'].append([now, size])
             # Persist debit and failure sentinel before sending, including a process crash.
@@ -200,6 +217,7 @@ def translate_public_headline(row, *, store=None, fetch=_fetch_translation, now=
                 del state['cache'][next(iter(state['cache']))]
             _save_state(store, state)
             result = None
+            _record_diagnostic(last_errorcode=None, provider_state='REQUESTING')
             try:
                 body = fetch('https://api.mymemory.translated.net/get?' + urlencode({'q': title, 'langpair': 'en|ko'}))
                 if len(body) > TRANSLATION_LIMIT:
@@ -209,19 +227,32 @@ def translate_public_headline(row, *, store=None, fetch=_fetch_translation, now=
                     raise ValueError('TRANSLATION_INVALID')
                 if data.get('quotaFinished') is True or data.get('responseStatus') in (403, 429, '403', '429'):
                     state['blocked_until'] = now + WINDOW
+                    _record_diagnostic(last_errorcode='QUOTA', provider_state='QUOTA')
                 elif data.get('responseStatus') == 200 and data.get('quotaFinished') is False and isinstance(data.get('responseData'), dict):
                     text = data['responseData'].get('translatedText')
                     if isinstance(text, str) and '<' not in text and '>' not in text and re.search(r'[가-힣]', text):
                         result = plain_text(text, 1000) or None
+                    _record_diagnostic(last_errorcode=None if result else 'INVALID_RESPONSE', provider_state='AVAILABLE' if result else 'UNAVAILABLE')
+                else:
+                    _record_diagnostic(last_errorcode='INVALID_RESPONSE', provider_state='UNAVAILABLE')
             except HTTPError as error:
                 if error.code in (403, 429):
                     state['blocked_until'] = now + WINDOW
-            except (OSError, ValueError, TypeError, KeyError):
-                pass  # Already persisted failure; retain the original public headline.
+                    _record_diagnostic(last_errorcode='QUOTA', provider_state='QUOTA')
+                else:
+                    _record_diagnostic(last_errorcode='NETWORK_UNAVAILABLE', provider_state='UNAVAILABLE')
+            except OSError:
+                _record_diagnostic(last_errorcode='NETWORK_UNAVAILABLE', provider_state='UNAVAILABLE')
+            except (ValueError, TypeError, KeyError):
+                _record_diagnostic(last_errorcode='INVALID_RESPONSE', provider_state='UNAVAILABLE')  # Already persisted failure; retain the original public headline.
             state['cache'][key] = result
             _save_state(store, state)
             return result
+        except FileExistsError:
+            _record_diagnostic(store_state='BUSY')
+            return None
         except (OSError, ValueError, TypeError):
+            _record_diagnostic(last_errorcode='STORE_UNAVAILABLE', store_state='UNAVAILABLE')
             return None
         finally:
             if acquired:

@@ -198,7 +198,7 @@ def _status():
         site = 'OK'
     except Unavailable as error:
         site = str(error)
-    return {**shape, 'site': site, 'bridge_version': '0.6.45'}
+    return {**shape, 'site': site, 'bridge_version': '0.6.45', 'translation_diagnostic': zero_discovery.get_diagnostic()}
 
 
 async def status(request):
