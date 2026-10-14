@@ -59,6 +59,38 @@
     if (h >= 20 && h < 24) return ['야근 각이네요… 미국장 전에 데이터를 점검해요.', '밤에도 불이 켜진 사무실, 우리 팀이에요.'];
     return ['새벽 근무는 커피가 연료예요.', '다들 자는 시간에 숫자는 계속 움직여요.'];
   }
+  const hour12 = (h) => (h % 12) || 12, ampm = (h) => h < 12 ? '오전' : '오후';
+  // Lines that name the real Korean date and clock, so the office visibly lives on the visitor's calendar.
+  function dayLines(parts) {
+    const names = ['일', '월', '화', '수', '목', '금', '토'], [, month, day] = parts.date.split('-').map(Number), lines = [];
+    lines.push('지금 ' + ampm(parts.hour) + ' ' + hour12(parts.hour) + '시 ' + String(parts.minute).padStart(2, '0') + '분이에요.', '오늘은 ' + month + '월 ' + day + '일 ' + names[parts.weekday] + '요일이네요.');
+    if (parts.weekday === 1 && parts.hour < 14) lines.push('월요일 아침은 언제나 힘들어요…', '월요병이 아직 안 풀렸어요.');
+    if (parts.weekday === 5) lines.push('드디어 금요일이에요!', parts.hour >= 15 ? '불금이에요, 오늘은 일찍 마무리해요.' : '오늘만 지나면 주말이에요.');
+    if (parts.weekday === 0 || parts.weekday === 6) lines.push('주말엔 느긋하게 자료를 읽어요.');
+    if (parts.weekday === 3) lines.push('수요일이라 한 주의 반이 지났어요.');
+    if (month === 12) lines.push('벌써 연말 분위기가 나요.'); if (month >= 3 && month <= 5) lines.push('봄이라 창밖이 환해요.'); if (month >= 6 && month <= 8) lines.push('여름이라 에어컨이 필수예요.'); if (month >= 9 && month <= 11) lines.push('가을이라 커피가 더 맛있어요.');
+    return lines;
+  }
+  // Short answers a neighbour gives, so two staff can hold a tiny conversation.
+  const REPLIES = ['맞아요, 저도 그렇게 생각해요.', '그러게요, 하하.', '저도요! 완전 공감이에요.', '오, 그렇군요.', '맞다, 그 얘기 들었어요.', '그럼요, 커피 한 잔 해요.', '어머, 정말요?', '흠, 저는 조금 다르게 봐요.'];
+  const replyLine = (rng = Math.random) => REPLIES[Math.min(REPLIES.length - 1, Math.floor(rng() * REPLIES.length))];
+  // Faces: 7 eye styles x 7 mouths = 49 distinct expressions; personas pin a matching pair.
+  const FACE_EYES = 7, FACE_MOUTHS = 7;
+  const faceAt = (index) => ({eyes: ((index % FACE_EYES) + FACE_EYES) % FACE_EYES, mouth: (Math.floor(index / FACE_EYES) + index) % FACE_MOUTHS});
+  const PERSONAS = {
+    '낙천적': {face: {eyes: 1, mouth: 1}, lines: ['오늘도 잘 될 거예요!', '좋게 생각하면 다 좋아요.', '일단 웃고 시작해요 ㅎㅎ']},
+    '꼼꼼함': {face: {eyes: 0, mouth: 3}, lines: ['한 번 더 검토해 볼게요.', '숫자를 하나씩 대조 중이에요.', '출처 먼저 확인할게요.']},
+    '장난꾸러기': {face: {eyes: 3, mouth: 5}, lines: ['퀴즈 하나 낼까요?', '방금 농담인데 웃어 주세요 ㅋㅋ', '심심한데 내기할래요?']},
+    '차분함': {face: {eyes: 4, mouth: 2}, lines: ['서두르지 말고 차분히 봐요.', '숨 한 번 쉬고 갈게요.', '천천히 해도 괜찮아요.']},
+    '열정적': {face: {eyes: 5, mouth: 4}, lines: ['오늘 안에 끝내 봐요!', '이건 꼭 해보고 싶어요!', '에너지가 넘쳐요!']},
+    '졸림': {face: {eyes: 2, mouth: 6}, lines: ['커피… 커피가 필요해요…', '눈이 자꾸 감겨요 ㅠㅠ', '5분만 쉬고 올게요.']},
+    '호기심': {face: {eyes: 6, mouth: 0}, lines: ['이건 왜 이럴까요? 궁금해요!', '새로 알게 된 게 있어요.', '질문 하나만 해도 돼요?']}
+  };
+  const PERSONA_NAMES = Object.keys(PERSONAS);
+  const SPACE = {floor: ['wood', 'gray', 'mint', 'sand'], wall: ['sky', 'peach', 'lavender', 'white'], props: ['plant', 'coffee', 'sofa', 'books', 'fish', 'poster', 'clock']};
+  const SPACE_NAMES = {floor: {wood: '원목', gray: '회색', mint: '민트', sand: '모래'}, wall: {sky: '하늘', peach: '복숭아', lavender: '라벤더', white: '하양'}, props: {plant: '화분', coffee: '커피머신', sofa: '소파', books: '책장', fish: '어항', poster: '포스터', clock: '시계'}};
+  const DEFAULT_SPACE = {floor: 'wood', wall: 'sky', props: ['plant', 'coffee']};
+  const daypart = (hour) => hour >= 6 && hour < 11 ? 'morning' : hour >= 11 && hour < 17 ? 'day' : hour >= 17 && hour < 20 ? 'evening' : 'night';
   const PERSONA = {
     ZERO_FINAL_MANAGER: ['오늘 근거 목록을 정리하는 중이에요.', '제출된 자료와 아직 없는 자료를 구분해서 보고 있어요.'],
     GREENBLATT: ['이 회사 이익에 비해 가격이 어떤지 살펴보고 있어요.', '숫자 하나로 싸다고 단정하지 않으려고 해요.'],
@@ -78,7 +110,7 @@
   // Candidate pool for one chat bubble; `rng` returns [0,1) so tests can pin the result.
   function chatterLine(context, persona, rng = Math.random) {
     const now = context.now || new Date(), parts = kstParts(now), pool = [];
-    pool.push(...timeLines(parts), ...timeLines(parts));
+    pool.push(...timeLines(parts), ...timeLines(parts), ...dayLines(parts));
     pool.push(...weatherLines(context.weather));
     const note = holidayNote(now, context.holidays || KR_HOLIDAYS);
     if (note) pool.push(note, note);
@@ -125,6 +157,17 @@
     product.slice(0, 4).forEach((id, n) => spots.set(id, {x: productX[n], y: 27}));
     return spots;
   }
+  // A user's own company: team pods spread evenly across the floor (up to 4 per row), the leader in front of each pod.
+  function layoutTeams(chiefs, staffByChief) {
+    const spots = new Map(), columns = Math.min(4, Math.max(1, chiefs.length)), rows = Math.ceil(chiefs.length / columns);
+    chiefs.forEach((id, index) => {
+      const column = index % columns, row = Math.floor(index / columns), inRow = Math.min(columns, chiefs.length - row * columns);
+      const x = 160 * (column + 1) / (inRow + 1), y = rows === 1 ? 46 : 38 + row * 34;
+      spots.set(id, {x, y});
+      (staffByChief[id] || []).slice(0, STAFF_OFFSET.length).forEach((staffId, n) => spots.set(staffId, {x: x + STAFF_OFFSET[n][0], y: y + STAFF_OFFSET[n][1]}));
+    });
+    return spots;
+  }
   // Anonymous visit layout: N identical workers on a grid of up to eight columns.
   function layoutGrid(count) {
     const columns = Math.min(8, Math.max(1, count)), gap = columns > 1 ? 128 / (columns - 1) : 0, start = columns > 1 ? 16 : 80;
@@ -159,7 +202,8 @@
   ];
 
   const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, chatterLine, personaFor, pickSpeaker, clamp,
-    moveToward, keyDirection, clampToFloor, nearest, layoutZero, layoutGrid, reply, TOPICS, TUTORIAL, SYSTEM_TEXT};
+    moveToward, keyDirection, clampToFloor, nearest, layoutZero, layoutTeams, layoutGrid, reply, TOPICS, TUTORIAL, SYSTEM_TEXT,
+    dayLines, replyLine, faceAt, PERSONAS, PERSONA_NAMES, FACE_EYES, FACE_MOUTHS, SPACE, SPACE_NAMES, DEFAULT_SPACE, daypart};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZEROLobbyLogic = api;
 })();

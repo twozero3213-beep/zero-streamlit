@@ -67,10 +67,11 @@
       event.preventDefault();
       const heading = summary.querySelector('.desk-indicator-heading');
       dialog.querySelector('#indicator-title').textContent = heading?.querySelector('strong')?.textContent || '경제 지표';
-      dialog.querySelector('#indicator-sub').textContent = (summary.querySelector('.desk-indicator-values')?.textContent || '').replace(/\s+/g, ' ').trim();
+      dialog.querySelector('#indicator-sub').textContent = [...(summary.querySelector('.desk-indicator-values')?.children || [])].map((part) => part.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' · ');
       const body = card.querySelector('.desk-indicator-body')?.cloneNode(true);
       body?.querySelectorAll('details').forEach((details) => { details.open = true; });
-      dialog.querySelector('.ind-body').replaceChildren(...(body ? [body] : []));
+      const item = window.ZERODesk?.macro?.().find((row) => row.id === card.dataset.id), outlook = item && window.ZEROOutlook?.render?.(item);
+      dialog.querySelector('.ind-body').replaceChildren(...[outlook, body].filter(Boolean));
       dialog.showModal?.();
     });
   }

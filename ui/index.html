@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="assets/stock-analytics.css">
   <link rel="stylesheet" href="assets/office.css">
   <link rel="stylesheet" href="assets/lobby.css">
+  <link rel="stylesheet" href="assets/lobby-polish.css">
   <script src="assets/app.js" defer></script>
   <script src="assets/office.js" defer></script>
   <script src="assets/company-research.js" defer></script>
@@ -24,6 +25,8 @@
   <script src="assets/lobby-logic.js" defer></script>
   <script src="assets/lobby.js" defer></script>
   <script src="assets/lobby-users.js" defer></script>
+  <script src="assets/outlook.js" defer></script>
+  <script src="assets/numfmt.js" defer></script>
   <script src="assets/ux.js" defer></script>
 </head>
 <body>
@@ -121,6 +124,7 @@
     <section class="lobby" aria-labelledby="lobby-title">
       <div class="lobby-head"><div><h2 id="lobby-title">지금 근무 중인 팀</h2><p id="lobby-sub">지금 근무 중인 ZERO 팀이에요. 캐릭터를 움직여 직원에게 말을 걸어 보세요.</p></div>
         <div class="lobby-actions"><span class="lobby-chip">내 캐릭터<b id="lobby-name-chip">나</b></span><span class="lobby-chip" id="lobby-count" role="status">직원 불러오는 중</span><button id="lobby-tutorial-btn" class="secondary-button" type="button">튜토리얼</button><button id="lobby-profile-btn" class="secondary-button" type="button" hidden>내 사무실 만들기</button></div></div>
+      <div class="lobby-hero"><div><p class="hero-date" id="lobby-hero-date"></p><p class="hero-say" id="lobby-hero-say">“ZERO 사무실에 어서 오세요.”</p></div><div class="hero-cta"><button type="button" id="hero-talk">총괄에게 말 걸기</button><button type="button" id="hero-tour">튜토리얼 보기</button></div></div>
       <div id="lobby-banner" class="lobby-banner" hidden></div>
       <div id="lobby-error" class="lobby-error" hidden><p>팀 명부를 불러오지 못했어요.</p><button id="lobby-retry" class="secondary-button" type="button">다시 시도</button></div>
       <aside id="lobby-tutorial" class="lobby-tutorial" aria-label="튜토리얼" hidden><h3 class="tut-step"></h3><p class="tut-text"></p><div class="tut-bar"><div class="tut-progress"></div></div><div class="tut-actions"><button type="button" class="tut-next">건너뛰기</button><button type="button" class="tut-close">그만 보기</button></div></aside>

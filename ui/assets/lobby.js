@@ -24,6 +24,7 @@
       (role.support_staff || []).forEach((staff) => list.push({id: staff.id, department: id, kind: 'staff', name: shortName(staff.name), role: staff.name, mandate: String(staff.mandate || staff.work_order?.instruction || role.mandate || ''), hue}));
     });
     (team.operating_policy.product_staff || []).forEach((staff) => list.push({id: staff.id, department: 'PRODUCT_QUALITY_TEAM', kind: 'product', name: shortName(staff.name), role: staff.name, mandate: String(staff.instruction || ''), hue: 280}));
+    list.forEach((npc, index) => { npc.face = L.faceAt(index); });
     return {list, chiefs};
   }
   function placeZero(roster) {
@@ -33,13 +34,15 @@
     roster.list.forEach((npc) => { npc.home = spots.get(npc.kind === 'manager' ? 'manager' : npc.id); npc.pos = {...npc.home}; });
   }
 
-  function figure(kind) {
-    const fig = node('span', 'npc-fig'); fig.append(node('i', 'head'), node('i', 'body'), node('i', 'legs')); return fig;
+  function figure(kind, face) {
+    const fig = node('span', 'npc-fig'), head = node('i', 'head'), look = face || L.faceAt(0);
+    head.dataset.eyes = String(look.eyes); head.dataset.mouth = String(look.mouth); head.append(node('b', 'eye l'), node('b', 'eye r'), node('b', 'mouth'));
+    fig.append(head, node('i', 'body'), node('i', 'legs')); return fig;
   }
   function buildNpc(npc) {
     const button = node('button', 'npc ' + npc.kind); button.type = 'button'; button.dataset.id = npc.id; button.style.setProperty('--hue', npc.hue);
     button.setAttribute('aria-label', npc.name + ' · ' + npc.role + ' · 눌러서 대화');
-    button.append(node('span', 'npc-desk'), figure(npc.kind), node('span', 'npc-name', npc.name), node('span', 'npc-bubble'));
+    button.append(node('span', 'npc-desk'), figure(npc.kind, npc.face), node('span', 'npc-name', npc.name), node('span', 'npc-bubble'));
     button.addEventListener('click', (event) => { event.stopPropagation(); talkTo(npc); });
     npc.el = button; place(npc); stage.append(button);
   }
@@ -55,10 +58,14 @@
     const windowBox = node('div', 'lobby-window'); windowBox.id = 'lobby-weather'; windowBox.append(node('b', '', '창밖'), node('span', '', '날씨 확인 중'));
     const clock = node('div', 'lobby-clock'); clock.id = 'lobby-clock';
     wall.append(windowBox, boardEl, clock); stage.append(wall);
-    stage.append(node('div', 'prop table'), node('div', 'prop coffee', '☕'), node('div', 'prop plant left', '🪴'), node('div', 'prop plant right', '🪴'));
+    stage.append(node('div', 'prop table'));
+    const space = S.space || L.DEFAULT_SPACE; stage.dataset.floor = space.floor; stage.dataset.wall = space.wall;
+    const EMOJI = {plant: '🪴', coffee: '☕', sofa: '🛋️', books: '📚', fish: '🐠', poster: '🖼️', clock: '🕰️'};
+    space.props.forEach((name) => { if (EMOJI[name]) { const prop = node('div', 'prop ' + name, EMOJI[name]); prop.dataset.prop = name; stage.append(prop); } });
+    if (space.props.includes('plant')) stage.append(node('div', 'prop plant right', '🪴'));
     S.npcs.forEach(buildNpc);
     S.player = {id: 'player', pos: {x: 64, y: 96}, el: node('div', 'npc player')};
-    S.player.el.append(figure('player'), node('span', 'npc-name', S.playerName), node('span', 'npc-bubble')); place(S.player); stage.append(S.player.el);
+    S.player.el.append(figure('player', {eyes: 1, mouth: 1}), node('span', 'npc-name', S.playerName), node('span', 'npc-bubble')); place(S.player); stage.append(S.player.el);
   }
 
   // ---- movement -------------------------------------------------------------------------------
@@ -113,16 +120,26 @@
   $('lobby-chat-close').addEventListener('click', () => chat.dialog.close());
 
   // ---- chatter and roaming --------------------------------------------------------------------
-  function speak(entity, text, ms = 5500) {
+  function speak(entity, text, ms = 6500) {
     const bubble = entity.el.querySelector('.npc-bubble'); bubble.textContent = text; entity.el.classList.add('speaking');
     const record = {id: entity.id, pos: entity.pos}; S.speaker.push(record);
     setTimeout(() => { entity.el.classList.remove('speaking'); S.speaker = S.speaker.filter((item) => item !== record); }, ms);
   }
+  const MAX_BUBBLES = 4, BUBBLE_GAP = 26;
   function chatterTick() {
-    if (!S.active || document.hidden || S.speaker.length >= 2) return;
-    const npc = L.pickSpeaker(S.npcs.filter((item) => item.kind !== 'staff' || Math.random() < 0.5), S.speaker.map((item) => ({id: item.id, pos: item.pos})), 42);
+    if (!S.active || document.hidden || S.speaker.length >= MAX_BUBBLES || !S.npcs.length) return;
+    const active = S.speaker.map((item) => ({id: item.id, pos: item.pos}));
+    const npc = L.pickSpeaker(S.npcs.filter((item) => item.kind !== 'staff' || Math.random() < 0.7), active, BUBBLE_GAP);
     if (!npc) return;
-    speak(npc, L.chatterLine({now: new Date(), weather: S.weather, holidays: S.holidays}, S.visit ? [] : L.personaFor(npc.department)));
+    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), weather: S.weather, holidays: S.holidays};
+    speak(npc, npc.duty && Math.random() < 0.3 ? '저는 ' + npc.duty + ' 담당이에요.' : L.chatterLine(context, persona));
+    // A neighbour answers a moment later, so it reads as a small conversation, not isolated captions.
+    const buddy = L.nearest(S.npcs.filter((item) => item !== npc && !item.el.classList.contains('speaking')), npc.pos, 24);
+    if (buddy && Math.random() < 0.7) setTimeout(() => { if (S.active) speak(buddy, L.replyLine()); }, 2800);
+  }
+  function greet() {
+    const host = S.npcs.find((item) => item.kind === 'manager'); if (!host || S.visit) return;
+    speak(host, '어서 오세요, ' + S.playerName + '님! ZERO 사무실에 오신 걸 환영해요.', 7000);
   }
   const WAYPOINTS = [{x: 12, y: 30}, {x: 80, y: 36}, {x: 148, y: 30}];
   function roamTick() {
@@ -135,13 +152,21 @@
   }
   function clockTick() {
     const parts = L.kstParts(new Date()), clock = $('lobby-clock'); if (clock) clock.textContent = String(parts.hour).padStart(2, '0') + ':' + String(parts.minute).padStart(2, '0') + ' KST';
+    stage.dataset.daypart = L.daypart(parts.hour); stage.dataset.weather = L.weatherKind(S.weather?.code) || 'none';
+    const names = ['일', '월', '화', '수', '목', '금', '토'], date = $('lobby-hero-date'), [, month, day] = parts.date.split('-').map(Number);
+    if (date) date.textContent = month + '월 ' + day + '일 ' + names[parts.weekday] + '요일 · ' + (parts.hour < 12 ? '오전 ' : '오후 ') + ((parts.hour % 12) || 12) + '시 ' + String(parts.minute).padStart(2, '0') + '분' + (S.weather ? ' · 서울 ' + Math.round(S.weather.temp) + '°' : '');
+  }
+  // The hero line under the title: today's small talk, rotating, so the first screen always says something new.
+  function heroTick() {
+    const say = $('lobby-hero-say'); if (!say) return;
+    say.textContent = '“' + L.chatterLine({now: new Date(), weather: S.weather, holidays: S.holidays}, []) + '”';
   }
 
   // ---- outside world: weather, holidays, news board -------------------------------------------
   async function loadWeather() {
     try {
       const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=temperature_2m,weather_code&timezone=Asia%2FSeoul', {cache: 'no-store'});
-      const current = (await response.json()).current; S.weather = {temp: current.temperature_2m, code: current.weather_code};
+      const current = (await response.json()).current; S.weather = {temp: current.temperature_2m, code: current.weather_code}; clockTick(); heroTick();
       const box = $('lobby-weather'); box.replaceChildren(node('b', '', {clear: '☀️', cloud: '☁️', fog: '🌫️', rain: '🌧️', snow: '❄️', storm: '⛈️'}[L.weatherKind(S.weather.code)] || '🌤️'), node('span', '', '서울 ' + Math.round(S.weather.temp) + '°'));
     } catch (_) { S.weather = null; }
   }
@@ -201,6 +226,8 @@
   }
   function startTutorial() { S.tutorial = {step: 0, done: false}; store.set(TUT_KEY, JSON.stringify(S.tutorial)); renderTutorial(); }
   $('lobby-tutorial-btn').addEventListener('click', startTutorial);
+  $('hero-tour').addEventListener('click', startTutorial);
+  $('hero-talk').addEventListener('click', () => { const host = S.npcs.find((item) => item.kind === 'manager'); if (host) talkTo(host); });
   $('lobby-tutorial').querySelector('.tut-next').addEventListener('click', () => {
     const state = S.tutorial; if (!state) return; if (L.TUTORIAL[state.step].id === 'done') state.done = true; else state.step++;
     store.set(TUT_KEY, JSON.stringify(state)); renderTutorial();
@@ -213,7 +240,7 @@
     if (!text) return; banner.append(node('span', '', text)); if (back) { const button = node('button', 'secondary-button', 'ZERO 사무실로'); button.type = 'button'; button.addEventListener('click', () => open()); banner.append(button); }
   }
   async function open() {
-    S.visit = null; S.mode = 'zero'; setBanner('');
+    S.visit = null; S.mode = 'zero'; S.space = null; setBanner('');
     $('lobby-title').textContent = '지금 근무 중인 팀'; $('lobby-sub').textContent = '지금 근무 중인 ZERO 팀이에요. 캐릭터를 움직여 직원에게 말을 걸어 보세요.';
     try {
       if (!S.team) { const response = await fetch('api/team', {cache: 'no-store'}); if (!response.ok) throw Error('TEAM'); S.team = await response.json(); }
@@ -224,23 +251,28 @@
   }
   // The visitor's own company: the names they chose, visible only to them (the server never returns this to others).
   function showOwn(info) {
-    S.visit = null; S.mode = 'own'; const list = [], chiefs = [], staffByChief = {};
+    S.visit = null; S.mode = 'own'; S.space = info.space || L.DEFAULT_SPACE;
+    const list = [], chiefs = [], staffByChief = {}, person = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : (value || {name: '', persona: '', duty: ''});
+    const make = (id, department, kind, who, role, mandate, hue, index) => {
+      const persona = L.PERSONAS[who.persona];
+      return {id, department, kind, name: who.name || '이름 없음', role, mandate, hue, duty: who.duty || '', persona: who.persona || '', personaLines: persona?.lines, face: persona?.face || L.faceAt(index)};
+    };
     (info.team?.teams || []).slice(0, 8).forEach((team, index) => {
-      const id = 'own-' + index, hue = (index * 45 + 10) % 360; chiefs.push(id); staffByChief[id] = [];
-      list.push({id, department: id, kind: 'chief', name: team.leader || team.name, role: '팀장 · ' + team.name, mandate: team.name + ' 팀을 이끌어요.', hue});
-      team.members.forEach((member, n) => { const memberId = id + '-m' + n; staffByChief[id].push(memberId); list.push({id: memberId, department: id, kind: 'staff', name: member, role: team.name + ' 팀원', mandate: team.name + ' 팀의 일원이에요.', hue}); });
+      const id = 'own-' + index, hue = (index * 45 + 10) % 360, leader = person(team.leader); chiefs.push(id); staffByChief[id] = [];
+      list.push(make(id, id, 'chief', {...leader, name: leader.name || team.name}, '팀장 · ' + team.name + (team.role ? ' · ' + team.role : ''), (team.role || team.name) + ' 팀을 이끌어요. ' + (leader.duty ? '맡은 일: ' + leader.duty : ''), hue, list.length));
+      (team.members || []).forEach((raw, n) => { const member = person(raw), memberId = id + '-m' + n; staffByChief[id].push(memberId); list.push(make(memberId, id, 'staff', member, team.name + ' 팀원' + (member.duty ? ' · ' + member.duty : ''), team.name + ' 팀의 일원이에요. ' + (member.duty ? '맡은 일: ' + member.duty : ''), hue, list.length)); });
     });
-    const spots = L.layoutZero(chiefs, staffByChief, []);
+    const spots = L.layoutTeams(chiefs, staffByChief);
     list.forEach((npc) => { npc.home = spots.get(npc.id); npc.pos = {...npc.home}; });
     S.npcs = list; setBanner(list.length ? (info.team.company || info.nick + '의 회사') + ' · 직원 ' + list.length + '명 · 이 화면은 나만 볼 수 있어요' : '아직 직원이 없어요. "내 사무실" 창에서 팀을 만들어 보세요.', true);
     $('lobby-count').textContent = '직원 ' + list.length + '명'; buildStage(); finish();
   }
   // Another user's office: only the head count is public; names, teams and duties are never shown.
   function visitOffice(info) {
-    S.visit = info; S.mode = 'visit'; const count = Math.max(0, Math.min(40, Number(info.staffCount) || 0));
+    S.visit = info; S.mode = 'visit'; S.space = info.space || L.DEFAULT_SPACE; const count = Math.max(0, Math.min(40, Number(info.staffCount) || 0));
     const spots = L.layoutGrid(count);
-    S.npcs = spots.map((spot, index) => ({id: 'guest-' + index, department: 'GUEST', kind: 'staff', name: '직원', role: '비공개', mandate: '', hue: (index * 47 + 20) % 360, home: spot, pos: {...spot}}));
-    S.npcs.push({id: 'host', department: 'HOST', kind: 'manager', name: info.nick, role: '사무실 주인', mandate: '', hue: 40, home: {x: 80, y: 27}, pos: {x: 80, y: 27}});
+    S.npcs = spots.map((spot, index) => ({id: 'guest-' + index, department: 'GUEST', kind: 'staff', name: '직원', role: '비공개', mandate: '', hue: (index * 47 + 20) % 360, home: spot, pos: {...spot}, face: L.faceAt(index + 3)}));
+    S.npcs.push({id: 'host', department: 'HOST', kind: 'manager', name: info.nick, role: '사무실 주인', mandate: '', hue: 40, face: {eyes: 1, mouth: 1}, home: {x: 80, y: 27}, pos: {x: 80, y: 27}});
     setBanner(info.nick + '님의 사무실 · 직원 ' + count + '명 · 수익률 ' + (Number.isFinite(Number(info.returnPercent)) ? money(Number(info.returnPercent)) : '집계 전') + ' · 팀 구성은 비공개예요', true);
     $('lobby-title').textContent = info.nick + '님의 사무실'; $('lobby-sub').textContent = '직원 수와 근무 모습만 볼 수 있어요.'; $('lobby-count').textContent = '직원 ' + count + '명';
     buildStage(); finish();
@@ -270,8 +302,8 @@
     if (on === S.active) return; S.active = on;
     S.timers.forEach(clearInterval); S.timers = [];
     if (!on) { S.keys.clear(); if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return; }
-    S.timers.push(setInterval(chatterTick, 5200), setInterval(roamTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000));
-    clockTick(); ensureLoop(); setTimeout(chatterTick, 1200);
+    S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 9000), setInterval(heroTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000));
+    clockTick(); heroTick(); ensureLoop(); [900, 1800, 2700].forEach((ms) => setTimeout(chatterTick, ms)); setTimeout(greet, 400);
   }
   function setPlayerName(name) { S.playerName = name || '나'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
   function setUserBoard(rows) { S.userBoard = rows; loadReturns(); }

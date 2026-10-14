@@ -1,0 +1,69 @@
+/* Layering, faces, time of day, weather, themes and the hero strip of the ZERO office (loaded after lobby.css). */
+.lobby-stage { isolation: isolate; }
+.global-header { z-index: 60; }
+.npc-fig { width: 40px; height: 54px; }
+.npc.staff .npc-fig, .npc.product .npc-fig { width: 34px; height: 46px; } .npc.chief .npc-fig { width: 44px; height: 60px; } .npc.manager .npc-fig { width: 50px; height: 66px; } .npc.player .npc-fig { width: 40px; height: 54px; }
+.npc-fig .head { left: 14%; width: 72%; height: 40%; }
+.npc-fig .head b { position: absolute; display: block; }
+.head .eye { top: 40%; width: 17%; height: 17%; border-radius: 50%; background: #2b2f38; } .head .eye.l { left: 24%; } .head .eye.r { right: 24%; }
+.head[data-eyes='1'] .eye { height: 11%; background: none; border-top: 2px solid #2b2f38; border-radius: 50% 50% 0 0; top: 42%; }
+.head[data-eyes='2'] .eye { height: 5%; top: 48%; border-radius: 1px; width: 21%; }
+.head[data-eyes='3'] .eye.r { height: 5%; top: 48%; border-radius: 1px; width: 21%; }
+.head[data-eyes='4'] .eye { height: 9%; border-radius: 50% / 80%; width: 21%; }
+.head[data-eyes='5'] .eye { width: 22%; height: 22%; top: 36%; box-shadow: 0 0 0 2px #fff, 0 0 0 3px #2b2f38; }
+.head[data-eyes='6'] .eye { width: 19%; height: 19%; box-shadow: inset -1px -1px 0 #fff; background: #1c3d7a; }
+.head .mouth { left: 36%; width: 28%; top: 68%; height: 12%; }
+.head[data-mouth='0'] .mouth { left: 42%; width: 16%; height: 14%; border-radius: 50%; background: #7a2f2f; }
+.head[data-mouth='1'] .mouth { border-bottom: 2px solid #7a2f2f; border-radius: 0 0 60% 60%; height: 10%; }
+.head[data-mouth='2'] .mouth { top: 74%; height: 0; border-top: 2px solid #7a2f2f; }
+.head[data-mouth='3'] .mouth { top: 74%; height: 0; border-top: 2px solid #7a2f2f; transform: rotate(-12deg); }
+.head[data-mouth='4'] .mouth { left: 30%; width: 40%; height: 18%; background: #7a2f2f; border-radius: 0 0 100% 100%; }
+.head[data-mouth='5'] .mouth { border-bottom: 2px solid #7a2f2f; border-radius: 0 0 60% 60%; height: 10%; }
+.head[data-mouth='5'] .mouth::after { content: ''; position: absolute; left: 40%; top: 80%; width: 22%; height: 60%; background: #ff8fa3; border-radius: 0 0 50% 50%; }
+.head[data-mouth='6'] .mouth { top: 76%; height: 10%; border-top: 2px solid #7a2f2f; border-radius: 60% 60% 0 0; }
+.npc-bubble { font-size: 13px; max-width: 190px; }
+/* time of day and weather */
+.lobby-stage[data-daypart='morning'] { filter: sepia(.12) brightness(1.02); }
+.lobby-stage[data-daypart='evening'] { filter: sepia(.28) saturate(1.1) brightness(.96); }
+.lobby-stage[data-daypart='night'] { filter: brightness(.78) saturate(.9) hue-rotate(-8deg); }
+.lobby-stage[data-daypart='morning'] .lobby-window { background: #ffeab8; }
+.lobby-stage[data-daypart='evening'] .lobby-window { background: #ffb98a; }
+.lobby-stage[data-daypart='night'] .lobby-window { background: #1f2a4a; color: #dfe6ff; }
+.lobby-stage[data-daypart='night'] .lobby-window b::after { content: ' ☾'; }
+.lobby-stage[data-weather='rain'] .lobby-window::after, .lobby-stage[data-weather='storm'] .lobby-window::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(105deg, transparent 0 5px, #4a78b866 5px 6px); animation: lobby-rain .5s linear infinite; }
+.lobby-stage[data-weather='snow'] .lobby-window::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(#fff 1.5px, transparent 2px); background-size: 14px 14px; animation: lobby-snow 2.4s linear infinite; }
+@keyframes lobby-rain { to { background-position: -6px 12px; } }
+@keyframes lobby-snow { to { background-position: 7px 14px; } }
+/* floor and wall themes */
+.lobby-stage { background: #f3ead8; }
+.lobby-stage[data-floor='gray'] { background: #e9ebef; } .lobby-stage[data-floor='mint'] { background: #e3f1ec; } .lobby-stage[data-floor='sand'] { background: #f1e7cf; }
+.lobby-stage[data-wall='peach'] .lobby-wall { background: #f6e1d8; border-color: #e2b9a8; }
+.lobby-stage[data-wall='lavender'] .lobby-wall { background: #e6e0f3; border-color: #bcb1d8; }
+.lobby-stage[data-wall='white'] .lobby-wall { background: #f4f5f7; border-color: #cfd4dc; }
+.prop.sofa { left: 95%; top: 56%; font-size: 34px; } .prop.books { left: 4%; top: 54%; font-size: 30px; } .prop.fish { left: 4%; top: 72%; font-size: 28px; }
+.prop.poster { left: 95%; top: 33%; font-size: 30px; } .prop.clock { left: 87%; top: 31%; font-size: 26px; }
+/* hero strip */
+.lobby-hero { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 20px; margin-bottom: 12px; border-radius: var(--radius); background: linear-gradient(120deg, #1b64da, #5b8def); color: #fff; }
+.hero-date { font-size: 14px; opacity: .9; } .hero-say { font-size: 20px; font-weight: 650; line-height: 1.4; margin-top: 4px; min-height: 28px; }
+.hero-cta { display: flex; gap: 8px; flex-wrap: wrap; }
+.hero-cta button { min-height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #ffffff88; background: #ffffff22; color: #fff; font-weight: 600; }
+.hero-cta button:hover { background: #ffffff44; }
+@media (max-width: 760px) { .hero-say { font-size: 17px; } }
+/* team builder */
+.profile-team .profile-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+@media (max-width: 520px) { .profile-team .profile-row { grid-template-columns: 1fr; } }
+.profile-field select { min-height: 44px; padding: 0 10px; border: 1px solid #c8d3e3; border-radius: 12px; background: #fff; color: var(--ink); font-size: 15px; }
+.profile-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.profile-chips label { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 10px; border: 1px solid #c8d3e3; border-radius: 18px; background: #fff; font-size: 14px; }
+.member-row { display: grid; grid-template-columns: 1fr 120px 1fr auto; gap: 6px; align-items: center; }
+@media (max-width: 620px) { .member-row { grid-template-columns: 1fr 1fr; } }
+@media (prefers-reduced-motion: reduce) { .lobby-stage[data-weather] .lobby-window::after { animation: none; } }
+/* readable numbers */
+.num-t { position: relative; border-bottom: 1px dotted #8aa0bd; cursor: help; }
+.num-t.num-open::after { content: attr(data-full); position: absolute; left: 0; top: 100%; z-index: 80; margin-top: 4px; padding: 6px 10px; border-radius: 8px; background: #17202c; color: #fff; font: 500 13px/1.4 ui-monospace, Consolas, monospace; white-space: nowrap; box-shadow: 0 4px 14px #0004; }
+/* indicator outlook */
+.outlook { padding: 12px 14px; margin: 8px 0 14px; border-radius: 12px; background: #f1f6ff; display: grid; gap: 8px; }
+.outlook h3 { font-size: 15px; } .outlook-head { font-weight: 650; }
+.outlook-row { display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px; background: #fff; font-size: 14px; } .outlook-row strong { color: var(--blue); }
+.outlook-warn { padding: 8px 10px; border-radius: 10px; background: #fff4d6; color: #5b4300; font-size: 13px; }
+.source-more summary { cursor: pointer; color: var(--secondary); font-size: 13px; }

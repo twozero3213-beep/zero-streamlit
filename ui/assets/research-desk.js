@@ -167,7 +167,8 @@ function renderStudyCompany() {
   container.append(node('p','muted-note','연간 실적 기간 종료 '+(financial.period_end||'근거 없음')+' · 연간/최근 12개월 값은 혼합하지 않습니다. 제공자 현재 비율의 계산 기준일과 EPS 기간은 미검증입니다. 기업 전체가 독립 분석·검증된 것으로 해석하지 않습니다.'));
   if(financial.source_url)container.append(deskLink('연간 재무 출처',financial.source_url));
   if(company?.quarterly_margins?.length){const detail=node('details','desk-details');detail.append(node('summary','','분기별 순이익률·성장률 보기'));company.quarterly_margins.forEach((row)=>detail.append(node('p','muted-note',row.period+' · 순이익률 '+(Number.isFinite(deskNum(row.net_margin_percent))?deskExact(row.net_margin_percent)+'%':'근거 없음')+' · 순이익 성장률 '+(Number.isFinite(deskNum(row.net_profit_growth_percent))?deskExact(row.net_profit_growth_percent)+'%':'근거 없음'))));detail.append(node('p','muted-note','이익이 적자에서 흑자로 바뀌거나 이전 이익이 0·음수이면 성장률의 해석과 산식을 별도로 확인합니다.'));container.append(detail);}
-  (company?.sources||[]).forEach((item)=>{const p=node('p','desk-source');p.append(deskLink(item.label||'기업 자료 출처',item.url),node('span','muted-note','확인 '+stamp(item.retrieved_at)+' KST'));container.append(p);});
+  const sourceGroups=new Map();(company?.sources||[]).forEach((item)=>{const key=item.label+'|'+String(item.retrieved_at).slice(0,16);if(!sourceGroups.has(key))sourceGroups.set(key,[]);sourceGroups.get(key).push(item);});
+  sourceGroups.forEach((group)=>{const item=group[0],p=node('p','desk-source');p.append(deskLink(item.label||'기업 자료 출처',item.url),node('span','muted-note','확인 '+stamp(item.retrieved_at)+' KST'));if(group.length>1){const more=node('details','source-more');more.append(node('summary','','같은 출처 '+(group.length-1)+'건 더 보기'));group.slice(1).forEach((entry,index)=>{const row=node('p');row.append(deskLink((entry.label||'기업 자료 출처')+' '+(index+2),entry.url));more.append(row);});p.append(more);}container.append(p);});
   deskNotes(container,company?.limitations);
 }
 function deskCalculateExample() {
@@ -210,7 +211,7 @@ function renderMacro() {
   if (desk$('macro-empty')) desk$('macro-empty').hidden = rows.length > 0;
   if (desk$('macro-count')) desk$('macro-count').textContent = rows.length + '개 지표 · 눌러서 관측 이력과 경제적 의미 보기';
   rows.forEach((item) => {
-    const card = node('details', 'desk-indicator'), summary = node('summary', 'desk-indicator-summary');
+    const card = node('details', 'desk-indicator'), summary = node('summary', 'desk-indicator-summary'); card.dataset.id = item.id;
     const heading = node('span', 'desk-indicator-heading'), values = node('span', 'desk-indicator-values');
     heading.append(node('strong', '', item.name), node('span', 'muted-note', ({US:'미국', KR:'한국', GLOBAL:'세계'}[item.country] || item.country) + ' · 관측 ' + deskText(item.latest_period, '날짜 미확인')));
     values.append(node('strong', '', value(item.latest_value) + ' ' + deskText(item.unit, '단위 미확인')), node('span', 'muted-note', '직전 ' + value(item.previous_value) + ' ' + deskText(item.unit, '')));
@@ -391,4 +392,4 @@ desk$('study-example')?.addEventListener('submit',(event)=>event.preventDefault(
 if(desk$('study-price'))deskCalculateExample();
 renderNvdaFilingExample();
 if(typeof ResizeObserver!=='undefined'&&desk$('study-price-chart')){let previousWidth=0;new ResizeObserver(()=>{const width=Math.round(desk$('study-price-chart').clientWidth);if(width&&width!==previousWidth){previousWidth=width;if(researchDesk.data||desk$('study-learning').checked)renderStudyChart();}}).observe(desk$('study-price-chart'));}
-window.ZERODesk={load:loadDesk,render:renderDesk,renderReports:renderBriefingSources,openReport:openDeskReport,open:async()=>{await loadDesk();}};
+window.ZERODesk={macro:()=>researchDesk.data?.macro||[],load:loadDesk,render:renderDesk,renderReports:renderBriefingSources,openReport:openDeskReport,open:async()=>{await loadDesk();}};

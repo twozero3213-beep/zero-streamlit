@@ -9,7 +9,10 @@
   const nickProblem = (nick) => !NICK.test(nick) ? '2~12자의 한글·영문·숫자·밑줄만 쓸 수 있어요.' : /^\d+$/.test(nick) ? '숫자만으로는 만들 수 없어요.' : null;
   function weightTotal(inputs) { return Object.values(inputs).reduce((sum, value) => sum + (Number.isFinite(value) && value > 0 ? value : 0), 0); }
   function weightsFrom(inputs) { const weights = Object.fromEntries(Object.entries(inputs).filter(([symbol, value]) => ALLOWED.includes(symbol) && Number.isFinite(value) && value > 0)); return Object.keys(weights).length && Math.abs(weightTotal(weights) - 100) < 1e-6 ? weights : null; }
-  if (typeof module !== 'undefined' && module.exports) module.exports = {nickProblem, weightTotal, weightsFrom, ALLOWED};
+  const PERSONAS = ['낙천적', '꼼꼼함', '장난꾸러기', '차분함', '열정적', '졸림', '호기심'];
+  const SPACE = {floor: [['wood', '원목'], ['gray', '회색'], ['mint', '민트'], ['sand', '모래']], wall: [['sky', '하늘'], ['peach', '복숭아'], ['lavender', '라벤더'], ['white', '하양']],
+    props: [['plant', '화분'], ['coffee', '커피머신'], ['sofa', '소파'], ['books', '책장'], ['fish', '어항'], ['poster', '포스터'], ['clock', '시계']]};
+  if (typeof module !== 'undefined' && module.exports) module.exports = {nickProblem, weightTotal, weightsFrom, ALLOWED, PERSONAS, SPACE};
   if (typeof document === 'undefined' || !document.getElementById('lobby-view')) return;
 
   const meta = document.querySelector('meta[name="zero-lobby-api"]'), BASE = (meta?.content || '').replace(/\/+$/, '');
@@ -83,33 +86,53 @@
     $('profile-title').textContent = U.me.nick + '의 사무실'; $('profile-sub').textContent = '직원 ' + U.me.staff_count + '명 · 연습 수익률 ' + (U.me.portfolio.return_percent === null ? '집계 전' : (U.me.portfolio.return_percent > 0 ? '+' : '') + U.me.portfolio.return_percent.toFixed(2) + '%');
     const team = node('button', 'primary-button', '팀·직원 구성하기'), portfolio = node('button', 'secondary-button', '연습 포트폴리오 배분'), see = node('button', 'secondary-button', '내 사무실 보기'), out = node('button', 'secondary-button', '로그아웃(이 기기에서)');
     [team, portfolio, see, out].forEach((b) => { b.type = 'button'; });
-    team.addEventListener('click', viewTeam); portfolio.addEventListener('click', viewPortfolio); see.addEventListener('click', () => { dialog.close(); window.ZEROLobby.showOwn({nick: U.me.nick, team: U.me.team}); });
+    team.addEventListener('click', viewTeam); portfolio.addEventListener('click', viewPortfolio); see.addEventListener('click', () => { dialog.close(); window.ZEROLobby.showOwn({nick: U.me.nick, team: U.me.team, space: U.me.space}); });
     out.addEventListener('click', () => { store.del(KEY); U.token = null; U.me = null; window.ZEROLobby.setPlayerName('나'); dialog.close(); render(); });
     body.replaceChildren(node('p', 'muted-note', '직원 구성과 맡은 일은 나만 볼 수 있어요. 다른 사람에게는 직원 수와 수익률만 보여요.'), team, portfolio, see, out);
   }
 
+  const select = (options, value, blank) => {
+    const box = node('select'); if (blank) { const none = node('option', '', blank); none.value = ''; box.append(none); }
+    options.forEach((option) => { const [id, label] = Array.isArray(option) ? option : [option, option]; const item = node('option', '', label); item.value = id; box.append(item); });
+    box.value = value || ''; return box;
+  };
+  const asPerson = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : {name: value?.name || '', persona: value?.persona || '', duty: value?.duty || ''};
+
   function viewTeam() {
-    $('profile-title').textContent = '내 회사 만들기'; $('profile-sub').textContent = '팀을 만들고 팀장과 팀원 이름을 정하세요. 최대 8팀·직원 60명까지예요.';
-    const model = JSON.parse(JSON.stringify(U.me.team || {company: '', teams: []})), company = input('text', {maxLength: 20, value: model.company || '', placeholder: '회사 이름'}), list = node('div', 'profile-teams'), note = status();
+    $('profile-title').textContent = '내 회사 만들기'; $('profile-sub').textContent = '팀을 만들고 팀장·팀원의 이름, 성격, 맡은 일을 정하세요. 최대 8팀·직원 60명까지예요. 이 구성은 나만 볼 수 있어요.';
+    const model = JSON.parse(JSON.stringify(U.me.team || {company: '', teams: []})), space = {floor: U.me.space?.floor || 'wood', wall: U.me.space?.wall || 'sky', props: [...(U.me.space?.props || ['plant', 'coffee'])]};
+    model.teams = (model.teams || []).map((team) => ({name: team.name || '', role: team.role || '', leader: asPerson(team.leader), members: (team.members || []).map(asPerson)}));
+    const company = input('text', {maxLength: 20, value: model.company || '', placeholder: '회사 이름'}), list = node('div', 'profile-teams'), note = status();
+    // office room: floor, wall and furniture are public (visitors see the room), the people are not
+    const floor = select(SPACE.floor, space.floor), wall = select(SPACE.wall, space.wall); floor.addEventListener('change', () => { space.floor = floor.value; }); wall.addEventListener('change', () => { space.wall = wall.value; });
+    const props = node('div', 'profile-chips');
+    SPACE.props.forEach(([id, label]) => { const box = input('checkbox'); box.checked = space.props.includes(id); box.addEventListener('change', () => { space.props = box.checked ? [...new Set([...space.props, id])] : space.props.filter((name) => name !== id); }); const chip = node('label'); chip.append(box, document.createTextNode(label)); props.append(chip); });
+    const room = node('fieldset', 'profile-team'); room.append(node('legend', '', '사무실 꾸미기(방문자에게도 보여요)'), field('바닥', floor), field('벽', wall), node('span', 'muted-note', '가구'), props);
+    const personRow = (person, onChange, onRemove, placeholder) => {
+      const row = node('div', 'member-row'), name = input('text', {maxLength: 12, value: person.name, placeholder}), persona = select(PERSONAS, person.persona, '성격'), duty = input('text', {maxLength: 24, value: person.duty, placeholder: '맡은 일'});
+      name.addEventListener('input', () => { person.name = name.value; onChange(); }); persona.addEventListener('change', () => { person.persona = persona.value; onChange(); }); duty.addEventListener('input', () => { person.duty = duty.value; onChange(); });
+      row.append(name, persona, duty); if (onRemove) { const drop = node('button', 'secondary-button', '삭제'); drop.type = 'button'; drop.addEventListener('click', onRemove); row.append(drop); } return row;
+    };
     const redraw = () => {
       list.replaceChildren(...model.teams.map((team, index) => {
-        const box = node('fieldset', 'profile-team'), name = input('text', {maxLength: 12, value: team.name, placeholder: '팀 이름'}), leader = input('text', {maxLength: 12, value: team.leader, placeholder: '팀장 이름'});
-        const members = input('text', {value: team.members.join(', '), placeholder: '팀원 이름(쉼표로 구분, 최대 10명)'}), drop = node('button', 'secondary-button', '이 팀 지우기'); drop.type = 'button';
-        name.addEventListener('input', () => { team.name = name.value; }); leader.addEventListener('input', () => { team.leader = leader.value; });
-        members.addEventListener('input', () => { team.members = members.value.split(/[,，]/).map((v) => v.trim()).filter(Boolean).slice(0, 10); });
-        drop.addEventListener('click', () => { model.teams.splice(index, 1); redraw(); });
-        box.append(node('legend', '', (index + 1) + '번째 팀'), field('팀 이름', name), field('팀장', leader), field('팀원', members), drop); return box;
+        const box = node('fieldset', 'profile-team'), name = input('text', {maxLength: 12, value: team.name, placeholder: '팀 이름'}), role = input('text', {maxLength: 24, value: team.role, placeholder: '팀이 하는 일(예: 기업 분석)'});
+        name.addEventListener('input', () => { team.name = name.value; }); role.addEventListener('input', () => { team.role = role.value; });
+        box.append(node('legend', '', (index + 1) + '번째 팀'), field('팀 이름', name), field('팀의 역할', role), node('span', 'muted-note', '팀장'), personRow(team.leader, () => {}, null, '팀장 이름'), node('span', 'muted-note', '팀원'));
+        team.members.forEach((member, n) => box.append(personRow(member, () => {}, () => { team.members.splice(n, 1); redraw(); }, '팀원 이름')));
+        const addMember = node('button', 'secondary-button', '팀원 추가'), drop = node('button', 'secondary-button', '이 팀 지우기'); addMember.type = drop.type = 'button';
+        addMember.addEventListener('click', () => { if (team.members.length < 10) { team.members.push({name: '', persona: '', duty: ''}); redraw(); } });
+        drop.addEventListener('click', () => { model.teams.splice(index, 1); redraw(); }); box.append(addMember, drop); return box;
       }));
     };
     redraw();
     const add = node('button', 'secondary-button', '팀 추가'), save = node('button', 'primary-button', '저장'), back = node('button', 'secondary-button', '돌아가기'); [add, save, back].forEach((b) => { b.type = 'button'; });
-    add.addEventListener('click', () => { if (model.teams.length < 8) { model.teams.push({name: '', leader: '', members: []}); redraw(); } });
+    add.addEventListener('click', () => { if (model.teams.length < 8) { model.teams.push({name: '', role: '', leader: {name: '', persona: '', duty: ''}, members: []}); redraw(); } });
     save.addEventListener('click', async () => {
       note.textContent = '저장 중…';
-      try { await api('/me/team', {method: 'PUT', token: U.token, body: {company: company.value, teams: model.teams}}); await refreshMe(); note.textContent = '저장했어요.'; viewHome(); } catch (error) { note.textContent = say(error); }
+      try { await api('/me/team', {method: 'PUT', token: U.token, body: {company: company.value, space, teams: model.teams}}); await refreshMe(); note.textContent = '저장했어요.'; viewHome(); } catch (error) { note.textContent = say(error); }
     });
     back.addEventListener('click', viewHome);
-    body.replaceChildren(field('회사 이름', company), list, add, note, save, back);
+    body.replaceChildren(field('회사 이름', company), room, list, add, note, save, back);
   }
 
   function viewPortfolio() {
@@ -141,7 +164,7 @@
     try { const data = await api('/leaderboard'); window.ZEROLobby.setUserBoard(data.state === 'AVAILABLE' ? data.items : []); } catch (_) { /* the board keeps the ZERO line */ }
   }
   async function visit(nick) {
-    try { const data = await api('/office?nick=' + encodeURIComponent(nick)); window.ZEROLobby.visit({nick: data.nick, staffCount: data.staff_count, returnPercent: data.return_percent}); }
+    try { const data = await api('/office?nick=' + encodeURIComponent(nick)); window.ZEROLobby.visit({nick: data.nick, staffCount: data.staff_count, returnPercent: data.return_percent, space: data.space}); }
     catch (_) { /* a missing office leaves the current scene */ }
   }
   window.ZEROLobbyUsers = {visit, refresh: refreshMe};

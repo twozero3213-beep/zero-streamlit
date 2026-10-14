@@ -2,6 +2,22 @@
 // Public research is loaded separately from account money and cannot authorize an order.
 const companyResearch = {data: null, market: 'SP500', search: '', promise: null, failed: false,sort:'market_cap',descending:true,currency:'NATIVE',annualPeriod:'',quarterPeriod:'',desk:null};
 const researchSortLabels={market_cap:'시가총액',rank:'원자료 순위',rank_change:'순위 변동',revenue:'연간 매출',operating_income:'연간 영업이익',operating_margin:'영업이익률',per:'PER',pbr:'PBR',psr:'PSR',net_margin_percent:'분기 순이익률',net_profit_growth_percent:'전 분기 이익 변화'};
+// Sources that share a label and the same check minute collapse into one line with the rest folded away.
+function groupSources(list){
+  const groups=new Map();
+  (Array.isArray(list)?list:[]).forEach((source)=>{const key=source.label+'|'+String(source.retrieved_at).slice(0,16);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(source);});
+  return [...groups.values()];
+}
+function sourceLine(group){
+  const first=group[0],p=node('p');
+  p.append(researchLink(first.label,first.url),node('span','market-label','확인 '+stamp(first.retrieved_at)+' KST'));
+  if(group.length>1){
+    const more=node('details','source-more');more.append(node('summary','','같은 출처 '+(group.length-1)+'건 더 보기'));
+    group.slice(1).forEach((source,index)=>{const row=node('p');row.append(researchLink(source.label+' '+(index+2),source.url));more.append(row);});
+    p.append(more);
+  }
+  return p;
+}
 function researchSortValue(row,data,desk,key,annualPeriod,quarterPeriod){
   const company=data?.companies?.find(c=>c.id===row.id),detail=desk?.companies?.find(c=>c.id===row.id),f=company?.financials||{};
   if(['market_cap','rank','rank_change'].includes(key))return row[key];
@@ -170,7 +186,7 @@ async function showCompany(identity, destination = null, options = {}) {
   content.append(researchSection('미래 사업성 · 다음에 확인할 조건',company.drivers),researchSection('수익성을 훼손할 위험',company.risks));
   const sources=node('section','company-section');sources.append(node('h3','','근거와 확인 시각'));
   if (!company.sources?.length) sources.append(node('p','muted-note','이번 수집에서 확인한 출처 없음 · 공식 자료 대조 대기'));
-  (company.sources || []).forEach((s)=>{const p=node('p');p.append(researchLink(s.label,s.url),node('span','market-label','확인 '+stamp(s.retrieved_at)+' KST'));sources.append(p);});
+  groupSources(company.sources).forEach((group)=>sources.append(sourceLine(group)));
   content.append(sources);
 }
 function companyDetailSection(detail) {
@@ -194,7 +210,7 @@ function companyDetailSection(detail) {
   (detail.quarterly_margins||[]).slice(-8).reverse().forEach(row=>{const tr=node('tr');tr.append(node('td','',row.period),node('td','',Number.isFinite(number(row.net_margin_percent))?format(number(row.net_margin_percent),2)+'%':'근거 없음'),node('td','',Number.isFinite(number(row.net_profit_growth_percent))?detailPercent(row.net_profit_growth_percent):'근거 없음'));mb.append(tr);});marginTable.append(mb);section.append(marginTable,node('p','muted-note','순이익률=순이익/매출×100. 변화율은 제공자의 전 분기 비교값이며 전년 동기 성장률과 다릅니다. 금융업·적자 전환·일회성 손익은 별도 해석이 필요합니다.'));
   section.append(node('h4','','사업을 비교할 기업'));
   const peers=node('ul');(detail.peers||[]).forEach(p=>peers.append(node('li','',p.name)));section.append(peers,node('p','muted-note','토스가 산업 비교 대상으로 제시한 회사들입니다. 동일 제품·고객을 두고 경쟁하는 직접 경쟁사로 확정하지 않습니다. 제품, 고객군, 가격 결정력과 공시를 대조해야 합니다.'));
-  const sources=node('details','source-details');sources.append(node('summary','','상세 자료의 출처·조회 시각'));(detail.sources||[]).forEach(s=>{const p=node('p');p.append(researchLink(s.label,s.url),node('span','market-label','확인 '+stamp(s.retrieved_at)+' KST'));sources.append(p);});section.append(sources);
+  const sources=node('details','source-details');sources.append(node('summary','','상세 자료의 출처·조회 시각'));groupSources(detail.sources).forEach(group=>sources.append(sourceLine(group)));section.append(sources);
   return section;
 }
 $('#company-close').addEventListener('click',()=>$('#company-dialog').close());
