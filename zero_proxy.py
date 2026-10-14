@@ -198,7 +198,7 @@ def _status():
         site = 'OK'
     except Unavailable as error:
         site = str(error)
-    return {**shape, 'site': site, 'bridge_version': '0.6.45', 'translation_diagnostic': zero_discovery.get_diagnostic()}
+    return {**shape, 'site': site, 'bridge_version': '0.6.47', 'translation_diagnostic': zero_discovery.get_diagnostic()}
 
 
 async def status(request):
@@ -217,7 +217,7 @@ class _UI(StaticFiles):
         response.headers['Cache-Control'] = 'no-cache'
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self'; connect-src 'self' https://zero-lobby.zero-cloudflare.workers.dev https://api.open-meteo.com https://date.nager.at; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self'; connect-src 'self' https://zero-lobby.zero-cloudflare.workers.dev wss://zero-lobby.zero-cloudflare.workers.dev https://api.open-meteo.com https://date.nager.at; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
         return response
 
 
