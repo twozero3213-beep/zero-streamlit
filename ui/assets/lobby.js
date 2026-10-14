@@ -18,7 +18,7 @@
   const shortName = (full) => String(full).split(' · ')[0].replace(/^가상\s*/, '').replace(/\s*담당$/, '');
   function rosterFrom(team) {
     const manager = team.operating_policy.manager, chiefs = Object.keys(team.roles), list = [];
-    list.push({id: 'ZERO_FINAL_MANAGER', department: 'ZERO_FINAL_MANAGER', kind: 'manager', name: '총괄 합의 관리자', role: manager.name, mandate: String(manager.instruction || '').slice(0, 200), hue: 210});
+    list.push({id: 'ZERO_FINAL_MANAGER', department: 'ZERO_FINAL_MANAGER', kind: 'manager', name: '총괄 관리자', role: manager.name, mandate: String(manager.instruction || '').slice(0, 200), hue: 210});
     chiefs.forEach((id, index) => {
       const role = team.roles[id], hue = (index * 36 + 8) % 360;
       list.push({id, department: id, kind: 'chief', name: shortName(role.name), role: String(role.name).split(' · ')[1] || '수석 자문', mandate: String(role.mandate || ''), hue});
@@ -125,7 +125,8 @@
   function ensureLoop() { if (S.active && S.player && !S.rafId) { S.last = 0; S.rafId = requestAnimationFrame(frame); } }
   function talkTo(npc) {
     const stand = L.clampToFloor({x: npc.pos.x + (S.player.pos.x < npc.pos.x ? -6 : 6), y: npc.pos.y + 6});
-    if (Math.hypot(S.player.pos.x - stand.x, S.player.pos.y - stand.y) < 3) openChat(npc); else walkTo(stand, () => openChat(npc));
+    // A nearby person's standing point may be inside a desk/table; do not require walking into furniture to talk.
+    if (Math.hypot(S.player.pos.x - npc.pos.x, S.player.pos.y - npc.pos.y) < 16) openChat(npc); else walkTo(stand, () => openChat(npc));
   }
 
   // ---- chat -----------------------------------------------------------------------------------
@@ -239,7 +240,7 @@
   // ---- outside world: weather, holidays, news board -------------------------------------------
   async function loadWeather() {
     try {
-      const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=temperature_2m,weather_code&timezone=Asia%2FSeoul', {cache: 'no-store'});
+      const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=temperature_2m,weather_code&timezone=Asia%2FSeoul', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
       const current = (await response.json()).current; S.weather = {temp: current.temperature_2m, code: current.weather_code}; clockTick(); heroTick();
       const box = $('lobby-weather'); box.replaceChildren(node('b', '', {clear: '☀️', cloud: '☁️', fog: '🌫️', rain: '🌧️', snow: '❄️', storm: '⛈️'}[L.weatherKind(S.weather.code)] || '🌤️'), node('span', '', '서울 ' + Math.round(S.weather.temp) + '°'));
     } catch (_) { S.weather = null; }
@@ -250,9 +251,9 @@
       const rows = await response.json(); if (Array.isArray(rows) && rows.length > 5) S.holidays = new Set([...L.KR_HOLIDAYS, ...rows.map((row) => row.date)]);
     } catch (_) { /* the embedded reference table stays */ }
   }
-  function track(id, entries) {
+  function track(id, entries, emptyText = '표시할 항목을 불러오는 중이에요…') {
     const root = $(id); const lane = root.querySelector('.lobby-track'); lane.replaceChildren();
-    if (!entries.length) { lane.append(node('span', 'lobby-tick muted', '표시할 항목을 불러오는 중이에요…')); root.style.setProperty('--tick-seconds', '0s'); return; }
+    if (!entries.length) { lane.append(node('span', 'lobby-tick muted', emptyText)); root.style.setProperty('--tick-seconds', '0s'); return; }
     for (let copy = 0; copy < 2; copy++) entries.forEach((entry) => lane.append(entry(copy)));
     root.style.setProperty('--tick-seconds', Math.max(36, entries.length * 8) + 's');
   }
@@ -262,12 +263,12 @@
   };
   async function loadNews() {
     let items = [];
-    try { const response = await fetch('api/headlines', {cache: 'no-store'}); const data = response.ok ? await response.json() : null; if (data?.schema_version === 1) items = data.items.filter((row) => /^https:\/\//.test(row.url)); } catch (_) { /* fall back below */ }
+    try { const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); const data = response.ok ? await response.json() : null; if (data?.schema_version === 1) items = data.items.filter((row) => /^https:\/\//.test(row.url)); } catch (_) { /* fall back below */ }
     if (!items.length) {
-      try { const response = await fetch('api/desk', {cache: 'no-store'}); const desk = response.ok ? await response.json() : null;
+      try { const response = await fetch('api/desk', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); const desk = response.ok ? await response.json() : null;
         items = (desk?.news || []).map((row) => ({title: row.title, publisher: row.sources?.[0]?.label || '공식 자료', url: row.sources?.[0]?.url || ''})).filter((row) => /^https:\/\//.test(row.url)); } catch (_) { items = []; }
     }
-    track('lobby-news', items.slice(0, 30).map(linkTick));
+    track('lobby-news', items.slice(0, 30).map(linkTick), '뉴스를 확인하지 못했어요 · 다음 갱신 때 다시 확인해요');
   }
   const money = (value) => (value > 0 ? '+' : '') + Number(value).toFixed(2) + '%';
   function returnTick(entry) {
@@ -279,7 +280,7 @@
   async function loadReturns() {
     const entries = [], ranked = W.rankUsers(S.userBoard);
     try {
-      const response = await fetch('api/portfolio', {cache: 'no-store'}), scope = response.ok ? (await response.json()).summary?.zero_portfolio : null;
+      const response = await fetch('api/portfolio', {cache: 'no-store', signal: AbortSignal.timeout(15000)}), scope = response.ok ? (await response.json()).summary?.zero_portfolio : null;
       if (typeof scope?.gross_return_percent === 'number' && Number.isFinite(scope.gross_return_percent)) entries.push({label: 'ZERO 참고 · 순위 제외', percent: scope.gross_return_percent, zero: true});
     } catch (_) { /* a reference without prices stays unavailable */ }
     ranked.forEach(row => entries.push({...row, label: row.nick}));
@@ -340,7 +341,7 @@
     S.visit = null; S.mode = 'zero'; S.space = null; setBanner('');
     $('lobby-title').textContent = '지금 근무 중인 팀'; $('lobby-sub').textContent = '지금 근무 중인 ZERO 팀이에요. 캐릭터를 움직여 직원에게 말을 걸어 보세요.';
     try {
-      if (!S.team) { const response = await fetch('api/team', {cache: 'no-store'}); if (!response.ok) throw Error('TEAM'); S.team = await response.json(); }
+      if (!S.team) { const response = await fetch('api/team', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); if (!response.ok) throw Error('TEAM'); S.team = await response.json(); }
       const roster = rosterFrom(S.team); placeZero(roster); S.npcs = roster.list; $('lobby-count').textContent = '직원 ' + roster.list.length + '명 근무 중';
       $('lobby-error').hidden = true; buildStage();
     } catch (_) { S.npcs = []; buildStage(); $('lobby-error').hidden = false; }

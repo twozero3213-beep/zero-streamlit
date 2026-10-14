@@ -71,6 +71,34 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(call(zero_proxy.api, 'GET', 'api/nope').status_code, 404)
         self.assertEqual(call(zero_proxy.api, 'GET', 'api/portfolio', b'a=1&a=2').status_code, 404)
 
+    def test_parallel_cache_misses_share_one_upstream_request(self):
+        from concurrent.futures import ThreadPoolExecutor
+        import threading
+        gate, started = threading.Event(), threading.Event()
+        def fetch(path):
+            started.set(); gate.wait(timeout=5); return {'state':'AVAILABLE'}
+        with mock.patch.object(zero_proxy, 'fetch', side_effect=fetch) as upstream, ThreadPoolExecutor(max_workers=8) as pool:
+            futures=[pool.submit(zero_proxy.get_public,'/api/portfolio',{}) for _ in range(8)]
+            self.assertTrue(started.wait(timeout=2)); gate.set()
+            values=[future.result(timeout=5) for future in futures]
+        upstream.assert_called_once(); self.assertEqual(len(set(values)),1)
+        self.assertFalse(zero_proxy._pending)
+
+    def test_ui_enforces_script_origin_and_private_referrer_headers(self):
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as tmp:
+            Path(tmp,'index.html').write_text('<html>synthetic</html>',encoding='utf-8')
+            response=asyncio.run(zero_proxy._UI(directory=tmp,html=True).get_response('index.html', {'type':'http','method':'GET','headers':[]}))
+        self.assertEqual(response.headers['referrer-policy'],'no-referrer')
+        self.assertEqual(response.headers['x-content-type-options'],'nosniff')
+        self.assertIn("script-src 'self'",response.headers['content-security-policy'])
+        self.assertIn("object-src 'none'",response.headers['content-security-policy'])
+
+    def test_status_probe_uses_the_same_short_cache(self):
+        with mock.patch.object(zero_proxy,'_secret',return_value='synthetic'), mock.patch.object(zero_proxy,'fetch',return_value={'state':'AVAILABLE'}) as fetch:
+            self.assertEqual(zero_proxy._status()['site'],'OK'); self.assertEqual(zero_proxy._status()['site'],'OK')
+        fetch.assert_called_once()
+
     def test_portfolio_is_forwarded_and_cached(self):
         with mock.patch.object(zero_proxy, 'fetch', return_value={'summary': {'total_value_krw': 1}}) as fetch:
             first, second = call(zero_proxy.api, 'GET', 'api/portfolio'), call(zero_proxy.api, 'GET', 'api/portfolio')

@@ -24,7 +24,7 @@
     REBALANCE_TOO_SOON: '배분은 20시간에 한 번만 바꿀 수 있어요.', WEIGHTS_MUST_SUM_TO_100: '비중의 합이 100이 되어야 해요.', WEIGHTS_INVALID: '비중을 확인해 주세요.', TEAM_INVALID: '팀 구성을 확인해 주세요(직원 60명까지).', UNAUTHORIZED: '저장된 로그인 정보가 맞지 않아요.'};
   async function api(path, {method = 'GET', body, token} = {}) {
     // A template literal on purpose: the Streamlit build rewrites quote-led slash-api paths into relative ones, which would break this absolute address.
-    const response = await fetch(`${BASE}/api/lobby${path}`, {method, headers: {...(body ? {'Content-Type': 'application/json'} : {}), ...(token ? {Authorization: 'Bearer ' + token} : {})}, body: body ? JSON.stringify(body) : undefined, cache: 'no-store'});
+    const response = await fetch(`${BASE}/api/lobby${path}`, {method, headers: {...(body ? {'Content-Type': 'application/json'} : {}), ...(token ? {Authorization: 'Bearer ' + token} : {})}, body: body ? JSON.stringify(body) : undefined, cache: 'no-store', signal: AbortSignal.timeout(15000)});
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw Object.assign(new Error(data.error || 'LOBBY_ERROR'), {code: data.error || 'LOBBY_ERROR'});
     return data;
@@ -64,10 +64,10 @@
     const social = node('div', 'profile-social'); social.append(node('p', 'muted-note', '네이버·카카오·구글 연동 로그인은 각 서비스에 앱 등록이 끝나면 여기에 열려요.'));
     ['네이버로 시작', '카카오로 시작', '구글로 시작'].forEach((label) => { const b = node('button', 'secondary-button', label); b.type = 'button'; b.disabled = true; social.append(b); });
     const have = node('button', 'secondary-button', '이미 가입했어요(복구 코드 입력)'); have.type = 'button'; have.addEventListener('click', viewRecover);
-    body.replaceChildren(field('닉네임', nick), note, go, social, have);
+    body.replaceChildren(field('닉네임', nick), node('p', 'muted-note', '닉네임·직원 수·방 꾸밈·연습 수익률은 다른 이용자에게 공개돼요. 팀·직원 이름·업무·배분은 비공개예요. 실명·연락처·계좌번호·비밀번호를 입력하지 마세요. 이 기기에 로그인 코드와 학습 진도가 저장돼요.'), note, go, social, have);
   }
   function viewToken(token) {
-    $('profile-title').textContent = '가입 완료!'; $('profile-sub').textContent = '아래 복구 코드는 지금 한 번만 보여 드려요.';
+    $('profile-title').textContent = '복구 코드 보관'; $('profile-sub').textContent = '새 코드는 지금 한 번만 보여 드려요. 이전 코드가 있었다면 더 이상 사용할 수 없어요.';
     const code = node('code', 'profile-code', token), copy = node('button', 'secondary-button', '복사'), done = node('button', 'primary-button', '사무실로 가기'); copy.type = done.type = 'button';
     copy.addEventListener('click', async () => { try { await navigator.clipboard.writeText(token); copy.textContent = '복사됨'; } catch (_) { copy.textContent = '길게 눌러 직접 복사하세요'; } });
     done.addEventListener('click', () => viewHome());
@@ -87,8 +87,15 @@
     const team = node('button', 'primary-button', '팀·직원 구성하기'), portfolio = node('button', 'secondary-button', '연습 포트폴리오 배분'), see = node('button', 'secondary-button', '내 사무실 보기'), out = node('button', 'secondary-button', '로그아웃(이 기기에서)');
     [team, portfolio, see, out].forEach((b) => { b.type = 'button'; });
     team.addEventListener('click', viewTeam); portfolio.addEventListener('click', viewPortfolio); see.addEventListener('click', () => { dialog.close(); window.ZEROLobby.showOwn({nick: U.me.nick, team: U.me.team, space: U.me.space}); });
-    out.addEventListener('click', () => { store.del(KEY); U.token = null; U.me = null; window.ZEROLobby.setPlayerName('나'); dialog.close(); render(); });
-    body.replaceChildren(node('p', 'muted-note', '직원 구성과 맡은 일은 나만 볼 수 있어요. 다른 사람에게는 직원 수와 수익률만 보여요.'), team, portfolio, see, out);
+    out.addEventListener('click', () => { store.del(KEY); store.del('zero-lobby-name'); U.token = null; U.me = null; window.ZEROLobby.setPlayerName('나'); body.replaceChildren(); dialog.close(); window.ZEROLobby.open(); render(); });
+    const renew = node('button', 'secondary-button', '복구 코드 교체 · 다른 기기 로그아웃'); renew.type = 'button';
+    renew.addEventListener('click', async () => {
+      if (!window.confirm('이전 복구 코드는 사용할 수 없게 됩니다. 새 코드를 안전하게 보관할 수 있나요?')) return;
+      renew.disabled = true; const note = status(); body.append(note);
+      try { const result = await api('/me/token', {method: 'POST', token: U.token}); U.token = result.token; store.set(KEY, result.token); viewToken(result.token); }
+      catch (error) { note.textContent = say(error); renew.disabled = false; }
+    });
+    body.replaceChildren(node('p', 'muted-note', '팀·직원 이름과 업무, 배분은 본인만 조회해요. 닉네임·직원 수·방 꾸밈·연습 수익률은 공개해요. 복구 코드를 아는 사람은 내 정보를 볼 수 있어요. 로그아웃은 이 기기의 저장 정보만 지우며, 코드 교체는 이전 코드를 폐기해요.'), team, portfolio, see, renew, out);
   }
 
   const select = (options, value, blank) => {
@@ -153,8 +160,9 @@
   // ---- state ------------------------------------------------------------------------------------
   async function refreshMe() {
     if (!U.token) { U.me = null; return render(); }
-    try { U.me = await api('/me', {token: U.token}); window.ZEROLobby.setPlayerName(U.me.nick); }
-    catch (error) { if (error.code === 'UNAUTHORIZED') { store.del(KEY); U.token = null; } U.me = null; }
+    const token = U.token;
+    try { const result = await api('/me', {token}); if (U.token !== token) return; U.me = result; window.ZEROLobby.setPlayerName(U.me.nick); }
+    catch (error) { if (U.token !== token) return; if (error.code === 'UNAUTHORIZED') { store.del(KEY); U.token = null; } U.me = null; }
     render();
   }
   function render() { button.textContent = U.me ? '내 사무실' : '닉네임으로 시작'; $('lobby-name-chip').textContent = U.me?.nick || '나'; }

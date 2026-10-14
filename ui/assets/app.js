@@ -378,14 +378,21 @@ function livePortfolio(data, live) {
           unrealized_pnl_krw: costed ? held - cost : null, unrealized_return_percent: costed ? (held / cost - 1) * 100 : null, by_currency: {KRW: native('KRW'), USD: native('USD')}},
         allocations: {...(scope.allocations || {}), observed_market_percent: held > 0 ? {US: counts.USD ? sums.USD * fx / held * 100 : 0, KR: sums.KRW / held * 100} : {US: null, KR: null}}}}};
 }
-async function loadLiveQuotes() {
-  const response = await fetch('api/live-quotes', {cache: 'no-store'});
-  const live = response.ok ? await response.json() : null;
-  state.live = live?.schema_version === 1 && live.state === 'AVAILABLE' && Array.isArray(live.quotes) ? live : null;
-  // Other screens (the TQQQ comparison) reprice from the same quotes instead of fetching them again.
-  window.ZEROLive = state.live;
-  if (typeof CustomEvent === 'function') document.dispatchEvent?.(new CustomEvent('zero-live-quotes'));
-  return Boolean(state.live);
+let liveCheckedAt = 0, displayPolling = false, livePending = null;
+function loadLiveQuotes() {
+  if (livePending) return livePending;
+  livePending = (async () => {
+    liveCheckedAt = Date.now();
+    try {
+      const response = await fetch('api/live-quotes', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
+      const live = response.ok ? await response.json() : null;
+      state.live = live?.schema_version === 1 && live.state === 'AVAILABLE' && Array.isArray(live.quotes) ? live : null;
+    } catch (_) { state.live = null; }
+    window.ZEROLive = state.live;
+    if (typeof CustomEvent === 'function') document.dispatchEvent?.(new CustomEvent('zero-live-quotes'));
+    return Boolean(state.live);
+  })().finally(() => { livePending = null; });
+  return livePending;
 }
 async function loadPortfolio() {
   const response = await fetch('api/portfolio', {cache: 'no-store'});
@@ -904,4 +911,16 @@ loadPortfolio().catch(() => notice('조회 서버에 연결하지 못했습니�
 // Opening or reloading the hosted page also shows current public quotes.
 if (hostedView) loadLiveQuotes().then((live) => live && loadPortfolio()).catch(() => {});
 // Poll cached display state only; background observation never requests broker refresh.
-setInterval(() => { if (!document.hidden && !$('#refresh').disabled) loadPortfolio().catch(() => {}); }, 15000);
+async function pollDisplay() {
+  if (document.hidden || displayPolling || $('#refresh').disabled) return;
+  displayPolling = true;
+  try {
+    let quotesFailed = false;
+    if (hostedView && Date.now() - liveCheckedAt >= 60000) quotesFailed = !await loadLiveQuotes();
+    await loadPortfolio();
+    if (quotesFailed) notice('공개 시세 갱신 실패 · 마지막 저장 자료를 표시합니다. 시세 시각을 확인해 주세요.');
+  } catch (_) { notice('자료를 갱신하지 못해 마지막 확인 자료를 유지합니다. 연결 상태를 확인해 주세요.'); }
+  finally { displayPolling = false; }
+}
+setInterval(pollDisplay, 15000);
+document.addEventListener?.('visibilitychange', () => { if (!document.hidden) pollDisplay(); });

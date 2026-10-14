@@ -5,6 +5,7 @@ quote refresh is enabled. Account refresh and office job submission stay on the 
 every write is refused here. The Cloudflare Access service token stays on the server (Streamlit
 Secrets or ZERO_* environment variables); errors are fixed codes, never provider bodies.
 """
+from concurrent.futures import Future, TimeoutError as FutureTimeout
 import gzip
 import json
 import os
@@ -34,7 +35,8 @@ PLAIN = {'/api/portfolio': 60, '/api/team': 300, '/api/office': 60, '/api/resear
 MAX_BYTES = 12_000_000
 HEADLINES_SECONDS = 300  # live news-search titles; collected here, not on the Cloudflare site
 
-_cache, _lock = {}, threading.Lock()
+_cache, _pending, _lock = {}, {}, threading.Lock()
+_upstream_slots = threading.BoundedSemaphore(4)
 
 
 class Unavailable(Exception):
@@ -99,35 +101,53 @@ def _upstream(path, query):
     raise Unavailable('NOT_PUBLIC')
 
 
+def _cached(key, seconds, load):
+    with _lock:
+        hit = _cache.get(key)
+        if hit and hit[0] > time.monotonic():
+            return hit[1]
+        waiting = _pending.get(key)
+        owner = waiting is None
+        if owner:
+            waiting = _pending[key] = Future()
+    if not owner:
+        try:
+            return waiting.result(timeout=60)
+        except FutureTimeout:
+            raise Unavailable('BRIDGE_BUSY') from None
+    try:
+        if not _upstream_slots.acquire(timeout=2):
+            raise Unavailable('BRIDGE_BUSY')
+        try:
+            body = load()
+        finally:
+            _upstream_slots.release()
+        with _lock:
+            if len(_cache) > 400:
+                _cache.clear()
+            _cache[key] = (time.monotonic() + seconds, body)
+        waiting.set_result(body)
+        return body
+    except Exception as error:
+        waiting.set_exception(error)
+        raise
+    finally:
+        with _lock:
+            _pending.pop(key, None)
+
+
 def get_public(path, query):
     upstream, seconds = _upstream(path, query)
-    now = time.monotonic()
-    with _lock:
-        hit = _cache.get(upstream)
-        if hit and hit[0] > now:
-            return hit[1]
-    body = json.dumps(fetch(upstream), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
-    with _lock:
-        if len(_cache) > 400:
-            _cache.clear()
-        _cache[upstream] = (now + seconds, body)
-    return body
+    return _cached(upstream, seconds, lambda: json.dumps(fetch(upstream), ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
 
 
 def get_headlines():
-    """Fresh public headlines, cached briefly; all feeds failing is an error, never a cached empty list."""
-    now = time.monotonic()
-    with _lock:
-        hit = _cache.get('headlines')
-        if hit and hit[0] > now:
-            return hit[1]
-    value = zero_headlines.collect()
-    if not value['items'] and len(value['failed']) == len(zero_headlines.QUERIES):
-        raise Unavailable('HEADLINES_UNAVAILABLE')
-    body = json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
-    with _lock:
-        _cache['headlines'] = (now + HEADLINES_SECONDS, body)
-    return body
+    def load():
+        value = zero_headlines.collect()
+        if not value['items'] and len(value['failed']) == len(zero_headlines.QUERIES):
+            raise Unavailable('HEADLINES_UNAVAILABLE')
+        return json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    return _cached('headlines', HEADLINES_SECONDS, load)
 
 
 async def api(request):
@@ -145,7 +165,7 @@ async def api(request):
         return JSONResponse({'error': code}, status_code=404 if code == 'NOT_PUBLIC' else 503)
     except Exception as error:  # report the exception class only, never its message
         return JSONResponse({'error': 'BRIDGE_ERROR', 'kind': type(error).__name__}, status_code=500)
-    return Response(body, media_type='application/json; charset=utf-8', headers={'Cache-Control': 'no-store'})
+    return Response(body, media_type='application/json; charset=utf-8', headers={'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff'})
 
 
 def _status():
@@ -154,7 +174,9 @@ def _status():
              'secret_set': bool(secret), 'secret_length_ok': bool(secret and len(secret) >= 40),
              'placeholder': '...' in (client_id or '') + (secret or '')}
     try:
-        fetch('/api/office')
+        if not client_id or not secret:
+            raise Unavailable('NOT_CONFIGURED')
+        get_public('/api/office', {})
         site = 'OK'
     except Unavailable as error:
         site = str(error)
@@ -163,7 +185,7 @@ def _status():
 
 async def status(request):
     # Always 200 because Community Cloud rewrites app error statuses; key values are never included.
-    return JSONResponse(await run_in_threadpool(_status), headers={'Cache-Control': 'no-store'})
+    return JSONResponse(await run_in_threadpool(_status), headers={'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff'})
 
 
 async def to_ui(request):
@@ -175,6 +197,9 @@ class _UI(StaticFiles):
     async def get_response(self, path, scope):
         response = await super().get_response(path, scope)
         response.headers['Cache-Control'] = 'no-cache'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self'; connect-src 'self' https://zero-lobby.zero-cloudflare.workers.dev https://api.open-meteo.com https://date.nager.at; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
         return response
 
 
