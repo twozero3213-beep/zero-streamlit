@@ -142,3 +142,49 @@ html[data-zero-view='lobby'] .page-header { position: absolute; width: 1px; heig
 @media (prefers-reduced-motion: reduce) { .npc *, .npc *::before, .npc *::after { animation: none !important; } }
 .ranking-row .gain { color: #c93b49; } .ranking-row .loss { color: var(--blue); }
 .lobby-stage[data-suspended='true'] *, .lobby-stage[data-suspended='true'] *::before, .lobby-stage[data-suspended='true'] *::after { animation-play-state: paused !important; }
+
+/* The trading floor owns the remaining viewport; learning and settings scroll in dialogs. */
+html[data-zero-view='lobby'], html[data-zero-view='lobby'] body { height: 100%; overflow: hidden; }
+html[data-zero-view='lobby'] main { height: var(--floor-height, calc(100dvh - 140px)); padding: 8px 16px; max-width: none; box-sizing: border-box; }
+#lobby-view:not([hidden]), #lobby-view > .lobby { height: 100%; min-height: 0; }
+#lobby-view > .lobby { display: flex; flex-direction: column; gap: 6px; position: relative; }
+#lobby-view .lobby-hero { flex: none; margin: 0; padding: 6px 12px; border-radius: 8px; background: #fff; }
+#lobby-view .hero-say { font-size: 14px; }
+#lobby-view .hero-date { font-size: 11px; }
+#lobby-view .hero-cta { gap: 6px; }
+#lobby-view .hero-cta button { min-height: 44px; padding: 6px 10px; font-size: 12px; }
+#lobby-view .lobby-layout { display: block; flex: 1; min-height: 0; }
+#lobby-view .lobby-main { display: flex; flex-direction: column; height: 100%; position: relative; }
+#lobby-view .lobby-scroll { flex: 1; min-height: 0; }
+#lobby-view .lobby-scroll .lobby-stage { width: 100%; height: 100%; min-width: 0; aspect-ratio: auto; border: 1px solid #607287; border-radius: 10px; background: #dbe3ec; box-shadow: inset 0 0 0 5px #eef2f6; }
+#lobby-view .lobby-stage::after { background-image: linear-gradient(#7a8da51c 1px, transparent 1px), linear-gradient(90deg, #7a8da51c 1px, transparent 1px); }
+#lobby-view .lobby-wall { background: #172c43; border-bottom: 4px solid #7e9aba; }
+#lobby-view .lobby-board { border-color: #506c89; background: #081c30; box-shadow: 0 0 0 2px #263f59; }
+#lobby-view .lobby-window { background: #daeafa; border-color: #607f9f; }
+#lobby-view .office-desk { background: #8096ae; border-color: #4e647e; box-shadow: 0 3px 0 #b6c4d3; }
+#lobby-view .office-desk::after { width: 74%; left: 12%; top: -70%; height: 110%; background: repeating-linear-gradient(90deg, #122a42 0 29%, #7296bb 30% 33%); border-color: #7b9bbd; box-shadow: inset 0 -2px #32b8bd; }
+#lobby-view .prop.table { background: #f8fafc; border: 3px solid #627d9c; box-shadow: 0 5px 0 #a7b8ca; }
+#lobby-view .lobby-meta { flex: none; flex-wrap: nowrap; margin: 4px 0 0; gap: 6px; }
+#lobby-view .lobby-meta .lobby-chip { min-height: 30px; padding: 0 7px; font-size: 11px; white-space: nowrap; }
+#lobby-view .lobby-meta button { min-height: 44px; padding: 4px 8px; font-size: 12px; white-space: nowrap; }
+#lobby-view .lobby-near { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+#lobby-view .lobby-pad { position: absolute; bottom: 58px; right: 8px; margin: 0; z-index: 10000; }
+#lobby-view .lobby-banner, #lobby-view .lobby-error { position: absolute; top: 64px; left: 12px; right: 12px; z-index: 10001; max-height: 30%; overflow: auto; }
+.floor-help-dialog { width: min(540px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 18px; border: 0; border-radius: 16px; overflow: auto; }
+.floor-help-dialog::backdrop { background: #10233888; }
+.floor-help-dialog .lobby-side { margin-top: 14px; }
+@media(max-width: 760px) {
+ html[data-zero-view='lobby'] main { padding: 4px 6px; }
+ #lobby-view .hero-text { display: none; }
+ #lobby-view .hero-cta { width: 100%; display: flex; justify-content: space-between; }
+ #lobby-view .lobby-hero { padding: 2px 4px; }
+ #lobby-view .lobby-count, #lobby-count { display: none; }
+ #lobby-view .lobby-meta { justify-content: space-between; }
+}
+@media(max-height: 450px) { #lobby-view .hero-text { display: none; } #lobby-view .lobby-pad { bottom: 52px; } }
+
+#lobby-view .hero-say { color: #233d58; }
+#lobby-view .hero-date { color: #586d83; }
+#lobby-view .hero-cta button { color: #174b87; background: #edf4fc; border-color: #c2d5ea; }
+.rail [data-view='lobby'] { font-size: 13px; }
+.rail [data-view='lobby'] span { white-space: normal; line-height: 1.3; }

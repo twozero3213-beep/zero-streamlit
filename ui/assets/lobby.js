@@ -334,7 +334,7 @@
   // ---- scenes: ZERO and visits ----------------------------------------------------------------
   function setBanner(text, back) {
     const banner = $('lobby-banner'); banner.hidden = !text; banner.replaceChildren();
-    if (!text) return; banner.append(node('span', '', text)); if (back) { const button = node('button', 'secondary-button', 'ZERO 사무실로'); button.type = 'button'; button.addEventListener('click', () => open()); banner.append(button); }
+    if (!text) return; banner.append(node('span', '', text)); if (back) { const button = node('button', 'secondary-button', '플로어로 돌아가기'); button.type = 'button'; button.addEventListener('click', () => open()); banner.append(button); }
   }
   async function open() {
     S.visit = null; S.mode = 'zero'; S.space = null; setBanner('');
@@ -405,6 +405,26 @@
   }
   function setPlayerName(name) { S.playerName = name || '나'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
   function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; loadReturns(); }
+
+
+  const floorHelp = document.createElement('dialog');
+  floorHelp.id = 'floor-help-dialog'; floorHelp.className = 'floor-help-dialog';
+  floorHelp.setAttribute('aria-labelledby', 'floor-help-title');
+  floorHelp.innerHTML = '<header class="chat-head"><h2 id="floor-help-title">플로어 안내 · 내 사무실</h2><button type="button" class="secondary-button" autofocus>닫기</button></header>';
+  document.body.append(floorHelp);
+  floorHelp.append(document.querySelector('.lobby-side'));
+  floorHelp.querySelector('header button').addEventListener('click', () => floorHelp.close());
+  $('floor-help').addEventListener('click', () => floorHelp.showModal());
+  // Measure the shared shell rather than assuming a fixed mobile header height.
+  function fitFloor() {
+    const header = document.querySelector('.global-header');
+    const tabs = document.querySelector('.mobile-tabbar');
+    const top = header ? header.getBoundingClientRect().bottom : 0;
+    const bottom = tabs && getComputedStyle(tabs).display !== 'none' ? innerHeight - tabs.getBoundingClientRect().top : 0;
+    document.documentElement.style.setProperty('--floor-height', Math.max(120, innerHeight - top - bottom) + 'px');
+  }
+  new ResizeObserver(fitFloor).observe(document.querySelector('.global-header'));
+  window.addEventListener('resize', fitFloor); fitFloor();
 
   const initialTutorial = tutorialState();
   S.tutorial = initialTutorial || {step: 0, done: false};

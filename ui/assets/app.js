@@ -791,7 +791,7 @@ async function loadTeam(event, force = false) {
 }
 $('#team-event').addEventListener('change', () => loadTeam($('#team-event').value));
 const views = {
-  lobby: ['ZERO 사무실', '지금 일하는 ZERO 팀을 보고, 내 캐릭터로 직원과 이야기해 보세요.'],
+  lobby: ['ZERO 트레이딩 플로어', '지금 일하는 ZERO 팀을 보고, 내 캐릭터로 직원과 이야기해 보세요.'],
   portfolio: ['내 자산', '1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.'],
   research: ['주식 탐색', '미국 100 · 코스피 50 · 코스닥 50 기업을 찾아보세요.'],
   workbench: ['종목과 차트', '시세와 차트, 기업 정보를 한 화면에서 확인하세요.'],
