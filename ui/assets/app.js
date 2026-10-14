@@ -907,6 +907,7 @@ function navigate(view, updateAddress = true) {
   if (!Object.hasOwn(views, view) || !$('#' + view + '-view')) return false;
   currentView = view;
   document.documentElement.dataset.zeroView = view;
+  document.dispatchEvent?.(new CustomEvent('zero-view-changed', {detail:{view}}));
   if ($('#mobile-view')) $('#mobile-view').value = view;
   $('#refresh').hidden = view !== 'portfolio';
   document.querySelectorAll('.view').forEach((section) => { section.hidden = section.id !== view + '-view'; });

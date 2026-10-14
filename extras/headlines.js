@@ -11,7 +11,7 @@
   const kst = (iso) => new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date(iso));
   let loading = false;
   async function load() {
-    if (loading || document.hidden) return; loading = true;
+    if (loading || document.hidden || document.documentElement?.dataset.zeroView !== 'news') return; loading = true;
     try {
       const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(30000)}), data = response.ok ? await response.json() : null;
       if (data?.schema_version !== 1 || !Array.isArray(data.items) || !data.items.length) { panel.hidden = true; return; }
@@ -27,6 +27,7 @@
       panel.hidden = false;
     } catch (_) { panel.hidden = true; } finally { loading = false; }
   }
+  document.addEventListener('zero-view-changed', load);
   load(); setInterval(load, 300000);
   document.querySelectorAll('[data-desk-reload]').forEach((button) => button.addEventListener('click', load));
 })();
