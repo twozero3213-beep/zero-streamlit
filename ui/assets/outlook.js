@@ -27,8 +27,10 @@
   function describe(result, item) {
     if (!result) return {headline: '과거 기록이 짧아(오르내림 12회 미만) 참고 시나리오를 만들지 않아요.', lines: [], disclaimer: DISCLAIMER};
     const side = result.lean === 'UP' ? '높게' : result.lean === 'DOWN' ? '낮게' : null, lead = Math.max(result.up, result.down);
+    // The leading side is named first, so a split can never be read the wrong way round.
+    const split = result.lean === 'DOWN' ? '낮게 ' + result.down + '% 대 높게 ' + result.up + '%' : '높게 ' + result.up + '% 대 낮게 ' + result.down + '%';
     return {
-      headline: side ? '다음 발표는 직전보다 ' + side + ' 나온 쪽이 ' + (lead < 56 ? '근소하게 ' : '') + '더 많았어요 · ' + result.up + '% 대 ' + result.down + '%' : '높게·낮게 나온 횟수가 거의 같았어요 · ' + result.up + '% 대 ' + result.down + '%',
+      headline: side ? '다음 발표는 직전보다 ' + side + ' 나온 쪽이 ' + (lead < 56 ? '근소하게 ' : '') + '더 많았어요 · ' + split : '높게·낮게 나온 횟수가 거의 같았어요 · ' + split,
       lines: [
         ['높게 나오면 (' + result.up + '%)', String(item?.above_range || '높을 때 확인할 점이 아직 정리되지 않았어요.')],
         ['낮게 나오면 (' + result.down + '%)', String(item?.below_range || '낮을 때 확인할 점이 아직 정리되지 않았어요.')]
