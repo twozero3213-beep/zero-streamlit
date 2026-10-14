@@ -10,11 +10,12 @@
   const store = {get() { try { return localStorage.getItem(KEY); } catch (_) { return null; } }, set(value) { try { localStorage.setItem(KEY, value); } catch (_) { /* private mode: progress lasts for this visit only */ } }};
 
   let progress = A.normalize(store.get()), view = {name: 'map'}, session = null;
-  const save = () => { store.set(JSON.stringify(progress)); paintBadges(); };
+  const save = (celebrate = false) => { store.set(JSON.stringify(progress)); paintBadges(celebrate); };
 
   // Small level badges elsewhere on the page (hero button, side card) follow the saved progress.
-  function paintBadges() {
+  function paintBadges(celebrate = false) {
     const level = A.playerLevel(progress), done = level > A.LEVELS.length;
+    document.dispatchEvent(new CustomEvent('zero-academy-progress', {detail: {level, rank: A.rankOf(progress), xp: progress.xp, celebrate}}));
     document.querySelectorAll('[data-academy="lv"]').forEach((el) => { el.textContent = done ? '졸업' : 'Lv.' + level; });
     document.querySelectorAll('[data-academy="rank"]').forEach((el) => { el.textContent = A.rankOf(progress); });
     document.querySelectorAll('[data-academy="xp"]').forEach((el) => { el.textContent = progress.xp + ' XP'; });
@@ -99,7 +100,7 @@
 
   function finishQuiz() {
     const before = A.playerLevel(progress), outcome = A.submit(progress, session.level, session.picks);
-    progress = outcome.progress; save(); session.outcome = outcome; session.levelBefore = before; go({name: 'result'});
+    progress = outcome.progress; save(outcome.leveledUp); session.outcome = outcome; session.levelBefore = before; go({name: 'result'});
   }
   function renderResult() {
     const {level, outcome} = session, {result, gained, leveledUp} = outcome, index = A.LEVELS.indexOf(level), nextLevel = A.LEVELS[index + 1];

@@ -26,7 +26,7 @@ a.lobby-tick:hover, button.lobby-tick:hover { text-decoration: underline; }
 .prop.table { left: 50%; top: 31%; width: 26%; height: 12%; background: #c9a77c; border: 3px solid #a98558; border-radius: 40px; }
 .prop.coffee { left: 5%; top: 29%; width: 7%; height: 11%; background: #fff; border: 3px solid #c3ccd9; border-radius: 8px; }
 .prop.plant.left { left: 3%; top: 90%; } .prop.plant.right { left: 97%; top: 90%; }
-.npc { position: absolute; transform: translate(-50%, -78%); display: flex; flex-direction: column; align-items: center; background: none; border: 0; padding: 0; min-height: 0; color: var(--ink); transition: left 4.2s linear, top 4.2s linear; }
+.npc { position: absolute; transform: translate(-50%, -78%); display: flex; flex-direction: column; align-items: center; background: none; border: 0; padding: 0; min-height: 0; color: var(--ink); left: 0; top: 0; }
 .npc.player { transition: none; z-index: 9999 !important; pointer-events: none; }
 .npc-desk { position: absolute; top: 58%; width: 150%; height: 44%; background: #fff; border: 2px solid #cfd6e0; border-radius: 6px; z-index: -1; }
 .npc.staff .npc-desk { width: 130%; height: 38%; } .npc.player .npc-desk { display: none; }

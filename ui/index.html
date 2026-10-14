@@ -22,6 +22,9 @@
   <script src="assets/stock-workbench.js" defer></script>
   <script src="assets/research-desk.js" defer></script>
   <script src="assets/fund-view.js" defer></script>
+  <script src="assets/vendor-astar.js" defer></script>
+  <script src="assets/vendor-anime-4.5.0.min.js" defer></script>
+  <script src="assets/lobby-world.js" defer></script>
   <script src="assets/lobby-logic.js" defer></script>
   <script src="assets/lobby.js" defer></script>
   <script src="assets/academy-logic.js" defer></script>
@@ -133,9 +136,9 @@
           <div class="lobby-scroll"><div id="lobby-stage" class="lobby-stage" tabindex="0" role="application" aria-label="ZERO 사무실. 방향키로 이동하고 직원을 눌러 대화합니다."></div></div>
           <div id="lobby-board" class="lobby-board" role="region" aria-label="전광판">
             <div class="lobby-board-row"><span class="lobby-board-tag">속보</span><div id="lobby-news" class="lobby-marquee"><div class="lobby-track"></div></div></div>
-            <div class="lobby-board-row"><span class="lobby-board-tag">수익률</span><div id="lobby-returns" class="lobby-marquee"><div class="lobby-track"></div></div></div>
+            <div class="lobby-board-row"><span class="lobby-board-tag">연습 랭킹</span><div id="lobby-returns" class="lobby-marquee"><div class="lobby-track"></div></div></div>
           </div>
-          <div class="lobby-meta"><span class="lobby-chip">내 캐릭터<b id="lobby-name-chip">나</b></span><span class="lobby-chip" id="lobby-count" role="status">직원 불러오는 중</span><p id="lobby-near" class="lobby-near" role="status" aria-live="polite"></p></div>
+          <div class="lobby-meta"><span class="lobby-chip">내 캐릭터<b id="lobby-name-chip">나</b><small id="lobby-player-level" class="character-level">Lv.1</small></span><span class="lobby-chip" id="lobby-count" role="status">직원 불러오는 중</span><button id="lobby-ranking-open" type="button" class="secondary-button">연습 랭킹</button><button id="lobby-pause" type="button" class="secondary-button" aria-pressed="false">연출 멈춤</button><p id="lobby-near" class="lobby-near" role="status" aria-live="polite"></p></div>
           <div class="lobby-pad" aria-label="이동 버튼"><button type="button" data-pad="up" aria-label="위로">▲</button><button type="button" data-pad="left" aria-label="왼쪽으로">◀</button><button type="button" data-pad="down" aria-label="아래로">▼</button><button type="button" data-pad="right" aria-label="오른쪽으로">▶</button></div>
         </div>
         <div class="lobby-side">
@@ -154,7 +157,8 @@
       <form id="lobby-chat-form" class="chat-form"><input id="lobby-chat-input" type="text" maxlength="80" placeholder="직원에게 물어보세요" aria-label="질문"><button class="primary-button" type="submit">보내기</button></form>
       <p class="lobby-note">가상 직원이 정해진 대본과 이 시스템의 기록으로만 답해요. 투자 조언이 아니에요.</p></dialog>
   </section>
-  <dialog id="academy" class="academy" aria-labelledby="academy-title"><div class="academy-head"><div><h2 id="academy-title">주식 입문 학교</h2><p id="academy-rank"></p></div><button id="academy-close" class="secondary-button" type="button">닫기</button></div>
+  <dialog id="lobby-ranking-dialog" class="lobby-chat ranking-dialog" aria-labelledby="lobby-ranking-title"><header class="chat-head"><div><h2 id="lobby-ranking-title">사무실 연습 수익률 랭킹</h2><p id="lobby-ranking-status" role="status">조회 중</p></div><button id="lobby-ranking-close" class="secondary-button" type="button" autofocus>닫기</button></header><p class="ranking-basis">각자의 가입 시점부터 가상 1억원의 ETF 가격 변동을 비교해요. 공개 지연 시세이며 환율·세금·수수료는 제외해요. 시작일이 다르고 실제 투자 성과가 아니에요. 닉네임을 누르면 그 사람의 사무실을 방문해요. 팀 구성과 직원 역할은 공개하지 않아요.</p><p id="lobby-ranking-time" class="ranking-time"></p><ol id="lobby-ranking-list" class="ranking-list"></ol></dialog>
+<dialog id="academy" class="academy" aria-labelledby="academy-title"><div class="academy-head"><div><h2 id="academy-title">주식 입문 학교</h2><p id="academy-rank"></p></div><button id="academy-close" class="secondary-button" type="button">닫기</button></div>
     <div class="academy-xpbar" aria-hidden="true"><div id="academy-bar"></div></div><div id="academy-body" class="academy-body"></div></dialog>
   <section id="team-view" class="view" hidden>
     <section id="office-panel" class="office-panel" aria-labelledby="office-title">

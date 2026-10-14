@@ -1,0 +1,17 @@
+ZERO office third-party notices
+
+Anime.js 4.5.0 — MIT, copyright Julian Garnier.
+Source: https://github.com/juliangarnier/anime/tree/2c9cf8ea00329f6768c7d7902252ed977d75ce42
+Local file: vendor-anime-4.5.0.min.js; license: vendor-anime-LICENSE.txt.
+Used for interruptible NPC waypoint movement, greetings and learner level-up gestures.
+
+javascript-astar 0.4.1 — MIT, copyright Brian Grinstead.
+Source: https://github.com/bgrins/javascript-astar/tree/ef5ec96002f87f8ae9854c9a411e6f482d20ff35
+Local file: vendor-astar.js; license: vendor-astar-LICENSE.txt.
+Includes Binary Heap credited to Marijn Haverbeke in the original source.
+Used for local routes around office furniture; no network or financial logic.
+
+Only these two pinned source files are imported. Original license texts and headers are preserved.
+No upstream images, office assets, sounds, analytics or servers are imported.
+CSS characters and the learning/ranking adapters are ZERO code.
+The assets are served locally from ZERO; no third-party CDN is contacted by the office.

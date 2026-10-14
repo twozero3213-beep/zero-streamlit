@@ -161,7 +161,7 @@
   button.addEventListener('click', () => { U.me ? viewHome() : viewSignup(); if (!dialog.open) dialog.showModal?.(); });
 
   async function loadBoard() {
-    try { const data = await api('/leaderboard'); window.ZEROLobby.setUserBoard(data.state === 'AVAILABLE' ? data.items : []); } catch (_) { /* the board keeps the ZERO line */ }
+    try { const data = await api('/leaderboard'); window.ZEROLobby.setUserBoard(data.state === 'AVAILABLE' ? data.items : [], {state: data.state, checkedAt: data.checked_at}); } catch (_) { window.ZEROLobby.setUserBoard([], {state: 'UNAVAILABLE'}); }
   }
   async function visit(nick) {
     try { const data = await api('/office?nick=' + encodeURIComponent(nick)); window.ZEROLobby.visit({nick: data.nick, staffCount: data.staff_count, returnPercent: data.return_percent, space: data.space}); }

@@ -4,7 +4,7 @@
   'use strict';
   const view = document.getElementById('lobby-view');
   if (!view) return;
-  const L = window.ZEROLobbyLogic;
+  const L = window.ZEROLobbyLogic, W = window.ZEROLobbyWorld, M = window.anime;
   const $ = (id) => document.getElementById(id);
   const node = (tag, className = '', text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
   const stage = $('lobby-stage'), boardEl = $('lobby-board'), reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
@@ -12,7 +12,8 @@
   const store = { get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }, set(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* private mode */ } } };
 
   const S = {active: false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
-    chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: store.get('zero-lobby-name') || '나', tutorial: null};
+    chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: store.get('zero-lobby-name') || '나', tutorial: null,
+    motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolRank: '입문 전', boardMeta: null};
 
   const shortName = (full) => String(full).split(' · ')[0].replace(/^가상\s*/, '').replace(/\s*담당$/, '');
   function rosterFrom(team) {
@@ -37,22 +38,27 @@
   function figure(kind, face) {
     const fig = node('span', 'npc-fig'), head = node('i', 'head'), look = face || L.faceAt(0);
     head.dataset.eyes = String(look.eyes); head.dataset.mouth = String(look.mouth); head.append(node('b', 'eye l'), node('b', 'eye r'), node('b', 'mouth'));
-    fig.append(head, node('i', 'body'), node('i', 'legs')); return fig;
+    fig.append(head, node('i', 'body'), node('i', 'arm l'), node('i', 'arm r'), node('i', 'legs')); return fig;
   }
   function buildNpc(npc) {
     const button = node('button', 'npc ' + npc.kind); button.type = 'button'; button.dataset.id = npc.id; button.style.setProperty('--hue', npc.hue);
     button.setAttribute('aria-label', npc.name + ' · ' + npc.role + ' · 눌러서 대화');
-    button.append(node('span', 'npc-desk'), figure(npc.kind, npc.face), node('span', 'npc-name', npc.name), node('span', 'npc-bubble'));
+    const desk = node('span', 'office-desk'); desk.style.left = pct(npc.home.x, L.STAGE.w); desk.style.top = pct(npc.home.y - 2, L.STAGE.h); desk.style.zIndex = String(Math.round((npc.home.y - 3) * 10)); stage.append(desk);
+    button.dataset.activity = npc.kind === 'staff' ? 'typing' : 'reading'; button.style.setProperty('--blink-delay', (npc.face.eyes * .7) + 's');
+    button.append(figure(npc.kind, npc.face), node('span', 'npc-name', npc.name), node('span', 'npc-bubble'));
     button.addEventListener('click', (event) => { event.stopPropagation(); talkTo(npc); });
     npc.el = button; place(npc); stage.append(button);
   }
   function place(entity) {
-    entity.el.style.left = pct(entity.pos.x, L.STAGE.w); entity.el.style.top = pct(entity.pos.y, L.STAGE.h);
+    const size = S.viewport || {w: stage.clientWidth, h: stage.clientHeight};
+    entity.el.style.transform = 'translate(' + (entity.pos.x / L.STAGE.w * size.w) + 'px, ' + (entity.pos.y / L.STAGE.h * size.h) + 'px) translate(-50%, -100%)';
     entity.el.style.zIndex = String(Math.round(entity.pos.y * 10));
     entity.el.classList.toggle('edge-left', entity.pos.x < 24); entity.el.classList.toggle('edge-right', entity.pos.x > 136);
   }
 
   function buildStage() {
+    S.motions.forEach(motion => motion.cancel()); S.motions.clear(); S.speaker = []; S.target = null;
+    S.viewport = {w: stage.clientWidth, h: stage.clientHeight}; S.world = W.createWorld(S.npcs, S.space || L.DEFAULT_SPACE, {...L.FLOOR, minX: 9, maxX: 151, minY: 30});
     stage.replaceChildren();
     const wall = node('div', 'lobby-wall');
     const windowBox = node('div', 'lobby-window'); windowBox.id = 'lobby-weather'; windowBox.append(node('b', '', '창밖'), node('span', '', '날씨 확인 중'));
@@ -65,7 +71,8 @@
     if (space.props.includes('plant')) stage.append(node('div', 'prop plant right', '🪴'));
     S.npcs.forEach(buildNpc);
     S.player = {id: 'player', pos: {x: 64, y: 96}, el: node('div', 'npc player')};
-    S.player.el.append(figure('player', {eyes: 1, mouth: 1}), node('span', 'npc-name', S.playerName), node('span', 'npc-bubble')); place(S.player); stage.append(S.player.el);
+    S.player.el.append(figure('player', {eyes: 1, mouth: 1}), node('span', 'npc-name', S.playerName), node('span', 'player-level', 'Lv.' + S.level), node('span', 'npc-bubble')); place(S.player); stage.append(S.player.el);
+    $('lobby-player-level').textContent = 'Lv.' + S.level;
   }
 
   // ---- movement -------------------------------------------------------------------------------
@@ -73,14 +80,31 @@
     S.rafId = 0; if (!S.active || !S.player) return;
     const dt = Math.min(0.05, (timestamp - (S.last || timestamp)) / 1000); S.last = timestamp;
     const speed = 34 * dt, direction = L.keyDirection(S.keys);
-    let next = null;
-    if (direction) { S.target = null; next = L.clampToFloor({x: S.player.pos.x + direction.x * speed, y: S.player.pos.y + direction.y * speed}); }
-    else if (S.target) { const step = L.moveToward(S.player.pos, S.target.pos, speed); next = L.clampToFloor(step); if (step.arrived) { const done = S.target; S.target = null; done.after?.(); } }
+    let next = null, arrived = null;
+    if (direction) {
+      S.target = null;
+      const candidate = L.clampToFloor({x: S.player.pos.x + direction.x * speed, y: S.player.pos.y + direction.y * speed});
+      if (W.canStand(S.world, candidate)) next = candidate;
+      else {
+        const slideX = {x: candidate.x, y: S.player.pos.y}, slideY = {x: S.player.pos.x, y: candidate.y};
+        if (W.canStand(S.world, slideX)) next = slideX; else if (W.canStand(S.world, slideY)) next = slideY;
+      }
+    } else if (S.target) {
+      const target = S.target, step = L.moveToward(S.player.pos, target.path[0], speed); next = step;
+      if (step.arrived) { target.path.shift(); if (!target.path.length) { S.target = null; arrived = target.after; } }
+    }
     if (next) {
-      S.walked += Math.hypot(next.x - S.player.pos.x, next.y - S.player.pos.y); S.player.pos = next; place(S.player); S.player.el.dataset.walking = 'true';
+      const dx = next.x - S.player.pos.x, dy = next.y - S.player.pos.y;
+      S.walked += Math.hypot(dx, dy); S.player.pos = {x: next.x, y: next.y}; facing(S.player, dx, dy); place(S.player); S.player.el.dataset.walking = 'true';
       followPlayer(); proximity(); if (S.walked > 12) advanceTutorial('move');
     } else S.player.el.dataset.walking = 'false';
-    S.rafId = requestAnimationFrame(frame);
+    if (arrived) arrived();
+    if (S.target || S.keys.size) S.rafId = requestAnimationFrame(frame);
+    else S.player.el.dataset.walking = 'false';
+  }
+  function facing(entity, dx, dy) {
+    if (Math.abs(dx) + Math.abs(dy) < .01) return;
+    entity.el.dataset.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
   }
   function followPlayer() {
     const scroller = stage.parentElement; if (!scroller || scroller.scrollWidth <= scroller.clientWidth + 2) return;
@@ -93,7 +117,11 @@
     $('lobby-near').textContent = close ? close.name + '와(과) 가까워요 · Enter 또는 누르기로 대화' : '';
     S.nearNpc = close;
   }
-  function walkTo(pos, after) { S.target = {pos: L.clampToFloor(pos), after}; ensureLoop(); }
+  function walkTo(pos, after) {
+    const path = W.route(S.world, S.player.pos, L.clampToFloor(pos));
+    if (!path.length) { if (Math.hypot(pos.x - S.player.pos.x, pos.y - S.player.pos.y) < 1) after?.(); else $('lobby-near').textContent = '가구 사이로 갈 수 있는 바닥을 눌러 주세요.'; return; }
+    S.target = {path, after}; ensureLoop();
+  }
   function ensureLoop() { if (S.active && S.player && !S.rafId) { S.last = 0; S.rafId = requestAnimationFrame(frame); } }
   function talkTo(npc) {
     const stand = L.clampToFloor({x: npc.pos.x + (S.player.pos.x < npc.pos.x ? -6 : 6), y: npc.pos.y + 6});
@@ -121,6 +149,7 @@
 
   // ---- chatter and roaming --------------------------------------------------------------------
   function speak(entity, text, ms = 6500) {
+    if (!entity.el.isConnected || !S.npcs.includes(entity)) return false;
     if (S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || S.speaker.some((item) => item.id === entity.id)) return;
     const bubble = entity.el.querySelector('.npc-bubble'); bubble.textContent = text; entity.el.classList.add('speaking');
     const box = bubble.getBoundingClientRect();
@@ -130,34 +159,70 @@
     });
     if (overlaps) { entity.el.classList.remove('speaking'); return; }
     const record = {id: entity.id, pos: entity.pos}; S.speaker.push(record);
-    setTimeout(() => { entity.el.classList.remove('speaking'); S.speaker = S.speaker.filter((item) => item !== record); }, ms);
+    S.recent.push(text); S.recent = S.recent.slice(-12);
+    entity.el.dataset.activity = 'chatting'; gesture(entity, 'talk');
+    setTimeout(() => { entity.el.classList.remove('speaking'); entity.el.dataset.activity = entity.kind === 'staff' ? 'typing' : 'reading'; S.speaker = S.speaker.filter((item) => item !== record); }, ms);
+    return true;
   }
   const MAX_BUBBLES = 4, BUBBLE_GAP = 26;
   // On a phone-sized stage fewer, more distant bubbles keep the small scene readable.
   const narrow = () => stage.clientWidth < 560;
   function chatterTick() {
-    if (!S.active || document.hidden || S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || !S.npcs.length) return;
+    if (!S.active || S.paused || document.hidden || S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || !S.npcs.length) return;
     const active = S.speaker.map((item) => ({id: item.id, pos: item.pos}));
     const npc = L.pickSpeaker(S.npcs.filter((item) => !item.away && (item.kind !== 'staff' || Math.random() < 0.7)), active, narrow() ? 44 : BUBBLE_GAP);
     if (!npc) return;
-    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), weather: S.weather, holidays: S.holidays};
-    speak(npc, npc.duty && Math.random() < 0.3 ? '저는 ' + npc.duty + ' 담당이에요.' : L.chatterLine(context, persona));
+    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), weather: S.weather, holidays: S.holidays, level: S.level};
+    const text = W.chooseChatter(L, context, persona, S.recent);
+    if (!speak(npc, text)) return;
     // A neighbour answers a moment later, so it reads as a small conversation, not isolated captions.
     const buddy = L.nearest(S.npcs.filter((item) => item !== npc && !item.away && !item.el.classList.contains('speaking')), npc.pos, 24);
-    if (buddy && Math.random() < 0.7) setTimeout(() => { if (S.active) speak(buddy, L.replyLine()); }, 2800);
+    if (buddy && Math.random() < 0.7) setTimeout(() => { if (S.active && !S.paused && !buddy.away) speak(buddy, W.chatReply(text, S.recent)); }, 2800);
   }
   function greet() {
     const host = S.npcs.find((item) => item.kind === 'manager'); if (!host || S.visit) return;
-    speak(host, '어서 오세요, ' + S.playerName + '님! ZERO 사무실에 오신 걸 환영해요.', 7000);
+    speak(host, '어서 오세요, ' + S.playerName + '님! ' + (S.level > 1 ? 'Lv.' + S.level + ' 학습을 이어가 볼까요?' : '입문 학교에서 첫 레벨부터 같이 배워요.'), 7000);
+    gesture(host, 'wave');
   }
-  const WAYPOINTS = [{x: 12, y: 30}, {x: 80, y: 36}, {x: 148, y: 30}];
+  function gesture(entity, kind) {
+    if (reduceMotion || S.paused || !M?.animate || !entity.el.isConnected) return;
+    const target = kind === 'wave' ? entity.el.querySelector('.arm.r') : entity.el.querySelector('.npc-fig');
+    const values = kind === 'wave' ? {rotate: [0, -70, -30, -70, 0]} : kind === 'level' ? {y: [0, -8, 0], scale: [1, 1.12, 1]} : {rotate: [0, -3, 0, 3, 0]};
+    const motion = M.animate(target, {...values, duration: kind === 'level' ? 600 : 480, ease: 'out(3)', onComplete: () => S.motions.delete(motion)});
+    S.motions.add(motion);
+  }
+  function walkNpc(npc, destination, done, seat = false) {
+    if (!M?.animate || !S.npcs.includes(npc)) return false;
+    const path = W.route(S.world, npc.pos, destination); if (!path.length) return false;
+    if (seat) path.push({...npc.home});
+    npc.el.dataset.walking = 'true'; npc.el.dataset.activity = 'walking';
+    function segment(index) {
+      if (!S.npcs.includes(npc)) return;
+      const point = path[index];
+      if (!point) { npc.motion = null; npc.el.dataset.walking = 'false'; done(); proximity(); return; }
+      const dx = point.x - npc.pos.x, dy = point.y - npc.pos.y; facing(npc, dx, dy);
+      const motion = M.animate(npc.pos, {
+        x: point.x, y: point.y, duration: Math.max(80, Math.hypot(dx, dy) / 18 * 1000), ease: 'linear',
+        onUpdate: () => place(npc),
+        onComplete: () => { S.motions.delete(motion); segment(index + 1); }
+      });
+      npc.motion = motion; S.motions.add(motion);
+      if (!S.active || S.paused || document.hidden) motion.pause();
+    }
+    segment(0); return true;
+  }
+  const WAYPOINTS = [{x: 15, y: 32}, {x: 80, y: 40}, {x: 144, y: 30}, {x: 96, y: 62}];
   function roamTick() {
-    if (!S.active || document.hidden || reduceMotion) return;
-    const movers = S.npcs.filter((npc) => npc.kind === 'chief' && !npc.away && !npc.el.classList.contains('speaking')); if (!movers.length || Math.random() > 0.6) return;
+    if (!S.active || S.paused || document.hidden || reduceMotion) return;
+    S.npcs.filter(npc => npc.away && !npc.motion && Date.now() >= npc.returnAt).forEach(npc => {
+      if (!walkNpc(npc, npc.home, () => { npc.away = false; npc.el.dataset.activity = npc.kind === 'staff' ? 'typing' : 'reading'; }, true)) npc.returnAt = Date.now() + 3000;
+    });
+    if (S.npcs.filter(npc => npc.away).length >= 3) return;
+    const movers = S.npcs.filter(npc => npc.kind !== 'manager' && !npc.away && !npc.el.classList.contains('speaking'));
+    if (!movers.length) return;
     const npc = movers[Math.floor(Math.random() * movers.length)], spot = WAYPOINTS[Math.floor(Math.random() * WAYPOINTS.length)];
-    npc.away = true; npc.el.dataset.walking = 'true'; npc.pos = {x: spot.x + (Math.random() * 6 - 3), y: spot.y}; place(npc);
-    setTimeout(() => { npc.el.dataset.walking = 'false'; }, 4200);
-    setTimeout(() => { npc.pos = {...npc.home}; npc.el.dataset.walking = 'true'; place(npc); setTimeout(() => { npc.el.dataset.walking = 'false'; npc.away = false; }, 4200); }, 4200 + 6000 + Math.random() * 6000);
+    npc.away = true;
+    if (!walkNpc(npc, spot, () => { npc.el.dataset.activity = spot.x < 20 ? 'coffee' : 'reading'; npc.returnAt = Date.now() + 5000; })) npc.away = false;
   }
   function clockTick() {
     const parts = L.kstParts(new Date()), clock = $('lobby-clock'); if (clock) clock.textContent = String(parts.hour).padStart(2, '0') + ':' + String(parts.minute).padStart(2, '0') + ' KST';
@@ -212,12 +277,36 @@
     };
   }
   async function loadReturns() {
-    const entries = [];
-    try { const response = await fetch('api/portfolio', {cache: 'no-store'}); const scope = response.ok ? (await response.json()).summary?.zero_portfolio : null;
-      if (scope && Number.isFinite(Number(scope.gross_return_percent))) entries.push({label: 'ZERO 참고', percent: Number(scope.gross_return_percent), zero: true}); } catch (_) { /* board shows what it has */ }
-    (S.userBoard || []).forEach((row, index) => entries.push({label: row.nick, nick: row.nick, percent: row.return_percent, rank: index + 1}));
-    track('lobby-returns', entries.map(returnTick));
+    const entries = [], ranked = W.rankUsers(S.userBoard);
+    try {
+      const response = await fetch('api/portfolio', {cache: 'no-store'}), scope = response.ok ? (await response.json()).summary?.zero_portfolio : null;
+      if (typeof scope?.gross_return_percent === 'number' && Number.isFinite(scope.gross_return_percent)) entries.push({label: 'ZERO 참고 · 순위 제외', percent: scope.gross_return_percent, zero: true});
+    } catch (_) { /* a reference without prices stays unavailable */ }
+    ranked.forEach(row => entries.push({...row, label: row.nick}));
+    track('lobby-returns', entries.length ? entries.map(returnTick) : [(copy) => {
+      const text = S.boardMeta?.state === 'AVAILABLE' ? '첫 참가자를 기다려요 · 내 사무실에서 시작' : '연습 랭킹을 확인하는 중이에요';
+      const item = node('span', 'lobby-tick muted', text); if (copy) item.setAttribute('aria-hidden', 'true'); return item;
+    }]);
+    paintRanking(ranked);
   }
+  function paintRanking(ranked = W.rankUsers(S.userBoard)) {
+    const root = $('lobby-ranking-list'); root.replaceChildren();
+    $('lobby-ranking-status').textContent = S.boardMeta?.state === 'AVAILABLE'
+      ? (ranked.length ? ranked.length + '명 · 수익률 내림차순 · 동률은 공동 순위' : '아직 참가자가 없어요. 내 사무실에서 닉네임으로 시작해 보세요.')
+      : '가격을 확인하지 못했거나 조회 중이라 순위를 보류합니다.';
+    const stamp = S.boardMeta?.checkedAt ? new Date(S.boardMeta.checkedAt) : null;
+    $('lobby-ranking-time').textContent = stamp && Number.isFinite(stamp.getTime()) ? '조회: ' + stamp.toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'}) + ' KST' : '조회 시각 미확인';
+    ranked.forEach(row => {
+      const item = node('li', 'ranking-row'), visit = node('button', 'ranking-nick', row.nick); visit.type = 'button';
+      visit.addEventListener('click', () => { $('lobby-ranking-dialog').close(); window.ZEROLobbyUsers?.visit(row.nick); });
+      const value = node('strong', row.percent >= 0 ? 'gain' : 'loss', money(row.percent));
+      item.append(node('span', 'ranking-place', row.rank <= 3 ? ['🥇', '🥈', '🥉'][row.rank - 1] + ' ' + row.rank + '위' : row.rank + '위'), visit, value);
+      if (row.staffCount !== null) item.append(node('small', '', '직원 ' + row.staffCount + '명'));
+      root.append(item);
+    });
+  }
+  $('lobby-ranking-open').addEventListener('click', () => { paintRanking(); $('lobby-ranking-dialog').showModal(); });
+  $('lobby-ranking-close').addEventListener('click', () => $('lobby-ranking-dialog').close());
 
   // ---- tutorial -------------------------------------------------------------------------------
   const TUT_KEY = 'zero-lobby-tutorial-v1';
@@ -307,19 +396,37 @@
     button.addEventListener('pointerdown', down); ['pointerup', 'pointerleave', 'pointercancel'].forEach((name) => button.addEventListener(name, up));
   });
   function setActive(on) {
-    if (on === S.active) return; S.active = on;
+    if (on === S.active) return; S.active = on; stage.dataset.suspended = String(!on);
     S.timers.forEach(clearInterval); S.timers = [];
+    S.motions.forEach(motion => { if (on && !S.paused && !document.hidden) motion.resume(); else motion.pause(); });
     if (!on) { S.keys.clear(); if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return; }
-    S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 9000), setInterval(heroTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000));
+    S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000));
     clockTick(); heroTick(); ensureLoop(); [900, 1800, 2700].forEach((ms) => setTimeout(chatterTick, ms)); setTimeout(greet, 400);
   }
   function setPlayerName(name) { S.playerName = name || '나'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
-  function setUserBoard(rows) { S.userBoard = rows; loadReturns(); }
+  function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; loadReturns(); }
 
   const initialTutorial = tutorialState();
   S.tutorial = initialTutorial || {step: 0, done: false};
   if (!initialTutorial) store.set(TUT_KEY, JSON.stringify(S.tutorial));
   loadWeather(); loadHolidays(); $('lobby-retry').addEventListener('click', open);
   window.ZEROLobby = {showOwn, open: () => { setActive(true); if (!S.npcs.length || S.mode !== 'zero') open(); }, close: () => setActive(false), setActive, visit: visitOffice, setPlayerName, setUserBoard, state: S};
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) ensureLoop(); });
+  document.addEventListener('visibilitychange', () => {
+    S.motions.forEach(motion => { if (document.hidden || !S.active || S.paused) motion.pause(); else motion.resume(); });
+    if (!document.hidden) ensureLoop();
+  });
+  new ResizeObserver(entries => {
+    const size = entries[0].contentRect; if (!size.width || !size.height) return;
+    S.viewport = {w: size.width, h: size.height}; S.npcs.forEach(npc => { if (npc.el) place(npc); }); if (S.player) place(S.player);
+  }).observe(stage);
+  $('lobby-pause').addEventListener('click', () => {
+    S.paused = !S.paused; stage.dataset.paused = String(S.paused); $('lobby-pause').textContent = S.paused ? '연출 재개' : '연출 멈춤'; $('lobby-pause').setAttribute('aria-pressed', String(S.paused));
+    S.motions.forEach(motion => { if (S.paused) motion.pause(); else if (S.active && !document.hidden) motion.resume(); });
+    if (!S.paused) { roamTick(); chatterTick(); }
+  });
+  document.addEventListener('zero-academy-progress', event => {
+    const detail = event.detail; if (!detail || !Number.isInteger(detail.level) || detail.level < 1 || detail.level > 7) return;
+    const before = S.level; S.level = detail.level; S.schoolRank = detail.rank; $('lobby-player-level').textContent = 'Lv.' + S.level;
+    if (S.player) { S.player.el.querySelector('.player-level').textContent = 'Lv.' + S.level; S.player.el.setAttribute('aria-label', S.playerName + ' · Lv.' + S.level + ' · ' + S.schoolRank); if (detail.celebrate && S.level > before) gesture(S.player, 'level'); }
+  });
 })();

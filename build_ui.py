@@ -27,6 +27,9 @@ def build(source, checkout=None):
         shutil.rmtree(OUT)
     shutil.copytree(source / 'assets', OUT / 'assets')
     for js in (OUT / 'assets').glob('*.js'):
+        # Reviewed vendor bytes and licenses are copied intact, including line endings.
+        if js.name.startswith('vendor-'):
+            continue
         js.write_text(relative(js.read_text(encoding='utf-8')), encoding='utf-8')
     # CSS and the manifest resolve URLs against their own location (assets/).
     for css in (OUT / 'assets').glob('*.css'):
