@@ -38,13 +38,15 @@ class BridgeTests(unittest.TestCase):
             (assets / 'vendor-example-LICENSE.txt').write_bytes(license_text)
             (assets / 'app.js').write_text('const endpoint = "/api/quotes";', encoding='utf-8')
             (assets / 'manifest.webmanifest').write_text('{"id":"/","start_url":"/","scope":"/"}', encoding='utf-8')
-            (source / 'index.html').write_text('<html data-zero-hosted="true"><body></body></html>', encoding='utf-8')
+            (source / 'index.html').write_text('<html data-zero-hosted="true"><body><span>본인 전용</span></body></html>', encoding='utf-8')
             output = Path(tmp) / 'ui'
             with mock.patch.object(build_ui, 'OUT', output), mock.patch.object(build_ui, 'EXTRAS', Path(tmp) / 'empty'), mock.patch.dict('os.environ', {'ZERO_LOBBY_API': ''}):
                 build_ui.build(source)
             self.assertEqual((output / 'assets/vendor-example.js').read_bytes(), vendor)
             self.assertEqual((output / 'assets/vendor-example-LICENSE.txt').read_bytes(), license_text)
             self.assertIn('"api/quotes"', (output / 'assets/app.js').read_text(encoding='utf-8'))
+            self.assertIn('공개 참고 화면',(output/'index.html').read_text(encoding='utf-8'))
+            self.assertIn('본인 전용',(source/'index.html').read_text(encoding='utf-8'),'public wording must not change the owner-private source')
 
     def setUp(self):
         zero_proxy._cache.clear()

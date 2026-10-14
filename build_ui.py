@@ -2,7 +2,7 @@
 
 usage: python build_ui.py <path-to-zero-cloudflare/public> [<zero checkout for the latest committed research list>]
 
-The UI is unchanged except that extras/*.js are added (live headlines) and that absolute '/api/' and '/assets/' become relative, so it works under
+The public-only privacy label is clarified, extras/*.js are added (live headlines) and that absolute '/api/' and '/assets/' become relative, so it works under
 /zero/ and Community Cloud's /~/+/ prefix. The build keeps data-zero-hosted, so the refresh button
 reprices with public quotes (account refresh and office requests stay on the owner's PC).
 """
@@ -37,7 +37,7 @@ def build(source, checkout=None):
     manifest = OUT / 'assets' / 'manifest.webmanifest'
     text = manifest.read_text(encoding='utf-8').replace('"/assets/', '"')
     manifest.write_text(re.sub(r'"(id|start_url|scope)":"/"', r'"\1":"../"', text), encoding='utf-8')
-    html = relative((source / 'index.html').read_text(encoding='utf-8'))
+    html = relative((source / 'index.html').read_text(encoding='utf-8')).replace('본인 전용', '공개 참고 화면')
     if 'data-zero-hosted="true"' not in html:
         raise SystemExit('HOSTED_FLAG_MISSING: build from the hosted (Cloudflare/Sites) public folder')
     # The office's account API (public Cloudflare Worker). Empty keeps the single-visitor office.
