@@ -121,10 +121,12 @@ def _collect(now, *, fetch, translate, cached, deadline, snapshot):
     for row in items:
         if not zero_discovery.is_public_english(row):
             continue
-        row['translation_status'] = 'PROVIDER_UNAVAILABLE'
         found, title_ko = cached(row)
+        if found:
+            row['translation_status'] = 'PROVIDER_UNAVAILABLE'
         if not found and attempts < MAX_TRANSLATIONS and time.monotonic() < deadline:
             attempts += 1
+            row['translation_status'] = 'PROVIDER_UNAVAILABLE'
             title_ko = translate(row)
         row['title_ko'] = title_ko
         if title_ko:

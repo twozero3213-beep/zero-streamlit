@@ -160,7 +160,9 @@ class DiscoveryTests(unittest.TestCase):
         with mock.patch.object(headlines, 'similar', return_value=False):
             value = headlines.collect(NOW, fetch=lambda url: ('<rss><channel>'+items+'</channel></rss>').encode(), translate=translate)
         self.assertEqual(translate.call_count, 2)
-        self.assertTrue(all(row['title_ko'] is None and row['translation_status'] == 'PROVIDER_UNAVAILABLE' and row['title'] for row in value['items']))
+        self.assertTrue(all(row['title_ko'] is None and row['title'] for row in value['items']))
+        self.assertEqual([row['translation_status'] for row in value['items'][:2]], ['PROVIDER_UNAVAILABLE'] * 2)
+        self.assertTrue(all(row['translation_status'] == 'PENDING' for row in value['items'][2:]))
 
     def test_standard_google_news_article_query_is_allowed_but_private_parameters_are_not(self):
         fetch = mock.Mock(return_value=GOOD)
@@ -244,13 +246,17 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_cached_titles_after_two_misses_are_reused_without_new_requests(self):
         items=''.join('<item><title>Headline %d uniqueword%d - Reuters</title><link>https://news.google.com/rss/articles/%d</link><source>Reuters</source><pubDate>Thu, 15 Oct 2026 00:00:00 GMT</pubDate></item>' % (i,i,i) for i in range(12))
-        cached=lambda row: (True,'캐시 제목') if row['title'].startswith('Headline 3 ') else (False,None)
+        cached=lambda row: (True,'캐시 제목') if row['title'].startswith('Headline 3 ') else (True,None) if row['title'].startswith('Headline 4 ') else (False,None)
         translate=mock.Mock(return_value=None)
         with mock.patch.object(headlines,'similar',return_value=False):
             value=headlines.collect(NOW,fetch=lambda url: ('<rss><channel>'+items+'</channel></rss>').encode(),translate=translate,cached=cached)
         translate.assert_called(); self.assertEqual(translate.call_count,2)
         row=next(row for row in value['items'] if row['title'].startswith('Headline 3 '))
         self.assertEqual((row['title_ko'],row['translation_status']),('캐시 제목','TRANSLATED'))
+        failed=next(row for row in value['items'] if row['title'].startswith('Headline 4 '))
+        self.assertEqual((failed['title_ko'],failed['translation_status']),(None,'PROVIDER_UNAVAILABLE'))
+        pending=next(row for row in value['items'] if row['title'].startswith('Headline 5 '))
+        self.assertEqual((pending['title_ko'],pending['translation_status']),(None,'PENDING'))
 
     def test_collector_deadline_returns_without_overlapping_cold_fetches(self):
         entered,release=threading.Event(),threading.Event()

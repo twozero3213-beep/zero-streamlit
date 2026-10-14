@@ -192,6 +192,15 @@ html[data-zero-view='lobby'] main { height: var(--floor-height, calc(100dvh - 14
 .lobby-profile .chat-head .secondary-button { flex: 0 0 auto; min-width: 64px; padding: 8px 12px; white-space: nowrap; }
 
 /* Keep market data outside the scaled floor so characters cannot cover the board. */
+#lobby-view .lobby-stage { container-type: size; }
+@media(max-height:450px) {
+  #lobby-view .npc .npc-fig { width: min(3cqw, 11cqh); height: auto; }
+  #lobby-view .npc.manager .npc-fig { width: min(4.4cqw, 15cqh); }
+  #lobby-view .npc.chief .npc-fig { width: min(3.8cqw, 13cqh); }
+  #lobby-view .npc-name { position: absolute; top: 100%; font-size: 8px; line-height: 1.2; margin-top: 0; }
+  #lobby-view .office-desk { width: min(5cqw, 18cqh); height: 2cqh; }
+}
+
 #lobby-view .lobby-board { position: relative; inset: auto; flex: none; width: 100%; grid-template-rows: repeat(4, 24px) auto; gap: 3px; padding: 7px 10px; margin-bottom: 7px; border-radius: 8px; box-sizing: border-box; }
 #lobby-view .lobby-board-tag { min-width: 68px; text-align: center; padding: 2px 5px; background: #32617e; }
 #lobby-view .market-row .lobby-board-tag { background: #1b7279; }
