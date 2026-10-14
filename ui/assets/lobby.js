@@ -370,7 +370,7 @@
     const spots = L.layoutGrid(count);
     S.npcs = spots.map((spot, index) => ({id: 'guest-' + index, department: 'GUEST', kind: 'staff', name: '직원', role: '비공개', mandate: '', hue: (index * 47 + 20) % 360, home: spot, pos: {...spot}, face: L.faceAt(index + 3)}));
     S.npcs.push({id: 'host', department: 'HOST', kind: 'manager', name: info.nick, role: '사무실 주인', mandate: '', hue: 40, face: {eyes: 1, mouth: 1}, home: {x: 80, y: 27}, pos: {x: 80, y: 27}});
-    setBanner(info.nick + '님의 사무실 · 직원 ' + count + '명 · 수익률 ' + (Number.isFinite(Number(info.returnPercent)) ? money(Number(info.returnPercent)) : '집계 전') + ' · 팀 구성은 비공개예요', true);
+    setBanner(info.nick + '님의 사무실 · 직원 ' + count + '명 · 수익률 ' + (typeof info.returnPercent === 'number' && Number.isFinite(info.returnPercent) ? money(info.returnPercent) : '집계 전') + ' · 팀 구성은 비공개예요', true);
     $('lobby-title').textContent = info.nick + '님의 사무실'; $('lobby-sub').textContent = '직원 수와 근무 모습만 볼 수 있어요.'; $('lobby-count').textContent = '직원 ' + count + '명';
     buildStage(); finish();
   }
