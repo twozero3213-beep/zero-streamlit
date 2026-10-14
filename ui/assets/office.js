@@ -723,5 +723,5 @@
   const visible=()=>!document.hidden && !$('office-panel').closest('.view')?.hidden && $('office-panel').getBoundingClientRect().top < window.innerHeight && $('office-panel').getBoundingClientRect().bottom > 0;
   setInterval(()=>{if(visible() && !submitting){loadPromise=load();loadPromise.catch(()=>{});}},30000);
   document.addEventListener?.('visibilitychange',()=>{syncMotion();if(visible() && !submitting)load();});
-  loadPromise=load(); loadPromise.catch(()=>{});
+  if(visible()){loadPromise=load(); loadPromise.catch(()=>{});}
 })();

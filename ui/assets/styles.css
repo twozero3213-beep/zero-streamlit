@@ -514,6 +514,19 @@ footer span { text-align: right; }
 .summary-evidence > summary { min-height: 44px; padding-block: 10px; cursor: pointer; font-size: 15px; font-weight: 550; }
 .summary-evidence > p { margin-top: 12px; max-width: 75ch; }
 .summary-evidence .source-details { margin-top: 12px; }
+.evidence-group { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 16px; }
+.evidence-group h3 { font-size: 15px; margin-bottom: 12px; }
+.portfolio-empty h2 { font-size: 22px; margin-bottom: 12px; }
+.empty-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.account-empty .account-scope, .account-empty .account-metrics, .account-empty .account-reference-note,
+.account-empty .summary-evidence, .account-empty .summary-meta,
+.account-empty .holdings-panel, .account-empty .overview-layout, .account-empty .lower-layout,
+.account-empty #benchmark-panel, .account-empty #tqqq-panel { display: none; }
+.period-comparison select { min-height: 44px; margin: 12px 8px 12px 0; max-width: 100%; }
+#risk-run, #comparison-run { flex-shrink: 0; white-space: normal; min-height: 44px; }
+#sort-value .sort-label { display: inline; }
+@media(max-width:600px) { #risk-panel .panel-heading { flex-wrap: wrap; } #risk-run { width: 100%; } }
+
 .news-outline { max-width: 920px; margin-bottom: 24px; padding: 16px 24px; }
 .news-outline summary { min-height: 44px; display: list-item; padding-block: 8px; cursor: pointer; font-weight: 550; }
 .news-outline ol { margin: 12px 0 8px; padding-left: 24px; }

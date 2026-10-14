@@ -12,7 +12,7 @@
   const store = { get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }, set(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* private mode */ } } };
 
   const S = {active: false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
-    chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: store.get('zero-lobby-name') || '나', tutorial: null,
+    chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: (store.get('zero-lobby-name') === '나' ? null : store.get('zero-lobby-name')) || '대표님', tutorial: null,
     motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolRank: '입문 전', boardMeta: null};
 
   const shortName = (full) => String(full).split(' · ')[0].replace(/^가상\s*/, '').replace(/\s*담당$/, '');
@@ -243,16 +243,20 @@
 
   // ---- outside world: weather, holidays, news board -------------------------------------------
   async function loadWeather() {
+    if (!S.active || !S.player) return;
+    const epoch = sceneEpoch;
     try {
       const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=temperature_2m,weather_code&timezone=Asia%2FSeoul', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
-      const current = (await response.json()).current; S.weather = {temp: current.temperature_2m, code: current.weather_code}; clockTick(); heroTick();
+      const current = (await response.json()).current; if (!S.active || epoch !== sceneEpoch) return; S.weather = {temp: current.temperature_2m, code: current.weather_code}; clockTick(); heroTick();
       const box = $('lobby-weather'); box.replaceChildren(node('b', '', {clear: '☀️', cloud: '☁️', fog: '🌫️', rain: '🌧️', snow: '❄️', storm: '⛈️'}[L.weatherKind(S.weather.code)] || '🌤️'), node('span', '', '서울 ' + Math.round(S.weather.temp) + '°'));
-    } catch (_) { S.weather = null; }
+    } catch (_) { if (S.active && epoch === sceneEpoch) S.weather = null; }
   }
   async function loadHolidays() {
+    if (!S.active || !S.player) return;
+    const epoch = sceneEpoch;
     try {
       const year = L.kstParts(new Date()).date.slice(0, 4), response = await fetch('https://date.nager.at/api/v3/PublicHolidays/' + year + '/KR');
-      const rows = await response.json(); if (Array.isArray(rows) && rows.length > 5) S.holidays = new Set([...L.KR_HOLIDAYS, ...rows.map((row) => row.date)]);
+      const rows = await response.json(); if (!S.active || epoch !== sceneEpoch) return; if (Array.isArray(rows) && rows.length > 5) S.holidays = new Set([...L.KR_HOLIDAYS, ...rows.map((row) => row.date)]);
     } catch (_) { /* the embedded reference table stays */ }
   }
   let boardDialog;
@@ -278,19 +282,24 @@
       link.title = translated ? '원제 · 괄호 안은 기계 번역입니다. 기사 원문을 확인하세요.' : '기사 원제 · 번역이 없으면 원문을 표시합니다.'; link.addEventListener('click', () => advanceTutorial('board')); return link;
   };
   async function loadNews() {
+    if (!S.active || !S.player || document.hidden) return;
+    const epoch = sceneEpoch;
     let items = [];
     try { const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(30000)}); const data = response.ok ? await response.json() : null; if (data?.schema_version === 1) items = data.items.filter((row) => /^https:\/\//.test(row.url)); } catch (_) { /* fall back below */ }
+    if (!S.active || epoch !== sceneEpoch) return;
     if (!items.length) {
       try { const response = await fetch('api/desk', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); const desk = response.ok ? await response.json() : null;
         items = (desk?.news || []).map((row) => ({title: row.title, publisher: row.sources?.[0]?.label || '공식 자료', url: row.sources?.[0]?.url || ''})).filter((row) => /^https:\/\//.test(row.url)); } catch (_) { items = []; }
     }
+    if (!S.active || epoch !== sceneEpoch) return;
     track('lobby-news', items.slice(0, 30).map(linkTick), '뉴스를 확인하지 못했어요 · 다음 갱신 때 다시 확인해요');
   }
     async function loadTrends() {
-      if (document.hidden || S.trendsLoading) return; S.trendsLoading = true;
+      if (!S.active || !S.player || document.hidden || S.trendsLoading) return; S.trendsLoading = true; const epoch = sceneEpoch;
       try {
         const response = await fetch('api/trends', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
         const data = response.ok ? await response.json() : null;
+        if (!S.active || epoch !== sceneEpoch) return;
         if (data?.schema_version !== 1 || !Array.isArray(data.items)) throw new Error('TRENDS_UNAVAILABLE');
         S.trends = data.items.filter(row => typeof row.keyword === 'string' && row.keyword.length <= 48 && !/[<>\x00-\x1f]/.test(row.keyword)).slice(0, 10);
         const fetched = new Date(data.retrieved_at), stamp = Number.isFinite(fetched.getTime()) ? fetched.toLocaleTimeString('ko-KR', {timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit'}) + ' KST' : '시각 미확인';
@@ -299,14 +308,15 @@
           item.title = 'Google Trends 한국 검색 관심 · 원천 평균 10분 갱신 · 전체 검색 순위가 아닙니다';
           if (copy) item.setAttribute('aria-hidden', 'true'); return item;
         }), 'Google 검색 관심 키워드를 확인하지 못했어요');
-      } catch (_) { S.trends = []; track('lobby-trends', [], '검색 관심 키워드 확인 불가 · 다음 갱신 때 다시 확인'); }
+      } catch (_) { if (!S.active || epoch !== sceneEpoch) return; S.trends = []; track('lobby-trends', [], '검색 관심 키워드 확인 불가 · 다음 갱신 때 다시 확인'); }
       finally { S.trendsLoading = false; }
     }
     async function loadMarket() {
-      if (document.hidden || S.marketLoading) return; S.marketLoading = true;
+      if (!S.active || !S.player || document.hidden || S.marketLoading) return; S.marketLoading = true; const epoch = sceneEpoch;
       try {
         const response = await fetch('api/live-quotes', {cache: 'no-store', signal: AbortSignal.timeout(20000)});
         const data = response.ok ? await response.json() : null;
+        if (!S.active || epoch !== sceneEpoch) return;
         if (!data) throw new Error('MARKET_UNAVAILABLE');
         const rows = [['S&P 500', data.benchmarks?.SP500, 'pt'], ['NASDAQ', data.markets?.NASDAQ, 'pt'], ['DOW', data.markets?.DOW, 'pt'], ['KOSPI', data.markets?.KOSPI, 'pt'], ['KOSDAQ', data.markets?.KOSDAQ, 'pt'], ['USD/KRW', data.exchange_rates?.USD_KRW || (data.fx ? {...data.fx, price: data.fx.usd_krw} : null), '원'], ['EUR/KRW', data.exchange_rates?.EUR_KRW, '원'], ['JPY/KRW · 1엔', data.exchange_rates?.JPY_KRW, '원']];
         track('lobby-market', rows.map(([name, quote, unit]) => copy => {
@@ -320,7 +330,7 @@
           item.addEventListener('click', () => showBoardDetail(name + ' · ' + item.title));
           if (copy) { item.setAttribute('aria-hidden', 'true'); item.tabIndex = -1; } return item;
         }));
-      } catch (_) { track('lobby-market', [], '시장 시세를 확인하지 못했어요 · 다음 갱신 때 다시 확인'); }
+      } catch (_) { if (!S.active || epoch !== sceneEpoch) return; track('lobby-market', [], '시장 시세를 확인하지 못했어요 · 다음 갱신 때 다시 확인'); }
       finally { S.marketLoading = false; }
     }
     const money = (value) => (value > 0 ? '+' : '') + Number(value).toFixed(2) + '%';
@@ -331,11 +341,14 @@
     };
   }
   async function loadReturns() {
+    if (!S.active || !S.player || document.hidden) return;
+    const epoch = sceneEpoch, request = S.returnRequest = (S.returnRequest || 0) + 1;
     const entries = [], ranked = W.rankUsers(S.userBoard);
     try {
       const response = await fetch('api/portfolio', {cache: 'no-store', signal: AbortSignal.timeout(15000)}), scope = response.ok ? (await response.json()).summary?.zero_portfolio : null;
       if (typeof scope?.gross_return_percent === 'number' && Number.isFinite(scope.gross_return_percent)) entries.push({label: 'ZERO 참고 · 순위 제외', percent: scope.gross_return_percent, zero: true});
     } catch (_) { /* a reference without prices stays unavailable */ }
+    if (!S.active || epoch !== sceneEpoch || request !== S.returnRequest) return;
     ranked.forEach(row => entries.push({...row, label: row.nick}));
     track('lobby-returns', entries.length ? entries.map(returnTick) : [(copy) => {
       const text = S.boardMeta?.state === 'AVAILABLE' ? '첫 참가자를 기다려요 · 내 사무실에서 시작' : '연습 랭킹을 확인하는 중이에요';
@@ -390,18 +403,50 @@
     const banner = $('lobby-banner'); banner.hidden = !text; banner.replaceChildren();
     if (!text) return; banner.append(node('span', '', text)); if (back) { const button = node('button', 'secondary-button', '플로어로 돌아가기'); button.type = 'button'; button.addEventListener('click', () => open()); banner.append(button); }
   }
-  async function open() {
+  let teamRequest = null, sceneEpoch = 0;
+  let retryButton = $('lobby-retry');
+  if (!retryButton) {
+    retryButton = node('button', 'secondary-button', '다시 시도'); retryButton.id = 'lobby-retry'; retryButton.type = 'button';
+    $('lobby-error').append(retryButton);
+  }
+  function invalidateRoster() { S.worldLoaded = false; sceneEpoch++; teamRequest?.controller.abort(); teamRequest = null; }
+  async function open(retry = false) {
+    if (teamRequest && (!retry || teamRequest.retry)) return teamRequest.promise;
+    if (retry) invalidateRoster();
+    setActive(true);
+    const request = {epoch: ++sceneEpoch, controller: new AbortController(), retry, promise: null};
+    teamRequest = request;
+    const current = () => teamRequest === request && request.epoch === sceneEpoch && S.active && S.mode === 'zero';
     S.visit = null; S.mode = 'zero'; S.space = null; setBanner('');
     $('lobby-title').textContent = '지금 근무 중인 팀'; $('lobby-sub').textContent = '지금 근무 중인 ZERO 팀이에요. 캐릭터를 움직여 직원에게 말을 걸어 보세요.';
-    try {
-      if (!S.team) { const response = await fetch('api/team', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); if (!response.ok) throw Error('TEAM'); S.team = await response.json(); }
-      const roster = rosterFrom(S.team); placeZero(roster); S.npcs = roster.list; $('lobby-count').textContent = '직원 ' + roster.list.length + '명 근무 중';
-      $('lobby-error').hidden = true; buildStage();
-    } catch (_) { S.npcs = []; buildStage(); $('lobby-error').hidden = false; }
-    finish();
+    $('lobby-error').hidden = false; $('lobby-error').querySelector('p').textContent = '팀 명부를 불러오는 중이에요. 오래 걸리면 다시 시도해 주세요.';
+    retryButton.disabled = retry; retryButton.textContent = retry ? '다시 불러오는 중…' : '다시 시도';
+    request.promise = (async () => {
+      const timer = setTimeout(() => request.controller.abort(), 15000);
+      try {
+        let team = S.team;
+        if (!team) {
+          const response = await fetch('api/team', {cache: 'no-store', signal: request.controller.signal});
+          if (!response.ok) throw Error('TEAM'); team = await response.json();
+        }
+        if (!current()) return;
+        const roster = rosterFrom(team); placeZero(roster);
+        S.team = team; S.npcs = roster.list; $('lobby-count').textContent = '직원 ' + roster.list.length + '명 근무 중';
+        $('lobby-error').hidden = true; buildStage(); finish();
+      } catch (_) {
+        if (!current()) return;
+        S.npcs = []; buildStage(); $('lobby-error').hidden = false;
+        $('lobby-error').querySelector('p').textContent = '팀 명부를 불러오지 못했어요. 다시 시도해 주세요.'; finish();
+      } finally {
+        clearTimeout(timer);
+        if (teamRequest === request) { teamRequest = null; retryButton.disabled = false; retryButton.textContent = '다시 시도'; }
+      }
+    })();
+    return request.promise;
   }
   // The visitor's own company: the names they chose, visible only to them (the server never returns this to others).
   function showOwn(info) {
+    invalidateRoster();
     S.visit = null; S.mode = 'own'; S.space = info.space || L.DEFAULT_SPACE;
     const list = [], chiefs = [], staffByChief = {}, person = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : (value || {name: '', persona: '', duty: ''});
     const make = (id, department, kind, who, role, mandate, hue, index) => {
@@ -420,6 +465,7 @@
   }
   // Another user's office: only the head count is public; names, teams and duties are never shown.
   function visitOffice(info) {
+    invalidateRoster();
     S.visit = info; S.mode = 'visit'; S.space = info.space || L.DEFAULT_SPACE; const count = Math.max(0, Math.min(40, Number(info.staffCount) || 0));
     const spots = L.layoutGrid(count);
     S.npcs = spots.map((spot, index) => ({id: 'guest-' + index, department: 'GUEST', kind: 'staff', name: '직원', role: '비공개', mandate: '', hue: (index * 47 + 20) % 360, home: spot, pos: {...spot}, face: L.faceAt(index + 3)}));
@@ -433,7 +479,10 @@
   function finish() {
     $('lobby-name-chip').textContent = S.playerName;
     let guestButton = $('lobby-guestbook'); if (!guestButton) { guestButton = node('button', 'secondary-button', '방명록'); guestButton.id = 'lobby-guestbook'; guestButton.type = 'button'; guestButton.addEventListener('click', () => window.ZEROSocial?.openGuestbook(S.visit?.nick || window.ZEROLobbyUsers?.session()?.nick)); document.querySelector('.lobby-meta').append(guestButton); } guestButton.hidden = !(S.visit || S.mode === 'own');
-    renderTutorial(); proximity(); ensureLoop(); loadNews(); loadReturns(); loadMarket(); loadTrends(); document.dispatchEvent(new CustomEvent('zero-ready'));
+    if (!S.active) return;
+    renderTutorial(); proximity(); ensureLoop();
+    const running = S.timers.length > 0; setActive(true); if (running) loadSceneResources();
+    document.documentElement.dataset.zeroReady = 'true'; document.dispatchEvent(new CustomEvent('zero-ready'));
   }
 
   // ---- input and lifecycle --------------------------------------------------------------------
@@ -455,16 +504,23 @@
     button.addEventListener('selectstart', event => event.preventDefault());
     button.addEventListener('pointerdown', down); ['pointerup', 'pointerleave', 'pointercancel'].forEach((name) => button.addEventListener(name, up));
   });
+  function loadSceneResources() {
+    if (!S.active || !S.player || document.hidden) return;
+    if (!S.worldLoaded) { S.worldLoaded = true; loadWeather(); loadHolidays(); }
+    loadNews(); loadReturns(); loadMarket(); loadTrends();
+  }
   function setActive(on) {
-    if (on === S.active) return; S.active = on; stage.dataset.suspended = String(!on);
+    if (on === S.active && (!on || S.timers.length || !S.player)) return; S.active = on; stage.dataset.suspended = String(!on);
     S.timers.forEach(clearInterval); S.timers = [];
     S.motions.forEach(motion => { if (on && !S.paused && !document.hidden) motion.resume(); else motion.pause(); });
-    if (!on) { S.keys.clear(); if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return; }
+    if (!on) { invalidateRoster(); S.worldLoaded = false; S.keys.clear(); if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return; }
+    if (!S.player) return;
+    loadSceneResources();
     S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000), setInterval(loadMarket, 60000), setInterval(loadTrends, 600000), setInterval(loadWeather, 1800000));
     clockTick(); heroTick(); ensureLoop(); [900, 1800, 2700].forEach((ms) => setTimeout(chatterTick, ms)); setTimeout(greet, 400);
   }
-  function setPlayerName(name) { S.playerName = name || '나'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
-  function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; loadReturns(); }
+  function setPlayerName(name) { S.playerName = name && name !== '나' ? name : '대표님'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
+  function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; if (S.active && S.player) loadReturns(); }
 
 
   const floorHelp = document.createElement('dialog');
@@ -490,8 +546,10 @@
   const initialTutorial = tutorialState();
   S.tutorial = initialTutorial || {step: 0, done: false};
   if (!initialTutorial) store.set(TUT_KEY, JSON.stringify(S.tutorial));
-  loadWeather(); loadHolidays(); $('lobby-retry').addEventListener('click', open);
-  window.ZEROLobby = {showOwn, open: () => { setActive(true); if (!S.npcs.length || S.mode !== 'zero') open(); }, close: () => setActive(false), setActive, visit: visitOffice, setPlayerName, setUserBoard, state: S};
+  retryButton.addEventListener('click', () => open(true));
+  window.ZEROLobby = {showOwn, open: () => { setActive(true); if (!S.team || !S.player || S.mode !== 'zero') return open(); }, close: () => setActive(false), setActive, visit: visitOffice, setPlayerName, setUserBoard, state: S};
+  document.addEventListener('zero-lobby-open', () => window.ZEROLobby.open());
+  if (document.documentElement.dataset.zeroView === 'lobby') window.ZEROLobby.open();
   document.addEventListener('visibilitychange', () => {
     S.motions.forEach(motion => { if (document.hidden || !S.active || S.paused) motion.pause(); else motion.resume(); });
     if (!document.hidden) ensureLoop();

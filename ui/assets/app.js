@@ -1,6 +1,6 @@
 'use strict';
 const $ = (selector) => document.querySelector(selector);
-const state = {data: null, market: 'ALL', currency: 'KRW', chart: 'bars', search: '', descending: true, sortMetric:'value',selected: null, fingerprint: null, benchmarkFingerprint: null, reference: null};
+const state = {data: null, market: 'ALL', currency: 'KRW', chart: 'bars', search: '', descending: true, sortMetric:'value',selected: null, fingerprint: null, benchmarkFingerprint: null, reference: null, demo: false, savedData: null, includeCash: false};
 const hostedView = document.documentElement?.dataset?.zeroHosted === 'true';
 const colors = {US: '#dce9fb', KR: '#f9e4df', RESERVE: '#d8efeb'};
 const number = (value) => value === null || value === undefined || value === '' ? NaN : Number(value);
@@ -13,6 +13,7 @@ const format = (value, decimals = 0) => {
   return numberFormatters.get(decimals).format(numeric);
 };
 const money = (value, currency = 'KRW') => Number.isFinite(number(value)) ? (currency === 'USD' ? '$' + format(value, 2) : format(value) + '원') : '—';
+const signedPercent = (value) => (number(value) > 0 ? '+' : '') + format(value, 2) + '%';
 const stamp = (value, short = false) => {
   if (!value || !Number.isFinite(Date.parse(value))) return '미확인';
   const variant = Boolean(short);
@@ -45,6 +46,7 @@ function positionButton(row) {
 }
 function notice(text) { $('#notice').textContent = text; $('#notice').hidden = !text; }
 function render(data) {
+  if (!state.demo) state.savedData = data;
   // Cached status polling must not replace a keyboard-focused position or chart.
   const fingerprint = JSON.stringify([data.context?.collected_at, data.holdings, data.history, data.summary, data.allocations]);
   const changed = fingerprint !== state.fingerprint; state.fingerprint = fingerprint;
@@ -63,6 +65,11 @@ function render(data) {
   const holdings = referenceAvailable ? scope.holdings : [];
   // The risk panel may use only the reference this screen itself validated.
   state.reference = referenceAvailable ? scope : null;
+  const empty = !referenceAvailable && !context.collected_at;
+  $('#portfolio-view').classList.toggle('account-empty', empty);
+  $('#portfolio-empty').hidden = !empty; $('#demo-exit').hidden = !state.demo;
+  $('#empty-query').disabled = false;
+  if (empty) notice('');
   const summary = {...connectedSummary, holdings_value_krw: referenceAvailable ? scope.holdings_value_krw : null,
     holdings_performance: referenceAvailable ? scope.holdings_performance || {} : {}};
   state.data = {...data, summary, holdings, allocations: referenceAvailable ? scope.allocations : {}, history: []};
@@ -137,7 +144,7 @@ function render(data) {
   if (context.data_kind === 'DEMO') notice('시각 검증용 합성 자료입니다. 실제 보유 자산이 아닙니다.');
   else if (important.length) notice('일부 자료를 확인하지 못했습니다. 마지막 조회 시각과 미확인 값을 확인하고 ‘계좌 새로고침’으로 다시 조회하세요.');
   else notice('');
-  if (hostedView) notice(live
+  if (hostedView && !empty && !state.demo) notice(live
     ? '공개 시세 반영 ' + stamp(live.checked_at) + ' KST · 시세 시각 ' + stamp(live.oldest_market_time, true) + (live.newest_market_time !== live.oldest_market_time ? '~' + stamp(live.newest_market_time, true) : '') + ' (지연될 수 있음) · 보유 수량·잔여자금은 계좌 자료 ' + stamp(context.collected_at) + ' KST 기준'
     : '온라인 저장 자료 · 계좌 자료 기준 ' + stamp(context.collected_at) + ' KST · ‘시세 새로고침’으로 공개 시세를 반영합니다.');
   if (context.collected_at) $('#connection-status').title = '한국 ' + (connected.KR ? '연결 확인' : '미확인') + ' / 미국 ' + (connected.US ? '연결 확인' : '미확인');
@@ -152,9 +159,77 @@ function render(data) {
     ['US', 'KR'].forEach((market) => { const part = node('span'); part.style.flex = String(Math.max(0, number(split[market]))); bar.append(part); });
   }
   if (changed) { renderAllocation(holdings, summary.holdings_value_krw); renderRows(); renderHistory([]); }
+  renderAllocationComparison();
   // Hosted refresh: the saved comparison is repriced with the live S&P 500 quote when one is available.
   const repriced = window.ZEROExploreMath?.liveBenchmark;
   renderBenchmark(hostedView && state.live && repriced ? repriced(data.benchmark, state.live, 'SP500', 'index_close') : data.benchmark);
+}
+let portfolioRequest = 0;
+function showDemo() {
+  portfolioRequest++;
+  state.demo = true; state.live = null;
+  const holdings = [
+    {market:'US',symbol:'SPY',name:'S&P 500 ETF · 시연',currency:'USD',asset_class:'US_EQUITY',quantity:100,current_price:500,average_price:500,market_value:50000,market_value_krw:64000000},
+    {market:'US',symbol:'BIL',name:'단기채 ETF · 시연',currency:'USD',asset_class:'US_RESERVE',quantity:100,current_price:100,average_price:100,market_value:10000,market_value_krw:12800000},
+    {market:'KR',symbol:'005930',name:'삼성전자 · 시연',currency:'KRW',asset_class:'KR_EQUITY',quantity:250,current_price:80000,average_price:80000,market_value:20000000,market_value_krw:20000000}
+  ];
+  holdings.forEach(row => {row.computed_unrealized_pnl_native=0;row.computed_unrealized_return_percent=0;});
+  const performance={state:'AVAILABLE',cost_basis_krw:96800000,market_value_krw:96800000,unrealized_pnl_krw:0,unrealized_return_percent:0};
+  render({schema_version:1,context:{data_kind:'DEMO',policy_capital_krw:100000000},holdings,summary:{fx:{usd_krw:1280},zero_portfolio:{
+    state:'REFERENCE',scope:'ZERO_100M_FROZEN_PLAN_GROSS_REFERENCE',capital_krw:100000000,total_value_krw:100000000,remaining_funds_krw:3200000,
+    holdings_value_krw:96800000,gross_return_percent:0,gross_gain_krw:0,opening_reference_funds_krw:3200000,opening_holdings_value_krw:96800000,
+    remaining_funds_by_currency:{KRW:3200000,USD:0},holdings,holdings_performance:performance,allocations:{observed_market_percent:{US:79.3388429752,KR:20.6611570248}}
+  }},system_status:{state:'READY'},errors:[]});
+}
+async function exitDemo() {
+  state.demo=false; state.fingerprint=null; state.live=null;
+  if(state.savedData)render(state.savedData);
+  await loadPortfolio().catch(()=>notice('저장 자료를 불러오지 못했습니다. 다시 조회해 주세요.'));
+}
+function renderAllocationComparison() {
+  const box=$('#allocation-comparison'), scope=state.reference;
+  $('#allocation-basis-label').textContent=state.includeCash?'현금 포함':'현금 제외';
+  $('#allocation-with-cash').setAttribute('aria-pressed',String(state.includeCash));
+  $('#allocation-without-cash').setAttribute('aria-pressed',String(!state.includeCash));
+  $('#allocation-with-cash').classList.toggle('active',state.includeCash);
+  $('#allocation-without-cash').classList.toggle('active',!state.includeCash);
+  box.replaceChildren();
+  if(!scope){box.textContent='ZERO 참고 배분을 확인하면 같은 기준으로 비교합니다.';return;}
+  const amounts={US_EQUITY:0,US_RESERVE:state.includeCash?number(scope.remaining_funds_krw):0,KR_EQUITY:0};
+  if(scope.holdings.some(row=>!Object.hasOwn(amounts,row.asset_class)||!Number.isFinite(number(row.market_value_krw)))){
+    box.textContent='종목의 자산 분류를 확인한 뒤 목표 차이를 표시합니다.';return;
+  }
+  scope.holdings.forEach(row=>amounts[row.asset_class]+=number(row.market_value_krw));
+  const denominator=state.includeCash?number(scope.total_value_krw):number(scope.holdings_value_krw);
+  const cashTarget=number(scope.opening_reference_funds_krw)/100000000*100;
+  const targetOK=state.includeCash||(Number.isFinite(cashTarget)&&cashTarget>=0&&cashTarget<=16);
+  const targetBase=state.includeCash?100:100-cashTarget;
+  const targets={US_EQUITY:64,US_RESERVE:16-(state.includeCash?0:cashTarget),KR_EQUITY:20};
+  if(!(denominator>0)){box.textContent='비교할 평가액이 없습니다.';return;}
+  [['US_EQUITY','미국 주식'],['US_RESERVE',state.includeCash?'미국 단기채·참고 현금':'미국 단기채'],['KR_EQUITY','한국 주식']].forEach(([key,label])=>{
+    const current=amounts[key]/denominator*100, target=targets[key]/targetBase*100, diff=current-target;
+    box.append(node('p','',label+' · 현재 '+format(current,2)+'%'+(targetOK?' · 목표 '+format(target,2)+'% · 차이 '+(diff>0?'+':'')+format(diff,2)+'%p':' · 목표 현금 분리 근거 부족')));
+  });
+  if(!targetOK)box.append(node('p','muted-note','현금 제외 목표는 시작 참고 현금이 준비자금 목표 16% 안에 있는 경우만 환산합니다. 원안 목표는 변경하지 않습니다.'));
+}
+async function runPeriodComparison() {
+  const button=$('#comparison-run'), result=$('#comparison-result'), range=$('#comparison-range').value, math=window.ZEROExploreMath;
+  if(!['1Y','5Y'].includes(range)||!math?.alignStockCharts)return;
+  button.disabled=true;result.replaceChildren(node('p','','공개 일별 종가를 불러오는 중입니다.'));
+  try{
+    const charts=await Promise.all(['SPY','TQQQ'].map(async symbol=>{
+      const identity='US:'+symbol,response=await fetch('api/chart?identity='+identity+'&range='+range,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+      const chart=response.ok?await response.json():null;
+      if(!math.stockChartValid(chart,identity,range)||chart.status==='UNAVAILABLE')throw Error('CHART_UNAVAILABLE');
+      return chart;
+    }));
+    const comparison=math.alignStockCharts(...charts);
+    if(comparison.status==='UNAVAILABLE')throw Error('COMMON_HISTORY_UNAVAILABLE');
+    result.replaceChildren(node('p','',comparison.start_date+' ~ '+comparison.end_date+' · 공통 거래일 · '+(comparison.status==='STALE'?'이전 저장 종가':'확인된 종가')),
+      node('p','','S&P 500(SPY) '+signedPercent(comparison.first.return_percent)+' · TQQQ '+signedPercent(comparison.second.return_percent)),
+      node('p','muted-note','달러 가격 기준 참고 비교입니다. 첫 매수 수익률·실제 계좌 성과·지수 자체의 수익률과 다릅니다. TQQQ는 일일 3배 상품으로 장기 수익률이 3배가 되지 않습니다.'));
+  }catch(_){result.replaceChildren(node('p','','공통 기간의 가격을 확인하지 못했습니다. 다시 계산해 주세요.'));}
+  finally{button.disabled=false;}
 }
 function holdingSortValue(row,key){
   if(key==='quantity')return number(row.quantity);if(key==='return')return number(row.computed_unrealized_return_percent);if(key==='value')return number(row.market_value_krw);
@@ -234,7 +309,7 @@ function renderBenchmark(benchmark) {
   $('#benchmark-basis').textContent = available ? (live ? '첫 매수 기록 기준 · 공개 지연 시세로 새로고침 · 시세 확인 ' + stamp(live.checked_at) + ' KST · 실제 체결 시각 미확인' : '첫 매수 기록 기준 · 미국 해당 거래일 종가 가정 · 실제 체결 시각 미확인') : '첫 매수 기록과 지수·환율의 기준일을 확인한 뒤 표시합니다.';
   if (!available) return;
   const date = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value.replaceAll('-', '.') : '미확인';
-  const signedPercent = (value) => (number(value) > 0 ? '+' : '') + format(value, 2) + '%';
+
   // These are provider-validated reference calculations, not account or ETF returns.
   $('#benchmark-price-return').textContent = signedPercent(latest.return_percent);
   $('#benchmark-price-return').className = number(latest.return_percent) > 0 ? 'gain' : number(latest.return_percent) < 0 ? 'loss' : '';
@@ -266,6 +341,13 @@ function selectPosition(row) {
   if (selected && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) selected.scrollIntoView({behavior: 'smooth', block: 'nearest'});
 }
 function renderAllocation(holdings, totalValue) {
+  const cash=number(state.reference?.remaining_funds_krw);
+  if(state.includeCash&&state.reference&&Number.isFinite(cash)&&cash>=0){
+    totalValue=number(totalValue)+cash;
+    if(cash>0)holdings=[...holdings,{market:'KR',symbol:'CASH_REFERENCE',name:'참고 잔여자금',asset_class:'US_RESERVE',market_value_krw:cash}];
+  }
+  const basis=state.includeCash?'현금 포함 · 참고 잔여자금':'현금 제외';
+  const subtitle=$('#map-title')?.parentElement?.querySelector('p');if(subtitle)subtitle.textContent='원화 환산 평가액 기준 · '+basis;
   const list = $('#holding-bars'), chart = $('#holding-map'); list.replaceChildren();
   const valid = Number.isFinite(number(totalValue)) && number(totalValue) > 0 && holdings.some((row) => number(row.market_value_krw) > 0) && holdings.every((row) => Number.isFinite(number(row.market_value_krw)) && number(row.market_value_krw) >= 0);
   // Missing FX or any unverified value must not silently shrink the denominator.
@@ -282,7 +364,7 @@ function renderAllocation(holdings, totalValue) {
     label.append(node('span', 'bar-name', positionName(row)), values);
     const track = node('span', 'bar-track'), fill = node('span', 'bar-fill ' + (row.asset_class === 'US_RESERVE' ? 'reserve' : row.market.toLowerCase()));
     track.setAttribute('aria-hidden', 'true'); fill.style.width = Math.min(100, Math.max(0, percent)) + '%'; track.append(fill);
-    button.append(label, track); button.addEventListener('click', () => { selectPosition(row); window.ZEROResearch?.open(positionKey(row)); }); item.append(button); list.append(item);
+    button.append(label, track); if(row.symbol==='CASH_REFERENCE'){button.disabled=true;button.setAttribute('aria-label','참고 잔여자금 · 실제 결제 현금 미확정');}else button.addEventListener('click', () => { selectPosition(row); window.ZEROResearch?.open(positionKey(row)); }); item.append(button); list.append(item);
   });
 }
 function partition(items, x, y, width, height) {
@@ -320,8 +402,8 @@ function renderMap(holdings, totalValue) {
       group.append(svgNode('text', {x: x + 18, y: y + 55, class: 'map-value'}, money(row.market_value_krw)));
       if (height > 105) group.append(svgNode('text', {x: x + 18, y: y + height - 18, class: 'map-weight'}, format(tile.weight / number(totalValue) * 100, 1) + '%'));
     } else if (width > 90 && height > 38) group.append(svgNode('text', {x: x + 10, y: y + 25, class: 'map-value'}, positionName(row)));
-    group.addEventListener('click', () => { selectPosition(row); window.ZEROResearch?.open(positionKey(row)); });
-    group.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectPosition(row); } });
+    group.addEventListener('click', () => { if(row.symbol!=='CASH_REFERENCE'){selectPosition(row); window.ZEROResearch?.open(positionKey(row));} });
+    group.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if(row.symbol!=='CASH_REFERENCE')selectPosition(row); } });
     chart.append(group);
   });
 }
@@ -395,13 +477,17 @@ function loadLiveQuotes() {
   return livePending;
 }
 async function loadPortfolio() {
+  if (state.demo) return;
+  const request = ++portfolioRequest;
   const response = await fetch('api/portfolio', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
   if (!response.ok) throw new Error('CACHE_UNAVAILABLE');
   const data = await response.json();
+  if (state.demo || request !== portfolioRequest) return;
   if (data.schema_version !== 1 || !Array.isArray(data.holdings)) throw new Error('CACHE_INVALID');
   render(hostedView && state.live ? livePortfolio(data, state.live) : data);
 }
 async function refresh() {
+  if(state.demo){notice('시연을 종료한 뒤 계좌 또는 시세를 조회해 주세요.');return;}
   const button = $('#refresh'); button.disabled = true; button.querySelector('span').textContent = hostedView ? '시세 확인 중' : '계좌 조회 중';
   try {
     // The hosted screen reprices saved quantities with public quotes; only the local app can query KIS.
@@ -845,7 +931,7 @@ function navigate(view, updateAddress = true) {
   if (view === 'community') window.ZEROSocial?.openCommunity();
   if (view !== 'lobby') window.ZEROSocial?.closeLounge();
   window.ZEROLobby?.setActive(view === 'lobby');
-  if (view === 'lobby') window.ZEROLobby?.open();
+  if (view === 'lobby') { window.ZEROLobby?.open(); window.ZEROLobbyUsers?.board?.(); }
   if (view === 'team') loadTeam($('#team-event').value === 'ONBOARDING' ? undefined : $('#team-event').value, true);
   if (view === 'portfolio' && state.data) { renderAllocation(state.data.holdings, state.data.summary.holdings_value_krw); renderHistory(state.data.history || []); }
   return true;
@@ -893,7 +979,7 @@ document.querySelectorAll('[data-chart]').forEach((button) => button.addEventLis
 $('#search').addEventListener('input', (event) => { state.search = event.target.value.trim().toLowerCase(); renderRows(); });
 function sortValue(forceValue=false) {
   if(forceValue&&state.sortMetric!=='value'){state.sortMetric='value';state.descending=true;const select=document.getElementById('holding-sort-metric');if(select)select.value='value';}else state.descending = !state.descending;
-  $('#sort-value span').textContent = state.descending ? '↓' : '↑';
+  $('#sort-value span[aria-hidden="true"]').textContent = state.descending ? '↓' : '↑';
   $('#sort-value').parentElement.setAttribute('aria-sort', state.descending ? 'descending' : 'ascending');
   const mobile = $('#sort-value-mobile'); mobile.textContent = state.descending ? '평가액 큰 순' : '평가액 작은 순';
   mobile.setAttribute('aria-label', '원화 환산 ' + mobile.textContent + ', 누르면 ' + (state.descending ? '작은' : '큰') + ' 순으로 변경');
@@ -903,6 +989,18 @@ $('#sort-value').addEventListener('click',()=>sortValue(true));
 $('#sort-value-mobile').addEventListener('click',()=>sortValue(false));
 $('#refresh').addEventListener('click', refresh);
 $('#risk-run').addEventListener('click', runRisk);
+$('#demo-toggle').addEventListener('click',showDemo);
+$('#demo-exit').addEventListener('click',exitDemo);
+$('#empty-query').addEventListener('click',()=>{
+  if(hostedView){$('#empty-query-note').hidden=false;$('#empty-query-note').textContent='온라인 화면은 계좌를 직접 조회하지 않습니다. PC의 ZERO에서 계좌 조회 후 저장 자료를 게시해 주세요.';}
+  else refresh();
+});
+$('#comparison-run').addEventListener('click',runPeriodComparison);
+['allocation-with-cash','allocation-without-cash'].forEach(id=>$('#'+id).addEventListener('click',()=>{
+  state.includeCash=id==='allocation-with-cash';
+  if(state.data)renderAllocation(state.data.holdings,state.data.summary.holdings_value_krw);
+  renderAllocationComparison();
+}));
 let layoutWidth = 0;
 new ResizeObserver(() => {
   const width = Math.round($('#portfolio-view').clientWidth);
@@ -910,12 +1008,12 @@ new ResizeObserver(() => {
     layoutWidth = width; renderAllocation(state.data.holdings, state.data.summary.holdings_value_krw); renderHistory(state.data.history || []);
   }
 }).observe($('#portfolio-view'));
-loadPortfolio().catch(() => notice('조회 서버에 연결하지 못했습니다. ZERO 포트폴리오를 실행한 뒤 새로 열어 주세요.')).finally(() => document.dispatchEvent?.(new CustomEvent('zero-ready')));
+loadPortfolio().catch(() => { if(state.demo||state.data)return; render({schema_version:1,context:{},holdings:[],summary:{},system_status:{state:'EMPTY'},errors:[]}); notice('저장 자료 연결 실패 · 다시 조회하거나 시연 화면을 볼 수 있습니다.'); }).finally(() => { document.documentElement.dataset.zeroReady='true'; document.dispatchEvent?.(new CustomEvent('zero-ready')); });
 // Opening or reloading the hosted page also shows current public quotes.
 if (hostedView) loadLiveQuotes().then((live) => live && loadPortfolio()).catch(() => {});
 // Poll cached display state only; background observation never requests broker refresh.
 async function pollDisplay() {
-  if (document.hidden || displayPolling || $('#refresh').disabled) return;
+  if (document.hidden || state.demo || displayPolling || $('#refresh').disabled) return;
   displayPolling = true;
   try {
     let quotesFailed = false;

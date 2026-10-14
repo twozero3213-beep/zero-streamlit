@@ -17,14 +17,15 @@
   const splash = document.getElementById('boot-splash');
   let hidden = false;
   function hideSplash() {
-    if (hidden || !splash) return; hidden = true; splash.classList.add('fade'); setTimeout(() => { splash.hidden = true; }, 350);
+    if (hidden || !splash) return; hidden = true; splash.hidden = true; splash.classList.add('fade');
   }
   if (splash) {
+    document.addEventListener('zero-ready', hideSplash);
+    if (document.documentElement.dataset.zeroReady === 'true') hideSplash();
     const sub = splash.querySelector('.boot-sub');
     setTimeout(() => { if (!hidden && sub) sub.textContent = '서버를 깨우는 중이에요. 처음 열 때는 잠시 걸릴 수 있어요.'; }, 5000);
     setTimeout(() => { if (!hidden && sub) sub.textContent = '조금만 더 기다려 주세요. 계속 불러오는 중이에요…'; }, 15000);
-    document.addEventListener('zero-ready', hideSplash);
-    setTimeout(hideSplash, 40000);
+    if (!hidden) setTimeout(hideSplash, 40000);
   }
 
   // ---- paging ---------------------------------------------------------------------------------
