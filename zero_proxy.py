@@ -12,6 +12,7 @@ import os
 import re
 import threading
 import time
+import xml.etree.ElementTree as ET
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -23,6 +24,7 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
 import zero_headlines
+import zero_discovery
 
 DEFAULT_SITE = 'https://zero-portfolio.zero-cloudflare.workers.dev'
 UI = Path(__file__).parent / 'ui'
@@ -33,6 +35,7 @@ EVENT = re.compile(r'[A-Z][A-Z_]{0,39}')
 PLAIN = {'/api/portfolio': 60, '/api/team': 300, '/api/office': 60, '/api/research': 1800, '/api/desk': 1800,
          '/api/funds': 1800, '/api/tqqq': 1800, '/api/institutions': 1800, '/api/live-quotes': 20}
 MAX_BYTES = 12_000_000
+TRENDS_SECONDS = 600
 HEADLINES_SECONDS = 300  # live news-search titles; collected here, not on the Cloudflare site
 
 _cache, _pending, _lock = {}, {}, threading.Lock()
@@ -144,10 +147,20 @@ def get_public(path, query):
 def get_headlines():
     def load():
         value = zero_headlines.collect()
-        if not value['items'] and len(value['failed']) == len(zero_headlines.QUERIES):
+        if not value['items'] and len(value['failed']) == len({q[0] for q in zero_headlines.QUERIES}):
             raise Unavailable('HEADLINES_UNAVAILABLE')
         return json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     return _cached('headlines', HEADLINES_SECONDS, load)
+
+
+def get_trends():
+    def load():
+        try:
+            value = zero_discovery.collect_trends()
+        except (OSError, ValueError, ET.ParseError):
+            raise Unavailable('TRENDS_UNAVAILABLE') from None
+        return json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    return _cached('trends', TRENDS_SECONDS, load)
 
 
 async def api(request):
@@ -159,7 +172,12 @@ async def api(request):
     if len(query) != len(request.query_params.multi_items()):
         return JSONResponse({'error': 'NOT_PUBLIC'}, status_code=404)
     try:
-        body = await run_in_threadpool(get_headlines) if path == '/api/headlines' and not query else await run_in_threadpool(get_public, path, query)
+        if path == '/api/trends' and not query:
+            body = await run_in_threadpool(get_trends)
+        elif path == '/api/headlines' and not query:
+            body = await run_in_threadpool(get_headlines)
+        else:
+            body = await run_in_threadpool(get_public, path, query)
     except Unavailable as error:
         code = str(error)
         return JSONResponse({'error': code}, status_code=404 if code == 'NOT_PUBLIC' else 503)
@@ -180,7 +198,7 @@ def _status():
         site = 'OK'
     except Unavailable as error:
         site = str(error)
-    return {**shape, 'site': site, 'bridge_version': '0.6.44'}
+    return {**shape, 'site': site, 'bridge_version': '0.6.45'}
 
 
 async def status(request):

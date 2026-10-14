@@ -70,7 +70,10 @@
     const study = context.level >= 7 ? ['학교를 졸업했네요! 숫자의 출처도 잊지 마세요.'] : context.level > 1 ? ['퀴즈를 하나씩 풀면 모르는 말이 줄어들어요.', '오늘 배운 내용을 다음 설명에서 써 봐요.'] : ['주식이 처음이면 입문 학교부터 같이 시작해요.', '매수는 사기, 매도는 팔기예요. 학교에서 연습해 봐요.'];
     const pool = [...new Set([...logic.timeLines(parts), ...logic.dayLines(parts), ...logic.weatherLines(context.weather), ...persona, ...extras, ...study])];
     const holiday = logic.holidayNote(context.now || new Date(), context.holidays || logic.KR_HOLIDAYS); if (holiday) pool.push(holiday);
-    const fresh = pool.filter(line => !recent.includes(line)), choices = fresh.length ? fresh : pool;
+    const contextPool = [...logic.timeLines(parts), ...logic.trendLines(context.trends || [])];
+    const selected = rng() < 0.65 ? contextPool : pool;
+    const fresh = selected.filter(line => !recent.includes(line)), rest = pool.filter(line => !recent.includes(line));
+    const choices = fresh.length ? fresh : rest.length ? rest : selected;
     return choices[Math.min(choices.length - 1, Math.floor(rng() * choices.length))];
   }
   function chatReply(text, recent, rng = Math.random) {

@@ -51,13 +51,29 @@
   }
   function timeLines(parts) {
     const h = parts.hour;
-    if (h >= 6 && h < 9) return ['아침이에요. 커피부터 한 잔 하고 시작할게요.', '출근길 지하철이 꽉 찼어요.'];
-    if (h >= 9 && h < 11) return ['오전 집중 시간이에요. 방해 금지!', '오전 자료부터 차분히 확인해요.'];
-    if (h >= 11 && h < 14) return ['슬슬 점심 뭐 먹을지 고민이에요.', '배가 고파서 숫자가 눈에 안 들어와요.', '오늘 점심은 국밥 어때요?'];
-    if (h >= 14 && h < 17) return ['식곤증이 오네요. 커피 한 잔 더?', '오후엔 자료 검수 시간이에요.'];
-    if (h >= 17 && h < 20) return ['퇴근 전에 오늘 기록부터 정리할게요.', '저녁 메뉴를 벌써부터 고민 중이에요.'];
-    if (h >= 20 && h < 24) return ['야근 각이네요… 미국장 전에 데이터를 점검해요.', '밤에도 불이 켜진 사무실, 우리 팀이에요.'];
-    return ['새벽 근무는 커피가 연료예요.', '다들 자는 시간에 숫자는 계속 움직여요.'];
+    if (h < 6 || h >= 23) return ['새벽 야근도 로그가 쌓이네요. 마지막 커밋은 “휴식” 어때요?', '늦게까지 애썼어요. 오늘 다 끝내지 못해도 괜찮아요.', '모니터는 밤새 켜져도 우리는 쉬어도 돼요.', '혼자 버티는 기분이 들면 잠깐 말 걸어요. 여기서 함께 쉬어가요.'];
+    if (h < 9) return ['커피는 개장했는데 제 눈은 아직 휴장 중이에요.', '잠이 덜 깼다면 작은 일부터 차분히 시작해도 괜찮아요.', '오늘도 출근한 나에게 작은 박수부터 보내요.'];
+    if (h < 11) return ['오전 자료부터 차분히 확인해요.', '출근하자마자 모든 걸 해낼 필요는 없어요.', '오늘 목표는 완벽보다 한 걸음이에요.'];
+    if (h < 12) return ['점심 메뉴 회의가 오늘 제일 뜨거운 안건이네요.', '배고픈 마음은 분산투자가 안 되네요. 국밥 쪽으로 몰렸어요.'];
+    if (h < 15) return ['점심 뒤 눈꺼풀이 잠깐 조정장에 들어갔어요.', '식후에는 졸릴 수도 있죠. 잠깐 쉬어가도 괜찮아요.', '오전에도 많이 애썼어요. 물 한 모금 하고 천천히 이어가요.', '밥은 잘 먹었는데 집중력은 아직 복귀 중이에요.'];
+    if (h < 18) return ['오후의 작은 진전도 진전이에요. 오늘 한 걸 기억해요.', '제 집중력도 잠깐 거래 중단이네요. 쉬었다 재개할게요.', '막힌 일은 잠시 내려놓고 같이 한 줄부터 볼까요?'];
+    if (h < 20) return ['오늘 해낸 일이 작아 보여도 수고한 건 사라지지 않아요.', '퇴근 전에 마음의 미결 주문부터 취소할래요.', '저녁은 성과급 없어도 맛있게 먹을 수 있어요.'];
+    return ['늦게까지 고생했어요. 남은 일보다 지금의 나도 중요해요.', '미국장은 열리지만 제 배터리는 마감할 수 있어요.', '오늘의 마지막 업무는 나에게 “수고했어”라고 말하기예요.'];
+  }
+  function trendLines(rows) {
+    const sensitive = /사망|사고|재난|테러|전쟁|학대|성폭력|자살|살인|실종|구속|체포|혐의|피해|혈당|당뇨|암환자/;
+    return (Array.isArray(rows) ? rows : []).filter(row => typeof row?.keyword === 'string' && row.keyword.length <= 48 && !/[<>\x00-\x1f]/.test(row.keyword) && !sensitive.test(row.keyword)).slice(0, 5).flatMap(row => [
+      '검색창에는 “' + row.keyword + '” 얘기가 보이네요. 제 관심 키워드는 “퇴근”인데요.',
+      '“' + row.keyword + '”도 궁금하지만 커피가 식기 전에 잠깐 이야기해요.'
+    ]);
+  }
+  function appearanceAt(index) {
+    const i = Math.max(0, Math.floor(index));
+    return {outfit: ['suit', 'vest', 'cardigan', 'hoodie', 'shirt', 'jacket', 'knit', 'polo'][i % 8],
+      color: ['#385986', '#a75649', '#387c74', '#936932', '#755d95', '#577389', '#776653', '#668341'][Math.floor(i / 8) % 8],
+      skin: ['#edc5a4', '#c58e68', '#f3d9bd', '#a87555', '#d8a77d', '#926248', '#deb798'][i % 7],
+      hair: ['#343a40', '#73533c', '#292f3b', '#9a7852', '#b5aba0', '#563c37', '#565d65'][Math.floor(i / 7) % 7],
+      hairStyle: i % 4, pattern: Math.floor(i / 16) % 3};
   }
   const hour12 = (h) => (h % 12) || 12, ampm = (h) => h < 12 ? '오전' : '오후';
   // Lines that name the real Korean date and clock, so the office visibly lives on the visitor's calendar.
@@ -195,13 +211,13 @@
   // First-time guide: each step names what the visitor must do and how it is detected.
   const TUTORIAL = [
     {id: 'move', title: '1. 걸어 보기', text: '방향키·WASD, 화면 방향 버튼, 또는 바닥을 눌러 내 캐릭터를 움직여 보세요.'},
-    {id: 'manager', title: '2. 총괄과 대화', text: '맨 위 가운데 "총괄 합의 관리자"를 눌러 ZERO가 무엇인지 물어보세요.'},
+    {id: 'manager', title: '2. 총괄과 대화', text: '맨 위 가운데 "총괄 관리자"를 눌러 ZERO가 무엇인지 물어보세요.'},
     {id: 'chief', title: '3. 수석에게 묻기', text: '큰 캐릭터(수석) 아무나 눌러 "무슨 일을 하세요?"를 물어보세요.'},
     {id: 'board', title: '4. 전광판 보기', text: '위 전광판의 속보를 눌러 보세요. 정치·경제 분야의 공신력 있는 기관 기사만 모아요.'},
     {id: 'done', title: '5. 길잡이 끝', text: '주식이 처음이라면 "주식 입문 학교"에서 문제를 풀며 레벨을 올려 보세요. 메뉴에서 내 자산·주식 탐색·뉴스·경제 지표도 열어 볼 수 있어요. 이 길잡이는 "사무실 길잡이" 버튼으로 다시 볼 수 있어요.'}
   ];
 
-  const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, chatterLine, personaFor, pickSpeaker, clamp,
+  const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, trendLines, appearanceAt, chatterLine, personaFor, pickSpeaker, clamp,
     moveToward, keyDirection, clampToFloor, nearest, layoutZero, layoutTeams, layoutGrid, reply, TOPICS, TUTORIAL, SYSTEM_TEXT,
     dayLines, replyLine, faceAt, PERSONAS, PERSONA_NAMES, FACE_EYES, FACE_MOUTHS, SPACE, SPACE_NAMES, DEFAULT_SPACE, daypart};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

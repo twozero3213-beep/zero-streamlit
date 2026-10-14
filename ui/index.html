@@ -134,11 +134,14 @@
       <div id="lobby-error" class="lobby-error" hidden><p>팀 명부를 불러오지 못했어요.</p><button id="lobby-retry" class="secondary-button" type="button">다시 시도</button></div>
       <div class="lobby-layout">
         <div class="lobby-main">
-          <div class="lobby-scroll"><div id="lobby-stage" class="lobby-stage" tabindex="0" role="application" aria-label="ZERO 트레이딩 플로어. 방향키로 이동하고 직원을 눌러 대화합니다."></div></div>
           <div id="lobby-board" class="lobby-board" role="region" aria-label="전광판">
-            <div class="lobby-board-row"><span class="lobby-board-tag">속보</span><div id="lobby-news" class="lobby-marquee"><div class="lobby-track"></div></div></div>
+            <div class="lobby-board-row market-row"><span class="lobby-board-tag">지수·환율</span><div id="lobby-market" class="lobby-marquee"><div class="lobby-track"></div></div></div>
+            <div class="lobby-board-row"><span class="lobby-board-tag">정치·경제</span><div id="lobby-news" class="lobby-marquee"><div class="lobby-track"></div></div></div>
             <div class="lobby-board-row"><span class="lobby-board-tag">연습 랭킹</span><div id="lobby-returns" class="lobby-marquee"><div class="lobby-track"></div></div></div>
+            <div class="lobby-board-row trend-row"><span class="lobby-board-tag">검색 관심</span><div id="lobby-trends" class="lobby-marquee"><div class="lobby-track"></div></div></div>
+              <small id="lobby-board-source" class="board-source">공개 지연 시세 · Google Trends · 기사 원제와 기계 번역</small>
           </div>
+          <div class="lobby-scroll"><div id="lobby-stage" class="lobby-stage" tabindex="0" role="application" aria-label="ZERO 트레이딩 플로어. 방향키로 이동하고 직원을 눌러 대화합니다."></div></div>
           <div class="lobby-meta"><span class="lobby-chip">내 캐릭터<b id="lobby-name-chip">나</b><small id="lobby-player-level" class="character-level">Lv.1</small></span><span class="lobby-chip" id="lobby-count" role="status">직원 불러오는 중</span><button id="lobby-ranking-open" type="button" class="secondary-button">연습 랭킹</button><button id="lobby-pause" type="button" class="secondary-button" aria-pressed="false">연출 멈춤</button><p id="lobby-near" class="lobby-near" role="status" aria-live="polite"></p></div>
           <div class="lobby-pad" aria-label="이동 버튼"><button type="button" data-pad="up" aria-label="위로">▲</button><button type="button" data-pad="left" aria-label="왼쪽으로">◀</button><button type="button" data-pad="down" aria-label="아래로">▼</button><button type="button" data-pad="right" aria-label="오른쪽으로">▶</button></div>
         </div>

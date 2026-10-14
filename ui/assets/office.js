@@ -180,16 +180,51 @@
   function figure(actor,index,point){
     const outer=svgNode('g',{'class':'office-figure',transform:'translate('+point.x+' '+point.y+')','data-office-figure':actor.id}),travel=svgNode('g',{'class':'office-travel'}),person=svgNode('g',{'class':'office-person',transform:'scale(1)'});
     outer.append(travel);travel.append(svgNode('ellipse',{cx:0,cy:1,rx:13,ry:4,fill:'#213f44',opacity:.16}),person);
-    const skin=['#e5b086','#ba7d5d','#eec7a6','#d49c74','#ac7256','#f0d4b6','#935c43','#efba96'][index%8],hair=['#383634','#b2aba0','#795542','#252f35','#c79265','#5a2f2a','#e3ddd0'][Math.floor(index/8)%7],shirt=shirtColors[Object.keys(departmentNames).indexOf(actor.department)%shirtColors.length];
+    // Canonical IDs keep portraits stable across scene/board ordering and queue updates.
+    const identityIndex=actors.map(member=>member.id).sort().indexOf(actor.id);
+    if(identityIndex>=0)index=identityIndex;
+    const skin=['#e5b086','#ba7d5d','#eec7a6','#d49c74','#ac7256','#f0d4b6','#935c43','#efba96'][index%8],hair=['#383634','#b2aba0','#795542','#252f35','#c79265','#5a2f2a','#e3ddd0'][Math.floor(index/8)%7],shirt=shirtColors[Math.floor(index/5)%shirtColors.length],trim='#ebefe9',ink='#303a3e';
     outer.setAttribute('data-office-face',skin+':'+hair);
     const pixel=(x,y,width,height,fill,group=person)=>group.append(svgNode('rect',{x,y,width,height,fill}));
+    const path=(group,d,stroke=ink,fill='none')=>group.append(svgNode('path',{d,stroke,fill,'stroke-width':1.5,'stroke-linecap':'round','stroke-linejoin':'round'}));
     pixel(-10,-15,8,12,'#364651');pixel(2,-15,8,12,'#364651');pixel(-12,-5,10,5,'#253341');pixel(2,-5,11,5,'#253341');
-    pixel(-12,-34,24,20,shirt);pixel(-15,-32,5,14,shirt);pixel(10,-32,5,14,shirt);pixel(-14,-21,5,5,skin);pixel(10,-21,5,5,skin);
+    const outfit=svgNode('g',{'class':'office-outfit'}),style=index%5;
+    outer.setAttribute('data-office-outfit',['suit','cardigan','vest','hoodie','striped-shirt'][style]);person.append(outfit);
+    pixel(-12,-34,24,20,shirt,outfit);pixel(-15,-32,5,14,style===2?trim:shirt,outfit);pixel(10,-32,5,14,style===2?trim:shirt,outfit);
+    if(style===0){
+      path(outfit,'M -5 -34 L 0 -24 L 5 -34',trim,trim);
+      path(outfit,'M -8 -34 L -4 -24 L -8 -20 M 8 -34 L 4 -24 L 8 -20','#172f40');
+      path(outfit,'M 0 -30 L -2 -27 L 0 -18 L 2 -27 Z',hair,hair);
+      pixel(6,-25,4,2,trim,outfit);
+    }else if(style===1){
+      pixel(-3,-34,6,20,trim,outfit);path(outfit,'M -6 -34 L -3 -26 M 6 -34 L 3 -26',hair);
+      for(const y of [-25,-21,-17])pixel(4,y,2,2,trim,outfit);
+    }else if(style===2){
+      path(outfit,'M -7 -34 L 0 -23 L 7 -34',trim,trim);
+      pixel(-1,-30,2,7,hair,outfit);path(outfit,'M 0 -22 L 0 -15',hair);
+      pixel(-9,-20,5,1,trim,outfit);pixel(4,-20,5,1,trim,outfit);
+    }else if(style===3){
+      path(outfit,'M -11 -31 Q -13 -39 0 -39 Q 13 -39 11 -31 L 5 -33 Q 0 -29 -5 -33 Z',hair,shirt);
+      path(outfit,'M -4 -32 L -4 -26 M 4 -32 L 4 -26',trim);
+      path(outfit,'M -7 -21 L -5 -24 L 5 -24 L 7 -21 L 7 -17 L -7 -17 Z',trim);
+    }else{
+      for(const y of [-30,-25,-20])pixel(-11,y,22,2,trim,outfit);
+      path(outfit,'M -5 -34 Q 0 -27 5 -34',hair);
+    }
+    pixel(-14,-21,5,5,skin);pixel(10,-21,5,5,skin);
     pixel(-4,-37,8,7,skin);pixel(-10,-51,20,17,skin);pixel(-12,-47,3,8,skin);pixel(9,-47,3,8,skin);
-    pixel(-10,-54,20,6,hair);pixel(-11,-50,4,7,hair);if(index%3===1)pixel(7,-50,4,8,hair);
-    const eyes=svgNode('g',{'class':'office-eyes'});person.append(eyes);pixel(-6,-44,2,2,'#303a3e',eyes);pixel(4,-44,2,2,'#303a3e',eyes);pixel(-2,-38,5,1,'#9f614b');
-    pixel(-4,-33,8,5,'#ebefe9');pixel(-1,-29,2,8,actor.kind==='총괄'?'#c48a49':'#244f6b');
-    if(index%4===0){pixel(-8,-46,7,5,'#374958');pixel(2,-46,7,5,'#374958');pixel(-1,-44,3,1,'#374958');pixel(-6,-44,3,1,skin);pixel(4,-44,3,1,skin);}
+    pixel(-10,-54,20,5,hair);
+    if(index%4===0){pixel(-11,-50,4,9,hair);pixel(7,-50,4,9,hair);}
+    else if(index%4===1){path(person,'M -10 -49 L -5 -54 L 9 -50 L 4 -47 Z',hair,hair);}
+    else if(index%4===2){pixel(-11,-51,5,8,hair);pixel(-6,-50,8,3,hair);}
+    else{pixel(7,-51,4,10,hair);pixel(-10,-52,6,5,hair);}
+    const eyes=svgNode('g',{'class':'office-eyes'});person.append(eyes);
+    const eyePaths=['M -7 -44 h 3 M 4 -44 h 3','M -7 -43 Q -5 -47 -3 -43 M 3 -43 Q 5 -47 7 -43','M -7 -46 L -3 -44 M 3 -44 L 7 -46','M -7 -44 h 3 M 3 -46 v 3','M -7 -45 L -3 -43 M 3 -43 L 7 -45'];
+    path(eyes,eyePaths[index%5]);
+    const mouth=svgNode('g',{'class':'office-mouth'});person.append(mouth);
+    const mouthPaths=['M -3 -38 h 6','M -3 -39 Q 0 -35 3 -39','M -3 -38 Q 0 -40 3 -38','M -3 -38 L 1 -38 L 3 -40','M -2 -39 Q 0 -36 2 -39 Z','M -4 -39 Q 0 -34 4 -39 Z','M -3 -37 L 0 -39 L 3 -37','M -2 -39 L 2 -39 L 2 -37 L -2 -37 Z','M -4 -38 Q -1 -36 1 -38 L 4 -38'];
+    path(mouth,mouthPaths[Math.floor(index/5)%9],'#754633');
+    if(index%7===0){path(person,'M -8 -46 h 7 v 5 h -7 Z M 1 -46 h 7 v 5 h -7 Z M -1 -44 h 2','#374958');}
     const hands=svgNode('g',{'class':'office-typing-hands'});person.append(hands);pixel(-16,-24,6,4,skin,hands);pixel(11,-24,6,4,skin,hands);
     return {outer,travel};
   }

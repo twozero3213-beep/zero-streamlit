@@ -7,7 +7,7 @@
   const L = window.ZEROLobbyLogic, W = window.ZEROLobbyWorld, M = window.anime;
   const $ = (id) => document.getElementById(id);
   const node = (tag, className = '', text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
-  const stage = $('lobby-stage'), boardEl = $('lobby-board'), reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  const stage = $('lobby-stage'), reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
   const pct = (value, total) => (value / total * 100).toFixed(2) + '%';
   const store = { get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }, set(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* private mode */ } } };
 
@@ -35,8 +35,10 @@
     roster.list.forEach((npc) => { npc.home = spots.get(npc.kind === 'manager' ? 'manager' : npc.id); npc.pos = {...npc.home}; });
   }
 
-  function figure(kind, face) {
+  function figure(kind, face, appearance = L.appearanceAt(0)) {
     const fig = node('span', 'npc-fig'), head = node('i', 'head'), look = face || L.faceAt(0);
+    fig.dataset.outfit = appearance.outfit; fig.dataset.hair = String(appearance.hairStyle); fig.dataset.pattern = String(appearance.pattern);
+    fig.style.setProperty('--shirt', appearance.color); fig.style.setProperty('--skin', appearance.skin); fig.style.setProperty('--hair', appearance.hair);
     head.dataset.eyes = String(look.eyes); head.dataset.mouth = String(look.mouth); head.append(node('b', 'eye l'), node('b', 'eye r'), node('b', 'mouth'));
     fig.append(head, node('i', 'body'), node('i', 'arm l'), node('i', 'arm r'), node('i', 'legs')); return fig;
   }
@@ -45,7 +47,7 @@
     button.setAttribute('aria-label', npc.name + ' · ' + npc.role + ' · 눌러서 대화');
     const desk = node('span', 'office-desk'); desk.style.left = pct(npc.home.x, L.STAGE.w); desk.style.top = pct(npc.home.y - 2, L.STAGE.h); desk.style.zIndex = String(Math.round((npc.home.y - 3) * 10)); stage.append(desk);
     button.dataset.activity = npc.kind === 'staff' ? 'typing' : 'reading'; button.style.setProperty('--blink-delay', (npc.face.eyes * .7) + 's');
-    button.append(figure(npc.kind, npc.face), node('span', 'npc-name', npc.name), node('span', 'npc-bubble'));
+    button.append(figure(npc.kind, npc.face, L.appearanceAt(S.npcs.indexOf(npc))), node('span', 'npc-name', npc.name), node('span', 'npc-bubble'));
     button.addEventListener('click', (event) => { event.stopPropagation(); talkTo(npc); });
     npc.el = button; place(npc); stage.append(button);
   }
@@ -63,7 +65,7 @@
     const wall = node('div', 'lobby-wall');
     const windowBox = node('div', 'lobby-window'); windowBox.id = 'lobby-weather'; windowBox.append(node('b', '', '창밖'), node('span', '', '날씨 확인 중'));
     const clock = node('div', 'lobby-clock'); clock.id = 'lobby-clock';
-    wall.append(windowBox, boardEl, clock); stage.append(wall);
+    wall.append(windowBox, node('strong', 'floor-brand', 'ZERO EXCHANGE · 모의 투자'), clock); stage.append(wall);
     stage.append(node('div', 'prop table'));
     const space = S.space || L.DEFAULT_SPACE; stage.dataset.floor = space.floor; stage.dataset.wall = space.wall;
     const EMOJI = {plant: '🪴', coffee: '☕', sofa: '🛋️', books: '📚', fish: '🐠', poster: '🖼️', clock: '🕰️'};
@@ -173,7 +175,7 @@
     const active = S.speaker.map((item) => ({id: item.id, pos: item.pos}));
     const npc = L.pickSpeaker(S.npcs.filter((item) => !item.away && (item.kind !== 'staff' || Math.random() < 0.7)), active, narrow() ? 44 : BUBBLE_GAP);
     if (!npc) return;
-    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), weather: S.weather, holidays: S.holidays, level: S.level};
+    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), weather: S.weather, holidays: S.holidays, level: S.level, trends: S.trends || []};
     const text = W.chooseChatter(L, context, persona, S.recent);
     if (!speak(npc, text)) return;
     // A neighbour answers a moment later, so it reads as a small conversation, not isolated captions.
@@ -234,7 +236,7 @@
   // The hero line under the title: today's small talk, rotating, so the first screen always says something new.
   function heroTick() {
     const say = $('lobby-hero-say'); if (!say) return;
-    say.textContent = '“' + L.chatterLine({now: new Date(), weather: S.weather, holidays: S.holidays}, []) + '”';
+    say.textContent = '“' + W.chooseChatter(L, {now: new Date(), weather: S.weather, holidays: S.holidays, trends: S.trends || [], level: S.level}, [], S.recent) + '”';
   }
 
   // ---- outside world: weather, holidays, news board -------------------------------------------
@@ -251,6 +253,15 @@
       const rows = await response.json(); if (Array.isArray(rows) && rows.length > 5) S.holidays = new Set([...L.KR_HOLIDAYS, ...rows.map((row) => row.date)]);
     } catch (_) { /* the embedded reference table stays */ }
   }
+  let boardDialog;
+  function showBoardDetail(text) {
+    if (!boardDialog) {
+      boardDialog = node('dialog', 'floor-help-dialog'); boardDialog.setAttribute('aria-label', '시장 시세 상세');
+      const close = node('button', 'secondary-button', '닫기'); close.type = 'button'; close.addEventListener('click', () => boardDialog.close());
+      boardDialog.append(close, node('p', 'board-detail')); document.body.append(boardDialog);
+    }
+    boardDialog.querySelector('.board-detail').textContent = text; boardDialog.showModal();
+  }
   function track(id, entries, emptyText = '표시할 항목을 불러오는 중이에요…') {
     const root = $(id); const lane = root.querySelector('.lobby-track'); lane.replaceChildren();
     if (!entries.length) { lane.append(node('span', 'lobby-tick muted', emptyText)); root.style.setProperty('--tick-seconds', '0s'); return; }
@@ -259,18 +270,58 @@
   }
   const linkTick = (item) => (copy) => {
     const link = node('a', 'lobby-tick'); link.href = item.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; if (copy) link.setAttribute('aria-hidden', 'true'), link.tabIndex = -1;
-    link.append(node('b', '', item.publisher || '뉴스'), document.createTextNode(' ' + item.title)); link.addEventListener('click', () => advanceTutorial('board')); return link;
+    const label = item.kind === 'BREAKING' ? '[속보] ' : item.kind === 'EXCLUSIVE' ? '[단독] ' : '';
+      const translated = typeof item.title_ko === 'string' && item.title_ko.trim() ? ' (' + item.title_ko + ')' : '';
+      link.append(node('b', '', label + (item.publisher || '뉴스')), document.createTextNode(' ' + item.title + translated));
+      link.title = translated ? '원제 · 괄호 안은 기계 번역입니다. 기사 원문을 확인하세요.' : '기사 원제 · 번역이 없으면 원문을 표시합니다.'; link.addEventListener('click', () => advanceTutorial('board')); return link;
   };
   async function loadNews() {
     let items = [];
-    try { const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); const data = response.ok ? await response.json() : null; if (data?.schema_version === 1) items = data.items.filter((row) => /^https:\/\//.test(row.url)); } catch (_) { /* fall back below */ }
+    try { const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(30000)}); const data = response.ok ? await response.json() : null; if (data?.schema_version === 1) items = data.items.filter((row) => /^https:\/\//.test(row.url)); } catch (_) { /* fall back below */ }
     if (!items.length) {
       try { const response = await fetch('api/desk', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); const desk = response.ok ? await response.json() : null;
         items = (desk?.news || []).map((row) => ({title: row.title, publisher: row.sources?.[0]?.label || '공식 자료', url: row.sources?.[0]?.url || ''})).filter((row) => /^https:\/\//.test(row.url)); } catch (_) { items = []; }
     }
     track('lobby-news', items.slice(0, 30).map(linkTick), '뉴스를 확인하지 못했어요 · 다음 갱신 때 다시 확인해요');
   }
-  const money = (value) => (value > 0 ? '+' : '') + Number(value).toFixed(2) + '%';
+    async function loadTrends() {
+      if (document.hidden || S.trendsLoading) return; S.trendsLoading = true;
+      try {
+        const response = await fetch('api/trends', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
+        const data = response.ok ? await response.json() : null;
+        if (data?.schema_version !== 1 || !Array.isArray(data.items)) throw new Error('TRENDS_UNAVAILABLE');
+        S.trends = data.items.filter(row => typeof row.keyword === 'string' && row.keyword.length <= 48 && !/[<>\x00-\x1f]/.test(row.keyword)).slice(0, 10);
+        const fetched = new Date(data.retrieved_at), stamp = Number.isFinite(fetched.getTime()) ? fetched.toLocaleTimeString('ko-KR', {timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit'}) + ' KST' : '시각 미확인';
+        track('lobby-trends', S.trends.map(row => copy => {
+          const item = node('span', 'lobby-tick', row.keyword + (row.traffic ? ' · ' + row.traffic : '') + ' · ' + stamp);
+          item.title = 'Google Trends 한국 검색 관심 · 원천 평균 10분 갱신 · 전체 검색 순위가 아닙니다';
+          if (copy) item.setAttribute('aria-hidden', 'true'); return item;
+        }), 'Google 검색 관심 키워드를 확인하지 못했어요');
+      } catch (_) { S.trends = []; track('lobby-trends', [], '검색 관심 키워드 확인 불가 · 다음 갱신 때 다시 확인'); }
+      finally { S.trendsLoading = false; }
+    }
+    async function loadMarket() {
+      if (document.hidden || S.marketLoading) return; S.marketLoading = true;
+      try {
+        const response = await fetch('api/live-quotes', {cache: 'no-store', signal: AbortSignal.timeout(20000)});
+        const data = response.ok ? await response.json() : null;
+        if (!data) throw new Error('MARKET_UNAVAILABLE');
+        const rows = [['S&P 500', data.benchmarks?.SP500, 'pt'], ['NASDAQ', data.markets?.NASDAQ, 'pt'], ['DOW', data.markets?.DOW, 'pt'], ['KOSPI', data.markets?.KOSPI, 'pt'], ['KOSDAQ', data.markets?.KOSDAQ, 'pt'], ['USD/KRW', data.exchange_rates?.USD_KRW || (data.fx ? {...data.fx, price: data.fx.usd_krw} : null), '원'], ['EUR/KRW', data.exchange_rates?.EUR_KRW, '원'], ['JPY/KRW · 1엔', data.exchange_rates?.JPY_KRW, '원']];
+        track('lobby-market', rows.map(([name, quote, unit]) => copy => {
+          const item = node('button', 'lobby-tick market-tick'); item.type = 'button'; item.append(node('b', '', name));
+          if (quote && Number.isFinite(quote.price) && quote.price > 0) {
+            const shown = Math.trunc(quote.price * 100) / 100;
+            item.append(node('em', '', shown.toLocaleString('ko-KR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + unit));
+            const time = new Date(quote.market_time);
+            item.title = '전체 값 ' + quote.price + ' ' + unit + ' · 제공자 시각 ' + (Number.isFinite(time.getTime()) ? time.toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'}) + ' KST' : '미확인') + ' · 지연 시세';
+          } else { item.append(node('em', 'muted', '확인 불가')); item.title = name + ' · 제공자 가격을 확인하지 못했습니다.'; }
+          item.addEventListener('click', () => showBoardDetail(name + ' · ' + item.title));
+          if (copy) { item.setAttribute('aria-hidden', 'true'); item.tabIndex = -1; } return item;
+        }));
+      } catch (_) { track('lobby-market', [], '시장 시세를 확인하지 못했어요 · 다음 갱신 때 다시 확인'); }
+      finally { S.marketLoading = false; }
+    }
+    const money = (value) => (value > 0 ? '+' : '') + Number(value).toFixed(2) + '%';
   function returnTick(entry) {
     return (copy) => {
       const chip = entry.nick && !entry.zero ? node('button', 'lobby-tick return') : node('span', 'lobby-tick return'); if (chip.tagName === 'BUTTON') { chip.type = 'button'; chip.addEventListener('click', () => window.ZEROLobbyUsers?.visit(entry.nick)); if (copy) chip.tabIndex = -1; }
@@ -353,7 +404,7 @@
     const list = [], chiefs = [], staffByChief = {}, person = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : (value || {name: '', persona: '', duty: ''});
     const make = (id, department, kind, who, role, mandate, hue, index) => {
       const persona = L.PERSONAS[who.persona];
-      return {id, department, kind, name: who.name || '이름 없음', role, mandate, hue, duty: who.duty || '', persona: who.persona || '', personaLines: persona?.lines, face: persona?.face || L.faceAt(index)};
+      return {id, department, kind, name: who.name || '이름 없음', role, mandate, hue, duty: who.duty || '', persona: who.persona || '', personaLines: persona?.lines, face: L.faceAt(index)};
     };
     (info.team?.teams || []).slice(0, 8).forEach((team, index) => {
       const id = 'own-' + index, hue = (index * 45 + 10) % 360, leader = person(team.leader); chiefs.push(id); staffByChief[id] = [];
@@ -376,7 +427,7 @@
     buildStage(); finish();
   }
   function finish() {
-    $('lobby-name-chip').textContent = S.playerName; renderTutorial(); proximity(); ensureLoop(); loadNews(); loadReturns(); document.dispatchEvent(new CustomEvent('zero-ready'));
+    $('lobby-name-chip').textContent = S.playerName; renderTutorial(); proximity(); ensureLoop(); loadNews(); loadReturns(); loadMarket(); loadTrends(); document.dispatchEvent(new CustomEvent('zero-ready'));
   }
 
   // ---- input and lifecycle --------------------------------------------------------------------
@@ -401,7 +452,7 @@
     S.timers.forEach(clearInterval); S.timers = [];
     S.motions.forEach(motion => { if (on && !S.paused && !document.hidden) motion.resume(); else motion.pause(); });
     if (!on) { S.keys.clear(); if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return; }
-    S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000));
+    S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000), setInterval(loadMarket, 60000), setInterval(loadTrends, 600000), setInterval(loadWeather, 1800000));
     clockTick(); heroTick(); ensureLoop(); [900, 1800, 2700].forEach((ms) => setTimeout(chatterTick, ms)); setTimeout(greet, 400);
   }
   function setPlayerName(name) { S.playerName = name || '나'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }

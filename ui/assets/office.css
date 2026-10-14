@@ -45,6 +45,9 @@
 .office-figure { transition:opacity 160ms ease; }
 .office-figure.is-muted { opacity:.25; }
 .office-person { shape-rendering:crispEdges; }
+/* Facial curves stay legible in small scene and board portraits. */
+.office-person path { shape-rendering:geometricPrecision; }
+.office-eyes { transform-box:fill-box; transform-origin:center; }
 .office-eyes { animation:office-blink 9s linear infinite; }
 .office-figure:nth-child(3n) .office-eyes { animation-delay:2.6s; }
 .office-figure:nth-child(4n) .office-eyes { animation-delay:5.1s; }
