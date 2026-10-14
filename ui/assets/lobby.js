@@ -445,6 +445,8 @@
   document.querySelectorAll('[data-pad]').forEach((button) => {
     const key = {up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight'}[button.dataset.pad];
     const down = (event) => { event.preventDefault(); S.keys.add(key); ensureLoop(); }, up = () => S.keys.delete(key);
+    button.addEventListener('contextmenu', event => event.preventDefault());
+    button.addEventListener('selectstart', event => event.preventDefault());
     button.addEventListener('pointerdown', down); ['pointerup', 'pointerleave', 'pointercancel'].forEach((name) => button.addEventListener(name, up));
   });
   function setActive(on) {
