@@ -620,13 +620,24 @@
   function paintRankingBoard(ranked){
     if(!rankingBoard){
       rankingBoard=node('aside','lobby-ranking-board');rankingBoard.id='lobby-ranking-board';rankingBoard.setAttribute('aria-label','인증 회원 연습 랭킹');
-      const title=node('h3','','연습 랭킹'),status=node('p','lobby-ranking-live-status'),list=node('ol','lobby-ranking-live');status.id='lobby-ranking-live-status';list.id='lobby-ranking-live';list.tabIndex=0;list.setAttribute('aria-label','인증 회원 연습 수익률 · 세로 스크롤');
-      rankingBoard.append(title,status,list);(view.querySelector('.lobby-main')||view).append(rankingBoard);
+      const title=node('h3','','연습 랭킹'),status=node('p','lobby-ranking-live-status'),viewport=node('div','lobby-ranking-viewport'),track=node('div','lobby-ranking-track'),list=node('ol','lobby-ranking-live');
+      status.id='lobby-ranking-live-status';track.id='lobby-ranking-track';list.id='lobby-ranking-live';viewport.tabIndex=0;viewport.setAttribute('aria-label','인증 회원 연습 수익률 · 위에서 아래로 이동 · 선택하면 멈춤');
+      track.append(list);viewport.append(track);rankingBoard.append(title,status,viewport);(view.querySelector('.lobby-main')||view).append(rankingBoard);
     }
     $('lobby-ranking-live-status').textContent=S.boardMeta?.state==='AVAILABLE'?(ranked.length?'인증 회원 · 연습 수익률':'참가한 인증 회원이 없어요'):'조회 중 · 순위 보류';
-    const list=$('lobby-ranking-live');list.replaceChildren();
-    ranked.forEach(row=>{const item=node('li','lobby-ranking-live-row'),visit=node('button','',''+row.nick);visit.type='button';visit.addEventListener('click',()=>window.ZEROLobbyUsers?.visit(row.nick));
-      item.append(node('span','',row.rank+'위'),visit,node('strong',row.percent>=0?'gain':'loss',money(row.percent)));list.append(item);});
+    const track=$('lobby-ranking-track'),signature=JSON.stringify(ranked.map(row=>[row.nick,row.rank,row.percent]));
+    if(track.dataset.ranking===signature)return;
+    track.dataset.ranking=signature;track.dataset.moving=String(ranked.length>1);track.style.setProperty('--ranking-duration',Math.max(12,ranked.length*3)+'s');
+    const list=$('lobby-ranking-live');list.replaceChildren();track.replaceChildren(list);
+    function fill(target,copy){
+      ranked.forEach(row=>{const item=node('li','lobby-ranking-live-row'),visit=node('button','',''+row.nick);visit.type='button';visit.title=row.nick;
+        if(copy){visit.tabIndex=-1;visit.addEventListener('pointerdown',event=>event.preventDefault());}
+        visit.addEventListener('click',()=>window.ZEROLobbyUsers?.visit(row.nick));
+        item.append(node('span','',row.rank+'위'),visit,node('strong',row.percent>=0?'gain':'loss',money(row.percent)));target.append(item);});
+    }
+    fill(list,false);
+    // Only the original list participates in keyboard navigation and screen reading.
+    if(ranked.length>1){const copy=node('ol','lobby-ranking-live');copy.setAttribute('aria-hidden','true');fill(copy,true);track.append(copy);}
   }
   function paintRanking(ranked = W.rankUsers(S.userBoard)) {
     paintRankingBoard(ranked);
