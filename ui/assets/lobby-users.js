@@ -237,7 +237,7 @@
     openLoungeSocket: () => {
       if (!U.me || !U.token) throw {code: 'UNAUTHORIZED'};
       const token = U.token, socket = new WebSocket(`${BASE.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:')}/api/lobby/lounge/socket`);
-      socket.addEventListener('open', () => { if (U.token !== token) socket.close(); else socket.send(JSON.stringify({type: 'auth', token})); }); return socket;
+      socket.addEventListener('open', () => { if (U.token !== token) socket.close(); else socket.send(JSON.stringify({type: 'auth', token, move_ack: true})); }); return socket;
     }};
   if (U.visitor && !U.token) window.ZEROLobby.setPlayerName(U.visitor);
   render(); refreshMe(); if(document.documentElement?.dataset.zeroView==='lobby')loadBoard(); setInterval(() => { if (!document.hidden) { if(document.documentElement?.dataset.zeroView==='lobby')loadBoard(); if (U.me) refreshMe(); } }, 60000);
