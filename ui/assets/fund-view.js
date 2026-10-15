@@ -163,6 +163,7 @@ function renderFundBenchmark(data) {
   const live=data.live,latest=data.latest_usd,common=data.krw_common,first=data.start;
   fund$('tqqq-basis').textContent='소수점 수량을 가정한 전액 투자 참고값 · 시작 미국 거래일 '+first.market_date+(live?' · 공개 지연 시세로 새로고침 · 시세 확인 '+stamp(live.checked_at)+' KST':' · 공개 자료 기록 '+stamp(data.as_of)+' KST')+' · 금액·수익률은 소수 둘째 자리까지 표시';
   fund$('tqqq-price-return').textContent=format(latest.return_percent,2)+'%';
+  fund$('tqqq-price-return').className=fundNumber(latest.return_percent)>0?'gain':fundNumber(latest.return_percent)<0?'loss':'';
   fund$('tqqq-price-period').textContent=first.market_date+' → '+latest.market_date+(live?' 미국 시세(지연 가능) · ETF 현재 가격수익률':' 미국 거래일 · ETF 종가 가격수익률');
   fund$('tqqq-fixed-value').textContent=format(latest.reference_value_krw,2)+'원';
   fund$('tqqq-fixed-gain').textContent='환율 고정 참고 차액 '+format(latest.gain_krw,2)+'원';
