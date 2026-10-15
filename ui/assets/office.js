@@ -700,7 +700,7 @@
   $('office-focus-request')?.addEventListener('click',()=>{if(selected)openActor(selected);});
   $('office-demo')?.addEventListener('click',startMeeting);
   $('office-meeting-exit')?.addEventListener('click',finishMeeting);
-  $('office-meeting-mode')?.addEventListener('click',()=>{meetingRecordsOnly=!meetingRecordsOnly;$('office-meeting-mode').textContent=meetingRecordsOnly?'상시 담당 업무 보기':'실제 기록 보고 보기';$('office-meeting-mode').setAttribute('aria-pressed',String(meetingRecordsOnly));showMeetingReport(meetingIndex,false);});
+  $('office-meeting-mode')?.addEventListener('click',()=>{meetingRecordsOnly=!meetingRecordsOnly;$('office-meeting-mode').textContent=meetingRecordsOnly?'상시 담당 업무 보기':'실제 기록 보고 보기';$('office-meeting-mode').setAttribute('aria-pressed',String(meetingRecordsOnly));showMeetingReport(meetingIndex,false);updateSceneVisibility();});
   $('office-pause')?.addEventListener('click',toggleMotion);
   $('office-zoom-out')?.addEventListener('click',()=>setZoom(zoom-.2));
   $('office-zoom-in')?.addEventListener('click',()=>setZoom(zoom+.2));
