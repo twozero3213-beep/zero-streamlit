@@ -13,7 +13,7 @@
   const pct = (value, total) => (value / total * 100).toFixed(2) + '%';
   const store = { get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }, set(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* private mode */ } } };
 
-  const S = {active: false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
+  const S = {active: false, docked:false,dockRequested:false,dockStarted:false,dockHandoff:false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
     chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: (store.get('zero-lobby-name') === '나' ? null : store.get('zero-lobby-name')) || '대표님', tutorial: null,
     motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolLevel: 1, characterAuthenticated: false, schoolRank: '입문 전', boardMeta: null, chatterSeed:null, seedPending:null, seedAttemptAt:null, safe_keyword:null, trendFallback:true,market:null,
     layout:null,ownerLayout:null,ownerNick:null,sceneOwner:null,layoutRevision:null,ownerLayoutConfirmed:false,layoutPending:null,renderer:null,rendererObserver:null,visuals:[]};
@@ -733,14 +733,16 @@
   // ---- input and lifecycle --------------------------------------------------------------------
   stage.addEventListener('click', (event) => {
     if (event.target.closest('.npc, a, button')) return;
+    stage.focus({preventScroll:true});
     const box = stage.getBoundingClientRect(),position={x:(event.clientX-box.left)/box.width*L.STAGE.w,y:(event.clientY-box.top)/box.height*L.STAGE.h};
     if(S.world?.layout&&W.objectAt(S.world,position)){if(stage.dataset.spriteRendering!=='ready')interactObject(W.objectAt(S.world,position));return;}walkTo(position);
   });
   window.addEventListener('keydown', (event) => {
-    if (!S.active || S.portalBusy || chat.dialog.open || event.target.closest?.('input, textarea, select, dialog') || event.ctrlKey || event.metaKey || event.altKey) return;
-    if (event.key === 'Enter' && S.nearNpc && event.target === document.body) { event.preventDefault(); openChat(S.nearNpc); return; }
+    if (!S.active || document.activeElement!==stage || event.target!==stage || S.portalBusy || chat.dialog.open || event.target.closest?.('input, textarea, select, dialog') || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key === 'Enter' && S.nearNpc && event.target === stage) { event.preventDefault(); openChat(S.nearNpc); return; }
     if (L.keyDirection(new Set([event.key]))) { event.preventDefault(); S.keys.add(event.key); ensureLoop(); }
   });
+  stage.addEventListener('focusout',()=>S.keys.clear());
   window.addEventListener('keyup', (event) => S.keys.delete(event.key));
   window.addEventListener('blur', () => S.keys.clear());
   document.querySelectorAll('[data-pad]').forEach((button) => {
@@ -756,6 +758,10 @@
     loadChatterSeed(); loadNews(); loadReturns(); loadMarket(); loadTrends(); window.ZEROAnalysis?.load?.();
   }
   function setActive(on) {
+    const route=document.documentElement.dataset.zeroView;
+    if(S.docked&&route==='lobby'&&S.player)S.dockHandoff=true;
+    on=Boolean(on||S.docked&&window.innerWidth>=1280&&['portfolio','research','workbench'].includes(route));
+    if(document.hidden)on=false;
     if (on === S.active && (!on || S.timers.length || !S.player)) return; S.active = on; stage.dataset.suspended = String(!on);
     S.timers.forEach(clearInterval); S.timers = [];
     S.motions.forEach(motion => { if (on && !S.paused && !document.hidden) motion.resume(); else motion.pause(); });
@@ -771,6 +777,15 @@
     loadSceneResources();
     S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000),setInterval(loadChatterSeed,60000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000), setInterval(loadMarket, 60000), setInterval(loadTrends, 600000), setInterval(loadWeather, 1800000));
     clockTick(); heroTick(); ensureLoop(); [900, 1800, 2700].forEach((ms) => setTimeout(chatterTick, ms)); setTimeout(greet, 400);
+  }
+  function setDocked(on) {
+    S.dockRequested=on===true;
+    S.docked=S.dockRequested&&window.innerWidth>=1280&&['portfolio','research','workbench'].includes(document.documentElement.dataset.zeroView);
+    if(S.docked)view.dataset.desktopDocked='true';else delete view.dataset.desktopDocked;
+    if(!S.docked){S.dockStarted=false;S.dockHandoff=false;}
+    setActive(S.docked||document.documentElement.dataset.zeroView==='lobby');
+    if(S.docked&&!document.hidden&&!S.player&&!teamRequest&&!S.dockStarted){S.dockStarted=true;open();}
+    fitOfficeViewport();return S.docked;
   }
   function setCharacterProgress(progress) {
     const confirmed = progress?.basis === 'SERVER_CONFIRMED_LEARNING_REVIEW_AND_TRUSTED_PERFORMANCE' && Number.isSafeInteger(progress.xp) && progress.xp >= 0 && Number.isSafeInteger(progress.level) && progress.level >= 1;
@@ -796,6 +811,16 @@
   $('floor-help').addEventListener('click', () => floorHelp.showModal());
   $('lobby-profile-btn').addEventListener('click', () => floorHelp.close());
   // Measure the shared shell rather than assuming a fixed mobile header height.
+  function fitOfficeViewport() {
+    const host=stage.parentElement;
+    if(!host||window.innerWidth<768)return;
+    const width=host.clientWidth,height=host.clientHeight;
+    if(!(width>0&&height>0))return;
+    // Fit the same 16x10 saved world; no extra columns or collision coordinates are created.
+    const fitted=Math.min(width,height*1.6);
+    stage.style.setProperty('--office-scene-w',fitted+'px');
+    stage.style.setProperty('--office-scene-h',fitted/1.6+'px');
+  }
   function fitFloor() {
     const header = document.querySelector('.global-header');
     const tabs = document.querySelector('.mobile-tabbar');
@@ -805,12 +830,15 @@
   }
   new ResizeObserver(fitFloor).observe(document.querySelector('.global-header'));
   window.addEventListener('resize', fitFloor); fitFloor();
+  window.addEventListener('resize',()=>{if(S.dockRequested)setDocked(true);fitOfficeViewport();});
+  if(stage.parentElement)new ResizeObserver(fitOfficeViewport).observe(stage.parentElement);
+  fitOfficeViewport();
 
   const initialTutorial = tutorialState();
   S.tutorial = initialTutorial || {step: 0, done: false};
   if (!initialTutorial) store.set(TUT_KEY, JSON.stringify(S.tutorial));
   retryButton.addEventListener('click', () => open(true));
-  window.ZEROLobby = {showOwn, open: () => { setActive(true); if (!S.team || !S.player || S.mode !== 'zero') return open(); }, close: () => setActive(false), setActive, visit: visitOffice, setLayout,setPlayerName, setCharacterProgress, setUserBoard, state: S};
+  window.ZEROLobby = {showOwn, open: () => { setActive(true); if(S.dockHandoff&&S.player){S.dockHandoff=false;return;} if (!S.team || !S.player || S.mode !== 'zero') return open(); }, close: () => setActive(false), setActive, setDocked, visit: visitOffice, setLayout,setPlayerName, setCharacterProgress, setUserBoard, state: S};
   window.ZEROOffice={...(window.ZEROOffice||{}),setLayout};
   document.addEventListener('zero-plaza-closed', () => {
     S.portalBusy = false; S.keys.clear(); S.target = null; stage.classList.remove('portal-travel');
@@ -821,7 +849,8 @@
   const entryRoute=window.location?.hash?.slice(1).split('?')[0];
   if (document.documentElement.dataset.zeroView === 'lobby'&&(!entryRoute||entryRoute==='lobby')) window.ZEROLobby.open();
   document.addEventListener('visibilitychange', () => {
-    if(document.hidden)stopSpeech();
+    if(document.hidden){stopSpeech();S.keys.clear();if(S.docked){setActive(false);S.dockStarted=false;}}
+    else if(S.docked)setDocked(true);
     S.motions.forEach(motion => { if (document.hidden || !S.active || S.paused) motion.pause(); else motion.resume(); });
     if (!document.hidden) ensureLoop();
   });
