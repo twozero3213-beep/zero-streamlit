@@ -16,7 +16,7 @@
   const text = (value, limit = 4000) => typeof value === 'string' && value.length <= limit ? value : '';
   const exact = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value,key));
   const node = (tag, className = '', content) => { const element = document.createElement(tag); element.className = className; if (content !== undefined) element.textContent = content; return element; };
-  let rosterSource = null, actors = [], queue = null, selected = null, selectedDepartment = 'MEETING', requestEpoch = 0, loadPromise = null, pending = null, submitting = false;
+  let rosterSource = null, actors = [], queue = null, selected = null, selectedDepartment = 'ALL', requestEpoch = 0, loadPromise = null, pending = null, submitting = false;
   const actorButtons = new Map(), rooms = new Map(), clicks = new Map();
 
   function parseActors(team) {
@@ -72,7 +72,8 @@
     return data;
   }
 
-  const SVG_NS='http://www.w3.org/2000/svg', WORLD_WIDTH=2620, WORLD_HEIGHT=2620;
+  const SVG_NS='http://www.w3.org/2000/svg';
+  let WORLD_WIDTH=0,WORLD_HEIGHT=0,floorKey='',floorRooms=[],meetingRoom=null,chairpersonRoom=null;
   const sceneActors=new Map(),directoryMembers=new Map(),motionAnimations=new Set();
   const shirtColors=['#245f8d','#428f88','#bd8252','#626b8f','#a15f6a','#596f80','#537e67','#6c8f99','#9b8057','#5875a0','#855f8b','#346b76'];
   const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -83,34 +84,45 @@
   const rect=(parent,x,y,width,height,fill,attributes={})=>{const element=svgNode('rect',{x,y,width,height,fill,...attributes});parent.append(element);return element;};
   const polygon=(parent,points,fill,stroke='#0000')=>{const element=svgNode('polygon',{points:points.map(p=>p.x+','+p.y).join(' '),fill,stroke,'stroke-width':1});parent.append(element);return element;};
   const line=(parent,x1,y1,x2,y2,stroke,width=1)=>parent.append(svgNode('line',{x1,y1,x2,y2,stroke,'stroke-width':width}));
-  function roomLayout(list=actors){
-    const slots=[...[50,690,1330,1970].map(x=>({x,y:50,door:'bottom'})),...[690,1330,1970].map(y=>({x:1970,y,door:'left'})),...[1330,690,50].map(x=>({x,y:1970,door:'top'})),...[1330,690].map(y=>({x:50,y,door:'right'}))];
+  function floorGeometry(width,height){
+    const gap=32,roomHeight=300,ratio=Math.max(1,width-8)/Math.max(1,height-24),columns=ratio>=1.35?6:3,wingRows=Math.ceil(6/columns),rows=wingRows*2+1;
+    const roomWidth=Math.round(Math.max(300,Math.min(680,(ratio*(rows*(roomHeight+gap)+80)-(columns+1)*gap)/columns))/8)*8;
+    return {gap,roomHeight,roomWidth,columns,wingRows,rows,key:columns+':'+roomWidth};
+  }
+  function layoutFloor(width,height){
+    const geometry=floorGeometry(width,height),{gap,roomHeight,roomWidth,columns,wingRows,rows}=geometry;
+    floorKey=geometry.key;WORLD_WIDTH=columns*(roomWidth+gap)+gap;WORLD_HEIGHT=rows*(roomHeight+gap)+80;
     const flow=['ZERO_FINAL_MANAGER','DATA_ENGINEERING_CHIEF','GREENBLATT','WALL_STREET_CHIEF_ANALYST','QUANT_RESEARCH_CHIEF','GLOBAL_MACRO_CHIEF','THORP','MODEL_VALIDATION_CHIEF','PORTFOLIO_CONSTRUCTION_CHIEF','BOGLE','EXECUTION_OPERATIONS_CHIEF','PRODUCT_QUALITY_TEAM'];
-    return flow.map((id,index)=>({id,width:600,height:600,...slots[index]}));
+    floorRooms=flow.map((id,index)=>({id,x:gap+(index%6%columns)*(roomWidth+gap),y:80+(Math.floor(index%6/columns)+(index<6?0:wingRows+1))*(roomHeight+gap),width:roomWidth,height:roomHeight,door:'left'}));
+    meetingRoom={id:'MEETING',x:gap,y:80+wingRows*(roomHeight+gap),width:(columns-1)*(roomWidth+gap)-gap,height:roomHeight,door:'left'};
+    chairpersonRoom={id:'CHAIRPERSON',x:gap+(columns-1)*(roomWidth+gap),y:meetingRoom.y,width:roomWidth,height:roomHeight,door:'left'};
+  }
+  function roomLayout(list=actors){
+    if(!floorKey)layoutFloor(1400,720);
+    return floorRooms;
   }
   function seatLayout(list=actors){
-    const leaders=[{x:950,y:790},{x:1250,y:790},...[900,1090,1280,1470].map(y=>({x:740,y})),...[900,1090,1280,1470].map(y=>({x:1460,y})),{x:950,y:1520},{x:1250,y:1520}],layouts=roomLayout(list),used=new Map();
-    let leader=0;
+    const layouts=roomLayout(list),used=new Map();let leader=0;
     return list.map(actor=>{
-      if(isLeader(actor)){const point=leaders[leader++];return {id:actor.id,room:'MEETING',x:690+(point.x-590)*1240/1040,y:690+(point.y-590)*1240/1040};}
+      if(isLeader(actor)){const index=leader++,x=meetingRoom.x+90+(index%6)*(meetingRoom.width-180)/5,y=meetingRoom.y+(index<6?112:276);return {id:actor.id,room:'MEETING',x,y};}
       const room=layouts.find(item=>item.id===actor.department),index=used.get(room.id)||0;used.set(room.id,index+1);
       const columns=list.filter(member=>member.department===room.id&&!isLeader(member)).length>4?3:2;
-      return {id:actor.id,room:room.id,x:room.x+(columns===3?100+(index%3)*200:160+(index%2)*280),y:room.y+260+Math.floor(index/columns)*250};
+      return {id:actor.id,room:room.id,x:room.x+70+(index%columns)*(room.width-140)/(columns-1),y:room.y+180+Math.floor(index/columns)*95};
     });
   }
-  // Illustrated commutes follow real openings. They never create a job or a meeting decision.
+  function roomDoor(room){return {x:room.x,y:room.y+(room.id==='CHAIRPERSON'?224:120)};}
+  // Every journey shares the same door, clear room lane and outer corridor.
+  function officeExitRoute(room,point){
+    const door=roomDoor(room),laneX=room.x+28,outsideX=room.x-12;
+    return [point,{x:laneX,y:point.y},{x:laneX,y:door.y},door,{x:outsideX,y:door.y},{x:outsideX,y:room.y-8},{x:20,y:room.y-8}];
+  }
+  function officeVisitRoute(from,point,to,destination){
+    return [...officeExitRoute(from,point),{x:20,y:to.y-8},...officeExitRoute(to,destination).reverse()];
+  }
+  // Illustrated commutes never create a job or a meeting decision.
   function officeMeetingRoute(record){
-    const room=roomLayout().find(item=>item.id===record.actor.department),seat=record.point;
-    const side=room.door,edgeX=seat.x<1310?786:1834,edgeY=seat.y<1310?786:1834;
-    const entry=side==='bottom'?{x:1310,y:690}:side==='top'?{x:1310,y:1930}:side==='left'?{x:1930,y:1310}:{x:690,y:1310};
-    const door=side==='bottom'?{x:room.x+300,y:room.y+600}:side==='top'?{x:room.x+300,y:room.y}:side==='left'?{x:room.x,y:room.y+300}:{x:room.x+600,y:room.y+300};
-    const aisle=side==='bottom'||side==='top'?{x:door.x,y:side==='bottom'?670:1950}:{x:side==='left'?1950:670,y:door.y};
-    const inside=side==='bottom'||side==='top'?{x:door.x,y:door.y+(side==='bottom'?-30:80)}:{x:door.x+(side==='left'?80:-80),y:door.y};
-    const home=record.actor.id==='ZERO_FINAL_MANAGER'?{x:room.x+200,y:room.y+180}:{x:room.x+520,y:room.y+125},columns=actors.filter(actor=>actor.department===room.id&&!isLeader(actor)).length>4?3:2,laneX=room.x+(columns===3?400:300);
-    const perimeter=side==='bottom'||side==='top'?[{x:edgeX,y:seat.y},{x:edgeX,y:entry.y===690?786:1834},{x:entry.x,y:entry.y===690?786:1834}]:[{x:entry.x===690?786:1834,y:seat.y},{x:entry.x===690?786:1834,y:edgeY},{x:entry.x===690?786:1834,y:entry.y}];
-    const outside=side==='bottom'||side==='top'?{x:entry.x,y:aisle.y}:{x:aisle.x,y:entry.y};
-    const route=[seat,...perimeter,entry,outside,aisle,door,inside,{x:laneX,y:inside.y},{x:laneX,y:room.y+120},{x:home.x,y:room.y+120},home];
-    return route.filter((point,index)=>!index||point.x!==route[index-1].x||point.y!==route[index-1].y);
+    const room=roomLayout().find(item=>item.id===record.actor.department);
+    return officeVisitRoute(meetingRoom,record.point,room,{x:room.x+80,y:room.y+120});
   }
   function officeRouteFrames(route,origin,start,end){
     const lengths=route.map((point,index)=>index?Math.hypot(point.x-route[index-1].x,point.y-route[index-1].y):0),total=lengths.reduce((a,b)=>a+b,0);let distance=0;
@@ -141,7 +153,7 @@
     rect(layer,x,y,8,height,'#94adb1');rect(layer,x+width-8,y,8,height,'#577b87');
     const doorSize=64;
     if(room.door==='top'||room.door==='bottom'){const dy=room.door==='top'?y:y+height-4;rect(layer,x+width/2-doorSize/2,dy,doorSize,8,'#d3e0d9');line(layer,x+width/2-doorSize/2,dy,x+width/2-doorSize/2,dy+(room.door==='top'?32:-32),'#69908f',2);}
-    else{const dx=room.door==='left'?x:x+width-8;rect(layer,dx,y+height/2-doorSize/2,8,doorSize,'#d3e0d9');line(layer,dx,y+height/2-doorSize/2,dx+(room.door==='left'?32:-32),y+height/2-doorSize/2,'#69908f',2);}
+    else{const dx=room.door==='left'?x:x+width-8,dy=roomDoor(room).y-doorSize/2;rect(layer,dx,dy,8,doorSize,'#d3e0d9');line(layer,dx,dy,dx+(room.door==='left'?32:-32),dy,'#69908f',2);}
     rect(layer,x+width-165,y+85,52,36,'#b89568',{rx:3});rect(layer,x+width-160,y+90,42,26,'#dce8d7');line(layer,x+width-156,y+111,x+width-124,y+98,'#699d8a',3);
     rect(layer,x+30,y+88,76,12,'#b99d7b',{rx:2});for(let book=0;book<5;book++)rect(layer,x+34+book*13,y+70,9,18,shirtColors[(book+Math.floor(x/600))%shirtColors.length]);
     const inbox=svgNode('g',{'class':'office-room-inbox','data-office-inbox':room.id,visibility:'hidden'});rect(inbox,x+width-130,y+height-72,100,42,'#fff9e9',{rx:5,stroke:'#aac0b4'});inbox.append(svgNode('text',{x:x+width-80,y:y+height-46,'class':'office-room-inbox-count','text-anchor':'middle',fill:'#345f69','font-size':14},'접수 기록'));layer.append(inbox);
@@ -161,22 +173,19 @@
     svg.append(layer);rooms.set(room.id,layer);
   }
   function drawOffice(svg){
-    rect(svg,17,21,2588,2588,'#0c2638',{rx:20});rect(svg,28,28,2564,2564,'#d0d9cc',{rx:16,stroke:'#476b76','stroke-width':2});
-    for(let x=28;x<2592;x+=40)line(svg,x,28,x,2592,'#bdc9bd',.7);
-    for(let y=28;y<2592;y+=40)line(svg,28,y,2592,y,'#bdc9bd',.7);
+    rect(svg,4,4,WORLD_WIDTH-8,WORLD_HEIGHT-8,'#d0d9cc',{rx:12,stroke:'#64838a','stroke-width':2});
+    for(let x=32;x<WORLD_WIDTH;x+=40)line(svg,x,8,x,WORLD_HEIGHT-8,'#bdc9bd',.7);
+    for(let y=32;y<WORLD_HEIGHT;y+=40)line(svg,8,y,WORLD_WIDTH-8,y,'#bdc9bd',.7);
     roomLayout().forEach(room=>drawRoom(svg,room));
-    const conference=svgNode('g',{transform:'translate(-13.461538 -13.461538) scale(1.1923076923)'});svg.append(conference);svg=conference;
-    rect(svg,598,600,1040,1040,'#1b4053',{rx:8,opacity:.25});rect(svg,590,590,1040,1040,'#deebe5',{rx:7,stroke:'#568b96','stroke-width':3});
-    rect(svg,590,590,1040,12,'#4e7b86',{rx:4});rect(svg,590,600,10,1020,'#a3c4c0');rect(svg,1620,600,10,1020,'#5c8b93');
-    svg.append(svgNode('text',{x:1100,y:632,'class':'office-central-title','text-anchor':'middle',fill:'#285569','font-size':28,'font-weight':750},'ZERO 중앙 회의실'));
-    svg.append(svgNode('text',{x:1100,y:657,'text-anchor':'middle',fill:'#577f83','font-size':15},'총괄 + 11개 팀장 · 의견 조율 · 회의 연출'));
-    rect(svg,912,844,384,620,'#93aaa1',{rx:80});rect(svg,918,838,372,620,'#cfb58c',{rx:78,stroke:'#b89e75','stroke-width':2});rect(svg,931,850,346,590,'#e9d8b5',{rx:68});
-    rect(svg,1060,1080,82,44,'#42636a',{rx:5});rect(svg,1066,1086,70,32,'#9ac8bd',{rx:2});rect(svg,1094,1126,16,6,'#5e786f',{rx:2});
-    svg.append(svgNode('text',{x:1100,y:1170,'text-anchor':'middle',fill:'#aa9066','font-size':24,'font-weight':800,'letter-spacing':4},'ZERO'));
-    drawPlant(svg,615,645);drawPlant(svg,1605,645);drawPlant(svg,615,1580);drawPlant(svg,1605,1580);
-    rect(svg,1050,1650,92,12,'#cad9cb',{rx:4});svg.append(svgNode('text',{x:1100,y:1666,'text-anchor':'middle',fill:'#526d66','font-size':12},'공용 자료 · 휴식 코너'));
-    // Four openings connect the hall to the surrounding aisle; characters avoid the table.
-    for(const [x,y,w,h]of [[1073,589,54,13],[1619,1073,13,54],[1073,1619,54,13],[589,1073,13,54]])rect(svg,x,y,w,h,'#d0d9cc');
+    const {x,y,width,height}=meetingRoom,hall=svgNode('g',{'class':'office-conference','data-office-room':'MEETING'});
+    rect(hall,x,y,width,height,'#deebe5',{rx:6,stroke:'#568b96','stroke-width':3});
+    hall.append(svgNode('text',{x:x+width/2,y:y+32,'class':'office-central-title','text-anchor':'middle',fill:'#285569','font-size':24,'font-weight':750},'ZERO 중앙 회의실'));
+    hall.append(svgNode('text',{x:x+width/2,y:y+55,'class':'office-room-description','text-anchor':'middle',fill:'#456a70','font-size':13},'총괄 + 11개 팀장 · 회의 연출'));
+    rect(hall,x+70,y+150,width-140,52,'#cfb58c',{rx:24,stroke:'#b89e75','stroke-width':2});
+    rect(hall,x+78,y+154,width-156,40,'#e9d8b5',{rx:18});
+    hall.append(svgNode('text',{x:x+width/2,y:y+180,'text-anchor':'middle',fill:'#705b3d','font-size':18,'font-weight':750},'ZERO'));
+    rect(hall,x-4,roomDoor(meetingRoom).y-32,8,64,'#d0d9cc');
+    drawPlant(hall,x+width-24,y+60);svg.append(hall);rooms.set('MEETING',hall);
   }
 
   function figure(actor,index,point){
@@ -231,27 +240,19 @@
     return {outer,travel};
   }
 
-  const chairpersonRoom={id:'CHAIRPERSON',x:1510,y:710,width:290,height:190,door:'bottom'};
   const officeOwner={id:'OFFICE_OWNER',name:'ZERO',department:'CHAIRPERSON',kind:'의장'};
   let ownerScene=null,chatTurn=0;
   const teamChatRecent=[],teamChatCache=new Map();
   // Social visits stay outside the canonical roster, meeting reports and job assignees.
   function ownerTour(){
-    const home={x:1655,y:870},route=[home],stops=[];
-    const visit=(point,room)=>route.push({...point,room,pause:6500});
-    visit(home,'CHAIRPERSON');route.push({x:1655,y:900},{x:1655,y:990},{x:1834,y:990});
-    visit({x:1834,y:1310},'MEETING');route.push({x:1930,y:1310},{x:1950,y:1310},{x:1950,y:670});
-    for(const room of roomLayout()){
-      const vertical=room.door==='bottom'||room.door==='top';
-      const door=vertical?{x:room.x+300,y:room.door==='bottom'?room.y+600:room.y}:{x:room.door==='left'?room.x:room.x+600,y:room.y+300};
-      const aisle=vertical?{x:door.x,y:room.door==='bottom'?670:1950}:{x:room.door==='left'?1950:670,y:door.y};
-      const previous=route.at(-1);
-      if(vertical)route.push({x:previous.x,y:aisle.y});else route.push({x:aisle.x,y:previous.y});
-      route.push(aisle,door);
-      visit({x:door.x+(vertical?0:room.door==='left'?70:-70),y:door.y+(vertical?(room.door==='bottom'?-70:70):0)},room.id);
-      route.push(door,aisle);
+    const home={x:chairpersonRoom.x+chairpersonRoom.width/2,y:chairpersonRoom.y+264},route=[home,{...home,room:'CHAIRPERSON',pause:6500}],stops=[];
+    let previous=chairpersonRoom,point=home;
+    for(const room of [meetingRoom,...roomLayout(),chairpersonRoom]){
+      const destination=room.id==='CHAIRPERSON'?home:{x:room.x+80,y:room.y+120};
+      route.push(...officeVisitRoute(previous,point,room,destination));
+      if(room.id!=='CHAIRPERSON')route.push({...destination,room:room.id,pause:6500});
+      previous=room;point=destination;
     }
-    route.push({x:670,y:670},{x:1950,y:670},{x:1950,y:1310},{x:1930,y:1310},{x:1834,y:1310},{x:1834,y:990},{x:1655,y:990},{x:1655,y:900},home);
     let elapsed=0;const frames=[{time:0,transform:'translate(0px, 0px)'}];
     route.forEach((point,index)=>{
       const previous=route[Math.max(0,index-1)];elapsed+=Math.hypot(point.x-previous.x,point.y-previous.y)/160*1000;
@@ -269,7 +270,7 @@
     rect(layer,x+26,y+84,130,64,'#b5936a',{rx:8});rect(layer,x+38,y+90,106,44,'#eadcc7',{rx:4});
     rect(layer,x+48,y+99,42,26,'#466d89',{rx:3});rect(layer,x+103,y+104,26,18,'#faf8ef');
     rect(layer,x+width-100,y+90,70,94,'#83a6b7',{rx:10});rect(layer,x+width-94,y+98,58,26,'#aec5cf',{rx:5});
-    rect(layer,x+width/2-32,y+height-4,64,8,'#d3e0d9');
+    rect(layer,x-4,roomDoor(chairpersonRoom).y-32,8,64,'#d3e0d9');
     drawPlant(layer,x+36,y+height-32);drawPlant(layer,x+width-30,y+76);
     svg.append(layer);rooms.set('CHAIRPERSON',layer);
   }
@@ -334,14 +335,16 @@
       record.status.dataset.jobStatus=state;record.result.textContent=recorded?.result_summary?'최근 제출 기록 · '+recorded.result_summary:'';record.result.hidden=!recorded?.result_summary;
     }
   }
-  function renderActors(){
-    const map=$('office-map'),selector=$('office-department'),assignee=$('office-assignee');
-    clearTimeout(meetingTimer);meetingTimer=null;meetingTask=null;meetingPhase='REPORT';
+  function renderActors(relayout=false){
+    const map=$('office-map'),selector=$('office-department'),assignee=$('office-assignee'),selectedId=selected?.id,elapsed=motionAnimations.values().next().value?.currentTime;
+    layoutFloor(map.clientWidth||1200,map.clientHeight||720);
+    if(!relayout){clearTimeout(meetingTimer);meetingTimer=null;meetingTask=null;meetingPhase='REPORT';}
     for(const animation of motionAnimations)animation.cancel();motionAnimations.clear();
-    map.replaceChildren();selector.replaceChildren();assignee.replaceChildren();actorButtons.clear();sceneActors.clear();rooms.clear();directoryMembers.clear();teamChatCache.clear();
+    map.replaceChildren();selector.replaceChildren();assignee.replaceChildren();actorButtons.clear();sceneActors.clear();rooms.clear();directoryMembers.clear();if(!relayout)teamChatCache.clear();
     actors.forEach(actor=>{const option=node('option','',actor.name);option.value=actor.id;assignee.append(option);});
     for(const [id,name]of [['ALL','전체 사무실'],['MEETING','중앙 회의실'],...Object.entries(departmentNames),['CHAIRPERSON','ZERO 의장실']]){const option=node('option','',name);option.value=id;selector.append(option);}
     fit=node('div','office-scene-fit');world=node('div','office-scene-world');
+    world.style.width=WORLD_WIDTH+'px';world.style.height=WORLD_HEIGHT+'px';map.dataset.floorLayout=floorKey;
     const svg=svgNode('svg',{viewBox:'0 0 '+WORLD_WIDTH+' '+WORLD_HEIGHT,'class':'office-scene-svg','aria-hidden':'true'});drawOffice(svg);
     const furniture=svgNode('g'),people=svgNode('g'),hotspots=node('div','office-hotspots'),layout=seatLayout();
     actors.forEach((actor,index)=>{
@@ -351,20 +354,17 @@
       const button=node('button','office-actor');button.type='button';button.dataset.officeActor=actor.id;button.dataset.department=actor.department;button.dataset.room=seat.room;
       button.style.left=(point.x-90)+'px';button.style.top=(point.y-76)+'px';button.title=actor.name+' · '+actor.kind+' · '+departmentNames[actor.department];button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','office-request-dialog');
       const bubble=node('span','office-actor-bubble'),duty=node('span','office-actor-duty'),status=node('span','office-actor-status'),label=node('span','office-actor-label');
-      if(seat.room==='MEETING'&&(point.x<1000||point.x>1600)){bubble.style.left=point.x<1000?'215px':'-215px';bubble.style.top='60px';}
       bubble.append(duty,status);label.dataset.short=departmentNames[actor.department]||'';label.append(node('span','office-actor-name',actor.name),node('span','office-actor-role',departmentNames[actor.department]+' · '+actor.kind));button.append(bubble,label);
       button.addEventListener('click',()=>openActor(actor));hotspots.append(button);actorButtons.set(actor.id,button);sceneActors.set(actor.id,{actor,button,figure:person.outer,travel:person.travel,point,duty,bubble});
     });
     svg.append(furniture,people);drawChairperson(svg);renderOwner(svg,hotspots);world.append(svg,hotspots);fit.append(world);map.append(fit);
     const hint=node('p','office-scene-hint','이동·잡담은 가상 연출 · ZERO 의장과 직원 선택 · 업무는 별도 요청');map.append(hint);
-    const navigator=node('nav','office-room-navigator');navigator.setAttribute('aria-label','방 목록');
-    for(const [id,name]of [['MEETING','중앙 회의실'],...Object.entries(departmentNames),['CHAIRPERSON','ZERO 의장실']]){const button=node('button','office-room-link',name);button.type='button';button.dataset.room=id;button.addEventListener('click',()=>{selectedDepartment=id;selector.value=id;filterDepartment();});navigator.append(button);}map.replaceChildren(navigator,fit,hint);
-    // Keep the initial twelve seats visible, with readable unscaled mobile controls nearby.
+    // The toolbar's native department selector is the single room navigator.
     let central=$('office-central-roster');if(!central){central=node('nav','office-central-roster');central.id='office-central-roster';central.setAttribute('aria-label','중앙 팀장 선택');$('office-records')?.append(central);}central.replaceChildren();
     for(const actor of actors.filter(isLeader)){const button=node('button','',actor.name+' · '+departmentNames[actor.department]);button.type='button';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','office-request-dialog');button.addEventListener('click',()=>openActor(actor));central.append(button);}
     if($('team-meeting-state')&&!$('office-actual-meeting')){const link=node('button','office-reload','실제 자문회의 제출 현황 보기');link.id='office-actual-meeting';link.type='button';link.addEventListener('click',()=>{const target=$('team-meeting-state');for(let parent=target?.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;target?.scrollIntoView?.({block:'center',behavior:reducedMotion?.matches?'auto':'smooth'});});$('office-meeting')?.append(link);}
     selector.value=selectedDepartment;$('office-roster-count').textContent=actors.length+'개 직무 · 12개 팀 사무실 · 별도 ZERO 의장실 · 중앙 회의 12명';$('office-empty').hidden=true;
-    selected=actors.find(actor=>actor.id==='ZERO_FINAL_MANAGER');renderDirectory();selectActor(selected);filterDepartment();showMeetingReport(0);startSceneMotion();startOwnerMotion();syncMotion();
+    selected=actors.find(actor=>actor.id===(relayout?selectedId:'ZERO_FINAL_MANAGER'));renderDirectory();selectActor(selected);filterDepartment();if(!relayout)showMeetingReport(0);startSceneMotion();startOwnerMotion();if(relayout&&Number.isFinite(elapsed))for(const animation of motionAnimations)animation.currentTime=elapsed;syncMotion();
   }
   function selectActor(actor){
     if(!actor)return;selected=actor;
@@ -383,18 +383,17 @@
     for(const record of sceneActors.values()){const match=selectedDepartment==='ALL'||selectedDepartment==='MEETING'&&isLeader(record.actor)||record.actor.department===selectedDepartment;record.button.classList.toggle('is-muted',!match);record.figure.classList.toggle('is-muted',!match);}
     for(const [id,room]of rooms)room.classList.toggle('is-muted',selectedDepartment!=='ALL'&&id!==selectedDepartment);
     for(const button of world?.querySelectorAll('.office-room-lead-request')||[])button.hidden=button.dataset.department!==selectedDepartment;
-    for(const button of $('office-map').querySelectorAll('.office-room-link')){const active=button.dataset.room===selectedDepartment;button.setAttribute('aria-current',active?'page':'false');if(active&&$('office-map').clientWidth<600&&Number.isFinite(button.offsetLeft))$('office-map').querySelector('.office-room-navigator').scrollLeft=Math.max(0,button.offsetLeft-16);}
     updateSceneVisibility();fitScene();
   }
   function fitScene(){
     if(!world||!fit)return;const map=$('office-map'),overview=selectedDepartment==='ALL';
-    const area=overview?{x:0,y:0,width:WORLD_WIDTH,height:WORLD_HEIGHT}:selectedDepartment==='CHAIRPERSON'?chairpersonRoom:selectedDepartment==='MEETING'?{x:690,y:690,width:1240,height:1240}:roomLayout().find(room=>room.id===selectedDepartment);
+    if(floorGeometry(map.clientWidth||1200,map.clientHeight||720).key!==floorKey){renderActors(true);return;}
+    const area=overview?{x:0,y:0,width:WORLD_WIDTH,height:WORLD_HEIGHT}:selectedDepartment==='CHAIRPERSON'?chairpersonRoom:selectedDepartment==='MEETING'?meetingRoom:roomLayout().find(room=>room.id===selectedDepartment);
     if(!area)return;map.classList.toggle('office-overview',overview);
-    const viewportWidth=Math.max(1,(map.clientWidth||1200)-8),navigatorHeight=map.querySelector('.office-room-navigator')?.offsetHeight||0,hintHeight=map.querySelector('.office-scene-hint')?.offsetHeight||0;
-    const viewportHeight=Math.max(1,(map.clientHeight||720)-navigatorHeight-hintHeight-8);
+    const viewportWidth=Math.max(1,(map.clientWidth||1200)-8),viewportHeight=Math.max(1,(map.clientHeight||720)-24);
     const base=Math.min(viewportWidth/(area.width+(overview?0:70)),viewportHeight/(area.height+(overview?0:80))),scale=Math.min(1.65,base)*zoom;
     world.style.transform='scale('+scale+')';world.style.setProperty('--office-scene-scale',scale);world.style.setProperty('--office-label-font',Math.min(26,Math.max(13,(overview?10:14)/scale))+'px');world.style.setProperty('--office-meta-font',Math.min(22,Math.max(11,(overview?10:12)/scale))+'px');
-    world.style.setProperty('--office-summary-font',Math.min(48,14/scale)+'px');world.style.setProperty('--office-phone-font',(11/scale)+'px');world.style.setProperty('--office-summary-meta-font',Math.min(42,12/scale)+'px');
+    world.style.setProperty('--office-room-title-font',Math.min(38,Math.max(20,11/scale))+'px');world.style.setProperty('--office-summary-font',Math.min(48,14/scale)+'px');world.style.setProperty('--office-phone-font',(11/scale)+'px');world.style.setProperty('--office-summary-meta-font',Math.min(42,12/scale)+'px');
     fit.style.width=(WORLD_WIDTH*scale)+'px';fit.style.height=(WORLD_HEIGHT*scale)+'px';map.scrollTo?.({left:overview?0:Math.max(0,(area.x+area.width/2)*scale-viewportWidth/2),top:overview?0:Math.max(0,(area.y+area.height/2)*scale-viewportHeight/2),behavior:'auto'});
     if($('office-zoom-out'))$('office-zoom-out').disabled=zoom<=.8;if($('office-zoom-in'))$('office-zoom-in').disabled=zoom>=2.5;
   }
@@ -438,13 +437,12 @@
   }
   function motionAllowed(){return !motionPaused&&sceneVisible()&&!reducedMotion?.matches;}
   function startSceneMotion(){
-    const clock=document.timeline?.currentTime,layouts=roomLayout();let index=0;
+    const clock=document.timeline?.currentTime;let index=0;
     for(const record of sceneActors.values()){
       const phaseIndex=index++;if(!record.travel.animate||!record.button.animate)continue;
-      const area=isLeader(record.actor)?{x:690,y:690,width:1240,height:1240}:layouts.find(room=>room.id===record.actor.department),point=record.point;
-      const preferred=phaseIndex%2?-48:48,min=area.x+96-point.x,max=area.x+area.width-96-point.x;
-      let dx=Math.max(min,Math.min(max,preferred));if(Math.abs(dx)<24)dx=Math.max(min,Math.min(max,-preferred));
-      const away='translate('+Math.round(dx)+'px, '+Math.round(Math.min(24,area.y+area.height-96-point.y))+'px)',home='translate(0px, 0px)';
+      const point=record.point;
+      const dx=phaseIndex%2?-20:20;
+      const away='translate('+dx+'px, 4px)',home='translate(0px, 0px)';
       let duration=9200+(phaseIndex%5)*400,delay=-(phaseIndex*977%duration),frames=[{offset:0,transform:home},{offset:.1,transform:home},{offset:.28,transform:away},{offset:.42,transform:away},{offset:.62,transform:home},{offset:1,transform:home}],easing='cubic-bezier(.77,0,.175,1)';
       if(isLeader(record.actor)){
         const route=officeMeetingRoute(record),outStart=84500,outEnd=outStart+12000,backStart=outEnd+20000;duration=backStart+12000;delay=0;easing='linear';
@@ -658,7 +656,7 @@
       if(flow){const item=node('button','office-flow-team');item.type='button';item.dataset.bottleneck=String(bottleneck);item.dataset.roomState=roomState;item.append(node('strong','',name),node('span','',stateLabel+' · '+pending));if(stats.total){const bar=node('meter');bar.min=0;bar.max=100;bar.value=stats.submissionRate*100;bar.setAttribute('aria-label',name+' 결과 제출 '+stats.submitted+' / 접수 '+stats.total);item.append(bar);}item.addEventListener('click',focus);flow.append(item);}
       const room=roomLayout().find(room=>room.id===id);
       if(room&&overlays){const badge=node('button','office-room-summary');badge.type='button';badge.style.left=(room.x+18)+'px';badge.style.top=(room.y+14)+'px';badge.style.width=(room.width-36)+'px';badge.dataset.bottleneck=String(bottleneck);badge.dataset.roomState=roomState;badge.setAttribute('aria-label',name+' · '+staffing+' · '+pending+' · 방 확대');badge.append(node('strong','',name),node('span','',staffing),node('span','',stateLabel+' · '+pending));badge.addEventListener('click',focus);overlays.append(badge);
-        const owner=members.find(isLeader);if(owner){const request=node('button','office-room-lead-request','팀장 · 중앙 회의 연출석 → 업무 맡기기');request.type='button';request.dataset.department=id;request.style.left=(room.x+410)+'px';request.style.top=(room.y+room.height-48)+'px';request.style.width='170px';request.hidden=selectedDepartment!==id;request.setAttribute('aria-label',owner.name+'에게 업무 요청');request.addEventListener('click',()=>openActor(owner));overlays.append(request);}
+        const owner=members.find(isLeader);if(owner){const request=node('button','office-room-lead-request','팀장 · 중앙 회의 연출석 → 업무 맡기기');request.type='button';request.dataset.department=id;request.style.left=(room.x+room.width-180)+'px';request.style.top=(room.y+76)+'px';request.style.width='170px';request.hidden=selectedDepartment!==id;request.setAttribute('aria-label',owner.name+'에게 업무 요청');request.addEventListener('click',()=>openActor(owner));overlays.append(request);}
         if(capacity!==null&&capacity>members.length){const empty=node('div','office-team-vacancies');empty.style.left=(room.x+24)+'px';empty.style.top=(room.y+room.height-46)+'px';for(let index=0;index<Math.min(3,capacity-members.length);index++){const chair=node('span','office-empty-chair','빈');chair.title='근거가 있는 빈 자리';empty.append(chair);}overlays.append(empty);}
       }
       const section=[...($('office-directory')?.querySelectorAll('.office-directory-team')||[])].find(element=>element.dataset.department===id);
@@ -802,7 +800,7 @@
   $('office-lobby-request').addEventListener('click',()=>{const actor=actors.find(item=>item.id==='ZERO_FINAL_MANAGER');if(actor)openActor(actor);});
   const switchOfficeView=board=>{$('office-board').hidden=!board;$('office-scene-surface').hidden=board;$('office-meeting').hidden=board;$('office-view-board').setAttribute('aria-pressed',String(board));$('office-view-scene').setAttribute('aria-pressed',String(!board));if(!board)fitScene();syncMotion();};
   $('office-view-board').addEventListener('click',()=>switchOfficeView(true));$('office-view-scene').addEventListener('click',()=>switchOfficeView(false));
-  document.addEventListener?.('zero-view-changed',event=>{if(event.detail?.view==='team'){startMeeting();switchOfficeView(false);}syncMotion();});
+  document.addEventListener?.('zero-view-changed',event=>{if(event.detail?.view==='team'){finishMeeting();switchOfficeView(false);}syncMotion();});
   $('office-request-close').addEventListener('click',()=>$('office-request-dialog').close());
   $('office-reload').addEventListener('click',()=>{if(!submitting)load();});
   $('office-request-dialog').addEventListener('close',()=>{if(!submitting)$('office-instruction').value='';});

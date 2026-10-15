@@ -870,3 +870,16 @@ html[data-zero-view="workbench"] .page-header { position: absolute; width: 1px; 
 .install-guide li { padding-left: 4px; margin-top: 12px; line-height: 1.85; }
 .install-guide .muted-note { font-size: 14px; }
 @media (max-width: 560px) { .install-heading { align-items: flex-start; } .install-heading h2 { font-size: 20px; } }
+
+/* Short task groups and intact Korean words keep the office rail easy to scan. */
+html .rail { padding: 20px 14px; }
+html .rail-description { margin-bottom: 16px; }
+html .rail nav, html .rail .nav-group, html .more-menu .nav-group { display: grid; gap: 2px; }
+html .nav-group-label { margin: 18px 8px 6px; font-size: 12px; font-weight: 600; line-height: 1.5; }
+html .nav-group:first-child > .nav-group-label { margin-top: 4px; }
+html .rail .nav-item { min-width: 0; min-height: 36px; gap: 8px; padding: 7px 8px; border-radius: 7px; font-size: 14px; line-height: 20px; }
+html .rail .nav-item svg { flex: 0 0 18px; width: 18px; height: 18px; }
+html .rail .nav-item > span { min-width: 0; white-space: normal; word-break: keep-all; overflow-wrap: normal; line-height: 1.4; }
+html .rail-bottom { padding: 20px 8px 0; }
+html .more-menu .nav-item { min-height: 44px; gap: 10px; padding: 8px 10px; border-radius: 7px; white-space: normal; word-break: keep-all; }
+html .rail .nav-item:focus-visible, html .more-menu .nav-item:focus-visible { outline: 2px solid #1b64da; outline-offset: 2px; }

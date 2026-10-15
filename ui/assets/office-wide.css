@@ -1,95 +1,44 @@
-/* Keep the persisted 16x10 room intact inside a wider, uniformly fitted viewport. */
-@media(min-width:768px){
- html #lobby-view .lobby-scroll.zero-office-canvas-wrap{display:flex;align-items:center;justify-content:center;flex:1 1 0;height:auto;min-height:0;max-height:none;overflow:hidden;}
- html #lobby-view #lobby-stage.lobby-stage{width:var(--office-scene-w,100%)!important;height:var(--office-scene-h,auto)!important;aspect-ratio:16/10!important;max-width:100%;max-height:100%!important;min-width:0!important;min-height:0!important;margin:0!important;box-sizing:border-box!important;border:0!important;padding:0!important;flex:none;}
- html #lobby-view .lobby-main{min-height:0;}
- .social-dialog.lounge-dialog{width:min(1280px,calc(100vw - 48px));max-width:calc(100vw - 48px);}
- .social-dialog.lounge-dialog .plaza-stage{height:clamp(220px,48dvh,480px);min-height:180px;max-height:55dvh;}
- .social-dialog.lounge-dialog .plaza-stage .lounge-person{width:64px;max-width:64px;transform:translate(-50%,-100%);}
-}
-@media(min-width:1280px){
- #lobby-view[data-desktop-docked="true"]{min-width:0;min-height:0;height:100%;}
- #lobby-view[data-desktop-docked="true"] .lobby-scroll.zero-office-canvas-wrap{width:100%;min-width:0;}
- #lobby-view[data-desktop-docked="true"] .lobby-meta{flex-wrap:wrap;}
- #lobby-view[data-desktop-docked="true"] .lobby-meta .lobby-chip{max-width:100%;}
-}
-@media(min-width:768px) and (max-height:650px){.social-dialog.lounge-dialog .plaza-stage{height:220px;min-height:160px;max-height:38dvh;}}
-@media(prefers-reduced-motion:reduce){#lobby-view[data-desktop-docked="true"] .npc,#lobby-view[data-desktop-docked="true"] .npc *,.social-dialog.lounge-dialog .lounge-person{animation:none!important;transition:none!important;}}
-
-/* Override viewport.css's fixed canvas cap after the shell has reserved its controls. */
-html #lobby-view .lobby-scroll.zero-office-canvas-wrap{display:flex;align-items:center;justify-content:center;flex:1 1 0;height:auto;min-height:0;max-height:none;overflow:hidden;}
-html #lobby-view #lobby-stage.lobby-stage{width:var(--office-scene-w,100%)!important;height:var(--office-scene-h,auto)!important;aspect-ratio:16/10!important;max-width:100%;max-height:100%!important;min-width:0!important;min-height:0!important;margin:0!important;box-sizing:border-box!important;border:0!important;padding:0!important;flex:none;}
-html #lobby-view .lobby-main{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:6px 12px;min-height:0;min-width:0;}
-html #lobby-view .lobby-scroll.zero-office-canvas-wrap{grid-column:1/-1;grid-row:2;}
-html #lobby-view .lobby-meta{grid-column:1/-1;grid-row:3;min-width:0;flex-wrap:wrap;margin:0;}
-html #lobby-view .lobby-board{grid-column:1;grid-row:1;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:24px 28px 24px auto;gap:2px;min-width:0;margin:0;padding:5px 8px;}
-html #lobby-view .lobby-board .market-row{grid-column:1;grid-row:1;}
-html #lobby-view .lobby-board .trend-row{grid-column:1;grid-row:3;}
-html #lobby-view .lobby-board-row:nth-child(2){grid-column:1/-1;grid-row:2;}
-html #lobby-view .lobby-board-row:has(#lobby-returns){display:none;}
-html #lobby-view .board-source{grid-column:1;grid-row:4;display:block;}
-html #lobby-view .lobby-tick{font-size:13px;line-height:1.5;}
-html #lobby-view .lobby-board-tag{font-size:11px;min-width:58px;}
-html #lobby-view .lobby-ranking-board{grid-column:2;grid-row:1;min-width:0;min-height:0;height:112px;box-sizing:border-box;display:flex;flex-direction:column;padding:8px 10px;border:1px solid #d4dde5;border-radius:8px;background:#fff;overflow:hidden;}
-.lobby-ranking-board h3{font-size:14px;line-height:20px;margin:0;color:#233d58;}
-.lobby-ranking-live-status{font-size:11px;line-height:16px;margin:0 0 4px;color:#626d7b;}
-.lobby-ranking-viewport{min-height:0;overflow:hidden;flex:1;overscroll-behavior:contain;scrollbar-width:thin;}
-.lobby-ranking-track{will-change:transform;}
-.lobby-ranking-track[data-moving="true"]{animation:ranking-down var(--ranking-duration,18s) linear infinite;}
+/* Office routes give the scene the available viewport; saved coordinates stay unchanged. */
+html[data-zero-view="lobby"] main,html[data-zero-view="team"] main{height:calc(100dvh - var(--zero-header));padding:8px 12px;gap:0}
+html[data-zero-view="lobby"] main>footer,html[data-zero-view="team"] main>footer{display:none}
+html #lobby-view,html #team-view{position:relative;overflow:hidden}
+html #lobby-view>.lobby{height:100%;min-height:0;position:relative;display:flex;flex-direction:column;gap:0;overflow:hidden}
+html #lobby-view .lobby-layout,html #lobby-view .lobby-main{display:flex;flex:1;min-height:0;min-width:0;position:relative;width:100%}
+html #lobby-view .lobby-main{flex-direction:column}
+html #lobby-view .lobby-scroll.zero-office-canvas-wrap{position:relative;display:flex;flex-direction:column;flex:1;min-height:0;max-height:none;height:auto;overflow:hidden;background:#dce4db;border:1px solid #a6b6ae;border-radius:12px}
+html #lobby-view #lobby-stage.lobby-stage{width:100%!important;height:0!important;flex:1;min-height:0!important;max-height:none!important;aspect-ratio:auto!important;max-width:none;min-width:0!important;margin:0 0 92px!important;padding:0!important;border:0!important;border-radius:0;box-sizing:border-box!important}
+html #lobby-view .lobby-wallboard{--board-row:26px;--board-font:14px;position:relative;flex:none;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);align-items:stretch;gap:10px;margin:10px 12px 0;z-index:20}
+html #lobby-view .lobby-wallboard[data-size="compact"]{--board-row:21px}html #lobby-view .lobby-wallboard[data-size="large"]{--board-row:34px}
+html #lobby-view .lobby-wallboard[data-font="12"]{--board-font:12px}html #lobby-view .lobby-wallboard[data-font="16"]{--board-font:16px}
+html #lobby-view .lobby-board{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(3,var(--board-row)) 16px;gap:1px;min-width:0;margin:0;padding:5px 8px;background:#102d3c;border:2px solid #678692;border-radius:6px}
+html #lobby-view .lobby-board-row{min-width:0;grid-column:1}html #lobby-view .market-row{grid-row:1}html #lobby-view .lobby-board-row:nth-child(2){grid-row:2}html #lobby-view .trend-row{grid-row:3}html #lobby-view .lobby-board-row:has(#lobby-returns){display:none}
+html #lobby-view .board-source{grid-column:1;grid-row:4;font-size:10px;line-height:16px;display:block;color:#b7cfdb}html #lobby-view .lobby-tick{font-size:var(--board-font);line-height:1.4}html #lobby-view .lobby-board-tag{font-size:11px;min-width:58px;padding:1px 4px}
+html #lobby-view .lobby-ranking-board{min-width:0;display:flex;flex-direction:column;max-height:calc(var(--board-row)*3 + 30px);padding:7px 8px;background:#183b49;border:2px solid #678692;border-radius:6px;color:#eff7f4;overflow:hidden}
+.lobby-ranking-board h3{font-size:13px;line-height:18px;margin:0}.lobby-ranking-live-status{font-size:11px;line-height:15px;margin:0 0 3px;color:#c2d4da}.lobby-ranking-viewport{min-height:0;overflow:hidden;flex:1;overscroll-behavior:contain;scrollbar-width:thin}.lobby-ranking-track{will-change:transform}.lobby-ranking-track[data-moving="true"]{animation:ranking-down var(--ranking-duration,18s) linear infinite}
 @keyframes ranking-down{from{transform:translateY(-50%);}to{transform:translateY(0);}}
-.lobby-ranking-board:hover .lobby-ranking-track{animation-play-state:paused;}
-.lobby-ranking-board:focus-within .lobby-ranking-track{animation:none;transform:none;}
-.lobby-ranking-board:focus-within .lobby-ranking-viewport{overflow-y:auto;}
-.lobby-ranking-board:focus-within .lobby-ranking-live[aria-hidden="true"]{display:none;}
-.lobby-ranking-live{list-style:none;padding:0;margin:0;}
-@media(prefers-reduced-motion:reduce){.lobby-ranking-track[data-moving="true"]{animation:none;transform:none;}.lobby-ranking-live[aria-hidden="true"]{display:none;}.lobby-ranking-viewport{overflow-y:auto;}}
-.lobby-ranking-live-row{display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:4px;border-top:1px solid #eef0f3;font-size:12px;}
-.lobby-ranking-live-row button{min-width:0;min-height:44px;padding:4px 2px;border:0;background:none;color:#1b64da;text-align:left;font:inherit;overflow-wrap:anywhere;}
-.lobby-ranking-live-row strong{font-variant-numeric:tabular-nums;white-space:nowrap;}
-.lobby-ranking-live-row .gain{color:#c93b49;}.lobby-ranking-live-row .loss{color:#1b64da;}
-.lobby-roles-dialog .lobby-role-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
-.lobby-roles-dialog .lobby-role-card{min-width:0;padding:10px;border-bottom:1px solid #eef0f3;overflow-wrap:anywhere;}
-.lobby-roles-dialog .lobby-role-card strong,.lobby-roles-dialog .lobby-role-card small{display:block;}
-.lobby-roles-dialog .lobby-role-card button,.lobby-roles-dialog .lobby-role-nav button{min-height:44px;}
-.lobby-roles-dialog .lobby-role-nav{display:flex;align-items:center;justify-content:center;gap:12px;}
-.lobby-roles-dialog .lobby-role-caption{font-size:12px;line-height:1.5;white-space:normal;}
+.lobby-ranking-board:hover .lobby-ranking-track{animation-play-state:paused}.lobby-ranking-board:focus-within .lobby-ranking-track{animation:none;transform:none}.lobby-ranking-board:focus-within .lobby-ranking-viewport{overflow-y:auto}.lobby-ranking-board:focus-within .lobby-ranking-live[aria-hidden="true"]{display:none}.lobby-ranking-live{list-style:none;padding:0;margin:0}
+.lobby-ranking-live-row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:4px;border-top:1px solid #45616d;font-size:12px}.lobby-ranking-live-row button{min-width:0;min-height:30px;padding:4px 2px;border:0;background:none;color:#e7f2fb;text-align:left;font:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lobby-ranking-live-row strong{font-variant-numeric:tabular-nums;white-space:nowrap}.lobby-ranking-live-row .gain{color:#ff9aa4}.lobby-ranking-live-row .loss{color:#9ec8ff}
+.board-settings{position:absolute;right:0;top:100%;margin-top:4px;color:#254659;background:#fffffff2;border:1px solid #b6c7cf;border-radius:6px;font-size:12px;z-index:30}.board-settings summary{cursor:pointer;padding:5px 9px;min-height:28px;box-sizing:border-box}.board-settings label{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 9px}.board-settings select{min-height:30px;font:inherit;border:1px solid #a9bac4;border-radius:4px;padding:3px}
+html #lobby-view .lobby-hero{position:absolute;bottom:48px;left:12px;right:12px;z-index:21;margin:0;padding:0;display:flex;align-items:end;gap:8px;background:none;border:0;box-shadow:none;pointer-events:none}
+html #lobby-view .hero-text{min-width:0;flex:1;max-width:55%;padding:6px 9px;background:#fffffff2;border-radius:6px}html #lobby-view .hero-date{margin:0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html #lobby-view .hero-say{margin:2px 0 0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html #lobby-view .hero-cta{display:flex;flex-wrap:nowrap;gap:4px;pointer-events:auto;width:auto}html #lobby-view .hero-cta button{min-height:32px;padding:5px 9px;border-radius:6px;font-size:12px;white-space:nowrap}
+html #lobby-view .lobby-meta{position:absolute;bottom:8px;left:12px;right:12px;z-index:22;display:flex;align-items:center;gap:5px;min-height:32px;margin:0;flex-wrap:nowrap;pointer-events:none}html #lobby-view .lobby-meta>*{pointer-events:auto}html #lobby-view .lobby-meta button{min-height:32px;padding:4px 8px;font-size:12px;border-radius:6px;white-space:nowrap}html #lobby-view .lobby-chip{min-height:28px;padding:0 6px;font-size:11px;border-radius:6px;background:#fffffff2;white-space:nowrap}html #lobby-view .lobby-near{min-width:0;min-height:0;margin:0;font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html #lobby-view .lobby-pad{position:absolute;z-index:25;right:10px;bottom:100px;left:auto;margin:0}html #lobby-view #lobby-stage.office-sprites-ready .npc{width:clamp(28px,4cqw,64px);height:clamp(28px,4cqw,64px)}html #lobby-view #lobby-stage.office-sprites-ready .floor-billboard{visibility:hidden;pointer-events:none}
+html #team-view>.viewport-pages-body{overflow:auto;height:100%}html #team-view #office-panel{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:38px minmax(0,1fr);gap:6px 10px;height:100%;min-height:0;padding:0;border:0;background:none}
+html #team-view #office-panel .office-heading{grid-column:1;grid-row:1;margin:0;gap:0;align-items:center}html #team-view #office-panel .office-heading h2{font-size:17px;margin:0;white-space:nowrap}html #team-view #office-panel .office-heading p,html #team-view #office-panel .office-heading-status{display:none}
+html #team-view #office-panel .office-toolbar{grid-column:2;grid-row:1;margin:0;display:flex;align-items:center;gap:6px}html #team-view #office-panel .office-toolbar label{font-size:0;display:flex;align-items:center;width:170px;flex:0 1 170px}html #team-view #office-panel .office-toolbar select{width:100%;font-size:12px;min-height:32px;max-width:170px;padding:4px 8px}
+html #team-view #office-panel .office-scene-controls{display:flex;gap:4px}html #team-view #office-panel .office-scene-controls button,html #team-view #office-panel .office-view-switch button{font-size:12px;min-height:32px;padding:4px 8px;border-radius:6px;white-space:nowrap}
+html #team-view .office-tools{position:relative}html #team-view .office-tools summary{padding:6px 10px;border:1px solid #c0cdd4;border-radius:6px;background:#fff;font-size:12px;cursor:pointer}html #team-view .office-tools[open] .office-scene-controls{position:absolute;left:0;top:100%;min-width:280px;flex-wrap:wrap;background:#fff;padding:8px;z-index:40;border:1px solid #c0cdd4;border-radius:6px}html #team-view .office-tools:not([open]) .office-scene-controls{display:none}
+html #team-view #office-panel .office-view-switch{grid-column:3;grid-row:1;display:flex;align-items:center;gap:4px;margin:0}html #team-view #office-scene-surface:not([hidden]){grid-column:1/-1;grid-row:2;display:flex;min-height:0;max-height:none;height:100%;overflow:hidden}html #team-view #office-map{width:100%;height:100%;min-width:0;min-height:0;max-height:none;flex:1}html #team-view .office-room-navigator{display:none}
+html #team-view #office-empty:not([hidden]){position:absolute;top:48px;left:16px;z-index:10;max-width:calc(100% - 32px)}html #team-view #office-board:not([hidden]){grid-column:1/-1;grid-row:2;min-height:0;overflow:auto}
+html #team-view>.viewport-controls{position:absolute;right:12px;bottom:12px;z-index:24;min-height:32px;max-width:190px;padding:0;margin:0;background:#fffffff2;border-radius:6px}html #team-view>.viewport-controls button,html #team-view>.viewport-controls .viewport-page-count{display:none}html #team-view>.viewport-controls select{min-height:32px;padding:4px 6px;font-size:12px}html #team-view #office-records{padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.social-dialog.lounge-dialog{width:min(1440px,calc(100vw - 32px));max-width:calc(100vw - 32px)}.social-dialog.lounge-dialog .plaza-stage{height:clamp(220px,52dvh,620px);min-height:180px;max-height:58dvh}.social-dialog.lounge-dialog .plaza-stage .lounge-person{width:64px;max-width:64px;transform:translate(-50%,-100%)}
+#lobby-view[data-desktop-docked="true"]{min-width:0;min-height:0;height:100%}.lobby-roles-dialog .lobby-role-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lobby-roles-dialog .lobby-role-card{min-width:0;padding:10px;border-bottom:1px solid #eef0f3;word-break:keep-all;overflow-wrap:break-word}.lobby-roles-dialog .lobby-role-card strong,.lobby-roles-dialog .lobby-role-card small{display:block}.lobby-roles-dialog .lobby-role-nav{display:flex;align-items:center;justify-content:center;gap:12px}.lobby-roles-dialog .lobby-role-caption{font-size:12px;line-height:1.5;white-space:normal}
+@media(min-width:768px){html #team-view #office-panel .office-layout{width:100%}}
 @media(max-width:767px){
- html #lobby-view .lobby-board{grid-template-rows:22px 26px 22px auto;gap:1px;padding:4px 5px;}
- html #lobby-view .lobby-main{column-gap:6px;}
- html #lobby-view .lobby-ranking-board{padding:4px;height:104px;}
- .lobby-ranking-board h3{font-size:12px;}
- .lobby-ranking-live-status{display:none;}.lobby-ranking-board:has(#lobby-ranking-live:empty) .lobby-ranking-live-status{display:block;}
- .lobby-ranking-live-row{grid-template-columns:1fr auto;font-size:11px;}
- .lobby-ranking-live-row button{grid-column:1/-1;grid-row:2;min-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
- html #lobby-view .lobby-tick{font-size:12px;}
- html #lobby-view .lobby-board-tag{min-width:0;font-size:10px;padding:1px 3px;}
- html #lobby-view .lobby-meta .lobby-chip{padding:0 4px;}
- html #lobby-view .lobby-meta button{padding:4px 6px;}
- html #lobby-view .lobby-pad{bottom:172px;}
+ html[data-zero-view="lobby"] main,html[data-zero-view="team"] main{height:calc(100dvh - var(--zero-header) - 52px - env(safe-area-inset-bottom,0px));padding:4px}
+ html #lobby-view .lobby-wallboard{--board-row:23px;gap:5px;margin:5px 5px 0}html #lobby-view .lobby-wallboard[data-size="large"]{--board-row:28px}html #lobby-view .lobby-board{padding:3px}html #lobby-view .lobby-board-tag{font-size:9px;min-width:0;padding:1px 2px}html #lobby-view .lobby-ranking-board{padding:4px 3px}.lobby-ranking-board h3{font-size:11px;line-height:16px}.lobby-ranking-live-status{font-size:10px;line-height:13px}.lobby-ranking-live-row{grid-template-columns:16px minmax(0,1fr);font-size:11px}.lobby-ranking-live-row strong{grid-column:2}.lobby-ranking-live-row button{min-height:44px}.board-settings summary{min-height:36px;padding:8px}.board-settings select{min-height:44px}
+ html #lobby-view .hero-text{display:none}html #lobby-view .lobby-hero{bottom:54px;left:8px;right:8px}html #lobby-view .hero-cta{gap:4px;width:100%}html #lobby-view .hero-cta button{min-height:44px;padding:4px 7px;font-size:11px}html #lobby-view #hero-talk{display:none}
+ html #lobby-view .lobby-meta{bottom:6px;left:8px;right:8px;gap:4px}html #lobby-view .lobby-meta button{min-height:44px;padding:4px 6px;font-size:11px}html #lobby-view .lobby-meta .lobby-chip{display:none}html #lobby-view .lobby-meta #lobby-count{display:inline-flex;font-size:10px}html #lobby-view .lobby-pad{bottom:110px;right:8px;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);gap:2px}html #lobby-view .lobby-pad button{min-width:44px;min-height:44px;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+ html #team-view #office-panel{grid-template-columns:auto minmax(0,1fr);grid-template-rows:44px 44px minmax(0,1fr);gap:3px}html #team-view #office-panel .office-heading h2{font-size:14px}html #team-view #office-panel .office-toolbar{grid-column:2;justify-content:flex-end;gap:3px}html #team-view #office-panel .office-toolbar label{width:128px;flex:0 1 128px}html #team-view #office-panel .office-toolbar select{max-width:128px;min-height:44px}html #team-view #office-panel .office-view-switch{grid-column:1/-1;grid-row:2;gap:3px}html #team-view #office-panel .office-view-switch button{min-height:44px;font-size:11px;padding:4px 7px}html #team-view .office-tools summary{min-height:44px;box-sizing:border-box;padding:13px 7px;font-size:11px}html #team-view .office-tools[open] .office-scene-controls{left:auto;right:0;min-width:240px}html #team-view #office-scene-surface:not([hidden]),html #team-view #office-board:not([hidden]){grid-row:3}html #team-view>.viewport-controls{top:48px;bottom:auto;right:4px;max-width:156px}html #team-view>.viewport-controls select{min-height:44px}
 }
-@media(max-height:500px){html #lobby-view .lobby-ranking-board{height:82px;padding:2px 6px;}html #lobby-view .lobby-ranking-live-status{display:none;}.lobby-ranking-board:has(#lobby-ranking-live:empty) .lobby-ranking-live-status{display:block;}html #lobby-view .lobby-board{grid-template-rows:20px 24px 20px;}html #lobby-view .board-source{display:none;}}
-/* The team scene keeps its own roster, movement and controls. Only release its canvas cap. */
-html #team-view{overflow-y:auto;}
-html #team-view #office-panel{display:flex;flex-direction:column;height:100%;min-height:0;gap:6px;}
-html #team-view #office-panel > :not(#office-scene-surface):not(#office-board){flex:none;}
-html #team-view #office-records{padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;}
-html #team-view #office-panel .office-heading p{margin:2px 0;font-size:12px;}
-html #team-view #office-panel .office-view-switch{margin:0;gap:6px;}
-html #team-view #office-board:not([hidden]){flex:1;min-height:0;overflow:auto;}
-html #team-view #office-panel .office-heading{margin-bottom:6px;gap:12px;}
-html #team-view #office-panel .office-heading h2{font-size:22px;}
-html #team-view #office-panel .office-toolbar{margin-bottom:6px;gap:6px;}
-html #team-view #office-scene-surface:not([hidden]){flex:1;display:flex;height:auto;min-height:160px;max-height:none;overflow:hidden;}
-html #team-view #office-scene-surface[hidden]{display:none;}
-html #team-view #office-panel .office-heading-status{max-width:40%;}
-@media(max-width:767px){html #team-view #office-panel .office-heading{flex-wrap:wrap;gap:4px;}html #team-view #office-panel .office-heading-status{max-width:100%;}html #team-view #office-panel .office-heading-status p{display:none;}html #team-view #office-panel .office-toolbar{gap:4px;margin:0;}html #team-view #office-panel .office-scene-controls{flex-wrap:nowrap;max-width:100%;overflow:auto;scrollbar-width:thin;}html #team-view #office-panel .office-scene-controls button{white-space:nowrap;flex:none;}html #team-view #office-scene-surface:not([hidden]){min-height:160px;}}
-html #team-view #office-map{flex:1;min-width:0;width:100%;height:100%;min-height:0;max-height:none;}
-/* Long scripted greetings must never take space away from the dealing room. */
-html #lobby-view .lobby-hero{flex-wrap:nowrap;gap:8px;}
-html #lobby-view .hero-text{flex:1;min-width:0;}
-html #lobby-view .hero-say,html #lobby-view .hero-date{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;}
-html #lobby-view .hero-cta{flex:none;width:auto;flex-wrap:nowrap;}
-@media(max-width:767px){html #lobby-view .hero-cta{width:100%;}html #lobby-view #hero-talk{display:none;}html #lobby-view .lobby-meta .lobby-chip{display:none;}html #lobby-view .lobby-meta #lobby-count{display:inline-flex;font-size:11px;}html #lobby-view .lobby-meta{justify-content:flex-start;}}
-
-
-@media(max-width:767px) and (max-height:650px){html #lobby-view .lobby-ranking-board{height:104px;padding:4px;}html #lobby-view .lobby-ranking-live-status{display:none;}.lobby-ranking-board:has(#lobby-ranking-live:empty) .lobby-ranking-live-status{display:block;}}
+@media(prefers-reduced-motion:reduce){.lobby-ranking-track[data-moving="true"]{animation:none;transform:none}.lobby-ranking-live[aria-hidden="true"]{display:none}.lobby-ranking-viewport{overflow-y:auto}#lobby-view[data-desktop-docked="true"] .npc,#lobby-view[data-desktop-docked="true"] .npc *,.social-dialog.lounge-dialog .lounge-person{animation:none!important;transition:none!important}}

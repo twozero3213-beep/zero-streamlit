@@ -392,3 +392,21 @@ html[data-zero-view='team'] #notice { display:none; }
 .office-map .office-owner .office-actor-name{font-size:clamp(16px,calc(11px / var(--office-scene-scale,1)),50px)}
 .office-overview .office-actor .office-actor-label{visibility:hidden}
 .office-overview .office-actor:hover .office-actor-label,.office-overview .office-actor:focus-visible .office-actor-label{visibility:visible}
+
+/* The floor changes its room grid; people and tap targets keep one uniform scale. */
+.office-scene-world{width:auto;height:auto}
+.office-scene-svg,.office-hotspots{width:100%;height:100%}
+.office-map.office-overview{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.office-map .office-scene-fit{margin:auto;flex:none}
+.office-map .office-scene-hint{position:absolute;left:0;right:0;bottom:0;margin:0;padding:3px 8px;background:#183849;color:#e2eeec;font-size:10px;line-height:1.3;text-align:center;pointer-events:none}
+.office-map .office-room-title{visibility:visible;font-size:var(--office-room-title-font,20px)}
+.office-map.office-overview .office-room-description,.office-map.office-overview .office-room-headcount,.office-map.office-overview .office-room-reservation{visibility:hidden}
+.office-map .office-central-title{font-size:var(--office-room-title-font,24px)}
+.office-map .office-actor .office-actor-label{top:82px}
+.office-map .office-owner .office-actor-label{top:82px}
+.office-map.office-overview .office-actor-bubble{width:160px;left:10px;top:-36px;font-size:var(--office-meta-font,13px)}
+.office-map.office-overview .office-actor.is-speaking .office-actor-status{display:none}
+.office-map.office-overview .office-owner .office-actor-bubble{width:160px;left:10px;top:-36px}
+.office-map.office-overview .office-room-summary span{display:none}
+.office-map.office-overview .office-room-summary strong{font-size:var(--office-room-title-font,20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.office-map.office-overview .office-room-title{visibility:hidden}

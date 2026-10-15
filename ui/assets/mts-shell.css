@@ -117,3 +117,38 @@ html #comparison-view .comparison-cards p,html #comparison-view .comparison-card
 html #comparison-view .period-comparison{margin-top:12px}
 @media(max-width:1023px){html #comparison-view .comparison-cards{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.mts-subnav button,.mobile-tab,.top-nav-item{transition:none}}
+
+/* One shell boundary keeps desktop controls compact and narrow-screen touch targets intact. */
+html .global-header { gap: 8px; }
+html .global-header .global-search-wrap label { border-radius: 8px; gap: 8px; padding-inline: 10px; }
+html .global-header .global-search-wrap input { line-height: 20px; padding-block: 0; }
+html .global-header .member-entry, html .global-header .icon-button { border-radius: 7px; }
+html .mts-subnav { gap: 4px; min-height: 36px; }
+html .mts-subnav button { min-height: 36px; min-width: 36px; padding: 4px 10px; border-radius: 6px; line-height: 20px; font-size: 13px; color: var(--secondary); }
+html .mts-subnav button.active { color: #1b64da; }
+html .mts-subnav #refresh { min-height: 36px; min-width: 36px; padding: 4px 8px; }
+html .global-header button:focus-visible, html .mts-subnav button:focus-visible { outline: 2px solid #1b64da; outline-offset: 2px; }
+@media (min-width: 901px) {
+  html .viewport-controls { min-height: 34px; gap: 6px; }
+  html .viewport-controls button, html .viewport-controls select { min-height: 34px; min-width: 34px; padding: 4px 8px; border-radius: 6px; font-size: 13px; line-height: 20px; }
+  html .global-navigation .top-nav-item { min-height: 34px; gap: 4px; padding: 5px 8px; border-radius: 6px; line-height: 20px; }
+  html .global-header .global-search-wrap label, html .global-header .global-search-wrap input { min-height: 34px; height: 34px; }
+  html .global-header .member-entry { min-height: 34px; padding: 5px 10px; line-height: 20px; }
+  html .global-header .icon-button { min-height: 34px; min-width: 34px; padding: 6px; }
+  html .global-header .global-search-results { inset-block-start: calc(100% + 6px); }
+}
+@media (max-width: 900px) {
+  html:root { --zero-header: 52px; }
+  html .viewport-controls { min-height: 44px; }
+  html .viewport-controls button, html .viewport-controls select { min-height: 44px; min-width: 44px; }
+  html .global-header { padding-block: 4px; }
+  html .global-header .global-search-wrap label, html .global-header .global-search-wrap input { min-height: 44px; height: 44px; }
+  html .global-header .global-search-wrap input { font-size: 16px; }
+  html .global-header .member-entry { min-height: 44px; padding: 6px 10px; line-height: 20px; }
+  html .global-header .icon-button { min-height: 44px; min-width: 44px; }
+  html .mts-subnav { min-height: 44px; flex-wrap: wrap; gap: 2px; overflow: visible; }
+  html .mts-subnav button, html .mts-subnav #refresh { min-height: 44px; min-width: 44px; padding: 6px 9px; }
+}
+@media (max-width: 560px) {
+  html .global-header .global-search-results { inset-block-start: 56px; }
+}

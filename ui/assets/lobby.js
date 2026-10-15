@@ -70,7 +70,12 @@
     syncNpcLabel(entity);
   }
 
-  const board=$('lobby-board'),boardHome=board?.parentElement,boardNext=board?.nextSibling;
+  const board=$('lobby-board'),wallboard=$('lobby-wallboard');
+  if(wallboard&&board)wallboard.prepend(board);
+  const boardHome=board?.parentElement,boardNext=board?.nextSibling;
+  function setBoardPreference(id,key,allowed){const control=$(id);if(!control)return;const apply=()=>{const value=allowed.includes(control.value)?control.value:allowed[1];control.value=value;if(wallboard)wallboard.dataset[key]=value;store.set('zero-board-'+key,value);};const saved=store.get('zero-board-'+key);if(allowed.includes(saved))control.value=saved;control.addEventListener('change',apply);apply();}
+  setBoardPreference('lobby-board-size','size',['compact','normal','large']);
+  setBoardPreference('lobby-board-font','font',['12','14','16']);
   let fullBoardDialog=null;
   function syncNpcLabel(entity){
     const ready=stage.dataset.spriteRendering==='ready';
@@ -730,7 +735,7 @@
       rankingBoard=node('aside','lobby-ranking-board');rankingBoard.id='lobby-ranking-board';rankingBoard.setAttribute('aria-label','인증 회원 연습 랭킹');
       const title=node('h3','','연습 랭킹'),status=node('p','lobby-ranking-live-status'),viewport=node('div','lobby-ranking-viewport'),track=node('div','lobby-ranking-track'),list=node('ol','lobby-ranking-live');
       status.id='lobby-ranking-live-status';track.id='lobby-ranking-track';list.id='lobby-ranking-live';viewport.tabIndex=0;viewport.setAttribute('aria-label','인증 회원 연습 수익률 · 위에서 아래로 이동 · 선택하면 멈춤');
-      track.append(list);viewport.append(track);rankingBoard.append(title,status,viewport);(view.querySelector('.lobby-main')||view).append(rankingBoard);
+      track.append(list);viewport.append(track);rankingBoard.append(title,status,viewport);(wallboard||view.querySelector('.lobby-main')||view).append(rankingBoard);
     }
     $('lobby-ranking-live-status').textContent=S.boardMeta?.state==='AVAILABLE'?(ranked.length?'인증 회원 · 연습 수익률':'참가한 인증 회원이 없어요'):'조회 중 · 순위 보류';
     const track=$('lobby-ranking-track'),signature=JSON.stringify(ranked.map(row=>[row.nick,row.rank,row.percent]));
@@ -970,10 +975,9 @@
     if(!host)return;
     const width=host.clientWidth,height=host.clientHeight;
     if(!(width>0&&height>0))return;
-    // Fit the same 16x10 saved world; no extra columns or collision coordinates are created.
-    const fitted=Math.min(width,height*1.6);
-    stage.style.setProperty('--office-scene-w',fitted+'px');
-    stage.style.setProperty('--office-scene-h',fitted/1.6+'px');
+    // Saved coordinates stay 16x10; the renderer keeps figures proportional in this viewport.
+    stage.style.setProperty('--office-scene-w',width+'px');
+    stage.style.setProperty('--office-scene-h',height+'px');
   }
   function fitFloor() {
     const header = document.querySelector('.global-header');

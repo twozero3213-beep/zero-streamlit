@@ -23,8 +23,9 @@
       }else body.append(child);
     }
     nav.append(previous,select,status,next);view.append(body,nav);view.classList.add('viewport-paged');
+    if(view.id==='team-view'){nav.setAttribute('aria-label','팀 사무실과 업무 자료');select.setAttribute('aria-label','사무실 또는 업무 자료 선택');}
     let page=0,selected=null,scheduled=false;
-    const label=(element,index)=>element.querySelector('h2,h3')?.textContent||element.getAttribute('aria-label')||({'team-grid':'팀 구성','office-directory':'팀별 담당 업무','news-list':'뉴스 목록','macro-list':'경제 지표','research-ranks':'종목 순위','company-content':'투자회사','community-list':'커뮤니티'}[element.id])||'내용 '+(index+1);
+    const label=(element,index)=>element.classList.contains('office-ledger-section')?'직원별 제출 기록':element.querySelector('h2,h3')?.textContent||element.getAttribute('aria-label')||({'team-grid':'팀 구성','office-directory':'팀별 담당 업무','news-list':'뉴스 목록','macro-list':'경제 지표','research-ranks':'종목 순위','company-content':'투자회사','community-list':'커뮤니티'}[element.id])||'내용 '+(index+1);
     function apply(){
       const sections=[...body.children].filter(element=>!element.hidden&&element.tagName!=='DIALOG');
       const retained=sections.indexOf(selected);page=sectionModel(sections.length,retained<0?page:retained).current;selected=sections[page]||null;

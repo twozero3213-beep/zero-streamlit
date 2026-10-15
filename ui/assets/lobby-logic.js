@@ -64,9 +64,9 @@
     if (typeof value !== 'string' || value.length>100) return null;
     const normalized=value.normalize('NFKC').trim(); if (/\p{C}/u.test(normalized)) return null;
     const keyword=normalized.replace(/ +/g,' '), compact=keyword.replace(/[^\p{L}\p{N}]/gu,''),rawCompact=value.replace(/[^\p{L}\p{N}]/gu,''),letters=keyword.replace(/[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\ud7b0-\ud7ff]/g,'');
-    const sensitive=/국민의힘|민주당|조국혁신당|개혁신당|정의당|진보당|기본소득당|사회민주당|녹색당|새누리당|국민의당|자유한국당|공화당|노동당|정치|정당|선거|대통령|탄핵|국회|대선|총선|여당|야당|시위|파업|사망|사고|폭행|참사|재난|지진|홍수|침수|태풍|산불|화재|붕괴|테러|전쟁|학대|성폭행|성추행|성폭력|성범죄|강간|자살|살인|실종|구속|체포|혐의|피해|논란|폭로|혐오|욕설|혈당|당뇨|암환자|성인|야동|포르노|음란|도박|카지노|토토|마약|씨발|시발|씨팔|병신|지랄|좆|새끼|개년|개놈|엿먹|\b(?:war|death|murder|arrest|porn|casino|betting|suicide|terror|fuck|shit|sex|av)\b/i;
+    const sensitive=/폭력|폭동|흉기|살해|성착취|성매매|성접대|불법촬영|음주운전|이재명|윤석열|한동훈|김건희|조국|홍준표|지지율|정권|국무총리|장관|국민의힘|민주당|조국혁신당|개혁신당|정의당|진보당|기본소득당|사회민주당|녹색당|새누리당|국민의당|자유한국당|공화당|노동당|정치|정당|선거|대통령|탄핵|국회|대선|총선|여당|야당|시위|파업|사망|사고|폭행|참사|재난|지진|홍수|침수|태풍|산불|화재|붕괴|테러|전쟁|학대|성폭행|성추행|성폭력|성범죄|강간|자살|살인|실종|구속|체포|혐의|피해|논란|폭로|혐오|욕설|혈당|당뇨|암환자|성인|야동|포르노|음란|도박|카지노|토토|마약|씨발|시발|씨팔|병신|지랄|좆|새끼|개년|개놈|엿먹|\b(?:war|death|murder|arrest|porn|casino|betting|suicide|terror|fuck|shit|sex|av)\b/i;
     const extra=/민생당|자유통일당|ㅂㅅ|ㅈㄹ|ㄲㅈ|ᄇᄉ|ᄌᄅ|ᄁᄌ|썅|꺼져/;
-    if([value,normalized,rawCompact,compact].some(text=>extra.test(text)))return null;
+    if(/[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\ud7b0-\ud7ff]/u.test(normalized)||[value,normalized,rawCompact,compact].some(text=>extra.test(text)))return null;
     return [...keyword].length>=2&&[...keyword].length<=15&&/^[\p{L}\p{N} ·&.+-]+$/u.test(keyword)&&/\p{L}/u.test(letters)&&!sensitive.test(value)&&!sensitive.test(rawCompact)&&!sensitive.test(normalized)&&!sensitive.test(compact)&&!/[ᄉᄊ]ᄇ/.test(compact)?keyword:null;
   }
   function trendLines(rows) {
