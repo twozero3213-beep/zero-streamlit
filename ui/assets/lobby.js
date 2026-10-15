@@ -1,4 +1,4 @@
-/* ZERO office home screen: the team at work, your own character, scripted staff chat, a news board,
+/* ZERO office home screen: the team at work, your own character, contextual AI staff chat, a news board,
    a tutorial and (through ZEROLobby) visits to other users' offices. Rules live in lobby-logic.js. */
 (() => {
   'use strict';
@@ -126,7 +126,7 @@
     const nick=window.ZEROLobbyUsers?.session()?.nick||S.ownerNick;if(!nick)return false;
     if(revision!==undefined&&(!Number.isSafeInteger(revision)||revision<0||S.ownerNick===nick&&S.layoutRevision!==null&&revision<S.layoutRevision))return false;
     S.ownerNick=nick;S.ownerLayout=layout;S.layoutRevision=revision??null;S.ownerLayoutConfirmed=true;
-    if(S.mode==='own'&&S.sceneOwner===nick&&S.player){S.layout=layout;sceneEpoch++;S.chatNpc=null;buildStage();if(S.active){proximity();ensureLoop();}}return true;
+    if(S.mode==='own'&&S.sceneOwner===nick&&S.player){S.layout=layout;sceneEpoch++;closeChat();S.chatNpc=null;buildStage();if(S.active){proximity();ensureLoop();}}return true;
   }
   function loadOwnerLayout(){
     const user=window.ZEROLobbyUsers;if(S.layoutPending||S.ownerLayoutConfirmed||!window.ZEROOfficeLayout||!user?.request||user.session()?.nick!==S.sceneOwner)return;
@@ -307,25 +307,133 @@
   }
 
   // ---- chat -----------------------------------------------------------------------------------
-  const chat = {dialog: $('lobby-chat'), log: $('lobby-chat-log'), title: $('lobby-chat-title'), role: $('lobby-chat-role'), topics: $('lobby-chat-topics'), form: $('lobby-chat-form'), input: $('lobby-chat-input')};
+  const chat = {dialog: $('lobby-chat'), log: $('lobby-chat-log'), title: $('lobby-chat-title'), role: $('lobby-chat-role'), topics: $('lobby-chat-topics'), form: $('lobby-chat-form'), input: $('lobby-chat-input'), send: $('lobby-chat-send'), status: $('lobby-chat-status'), retry: $('lobby-chat-retry')};
+  const dialogueHistories = new Map();
+  const dialogueDepartments = new Set(['ZERO_FINAL_MANAGER','GREENBLATT','THORP','BOGLE','WALL_STREET_CHIEF_ANALYST','QUANT_RESEARCH_CHIEF','GLOBAL_MACRO_CHIEF','PORTFOLIO_CONSTRUCTION_CHIEF','EXECUTION_OPERATIONS_CHIEF','DATA_ENGINEERING_CHIEF','MODEL_VALIDATION_CHIEF','PRODUCT_QUALITY_TEAM']);
+  let activeDialogue = null;
+  function dialogueBase() { return String(document.querySelector('meta[name="zero-lobby-api"]')?.content || '').trim().replace(/\/+$/, ''); }
+  function dialogueKey(npc) { return JSON.stringify([S.mode, S.mode === 'visit' ? S.visit?.nick : S.mode === 'own' ? S.sceneOwner : '', npc.id]); }
+  function dialoguePersona(npc) {
+    if (S.mode === 'visit' || S.visit) return 'common';
+    if (S.mode === 'zero') return dialogueDepartments.has(npc.department) ? npc.department : 'common';
+    const display = String(npc.display_persona || '').toLowerCase();
+    return new Map([['value','value'],['trend','momentum'],['momentum','momentum'],['dividend','dividend'],['volatility','risk'],['risk','risk'],['common','common']]).get(display) || 'common';
+  }
+  function dialogueHistory(npc) {
+    const key = dialogueKey(npc), history = dialogueHistories.get(key) || {messages: [], question: null, error: ''};
+    dialogueHistories.delete(key); dialogueHistories.set(key, history);
+    while (dialogueHistories.size > 32) dialogueHistories.delete(dialogueHistories.keys().next().value);
+    return history;
+  }
   function say(kind, text) { const row = node('p', 'chat-msg ' + kind, text); chat.log.append(row); chat.log.scrollTop = chat.log.scrollHeight; }
-  function ask(question) {
-    if (!S.chatNpc) return;
-    say('me', question);
-    say('bot', S.visit ? '이 사무실의 직원 구성과 맡은 일은 주인이 공개하지 않았어요. 제가 아는 건 오늘 날씨 이야기 정도예요.' : L.reply(S.chatNpc, question, {now: new Date(), weather: S.weather}));
+  function renderDialogue(history) {
+    chat.log.replaceChildren();
+    if (!history.messages.length && !history.question) {
+      if (S.chatNpc?.lastSmallTalk) say('reference', '참고 대사 (AI 답변 아님): ' + S.chatNpc.lastSmallTalk.slice(0, 2000));
+      else say('notice', '주제를 고르거나 질문을 직접 입력해 대화를 시작하세요.');
+    }
+    history.messages.forEach(message => say(message.role === 'user' ? 'me' : 'bot', message.content));
+    if (history.question) say('me', history.question);
+    const pending = activeDialogue?.history === history;
+    chat.status.textContent = pending ? 'AI가 답변을 생각 중이에요…' : history.error || (dialogueBase() ? 'AI 대화 · 질문을 보내면 연결해요.' : 'AI 연결 불가 · 아직 대화 서비스가 연결되지 않았어요.');
+    chat.status.setAttribute('aria-busy', String(pending));
+    chat.send.disabled = pending;
+    chat.topics.querySelectorAll('button').forEach(button => { button.disabled = pending; });
+    chat.retry.hidden = pending || !history.question || !history.error;
+  }
+  function cancelDialogue() {
+    const request = activeDialogue;
+    if (!request) return;
+    activeDialogue = null;
+    clearTimeout(request.timer); request.controller.abort();
+    request.history.error = 'AI 답변 요청을 취소했어요. 같은 직원에게 다시 시도할 수 있어요.';
+  }
+  function closeChat() {
+    cancelDialogue();
+    if (chat.dialog.open) chat.dialog.close();
+  }
+  function dialogueError(code) {
+    return ({
+      DIALOGUE_DISABLED: 'AI 연결 불가 · 대화 서비스가 아직 활성화되지 않았어요.',
+      DIALOGUE_RATE_LIMITED: 'AI 요청이 많아요. 잠시 뒤 다시 시도해 주세요.',
+      DIALOGUE_INVALID: 'AI가 질문을 처리하지 못했어요. 질문을 수정해 주세요.',
+      DIALOGUE_PRIVATE_INPUT: '이메일·전화번호·API 키를 지우고 다시 보내 주세요.',
+      DIALOGUE_TIMEOUT: 'AI 답변 시간이 초과됐어요. 다시 시도해 주세요.'
+    })[code] || 'AI 연결 불가 · 답변을 받지 못했어요. 다시 시도해 주세요.';
+  }
+  async function ask(question, retry = false) {
+    if (!S.active || !S.chatNpc || !chat.dialog.open || activeDialogue) return;
+    const history = dialogueHistory(S.chatNpc);
+    question = String(retry ? history.question || '' : question).trim();
+    if (!question) return;
+    if (question.length > 600) { chat.status.textContent = '질문은 600자 이내로 입력해 주세요.'; return; }
+    history.question = question; history.error = '';
+    const base = dialogueBase();
+    if (!base) { history.error = dialogueError('DIALOGUE_DISABLED'); renderDialogue(history); return; }
+    // Keep complete user/assistant pairs; the final user question makes at most 11 messages.
+    const messages = history.messages.slice(-10).map(message => ({role: message.role, content: message.content}));
+    while (messages.reduce((total, message) => total + message.content.length, question.length) > 6000) messages.splice(0, 2);
+    messages.push({role: 'user', content: question});
+    const weather = S.weather && Number.isInteger(S.weather.code) && Number.isFinite(S.weather.temp) ? {code:S.weather.code, temp:S.weather.temp} : null;
+    const payload = {persona:dialoguePersona(S.chatNpc), messages, weather};
+    const request = {history, key:dialogueKey(S.chatNpc), epoch:sceneEpoch, controller:new AbortController(), timer:null};
+    activeDialogue = request; renderDialogue(history);
+    const current = () => activeDialogue === request && S.active && chat.dialog.open && request.epoch === sceneEpoch && S.chatNpc && dialogueKey(S.chatNpc) === request.key;
+    try {
+      const deadline = new Promise((_, reject) => {
+        request.timer = setTimeout(() => { request.controller.abort(); reject(Error('DIALOGUE_TIMEOUT')); }, 30000);
+      });
+      const data = await Promise.race([deadline, (async () => {
+        const response = await fetch(`${base}/api/lobby/dialogue`, {method:'POST', credentials:'omit', cache:'no-store', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload), signal:request.controller.signal});
+        const body = await response.json();
+        if (!response.ok) throw Error(typeof body?.error === 'string' ? body.error : 'DIALOGUE_UNAVAILABLE');
+        if (body?.state !== 'AVAILABLE' || body.mode !== 'AI' || typeof body.reply !== 'string' || !body.reply.trim() || body.reply.length > 2000) throw Error('DIALOGUE_UNAVAILABLE');
+        return body;
+      })()]);
+      if (!current() || request.controller.signal.aborted) return;
+      history.messages.push({role:'user', content:question}, {role:'assistant', content:data.reply});
+      history.messages = history.messages.slice(-12);
+      history.question = null; history.error = '';
+    } catch (error) {
+      if (!current()) return;
+      history.error = dialogueError(error?.message);
+      if (error?.message === 'DIALOGUE_PRIVATE_INPUT') {
+        // Rejected private input must never enter later requests or the retry history.
+        history.messages = []; history.question = null; chat.input.value = question;
+      }
+    } finally {
+      clearTimeout(request.timer);
+      if (activeDialogue === request) {
+        const visible = current(); activeDialogue = null;
+        if (visible) renderDialogue(history);
+      }
+    }
   }
   function openChat(npc) {
-    S.chatNpc = npc; chat.title.textContent = npc.name;chat.title.title=FICTION_NOTICE;chat.role.textContent = (S.visit ? '이 사무실의 직원' : npc.role)+' · '+FICTION_NOTICE;
-    chat.log.replaceChildren();if(npc.lastSmallTalk)say('bot',npc.lastSmallTalk);say('bot', S.visit ? '안녕하세요! 이 사무실에 오신 걸 환영해요.' : '안녕하세요, ' + npc.name + '입니다. 가상 직원이라 정해진 대본으로 답해요. 무엇이든 물어보세요.');
-    chat.topics.replaceChildren(...L.TOPICS.map(([label, question]) => { const chip = node('button', 'chat-chip', label); chip.type = 'button'; chip.addEventListener('click', () => ask(question)); return chip; }));
+    cancelDialogue();
+    S.chatNpc = npc; chat.title.textContent = npc.name; chat.title.title = FICTION_NOTICE;
+    chat.role.textContent = (S.visit ? '이 사무실의 직원' : npc.role || '가상 직원') + ' · AI 대화 · 투자 조언 아님';
+    chat.topics.replaceChildren(...L.TOPICS.map(([label, question]) => {
+      const chip = node('button', 'chat-chip', label); chip.type = 'button'; chip.addEventListener('click', () => ask(question)); return chip;
+    }));
     if (!chat.dialog.open) chat.dialog.showModal?.();
+    renderDialogue(dialogueHistory(npc));
     S.npcs.forEach(syncNpcLabel);
     if (npc.id === 'ZERO_FINAL_MANAGER') advanceTutorial('manager'); else if (npc.kind === 'chief') advanceTutorial('chief');
     chat.input.value = '';
   }
-  chat.form.addEventListener('submit', (event) => { event.preventDefault(); const text = chat.input.value.trim(); if (text) { ask(text.slice(0, 80)); chat.input.value = ''; } });
-  $('lobby-chat-close').addEventListener('click', () => chat.dialog.close());
-  chat.dialog.addEventListener('close',()=>S.npcs.forEach(syncNpcLabel));
+  chat.form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const text = chat.input.value.trim();
+    if (!text || activeDialogue) return;
+    const result = ask(text);
+    if (text.length <= 600) chat.input.value = '';
+    return result;
+  });
+  chat.retry.addEventListener('click', () => ask('', true));
+  $('lobby-chat-close').addEventListener('click', closeChat);
+  chat.dialog.addEventListener('cancel', cancelDialogue);
+  chat.dialog.addEventListener('close', () => { if (!chat.dialog.open) cancelDialogue(); S.npcs.forEach(syncNpcLabel); });
 
   // ---- chatter and roaming --------------------------------------------------------------------
   function chatterNotice() {return FICTION_NOTICE+(S.mode==='zero'?' · 공식 연출 성향이며 실제 전략 설정 아님':'')+(S.trendFallback?' · 키워드 출처: 가상 대화 소재 · 실제 검색 순위 아님':'')+(W.marketContext(S.market)!=='unknown'?' · 시세 전일 변동 구간 · 예측·매매 판단 아님':'');}
@@ -693,7 +801,7 @@
     retryButton = node('button', 'secondary-button', '다시 시도'); retryButton.id = 'lobby-retry'; retryButton.type = 'button';
     $('lobby-error').append(retryButton);
   }
-  function invalidateRoster() { S.worldLoaded = false; sceneEpoch++; teamRequest?.controller.abort(); teamRequest = null; }
+  function invalidateRoster() { closeChat(); S.worldLoaded = false; sceneEpoch++; teamRequest?.controller.abort(); teamRequest = null; }
   async function open(retry = false) {
     if (teamRequest && (!retry || teamRequest.retry)) return teamRequest.promise;
     if (retry) invalidateRoster();
@@ -737,7 +845,7 @@
     const list = [], chiefs = [], staffByChief = {}, person = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : (value || {name: '', persona: '', duty: ''});
     const make = (id, department, kind, who, role, mandate, hue, index) => {
       const persona = L.PERSONAS[who.persona];
-      return {id, department, kind, name: who.name || '이름 없음', role, mandate, hue, duty: who.duty || '', persona: who.persona || '', strategy_persona:who.strategy_persona||'', personaLines: persona?.lines, face: L.faceAt(index)};
+      return {id, department, kind, name: who.name || '이름 없음', role, mandate, hue, duty: who.duty || '', persona: who.persona || '', strategy_persona:who.strategy_persona||'', display_persona:who.display_persona||'', personaLines: persona?.lines, face: L.faceAt(index)};
     };
     (info.team?.teams || []).slice(0, 8).forEach((team, index) => {
       const id = 'own-' + index, hue = (index * 45 + 10) % 360, leader = person(team.leader); chiefs.push(id); staffByChief[id] = [];
@@ -803,6 +911,7 @@
     loadChatterSeed(); loadNews(); loadReturns(); loadMarket(); loadTrends(); window.ZEROAnalysis?.load?.();
   }
   function setActive(on) {
+    if(!on)closeChat();
     const route=document.documentElement.dataset.zeroView;
     if(S.docked&&route==='lobby'&&S.player)S.dockHandoff=true;
     on=Boolean(on||S.docked&&window.innerWidth>=1280&&['portfolio','research','workbench'].includes(route));

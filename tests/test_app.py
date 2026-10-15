@@ -25,6 +25,12 @@ def call(handler, method, path, query=b''):
 
 
 class BridgeTests(unittest.TestCase):
+    def test_staff_dialogue_url_survives_the_hosted_path_rewrite(self):
+        import build_ui
+        script=(ROOT / 'ui/assets/lobby.js').read_text(encoding='utf-8')
+        rebuilt=build_ui.relative(script)
+        self.assertIn('fetch(`${base}/api/lobby/dialogue`,',rebuilt)
+        self.assertNotIn("base + 'api/lobby/dialogue'",rebuilt)
     def test_pinned_vendor_sources_and_licenses_keep_exact_bytes(self):
         from tempfile import TemporaryDirectory
         import build_ui
