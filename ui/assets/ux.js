@@ -61,7 +61,7 @@
   const registered=new WeakSet();
   function registerPagers(){
     researchControlsPage(document);
-    [['news-list','news'],['macro-list','macro'],['research-ranks','research'],['source-library-list','reports'],['holding-list','research'],['holdings-body','research'],['team-grid','cards'],['office-directory','cards']].forEach(([id,kind])=>{
+    [['live-headlines-list','news'],['news-list','news'],['macro-list','macro'],['research-ranks','research'],['source-library-list','reports'],['holding-list','research'],['holdings-body','research'],['team-grid','cards'],['office-directory','cards']].forEach(([id,kind])=>{
       const container=document.getElementById(id);if(container&&!registered.has(container)){registered.add(container);pager(container,width=>pageSize(kind,width));}
     });
     document.querySelectorAll?.('.office-directory-members').forEach(container=>{if(!registered.has(container)){registered.add(container);pager(container,width=>pageSize('cards',width));}});

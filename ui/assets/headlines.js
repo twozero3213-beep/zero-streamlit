@@ -5,9 +5,12 @@
   if (!view || !anchor) return;
   const make = (tag, className, text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
   const panel = make('section', 'panel desk-panel'), title = make('h2', '', '실시간 헤드라인'), note = make('p', 'muted-note'), list = make('ol', 'live-headlines');
+  list.id = 'live-headlines-list';
   panel.hidden = true; panel.setAttribute('aria-labelledby', 'live-headlines-title'); title.id = 'live-headlines-title';
   list.style.cssText = 'margin:12px 0 0;padding-left:20px;display:grid;gap:10px;line-height:1.5';
-  panel.append(title, note, list); anchor.before(panel);
+  panel.append(title, note, list);
+  const section = anchor.closest('.viewport-section-group');
+  (section?.parentElement?.classList.contains('viewport-pages-body') ? section : anchor).before(panel);
   const language = (text) => {
     if (typeof text !== 'string' || !text.trim() || /[<>\uFFFD]/u.test(text)) return null;
     if ([...text].some((char) => /[\p{M}\p{C}]/u.test(char) || (/\p{L}/u.test(char) && !/[A-Za-z가-힣]/u.test(char)))) return null;

@@ -169,9 +169,12 @@ class Element {
   replaceChildren(...children) { this.children = children; }
   setAttribute() {}
   before(panel) { this.panel = panel; }
+  closest() { return this.group || null; }
 }
-async function render(items) {
-  const anchor = new Element('div');
+async function render(items, wrapped=true) {
+  const anchor = new Element('div'), group = new Element('div');
+  group.parentElement = {classList:{contains:name=>name==='viewport-pages-body'}};
+  if(wrapped) anchor.group=group;
   const document = {hidden:false, documentElement:{dataset:{zeroView:'news'}},
     getElementById:id => id === 'news-list' ? anchor : new Element('div'),
     createElement:tag => new Element(tag), addEventListener(){}, querySelectorAll:()=>[]};
@@ -180,7 +183,8 @@ async function render(items) {
     fetch:async()=>({ok:true,json:async()=>({schema_version:1,items,checked_at:'2026-10-15T00:00:00Z'})})
   });
   await new Promise(resolve=>setImmediate(resolve));
-  return anchor.panel;
+  assert.equal(anchor.panel, wrapped ? undefined : anchor.panel, 'wrapped live headlines are a separate page, not inside the news archive');
+  return wrapped ? group.panel : anchor.panel;
 }
 (async()=>{
   const base={url:'https://news.google.com/rss/articles/x',market:'미국',publisher:'Reuters',published_at:'2026-10-15T00:00:00Z'};
@@ -201,6 +205,8 @@ async function render(items) {
   const labels=panel.children[2].children.map(row=>row.children[0].textContent);
   assert.deepEqual(labels,['정부 경제 대책 발표','Congress approves budget (의회 예산 승인)']);
   assert.equal(panel.hidden,false);
+  assert.equal(panel.children[2].id,'live-headlines-list','live rows participate in the existing responsive pager');
+  assert.equal((await render([{...base,title:'한국 경제 뉴스'}],false)).hidden,false,'plain layouts retain the original insertion fallback');
   assert.equal((await render(bad)).hidden,true);
   assert.equal((await render([])).hidden,true);
 })().catch(error=>{console.error(error);process.exitCode=1;});
@@ -212,4 +218,3 @@ async function render(items) {
 
 if __name__ == '__main__':
     unittest.main()
-
