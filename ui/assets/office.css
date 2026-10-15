@@ -371,13 +371,19 @@ html[data-zero-view='team'] #notice { display:none; }
 .office-scene-hint{position:sticky;top:auto;bottom:0;left:0;width:auto;max-width:none;margin:0;padding:6px 10px;border-radius:0;box-sizing:border-box}
 .office-actor .office-actor-bubble{visibility:hidden}
 .office-actor.show-bubble:not(.is-muted) .office-actor-bubble,.office-actor.is-speaking:not(.is-muted) .office-actor-bubble{visibility:visible}
-.office-owner{position:absolute;z-index:4;width:180px;height:166px;min-height:0;padding:0;border:0;background:transparent;color:#234d84;font:inherit;cursor:pointer;pointer-events:auto}
-.office-owner .office-actor-label{width:180px;left:0}
-.office-owner .office-actor-name{width:180px;color:#234d84;background:#fff1cceb;border:1px solid #c6a957}
+.office-owner{position:absolute;z-index:14;width:180px;height:166px;min-height:0;padding:0;border:0;background:transparent;color:#234d84;font:inherit;cursor:pointer;pointer-events:auto}
+.office-owner .office-actor-label{display:flex;align-items:flex-start;width:max-content;left:94px}
+.office-owner .office-actor-name{width:auto;white-space:nowrap;color:#234d84;background:#fff1cceb;border:1px solid #c6a957}
 .office-owner .office-actor-role{width:180px;white-space:normal}
-.office-owner .office-actor-bubble{border-color:#c6a957;background:#fffae9}
+.office-owner .office-actor-bubble{visibility:visible;border-color:#c6a957;background:#fffae9}
 .office-owner .office-actor-bubble::after{background:#fffae9}
 .office-owner .office-actor-bubble[hidden]{display:none}
+.office-actor.is-chatting{z-index:13}
+.office-figure.is-chatting .office-typing-hands{animation:none}
+.office-map .office-actor.is-chatting .office-actor-bubble,.office-map.office-overview .office-owner.is-chatting .office-actor-bubble,.office-map .office-owner.is-chatting .office-actor-bubble{width:260px;top:auto;bottom:148px;left:var(--office-chat-left,-40px)}
+.office-map .office-actor.is-chatting .office-actor-bubble{bottom:auto;top:var(--office-reply-top,170px)}
+.office-map.office-overview .office-actor.is-chatting .office-actor-duty{display:block;-webkit-line-clamp:unset;overflow:visible}
+.office-actor.is-chatting .office-actor-status{display:none}
 .office-owner:focus-visible{outline:3px solid #2485b3;outline-offset:3px}
 .office-owner-figure{pointer-events:none}
 .office-overview .office-owner .office-actor-role{display:none}
