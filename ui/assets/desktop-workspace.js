@@ -1,4 +1,4 @@
-/* Layout-only projections reuse the rendered, scoped ledger; no account math or broker calls. */
+/* Scoped ledger projections never change account math; owner book reads are explicit and separate. */
 (function(root){
 'use strict';
 const routes=['portfolio','research','workbench'];
@@ -10,7 +10,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports={panelMode,pageRow
 if(!root.document)return;
 const doc=root.document,make=(tag,cls,text)=>{const e=doc.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;},byId=id=>doc.getElementById(id);
 let lastInput=null,lastInputView=null,resizing=false;
-let enabled=true,active=0,scheduled=false,page=0,fingerprint='',selected='US:SPY',chosen=false,range='1Y',chart=null,chartKey='',moved=null,docked=false;
+let enabled=true,active=0,scheduled=false,page=0,fingerprint='',selected='US:SPY',chosen=false,range='1Y',chart=null,chartKey='',moved=null,docked=false,ownerBook=null,ownerBookKey=null;
 const workspace=make('section','desktop-workspace');workspace.id='desktop-workspace';workspace.hidden=true;workspace.setAttribute('aria-label','투자 멀티 패널');
 const left=make('aside','desktop-assets'),leftHead=make('header','desktop-panel-head'),title=make('h2','','내 자산'),detail=make('button','secondary-button','자산 상세');detail.type='button';leftHead.append(title,detail);
 const depositNote=make('p','desktop-deposit-note'),metrics=make('dl','desktop-metrics'),basis=make('p','desktop-scope','ZERO 참고 원장 · 예수금은 연결 계좌 별도 범위'),holdTitle=make('h3','','보유 종목'),list=make('ul','desktop-holdings'),empty=make('p','muted-note'),pager=make('nav','desktop-pager'),previous=make('button','secondary-button','이전'),pageText=make('span'),next=make('button','secondary-button','다음');
@@ -41,6 +41,7 @@ function renderAssets(){
 function disposeChart(){chart?.destroy();chart=null;chartKey='';}
 function showChart(){
  if(!active||current()!=='portfolio'){disposeChart();return;}
+ if(ownerBookKey!==selected&&root.ZEROOwnerFinance?.getSession?.()){ownerBook?.destroy();ownerBook=root.ZEROOwnerFinance.mountBook(book,selected);ownerBookKey=ownerBook?selected:null;}
  const key=selected+':'+range;if(chartKey===key&&chart)return;disposeChart();stockTitle.textContent=selected+' · 공개 참고';
  if(!root.ZEROTechnicalChart){plot.textContent='차트 모듈을 불러오지 못했습니다. 종목 상세에서 다시 확인하세요.';return;}
  plot.replaceChildren();chart=root.ZEROTechnicalChart.mount(plot,{identity:selected,range});chartKey=key;
@@ -61,6 +62,7 @@ function sync(){
 }
 function schedule(event){if(event?.type==='resize')resizing=true;if(scheduled)return;scheduled=true;queueMicrotask(sync);}
 previous.addEventListener('click',()=>{page--;fingerprint='';renderAssets();});next.addEventListener('click',()=>{page++;fingerprint='';renderAssets();});
+doc.addEventListener('zero-finance-ready',()=>{ownerBookKey=null;if(active&&current()==='portfolio')showChart();});
 period.addEventListener('change',()=>{range=period.value;showChart();});openStock.addEventListener('click',()=>root.ZEROExplore?.openCompany?.(selected));officeLink.addEventListener('click',()=>root.ZERO?.navigate?.('lobby'));
 toggle.addEventListener('click',()=>{enabled=!enabled;schedule();});detail.addEventListener('click',()=>{enabled=false;root.ZERO?.navigate?.('portfolio');schedule();});
 new MutationObserver(()=>{if(active){fingerprint='';renderAssets();}}).observe(byId('portfolio-view'),{childList:true,subtree:true,characterData:true});

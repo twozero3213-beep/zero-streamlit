@@ -21,3 +21,4 @@
 @keyframes mts-order-feedback-enter{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.mts-orders .mts-order-feedback-message{animation:none;transform:none}}
 @media(max-width:480px){.mts-order-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mts-order-fields>.mts-order-field:first-child{grid-column:1/-1}.mts-order-field{gap:4px}.mts-order-field input,.mts-order-field select,.mts-order-sides button{min-height:36px;padding:6px}.mts-order-blocked,.mts-order-status,.mts-order-estimate{font-size:.8125rem}}
+.mts-order-form button[hidden]{display:none}

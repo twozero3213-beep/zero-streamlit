@@ -1,10 +1,6 @@
-/* Draft-only ticket. No fetch, storage, broker submission or ledger mutation.
- * mount(company,target,{getSession,getEvidence,verifyEvidence}) reads evidence
- * only on explicit precheck. getSession returns an opaque session ID, never a
- * token. verifyEvidence(evidence,draft) must verify the trusted backend issuer,
- * ownership and draft binding; flags in JSON alone are not proof. Default: HOLD.
- * Exact evidence fixtures: tests/mts_orders_check.cjs. Cash excludes unsettled
- * funds; costs are preview estimates. No proof ever enables the submit button.
+/* Owner gateway is optional and server-authenticated. Defaults remain draft-only.
+ * Every mutation requires a fresh server preflight and a draft-bound approval.
+ * Social identity or JSON evidence flags never grant broker authority.
  */
 (function(root,factory){
   const api=factory(root);
@@ -102,7 +98,7 @@
     }catch(_){return unknown;}
   }
   function configure(options){
-    if(!object(options)||Object.keys(options).some(k=>!['getSession','getEvidence','verifyEvidence'].includes(k))||Object.values(options).some(v=>typeof v!=='function'))throw Error('MTS_OPTIONS_INVALID');
+    if(!object(options)||Object.keys(options).some(k=>!['getSession','getEvidence','verifyEvidence','gateway'].includes(k))||Object.entries(options).some(([k,v])=>k==='gateway'?!object(v)||['prepare','approve','submit','reconcile','evidence'].some(name=>typeof v[name]!=='function'):typeof v!=='function'))throw Error('MTS_OPTIONS_INVALID');
     configured={...options};
   }
   function mount(company,target,options={}){
@@ -121,13 +117,15 @@
     for(const [value,copy] of [['LIMIT','지정가'],['MARKET','시장가 · 금액 미확정']]){const option=el('option','',copy);option.value=value;fields.order_type.append(option);}fields.order_type.value='LIMIT';
     controls.append(kind,quantity,price);
     const check=el('button','secondary-button','사전 확인'),live=el('button','primary-button','실제 제출 차단');check.type=live.type='button';live.disabled=true;live.dataset.liveSubmit='blocked';live.setAttribute('aria-describedby','mts-order-'+number+'-blocked');badge.id='mts-order-'+number+'-blocked';
-    let side='BUY',draftId,epoch=0,destroyed=false,lastStatus=null;
+    const receipt=el('button','secondary-button','체결 상태 조회');receipt.type='button';receipt.hidden=true;
+    const recover=el('button','secondary-button','저장된 미해결 주문 확인');recover.type='button';recover.hidden=typeof opts.gateway?.recover!=='function';
+    let side='BUY',draftId,epoch=0,destroyed=false,lastStatus=null,prepared=null,submitted=null,sending=false;
     function newId(){return root.crypto?.randomUUID?.()||null;}
     draftId=newId();
     function session(){try{const s=opts.getSession?.();return text(s)?s:null;}catch(_){return null;}}
     function draft(){return normalizeDraft({draft_id:draftId,identity:company.id,currency:currencies[company.id.slice(0,2)],side,order_type:fields.order_type.value,quantity:fields.quantity.value,limit_price:fields.order_type.value==='MARKET'?null:fields.limit_price.value});}
     function invalidate(copy='주문 조건을 변경했습니다. 사전 근거를 다시 확인하세요.'){
-      epoch++;draftId=newId();lastStatus=null;check.disabled=false;estimate.textContent='';status.textContent=copy;
+      epoch++;draftId=newId();lastStatus=null;prepared=null;submitted=null;live.disabled=true;live.textContent='실제 제출 차단';live.dataset.liveSubmit='blocked';receipt.hidden=true;check.disabled=false;estimate.textContent='';status.textContent=copy;
       feedback.dataset.state='idle';feedback.replaceChildren();
     }
     function changed(){invalidate();}
@@ -144,6 +142,7 @@
       let d;try{d=draft();}catch(_){invalidDraft();return;}
       const generation=++epoch,key=draftKey(d),owner=session();check.disabled=true;estimate.textContent='';status.textContent='사전 근거 확인 중 · 실제 주문은 보내지 않습니다.';
       notify('checking','근거 확인 중 · 미제출');
+      if(opts.gateway){await prepareLive(d,generation,key,owner);return;}
       let e=null,trusted=false;
       try{if(owner&&typeof opts.getEvidence==='function')e=await opts.getEvidence(d);if(!same(generation,key,owner))return;trusted=await verify(e,d);if(!same(generation,key,owner))return;
         const result=preflight(d,e,{trusted,session_id:owner,now:Date.now()});
@@ -152,6 +151,61 @@
         notify(result.checks_state==='PASS'?'preview':'blocked',(result.simulation?'모의 · ':'')+(result.checks_state==='PASS'?'검토 완료 · 미제출':'검토 보류 · 미제출'));
       }catch(_){if(connected()&&epoch===generation){status.textContent='사전 확인 근거를 받지 못했습니다. 실제 제출은 차단되어 있습니다.';notify('blocked','확인 실패 · 미제출');}}
       finally{if(connected()&&epoch===generation)check.disabled=false;}
+    }
+    async function prepareLive(d,generation,key,owner){
+      prepared=null;live.disabled=true;live.dataset.liveSubmit='blocked';
+      try{
+        if(!owner)throw Error();
+        const result=await opts.gateway.prepare(d);
+        if(!same(generation,key,owner))return;
+        const valid=object(result)&&draftKey(result.draft)===key&&text(result.intent_id)&&/^[0-9a-f]{64}$/.test(result.draft_hash);
+        if(!valid)throw Error();
+        if(result.state==='PREPARED'&&text(result.approval_challenge)&&Number.isFinite(result.expires_at)&&result.expires_at*1000>Date.now()&&result.expires_at*1000-Date.now()<=120000){
+          prepared=result;live.disabled=false;live.textContent='확인한 조건으로 주문 승인·전송';live.dataset.liveSubmit='approval-required';
+          badge.textContent='소유자 전용 서버 · 아래 버튼을 누르면 이 조건으로 실제 주문을 승인하고 전송합니다.';
+          estimate.textContent=d.side+' · '+d.identity+' · '+d.quantity+'주 · '+(d.limit_price||'시장가')+' '+d.currency;
+          status.textContent='서버 원장·위험 기준 확인됨 · 주문 조건을 확인한 뒤 직접 승인하세요.';notify('preview','승인 대기 · 미제출');
+        }else{invalidate('검토 보류 · 원장·현금·비용·위험 기준을 확인하고 다시 사전 확인하세요. 승인 응답이 유실된 경우 새 초안으로 확인합니다.');notify('blocked','검토 보류 · 미제출');}
+      }catch(_){if(same(generation,key,owner)){status.textContent='소유자 서버 확인 실패 · 다시 사전 확인하세요.';notify('blocked','확인 실패 · 미제출');}}
+      finally{if(same(generation,key,owner))check.disabled=false;}
+    }
+    async function submitLive(){
+      if(sending||!prepared||live.disabled||prepared.expires_at*1000<=Date.now())return;
+      const d=draft(),key=draftKey(d),owner=session(),generation=epoch,p=prepared;prepared=null;sending=true;live.disabled=true;check.disabled=true;live.dataset.liveSubmit='blocked';
+      notify('checking','사용자 승인·전송 중 · 반복해서 누르지 마세요.');
+      try{
+        const approval=await opts.gateway.approve(p);
+        if(!same(generation,key,owner))return;
+        if(approval.state!=='APPROVED'||approval.intent_id!==p.intent_id||!text(approval.approval_token))throw Error();
+        submitted=p.intent_id;
+        const result=await opts.gateway.submit(p.intent_id,approval.approval_token);
+        if(!same(generation,key,owner))return;
+        await updateOrderEvidence(opts.gateway.evidence(d,result));
+      }catch(_){if(same(generation,key,owner)){status.textContent='전송 결과 미확인 · 자동 재전송하지 않습니다. 주문 상태를 대조하세요.';notify('unknown','상태 미확인 · 재전송 차단');}}
+      finally{sending=false;if(same(generation,key,owner)){receipt.hidden=!submitted;check.disabled=!!submitted;}}
+    }
+    async function reconcileLive(){
+      if(!submitted||sending)return;
+      const generation=epoch,d=draft(),key=draftKey(d),owner=session(),id=submitted;receipt.disabled=true;
+      try{const result=await opts.gateway.reconcile(id);if(same(generation,key,owner))await updateOrderEvidence(opts.gateway.evidence(d,result));}
+      catch(_){if(same(generation,key,owner))notify('unknown','상태 조회 실패 · 재전송 차단 · 다시 조회할 수 있습니다.');}
+      finally{if(same(generation,key,owner))receipt.disabled=false;}
+    }
+    async function recoverLive(){
+      if(sending||typeof opts.gateway?.recover!=='function')return;
+      const owner=session(),generation=++epoch;recover.disabled=true;
+      try{
+        const result=await opts.gateway.recover();
+        if(!connected()||epoch!==generation||session()!==owner)return;
+        if(!result){status.textContent='저장된 미해결 주문이 없습니다. 새 초안을 사전 확인하세요.';return;}
+        const restored=normalizeDraft(result.draft);
+        if(restored.identity!==company.id){status.textContent='다른 종목의 미해결 주문이 있습니다. '+restored.identity+'의 주문 화면에서 대조하세요.';return;}
+        side=restored.side;draftId=restored.draft_id;fields.order_type.value=restored.order_type;fields.quantity.value=restored.quantity;fields.limit_price.value=restored.limit_price||'';fields.limit_price.disabled=restored.order_type==='MARKET';
+        buy.setAttribute('aria-pressed',String(side==='BUY'));sell.setAttribute('aria-pressed',String(side==='SELL'));
+        prepared=null;submitted=result.intent_id;lastStatus=null;live.disabled=true;check.disabled=true;receipt.hidden=false;
+        status.textContent='저장된 미해결 주문을 복원했습니다. 체결 상태 조회로 대조하세요. 재전송하지 않습니다.';notify('unknown','저장 상태 복원 · 재전송 차단');
+      }catch(_){if(connected()&&epoch===generation)status.textContent='저장 주문 조회 실패 · 다시 확인하세요.';}
+      finally{if(connected()&&epoch===generation)recover.disabled=false;}
     }
     async function updateOrderEvidence(e){
       let d;try{d=draft();}catch(_){return false;}
@@ -165,17 +219,20 @@
         if(result.order_id!==lastStatus.order_id||result.simulation!==lastStatus.simulation||!allowed[lastStatus.state].includes(result.state)||lostQuantity)result={state:'UNKNOWN',simulation:false};
       }
       const copy={ACK:'접수 확인 · 체결 아님',PARTIAL_FILLED:'부분 체결 확인',FILLED:'체결 완료 확인',UNKNOWN:'상태 미확인 · 체결로 반영하지 않음',REJECTED:'주문 거절 확인',CANCELED:'취소 확인 · 기존 부분 체결 여부 별도 대조'};
-      status.textContent=(result.simulation?'모의 · ':'')+(copy[result.state]||copy.UNKNOWN)+' · 원장 반영·실제 제출 권한 없음';
+      status.textContent=(result.simulation?'모의 · ':'')+(copy[result.state]||copy.UNKNOWN)+(opts.gateway?' · 원장 반영은 별도 대조':' · 원장 반영·실제 제출 권한 없음');
       const feedbackStates={ACK:'ack',PARTIAL_FILLED:'partial',FILLED:'filled',UNKNOWN:'unknown',REJECTED:'rejected',CANCELED:'canceled'};
       notify(feedbackStates[result.state]||'unknown',(result.simulation?'모의 · ':'')+(copy[result.state]||copy.UNKNOWN));
       // Unknown/rejected transitions must not erase the last confirmed high-water state.
       if(result.checked_at!==undefined&&result.state!=='UNKNOWN')lastStatus=result;return true;
     }
     function onSession(){fields.quantity.value='';fields.limit_price.value='';invalidate('로그인 정보가 변경됐습니다. 현금·원장 근거를 다시 확인하세요.');}
+    live.addEventListener('click',submitLive);receipt.addEventListener('click',reconcileLive);recover.addEventListener('click',recoverLive);
+    function onReady(){Object.assign(opts,configured);recover.hidden=typeof opts.gateway?.recover!=='function';onSession();}
+    doc.addEventListener('zero-finance-ready',onReady);
     check.addEventListener('click',precheck);form.addEventListener('submit',event=>{event.preventDefault();precheck();});
-    form.append(badge,sides,controls,estimate,check,live,feedback,status);ticket.append(summary,form);target.append(ticket);
+    form.append(badge,sides,controls,estimate,check,live,receipt,recover,feedback,status);ticket.append(summary,form);target.append(ticket);
     doc.addEventListener('zero-session-changed',onSession);
-    const controller={draft,precheck,updateOrderEvidence,destroy(){destroyed=true;epoch++;doc.removeEventListener('zero-session-changed',onSession);ticket.remove();if(mounted.get(target)===controller)mounted.delete(target);}};
+    const controller={draft,precheck,submitLive,reconcileLive,recoverLive,updateOrderEvidence,destroy(){destroyed=true;epoch++;doc.removeEventListener('zero-session-changed',onSession);doc.removeEventListener('zero-finance-ready',onReady);ticket.remove();if(mounted.get(target)===controller)mounted.delete(target);}};
     mounted.set(target,controller);return controller;
   }
   return Object.freeze({normalizeDraft,draftKey,preflight,orderStatus,configure,mount});

@@ -176,7 +176,7 @@ async def api(request):
         return JSONResponse({'error': 'NOT_PUBLIC'}, status_code=404)
     try:
         if path == '/api/trends' and not query:
-            body = await run_in_threadpool(get_trends)
+            body = await run_in_threadpool(get_public_trends)
         elif path == '/api/headlines' and not query:
             body = await run_in_threadpool(get_headlines)
         else:
@@ -201,7 +201,7 @@ def _status():
         site = 'OK'
     except Unavailable as error:
         site = str(error)
-    return {**shape, 'site': site, 'bridge_version': '0.6.52', 'translation_diagnostic': zero_discovery.get_diagnostic()}
+    return {**shape, 'site': site, 'bridge_version': '0.6.58', 'translation_diagnostic': zero_discovery.get_diagnostic()}
 
 
 async def status(request):
@@ -232,3 +232,33 @@ routes = [*zero_lwc.routes,
     Route('/zero', to_ui),
     Mount('/zero', app=_UI(directory=UI, html=True)),
 ]
+
+_trend_service = None
+
+
+def configure_trends(service):
+    """Trusted startup injection only; never called by a public request."""
+    from zero_trends import TrendService
+    if not isinstance(service, TrendService):
+        raise ValueError('TREND_SERVICE_INVALID')
+    global _trend_service
+    _trend_service = service
+
+
+def get_public_trends():
+    global _trend_service
+    if _trend_service is None:
+        from zero_trends import TrendService
+        _trend_service = TrendService()
+    service = _trend_service
+    def load():
+        result = service.get_trends()
+        live = [row for provider in result['providers'] if provider['state'] == 'AVAILABLE'
+                for row in provider['items']]
+        stamps = [provider['retrieved_at'] for provider in result['providers']
+                  if provider['state'] == 'AVAILABLE' and provider['retrieved_at']]
+        result.update(state='AVAILABLE' if live else 'UNAVAILABLE', items=live,
+                      retrieved_at=max(stamps) if stamps else None,
+                      source_label='공식 검색 관심·인기 영상 참고 · 전체 검색 순위 아님')
+        return json.dumps(result, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    return _cached(('public-trends', service), TRENDS_SECONDS, load)

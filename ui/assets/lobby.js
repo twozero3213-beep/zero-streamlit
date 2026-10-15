@@ -541,7 +541,7 @@
         const fetched = new Date(data.retrieved_at), stamp = Number.isFinite(fetched.getTime()) ? fetched.toLocaleTimeString('ko-KR', {timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit'}) + ' KST' : '시각 미확인';
         track('lobby-trends', S.trends.map(row => copy => {
           const item = node('span', 'lobby-tick', row.keyword + (row.traffic?' · '+row.traffic:'') + ' · ' + (safe.fallback?'가상 대화 소재 · 실제 검색 순위 아님':stamp));
-          item.title = safe.fallback?'가상 대화 소재 · 검색 관심을 확인하지 못해 사용하는 참고 키워드입니다':'Google Trends 한국 검색 관심 · 원천 평균 10분 갱신 · 전체 검색 순위가 아닙니다';
+          item.title = safe.fallback?'가상 대화 소재 · 검색 관심을 확인하지 못해 사용하는 참고 키워드입니다':(typeof data.source_label==='string'?data.source_label:'Google Trends 한국 검색 관심 · 전체 검색 순위가 아닙니다')+' · 서버 캐시 최대 1시간';
           if (copy) item.setAttribute('aria-hidden', 'true'); return item;
         }), 'Google 검색 관심 키워드를 확인하지 못했어요');heroTick();
       } catch (_) { if (!S.active || epoch !== sceneEpoch) return; S.trends = []; S.safe_keyword=null;S.trendFallback=true;track('lobby-trends', [], '검색 관심 키워드 확인 불가 · 다음 갱신 때 다시 확인');heroTick(); }

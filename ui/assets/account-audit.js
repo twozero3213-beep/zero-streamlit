@@ -57,18 +57,18 @@
     return {status:'PARTIAL',as_of:data.context.collected_at,rows};
   }
   function configure(options){
-    if(!exact(options,['getSession'])||typeof options.getSession!=='function')throw Error('AUDIT_OPTIONS_INVALID');
+    if(!object(options)||typeof options.getSession!=='function'||Object.keys(options).some(k=>!['getSession','getAudit'].includes(k))||Object.values(options).some(v=>typeof v!=='function'))throw Error('AUDIT_OPTIONS_INVALID');
     configured={...options};
   }
   function mount(target,options={}){
-    mounted.get(target)?.destroy();const opts={...configured,...options},doc=root.document;let alive=true,selected=null;
+    mounted.get(target)?.destroy();const opts={...configured,...options},doc=root.document;let alive=true,selected=null,generation=0;
     function element(tag,cls,text){const e=doc.createElement(tag);e.className=cls;if(text!==undefined)e.textContent=text;return e;}
     function session(){try{const value=opts.getSession?.();return typeof value==='string'&&value.length>0&&value.length<=256?value:null;}catch(_){return null;}}
     function render(projection,reason,active=null){
       const section=element('section','account-audit-content'),header=element('div','account-audit-header');
       header.append(element('h2','account-audit-title','ZERO 대조'));
-      const button=element('button','account-audit-refresh','저장 자료 다시 확인');button.type='button';button.addEventListener('click',refresh);header.append(button);
-      section.append(header,element('p','account-audit-note','외부 감사·인증 아님 · 실계좌 연결 미설정'));
+      const button=element('button','account-audit-refresh',opts.getAudit?'계좌 자료 다시 조회':'저장 자료 다시 확인');button.type='button';button.addEventListener('click',refresh);header.append(button);
+      section.append(header,element('p','account-audit-note',opts.getAudit?'소유자 서버 원장 대조 · 외부 감사·인증 아님':'외부 감사·인증 아님 · 실계좌 연결 미설정'));
       const choices=projection.rows||[],label=element('label','account-audit-choice'),select=element('select','account-audit-select');
       label.append(element('span','','제공자 · 통화'));select.setAttribute('aria-label','대조할 제공자와 통화');
       if(!choices.some(row=>row.provider+':'+row.currency===selected))selected=choices.length?choices[0].provider+':'+choices[0].currency:null;
@@ -94,16 +94,28 @@
       details.append(element('p','account-audit-note','예수금은 입금 누계가 아니며 결제후 예상 현금은 확정 결제 현금이 아닙니다. 제공자·통화별로 분리하며 미확인은 0이 아닙니다.'),element('p','account-audit-note','현금 등식: 기간 시작 현금 + 입금 − 출금 − 결제 매수대금 + 결제 매도대금 − 수수료 − 원천징수 세금 + 환전 유입 − 환전 유출. 미결제는 별도 표시하며 합산하지 않습니다. 실현손익은 원장 제공값만 표시합니다.'),element('p','account-audit-note','ZERO의 저장 자료 산술 대조이며 외부 감사·인증이 아닙니다. FiscalAI 기업 재무자료는 증권계좌 감사 근거가 아닙니다.'));
       section.append(details);target.replaceChildren(section);
     }
-    function refresh(){
+    async function refresh(){
       if(!alive||target.isConnected===false)return;
+      const turn=++generation;
       const active=session();if(!active){render(unavailable(),'본인 인증 필요 · 계좌 자료 미확인');return;}
+      if(typeof opts.getAudit==='function'){
+        render(unavailable(),'계좌 원장 조회 중 · 미확인은 0으로 처리하지 않습니다.',active);
+        try{
+          const projection=await opts.getAudit();
+          if(!alive||turn!==generation||session()!==active)return;
+          render(validProjection(projection,projection?.as_of)?projection:unavailable(),null,active);
+        }catch(_){if(alive&&turn===generation&&session()===active)render(unavailable(),'조회 실패 · 다시 조회할 수 있습니다.',active);}
+        return;
+      }
       let data;try{data=root.ZERO?.getPortfolio?.();}catch(_){render(unavailable(),'자료 미확인 · 저장된 스냅샷을 읽지 못했습니다.');return;}
       if(session()!==active){render(unavailable(),'본인 인증을 다시 확인해 주세요.');return;}
       const projection=projectPortfolio(data);render(projection,projection.status==='UNAVAILABLE'?'자료 미확인 · 현재 범위의 저장 근거가 없습니다.':null,active);
     }
-    const clear=()=>{if(alive)render(unavailable(),'본인 인증 변경 · 저장 자료 표시를 지웠습니다.');};
+    const clear=()=>{generation++;if(alive)render(unavailable(),'본인 인증 변경 · 저장 자료 표시를 지웠습니다.');};
     root.addEventListener?.('zero-session-changed',clear);doc.addEventListener?.('zero-session-changed',clear);
-    const controller={refresh,destroy(){alive=false;root.removeEventListener?.('zero-session-changed',clear);doc.removeEventListener?.('zero-session-changed',clear);target.replaceChildren();mounted.delete(target);}};
+    function ready(){Object.assign(opts,configured);refresh();}
+    doc.addEventListener?.('zero-finance-ready',ready);
+    const controller={refresh,destroy(){alive=false;doc.removeEventListener?.('zero-finance-ready',ready);root.removeEventListener?.('zero-session-changed',clear);doc.removeEventListener?.('zero-session-changed',clear);target.replaceChildren();mounted.delete(target);}};
     mounted.set(target,controller);refresh();return controller;
   }
   function open(){const target=root.document?.getElementById('account-audit');if(target)return mount(target);return null;}
