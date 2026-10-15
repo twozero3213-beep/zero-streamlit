@@ -1,4 +1,4 @@
-/* Accounts for the office: nickname sign-up, own company and practice portfolio, leaderboard, visits.
+/* Accounts for the office: verified membership, guest access, own company and practice portfolio, leaderboard, visits.
    Talks to the public lobby API (meta zero-lobby-api). Without it the screen stays the single-visitor office. */
 (() => {
   'use strict';
@@ -18,8 +18,11 @@
   const meta = document.querySelector('meta[name="zero-lobby-api"]'), BASE = (meta?.content || '').replace(/\/+$/, '');
   const $ = (id) => document.getElementById(id);
   const node = (tag, className = '', text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
-  const KEY = 'zero-lobby-token';
+  const KEY = 'zero-lobby-token', MEMBER_KEY = 'zero-member-session', VISITOR_KEY = 'zero-visitor-nick';
   const store = { get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* private mode */ } }, del(k) { try { localStorage.removeItem(k); } catch (_) { /* private mode */ } } };
+  const memberSession = {get() { try { return sessionStorage.getItem(MEMBER_KEY); } catch (_) { return null; } }, set(token) { try { sessionStorage.setItem(MEMBER_KEY, token); } catch (_) { /* session remains in memory */ } }, clear() { try { sessionStorage.removeItem(MEMBER_KEY); } catch (_) { /* private mode */ } }};
+  const savedVisitor = store.get(VISITOR_KEY);
+  const visitorName = savedVisitor && !nickProblem(savedVisitor) ? savedVisitor : null;
   const messages = {NICK_TAKEN: '이미 쓰는 닉네임이에요.', NICK_INVALID: '2~12자의 한글·영문·숫자·밑줄만 쓸 수 있어요.', NICK_RESERVED: '쓸 수 없는 닉네임이에요.', SIGNUP_LIMIT: '오늘은 가입이 많아요. 내일 다시 시도해 주세요.', QUOTES_UNAVAILABLE: '가격을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.',
     REBALANCE_TOO_SOON: '배분은 20시간에 한 번만 바꿀 수 있어요.', WEIGHTS_MUST_SUM_TO_100: '비중의 합이 100이 되어야 해요.', WEIGHTS_INVALID: '비중을 확인해 주세요.', TEAM_INVALID: '팀 구성을 확인해 주세요(직원 60명까지).', UNAUTHORIZED: '저장된 로그인 정보가 맞지 않아요.'};
   async function api(path, {method = 'GET', body, token} = {}) {
@@ -31,13 +34,13 @@
   }
   const say = (error) => messages[error?.code] || '지금은 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
 
-  const U = {token: store.get(KEY), me: null, generation: 0};
+  const U = {token: memberSession.get() || store.get(KEY), me: null, visitor: visitorName, generation: 0};
   const button = $('lobby-profile-btn');
-  if (!BASE) { button.hidden = false; button.textContent = '닉네임 가입(준비 중)'; button.disabled = true; button.title = '공개 서버 연결 전이에요'; return; }
+  if (!BASE) { button.hidden = false; button.textContent = '로그인 연결 준비 중'; button.disabled = true; button.title = '공개 서버 연결 전이에요'; return; }
   button.hidden = false;
 
   // ---- dialog -----------------------------------------------------------------------------------
-  const dialog = document.createElement('dialog'); dialog.className = 'lobby-chat lobby-profile'; dialog.setAttribute('aria-labelledby', 'profile-title');
+  const dialog = document.createElement('dialog'); dialog.className = 'lobby-chat lobby-profile'; dialog.setAttribute('aria-labelledby', 'profile-title'); dialog.setAttribute('aria-describedby', 'profile-sub');
   dialog.innerHTML = '<div class="chat-head"><div><h2 id="profile-title"></h2><p id="profile-sub"></p></div><button type="button" class="secondary-button" id="profile-close">닫기</button></div><div id="profile-body" class="profile-body"></div>';
   $('lobby-view').append(dialog);
   $('profile-close').addEventListener('click', () => dialog.close());
@@ -46,25 +49,40 @@
   const input = (type, attrs = {}) => Object.assign(node('input'), {type, ...attrs});
   const status = () => { const p = node('p', 'profile-status'); p.setAttribute('role', 'status'); return p; };
 
+  let onboarding = null, profileEpoch = 0;
+  dialog.addEventListener('close', () => { profileEpoch++; onboarding?.destroy(); onboarding = null; });
   function viewSignup() {
-    $('profile-title').textContent = '닉네임으로 시작하기'; $('profile-sub').textContent = '닉네임은 다른 사람과 겹치면 안 돼요. 가입하면 연습용 1억원이 생겨요(가상).';
-    const nick = input('text', {maxLength: 12, placeholder: '예: 아침팀장', autocomplete: 'off'}), note = status(), go = node('button', 'primary-button', '이 닉네임으로 시작'); go.type = 'button'; go.disabled = true;
-    let timer = 0;
-    nick.addEventListener('input', () => {
-      clearTimeout(timer); go.disabled = true; const value = nick.value.trim(), problem = nickProblem(value);
-      if (problem) { note.textContent = value ? problem : ''; return; }
-      note.textContent = '확인 중…';
-      timer = setTimeout(async () => { try { const result = await api('/nick?nick=' + encodeURIComponent(value)); if (nick.value.trim() !== value) return; note.textContent = result.available ? '사용할 수 있어요.' : (messages[result.reason] || '이미 쓰는 닉네임이에요.'); go.disabled = !result.available; } catch (error) { note.textContent = say(error); } }, 350);
+    profileEpoch++; const signupToken = U.token, signupGeneration = U.generation;
+    onboarding?.destroy();
+    onboarding = window.ZEROOnboarding.mount(body, {
+      title: $('profile-title'), subtitle: $('profile-sub'), active: () => dialog.open && U.token === signupToken && U.generation === signupGeneration,
+      loadConfig: () => api('/auth/config'), nickProblem, guestName: U.visitor || '', memberNick: U.me?.nick || '',
+      onGuest(nick) {
+        if (!U.me) { U.visitor = nick; store.set(VISITOR_KEY, nick); window.ZEROLobby.setPlayerName(nick); }
+        render(); dialog.close();
+      },
+      complete: (method, accessToken, nick) => api('/auth/complete', {method: 'POST', token: U.token,
+        body: {method, access_token: accessToken, ...(nick === undefined ? {} : {nick})}}),
+      async onMember(result) {
+        if (typeof result.token !== 'string' || !result.token) throw {code: 'UNAUTHORIZED'};
+        U.token = result.token; U.visitor = null; U.me = null;
+        store.del(KEY); store.del(VISITOR_KEY); memberSession.set(result.token); render();
+        const memberToken = U.token, memberView = profileEpoch; await refreshMe(); if (profileEpoch !== memberView || !dialog.open) return; if (U.token === memberToken) { if (U.me) viewHome(); else viewPending(); } else if (!U.token) viewSignup();
+      },
+      onRecover: viewRecover
     });
-    go.addEventListener('click', async () => {
-      go.disabled = true; note.textContent = '가입 중…';
-      try { const result = await api('/register', {method: 'POST', body: {nick: nick.value.trim()}}); U.token = result.token; store.set(KEY, result.token); viewToken(result.token); await refreshMe(); }
-      catch (error) { note.textContent = say(error); go.disabled = false; }
+  }
+  function viewPending() {
+    onboarding?.destroy(); onboarding = null; const view = ++profileEpoch;
+    $('profile-title').textContent = '로그인 정보 확인'; $('profile-sub').textContent = '사무실 정보를 불러오지 못했습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.';
+    const retry = node('button', 'primary-button', '사무실 다시 불러오기'), note = status(); retry.type = 'button';
+    retry.addEventListener('click', async () => {
+      if (retry.disabled) return; const token = U.token; retry.disabled = true; note.textContent = '사무실 정보를 확인하고 있습니다.';
+      await refreshMe(); if (profileEpoch !== view || !dialog.open) return;
+      if (U.token !== token) { if (!U.token) viewSignup(); return; }
+      if (U.me) viewHome(); else { note.textContent = '지금은 사무실을 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.'; retry.disabled = false; }
     });
-    const social = node('div', 'profile-social'); social.append(node('p', 'muted-note', '네이버·카카오·구글 연동 로그인은 각 서비스에 앱 등록이 끝나면 여기에 열려요.'));
-    ['네이버로 시작', '카카오로 시작', '구글로 시작'].forEach((label) => { const b = node('button', 'secondary-button', label); b.type = 'button'; b.disabled = true; social.append(b); });
-    const have = node('button', 'secondary-button', '이미 가입했어요(복구 코드 입력)'); have.type = 'button'; have.addEventListener('click', viewRecover);
-    body.replaceChildren(field('닉네임', nick), node('p', 'muted-note', '닉네임·직원 수·방 꾸밈·연습 수익률은 다른 이용자에게 공개돼요. 팀 이름은 공개를 선택한 경우에만 표시돼요. 직원 이름·업무·배분은 비공개예요. 실명·연락처·계좌번호·비밀번호를 입력하지 마세요. 이 기기에 로그인 코드와 학습 진도가 저장돼요.'), note, go, social, have);
+    body.replaceChildren(note, retry);
   }
   function viewToken(token) {
     $('profile-title').textContent = '복구 코드 보관'; $('profile-sub').textContent = '새 코드는 지금 한 번만 보여 드려요. 이전 코드가 있었다면 더 이상 사용할 수 없어요.';
@@ -74,20 +92,40 @@
     body.replaceChildren(code, copy, node('p', 'muted-note', '다른 기기에서 같은 캐릭터로 들어오거나 브라우저를 지웠을 때 이 코드가 필요해요. 코드를 아는 사람은 누구나 내 계정을 쓸 수 있으니 공개하지 마세요.'), done);
   }
   function viewRecover() {
+    const view = ++profileEpoch;
     $('profile-title').textContent = '복구 코드로 들어가기'; $('profile-sub').textContent = '가입할 때 받은 코드를 붙여 넣어 주세요.';
     const code = input('password', {autocomplete: 'off', placeholder: '복구 코드'}), note = status(), go = node('button', 'primary-button', '들어가기'); go.type = 'button';
-    go.addEventListener('click', async () => { note.textContent = '확인 중…'; try { const token = code.value.trim(); await api('/me', {token}); U.token = token; store.set(KEY, token); await refreshMe(); viewHome(); } catch (error) { note.textContent = say(error); } });
+    go.addEventListener('click', async () => {
+      if (go.disabled) return;
+      const requestToken = U.token, requestGeneration = U.generation, token = code.value.trim(); code.value = ''; go.disabled = true; note.textContent = '확인 중…';
+      const current = () => profileEpoch === view && dialog.open && U.token === requestToken && U.generation === requestGeneration;
+      try {
+        const result = await api('/me', {token}); if (!current()) return;
+        if (result.membership?.kind === 'MEMBER') { note.textContent = '인증 회원은 이메일 또는 휴대폰 인증으로 로그인해 주세요.'; return; }
+        U.token = token; U.me = result; memberSession.clear(); store.set(KEY, token); window.ZEROLobby.setPlayerName(result.nick); render(); viewHome();
+      } catch (error) { if (current()) note.textContent = say(error); }
+      finally { if (profileEpoch === view) go.disabled = false; }
+    });
     const back = node('button', 'secondary-button', '돌아가기'); back.type = 'button'; back.addEventListener('click', viewSignup);
     body.replaceChildren(field('복구 코드', code), note, go, back);
   }
 
   function viewHome() {
+    profileEpoch++; onboarding?.destroy(); onboarding = null;
     if (!U.me) return viewSignup();
     $('profile-title').textContent = U.me.nick + '의 사무실'; $('profile-sub').textContent = '직원 ' + U.me.staff_count + '명 · 연습 수익률 ' + (U.me.portfolio.return_percent === null ? '집계 전' : (U.me.portfolio.return_percent > 0 ? '+' : '') + U.me.portfolio.return_percent.toFixed(2) + '%');
-    const team = node('button', 'primary-button', '팀·직원 구성하기'), portfolio = node('button', 'secondary-button', '연습 포트폴리오 배분'), see = node('button', 'secondary-button', '내 사무실 보기'), out = node('button', 'secondary-button', '로그아웃(이 기기에서)');
+    const isMember = U.me.membership?.kind === 'MEMBER';
+    const team = node('button', 'primary-button', '팀·직원 구성하기'), portfolio = node('button', 'secondary-button', '연습 포트폴리오 배분'), see = node('button', 'secondary-button', '내 사무실 보기'), out = node('button', 'secondary-button', isMember ? '로그아웃' : '방문자 데이터 나가기');
     [team, portfolio, see, out].forEach((b) => { b.type = 'button'; });
     team.addEventListener('click', viewTeam); portfolio.addEventListener('click', viewPortfolio); see.addEventListener('click', () => { dialog.close(); window.ZEROLobby.showOwn(window.ZEROCompany?.officeFor(U.me)||{nick: U.me.nick, team: U.me.team, space: U.me.space}); });
-    out.addEventListener('click', () => { store.del(KEY); store.del('zero-lobby-name'); U.token = null; U.me = null; window.ZEROLobby.setPlayerName('대표님'); body.replaceChildren(); dialog.close(); window.ZEROLobby.open(); render(); });
+    out.addEventListener('click', async () => {
+      const token = U.token; out.disabled = true;
+      try { if (isMember) await api('/logout', {method: 'POST', token, body: {}}); }
+      catch (error) { if (error.code !== 'UNAUTHORIZED') { const note = status(); note.textContent = '로그아웃 요청을 완료하지 못했습니다. 다시 시도해 주세요.'; body.append(note); out.disabled = false; return; } }
+      if (U.token !== token) return;
+      store.del(KEY); memberSession.clear(); store.del('zero-lobby-name'); U.token = null; U.me = null;
+      window.ZEROLobby.setPlayerName(U.visitor || '대표님'); body.replaceChildren(); dialog.close(); window.ZEROLobby.open(); render();
+    });
     const company = node('button', 'secondary-button', '투자회사 · 전략 직원 관리'); company.addEventListener('click',()=>{dialog.close();window.ZERO?.navigate('company');});
     const layout = node('button','secondary-button','사무실 꾸미기(배치 편집)');layout.type='button';layout.addEventListener('click',()=>{if(!U.me)return;dialog.close();window.ZEROOfficeEditor?.open();});
     const wardrobe = node('button', 'secondary-button', '내 캐릭터 · 성장과 꾸미기'); wardrobe.type = 'button'; wardrobe.addEventListener('click', () => { dialog.close(); window.ZEROSocial?.openWardrobe(); });
@@ -98,7 +136,11 @@
       try { const result = await api('/me/token', {method: 'POST', token: requestToken}); if (U.token !== requestToken || U.generation !== requestGeneration) return; U.token = result.token; store.set(KEY, result.token); render(); viewToken(result.token); }
       catch (error) { note.textContent = say(error); renew.disabled = false; }
     });
-    body.replaceChildren(node('p', 'muted-note', '직원 이름과 업무, 배분은 대표님만 조회해요. 팀 이름은 공개를 선택하면 방문자에게 표시됩니다. 닉네임·직원 수·방 꾸밈·캐릭터 꾸밈·연습 수익률은 공개해요. 복구 코드를 아는 사람은 내 정보를 볼 수 있어요. 로그아웃은 이 기기의 저장 정보만 지우며, 코드 교체는 이전 코드를 폐기해요.'), team, company, portfolio, see, layout, wardrobe, renew, out);
+    const membership = node('p', 'member-session-note', isMember
+      ? (U.me.membership.method === 'phone' ? '휴대폰 인증 회원' : '이메일 인증 회원') + ' · 연락처는 공개되지 않습니다. 전광판 수익률은 별도로 검증합니다.'
+      : '방문자 계정 · 전광판과 수익률 랭킹에 표시되지 않습니다. 기존 사무실은 인증 후에도 유지할 수 있습니다.');
+    const verify = node('button', 'primary-button', '이메일·휴대폰으로 인증하기'); verify.type = 'button'; verify.addEventListener('click', viewSignup);
+    body.replaceChildren(membership, node('p', 'muted-note', '직원 이름·업무·전략 배분은 대표님만 조회합니다. 팀 이름은 공개를 선택한 경우에만 표시됩니다. 회원 인증은 증권계좌 연결이나 매매 권한을 추가하지 않습니다.'), ...(!isMember ? [verify] : []), team, company, portfolio, see, layout, wardrobe, ...(!isMember ? [renew] : []), out);
   }
 
   const select = (options, value, blank) => {
@@ -168,14 +210,14 @@
     if (!U.token) { U.me = null; return render(); }
     const token = U.token;
     try { const result = await api('/me', {token}); if (U.token !== token) return; U.me = result; window.ZEROLobby.setPlayerName(U.me.nick); }
-    catch (error) { if (U.token !== token) return; if (error.code === 'UNAUTHORIZED') { store.del(KEY); U.token = null; } U.me = null; }
+    catch (error) { if (U.token !== token) return; if (error.code === 'UNAUTHORIZED') { store.del(KEY); memberSession.clear(); U.token = null; } U.me = null; }
     render();
   }
   let sessionNick, sessionToken;
-  function render() { button.textContent = U.me ? '내 사무실' : '닉네임으로 시작'; $('lobby-name-chip').textContent = U.me?.nick || '대표님';
+  function render() { button.textContent = U.me ? (U.me.membership?.kind === 'MEMBER' ? '내 사무실' : '방문자 계정') : U.token ? '로그인 확인' : U.visitor ? '방문자 · ' + U.visitor : '로그인 · 회원가입'; $('lobby-name-chip').textContent = U.me?.nick || U.visitor || '대표님';
     const nick = U.me?.nick || null; if (sessionNick !== nick || sessionToken !== U.token) { sessionNick = nick; sessionToken = U.token; U.generation++; document.dispatchEvent(new CustomEvent('zero-session-changed')); }
     document.dispatchEvent(new CustomEvent('zero-profile-updated')); }
-  button.addEventListener('click', () => { U.me ? viewHome() : viewSignup(); if (!dialog.open) dialog.showModal?.(); });
+  button.addEventListener('click', () => { U.me ? viewHome() : U.token ? viewPending() : viewSignup(); if (!dialog.open) dialog.showModal?.(); });
 
   async function loadBoard() {
     try { const data = await api('/leaderboard'); window.ZEROLobby.setUserBoard(data.state === 'AVAILABLE' ? data.items : [], {state: data.state, checkedAt: data.checked_at}); } catch (_) { window.ZEROLobby.setUserBoard([], {state: 'UNAVAILABLE'}); }
@@ -185,7 +227,7 @@
     catch (_) { /* a missing office leaves the current scene */ }
   }
   window.ZEROLobbyUsers = {visit, refresh: refreshMe, board: loadBoard,
-    session: () => U.me ? {nick: U.me.nick, progress: U.me.progress, appearance: U.me.appearance, catalog: U.me.catalog, blocks: U.me.blocks, practiceReturn: U.me.portfolio?.return_percent} : null,
+    session: () => U.me ? {nick: U.me.nick, progress: U.me.progress, appearance: U.me.appearance, catalog: U.me.catalog, blocks: U.me.blocks, practiceReturn: U.me.portfolio?.return_percent, membership: U.me.membership} : null,
     request: (path, options = {}) => api(path, {...options, token: U.token}),
     openProfile: () => button.click(),
     editOffice:()=>{if(!U.me)return;viewTeam();if(!dialog.open)dialog.showModal?.();},
@@ -194,5 +236,6 @@
       const token = U.token, socket = new WebSocket(`${BASE.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:')}/api/lobby/lounge/socket`);
       socket.addEventListener('open', () => { if (U.token !== token) socket.close(); else socket.send(JSON.stringify({type: 'auth', token})); }); return socket;
     }};
+  if (U.visitor && !U.token) window.ZEROLobby.setPlayerName(U.visitor);
   render(); refreshMe(); if(document.documentElement?.dataset.zeroView==='lobby')loadBoard(); setInterval(() => { if (!document.hidden) { if(document.documentElement?.dataset.zeroView==='lobby')loadBoard(); if (U.me) refreshMe(); } }, 60000);
 })();

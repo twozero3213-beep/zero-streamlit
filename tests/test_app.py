@@ -96,6 +96,18 @@ class BridgeTests(unittest.TestCase):
         self.assertIn("script-src 'self'",response.headers['content-security-policy'])
         self.assertIn("object-src 'none'",response.headers['content-security-policy'])
 
+    def test_auth_connect_allows_only_one_configured_official_project(self):
+        from tempfile import TemporaryDirectory
+        origin='https://abcdefghijklmnopqrst.supabase.co'
+        for configured,expected in [(origin,origin),('',None),('https://*.supabase.co',None),('https://evil.example',None),('http://abcdefghijklmnopqrst.supabase.co',None),(origin+'; connect-src *',None),(origin+'.evil.example',None)]:
+            with self.subTest(configured=configured), TemporaryDirectory() as tmp, mock.patch.dict('os.environ',{'ZERO_AUTH_SUPABASE_ORIGIN':configured}):
+                Path(tmp,'index.html').write_text('<html>synthetic</html>',encoding='utf-8')
+                response=asyncio.run(zero_proxy._UI(directory=tmp,html=True).get_response('index.html', {'type':'http','method':'GET','headers':[]}))
+                connect=next(rule.strip().split()[1:] for rule in response.headers['content-security-policy'].split(';') if rule.strip().startswith('connect-src '))
+                self.assertEqual([value for value in connect if 'supabase' in value], [expected] if expected else [])
+                self.assertNotIn('https:',connect)
+                self.assertNotIn('*',connect)
+
     def test_status_probe_uses_the_same_short_cache(self):
         with mock.patch.object(zero_proxy,'_secret',return_value='synthetic'), mock.patch.object(zero_proxy,'fetch',return_value={'state':'AVAILABLE'}) as fetch:
             self.assertEqual(zero_proxy._status()['site'],'OK'); self.assertEqual(zero_proxy._status()['site'],'OK')

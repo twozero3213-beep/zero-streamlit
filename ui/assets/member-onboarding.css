@@ -1,0 +1,23 @@
+.lobby-profile:has(.member-onboarding){width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:22px;box-sizing:border-box;overflow:auto}
+.member-onboarding{font-size:15px;color:var(--text,#333d4b);line-height:1.5;min-width:0}
+.member-choices{display:grid;gap:12px;margin-top:20px}
+.member-choice{display:flex;align-items:center;gap:16px;width:100%;min-height:78px;padding:16px;border:1px solid #d4dce6;background:#fff;border-radius:14px;color:#333d4b;cursor:pointer;text-align:left;font:inherit;box-sizing:border-box}
+.member-choice:hover{border-color:#3182f6;background:#f7faff}.member-choice:focus-visible,.member-form input:focus-visible,.member-back:focus-visible{outline:2px solid #1b64da;outline-offset:3px}
+.member-choice svg{width:24px;height:24px;flex:none;color:#1b64da}.member-choice-copy{display:grid;gap:4px;min-width:0}.member-choice-copy strong{font-weight:650;font-size:16px}.member-choice-copy small{font-size:13px;color:#626d7b}
+.member-separator{text-align:center;font-size:13px;color:#626d7b;margin:18px 0}
+.member-privacy{font-size:13px;color:#626d7b;margin:16px 0;word-break:keep-all;overflow-wrap:anywhere}
+.member-status{font-size:14px;min-height:21px;margin:12px 0;color:#333d4b;overflow-wrap:anywhere}.member-status:empty{display:none}
+.member-form{display:grid;gap:16px;margin-top:20px}.member-form .member-privacy,.member-form .member-status{margin:0}
+.member-field{display:grid;gap:8px;font-size:14px;font-weight:550}.member-field input{font:inherit;font-size:16px;min-height:48px;width:100%;box-sizing:border-box;border:1px solid #b8c4d3;border-radius:10px;background:#fff;color:#333d4b;padding:12px;caret-color:#1b64da}
+.member-form .primary-button{min-height:48px;width:100%;font-size:16px}.member-onboarding button:disabled{opacity:.65;cursor:not-allowed}
+.member-back{display:block;margin:18px auto 0;border:0;background:transparent;color:#1b64da;padding:10px 14px;min-height:44px;font:inherit;cursor:pointer}
+.member-legacy{font-size:13px;color:#626d7b;margin-top:22px;padding-top:16px;border-top:1px solid #eef0f3}.member-legacy summary{cursor:pointer;min-height:32px}.member-legacy button{margin-top:10px;min-height:44px}
+.member-session-note{background:#f1f6fd;padding:12px;border-radius:10px;font-size:14px;margin:0 0 14px;line-height:1.5}
+@media(max-width:767px){.lobby-profile:has(.member-onboarding){padding:18px;width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}.member-choices{margin-top:16px}.member-choice{min-height:74px;padding:14px}.member-onboarding .member-privacy{font-size:13px}.member-form{gap:14px}}
+
+.lobby-profile:has(.member-onboarding){max-width:calc(100vw - 24px)}
+.lobby-profile:has(.member-onboarding) .chat-head{display:grid;grid-template-columns:minmax(0,1fr) 52px;align-items:start;gap:12px}
+.lobby-profile:has(.member-onboarding) .chat-head h2{font-size:22px;line-height:1.35;margin:0 0 8px;word-break:keep-all}
+.lobby-profile:has(.member-onboarding) .chat-head p{font-size:14px;line-height:1.5;margin:0}
+.lobby-profile:has(.member-onboarding) #profile-close{width:52px;min-height:44px;height:44px;padding:6px;white-space:nowrap;align-self:start}
+@media(max-width:767px){.lobby-profile:has(.member-onboarding) .chat-head h2{font-size:20px}}
