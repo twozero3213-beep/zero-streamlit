@@ -264,7 +264,8 @@
     const player = S.player;
     setTimeout(() => {
       if (!S.active || S.player !== player || !S.portalBusy) return;
-      if (!window.ZEROSocial.openLounge()) { S.portalBusy = false; stage.classList.remove('portal-travel'); }
+      const entered=window.ZERO?.navigate?window.ZERO.navigate('plaza'):window.ZEROSocial.openLounge();
+      if (!entered) { S.portalBusy = false; stage.classList.remove('portal-travel'); }
     }, reduceMotion ? 0 : 180);
   }
   function followPlayer() {
@@ -344,7 +345,7 @@
     bubble.style.translate=(left-box.left)+'px '+(top-box.top)+'px';return true;
   }
   function speak(entity, text, ms = 6500) {
-    if (!entity.el.isConnected || entity.hidden || !S.npcs.includes(entity)) return false;
+    if (!S.active||S.paused||document.hidden||!entity.el.isConnected || entity.hidden || !S.npcs.includes(entity)) return false;
     if (S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || S.speaker.some((item) => item.id === entity.id)) return;
     const bubble = entity.bubbleEl||entity.el.querySelector('.npc-bubble');bubble.title=text+'\n'+chatterNotice();bubble.setAttribute('aria-label',text);bubble.setAttribute('aria-description',chatterNotice());
     bubble.textContent=text;entity.el.classList.add('speaking');
@@ -384,7 +385,7 @@
     gesture(host, 'wave');
   }
   function gesture(entity, kind) {
-    if (reduceMotion || S.paused || !M?.animate || !entity.el.isConnected) return;
+    if (!S.active||document.hidden||reduceMotion || S.paused || !M?.animate || !entity.el.isConnected) return;
     const target = kind === 'wave' ? entity.el.querySelector('.arm.r') : entity.el.querySelector('.npc-fig');
     const values = kind === 'wave' ? {rotate: [0, -70, -30, -70, 0]} : kind === 'level' ? {y: [0, -8, 0], scale: [1, 1.12, 1]} : {rotate: [0, -3, 0, 3, 0]};
     const motion = M.animate(target, {...values, duration: kind === 'level' ? 600 : 480, ease: 'out(3)', onComplete: () => S.motions.delete(motion)});
@@ -684,6 +685,7 @@
   }
   // The visitor's own company: the names they chose, visible only to them (the server never returns this to others).
   function showOwn(info) {
+    if(window.ZERO?.currentView?.()&&window.ZERO.currentView()!=='lobby')window.ZERO.navigate('lobby');
     invalidateRoster();
     S.visit = null; S.mode = 'own'; S.space = info.space || L.DEFAULT_SPACE;
     const sameOwner=S.ownerNick===info.nick,cached=sameOwner?S.ownerLayout:null,supplied=window.ZEROOfficeLayout?.validate(info.layout);if(!sameOwner){S.layoutRevision=null;S.ownerLayoutConfirmed=false;}S.ownerNick=info.nick;S.sceneOwner=info.nick;S.layout=supplied||cached||window.ZEROOfficeLayout?.defaultLayout('startup')||null;S.ownerLayout=S.layout;if(supplied)S.ownerLayoutConfirmed=true;
@@ -704,6 +706,7 @@
   }
   // Visits use only the public projection; roles, conditions and allocation never enter this scene.
   function visitOffice(info) {
+    if(window.ZERO?.currentView?.()&&window.ZERO.currentView()!=='lobby')window.ZERO.navigate('lobby');
     invalidateRoster();
     const teams = Array.isArray(info.teams) ? info.teams.filter(name => typeof name === 'string').slice(0, 8).map(name => name.slice(0, 12)) : [];
     const count = Number.isSafeInteger(info.staffCount) && info.staffCount >= 0 ? info.staffCount : 0;
@@ -764,6 +767,7 @@
       S.worldLoaded = false; S.keys.clear();S.target=null; if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return;
     }
     if (!S.player) return;
+    place(S.player);
     loadSceneResources();
     S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000),setInterval(loadChatterSeed,60000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000), setInterval(loadMarket, 60000), setInterval(loadTrends, 600000), setInterval(loadWeather, 1800000));
     clockTick(); heroTick(); ensureLoop(); [900, 1800, 2700].forEach((ms) => setTimeout(chatterTick, ms)); setTimeout(greet, 400);
@@ -810,11 +814,12 @@
   window.ZEROOffice={...(window.ZEROOffice||{}),setLayout};
   document.addEventListener('zero-plaza-closed', () => {
     S.portalBusy = false; S.keys.clear(); S.target = null; stage.classList.remove('portal-travel');
-    if (S.player && S.portalLatch) { S.player.pos = S.world?.layout?W.spawn(S.world,{x:S.portalGoal.x-12,y:S.portalGoal.y+10})||S.player.pos:{x:136,y:40};place(S.player); }
-    S.portalLatch = false; proximity();
+    if (S.player && S.portalLatch) { S.player.pos = S.world?.layout?W.spawn(S.world,{x:S.portalGoal.x-12,y:S.portalGoal.y+10})||S.player.pos:{x:136,y:40};if(S.active)place(S.player); }
+    S.portalLatch = false;if(S.active&&S.player)proximity();
   });
-  document.addEventListener('zero-lobby-open', () => window.ZEROLobby.open());
-  if (document.documentElement.dataset.zeroView === 'lobby') window.ZEROLobby.open();
+  document.addEventListener('zero-lobby-open', () => window.ZERO?.navigate?window.ZERO.navigate('lobby'):window.ZEROLobby.open());
+  const entryRoute=window.location?.hash?.slice(1).split('?')[0];
+  if (document.documentElement.dataset.zeroView === 'lobby'&&(!entryRoute||entryRoute==='lobby')) window.ZEROLobby.open();
   document.addEventListener('visibilitychange', () => {
     if(document.hidden)stopSpeech();
     S.motions.forEach(motion => { if (document.hidden || !S.active || S.paused) motion.pause(); else motion.resume(); });

@@ -177,7 +177,7 @@
     clearInterval(heartbeat); clearTimeout(reconnect); heartbeat = null; reconnect = null; stopPlaza();
     if (socket) { const old = socket; socket = null; old.close(); }
   }
-  function closeLounge() { active = false; loungeGeneration++; closeSocket(); if (lounge?.open) lounge.close(); }
+  function closeLounge() { active = false; loungeGeneration++; closeSocket();plaza.people.forEach(removePet);plaza.people.clear();$('lounge-people')?.replaceChildren();$('lounge-log')?.replaceChildren();if (lounge?.open) lounge.close(); }
   function paintPerson(person) {
     person.el.style.left = person.pos.x + '%'; person.el.style.top = person.pos.y + '%';
     person.el.style.zIndex = String(Math.round(person.pos.y)); person.el.dataset.facing = person.direction || 'down';
@@ -191,7 +191,7 @@
       if (!Number.isFinite(row.x) || !Number.isFinite(row.y)) continue;
       keep.add(row.nick); let person = plaza.people.get(row.nick);
       if (!person) {
-        const el = button('', () => { if (row.nick !== plaza.nick) { closeLounge(); U()?.visit(row.nick); } }, 'lounge-person'), fig = make('span', 'lounge-person-figure');
+        const el = button('', () => { if (row.nick !== plaza.nick) { window.ZERO?.navigate?.('lobby');closeLounge(); U()?.visit(row.nick); } }, 'lounge-person'), fig = make('span', 'lounge-person-figure');
         let hue = 20; for (const char of row.nick) hue = (hue * 31 + char.charCodeAt(0)) % 360;
         fig.style.setProperty('--person-hue', String(hue)); fig.append(make('i', 'head'), make('i', 'body'), make('i', 'legs'));
         el.append(fig, make('span', 'lounge-person-name', row.nick)); el.title = row.nick === plaza.nick ? '내 캐릭터 · 바닥을 눌러 이동' : '눌러서 사무실 방문';
@@ -247,7 +247,7 @@
     if (blocked(row.nick) || !row?.id || typeof row.text !== 'string') return;
     const log = $('lounge-log'); if (log.querySelector('[data-chat-id="' + CSS.escape(String(row.id)) + '"]')) return;
     const p = make('p', 'lounge-message'); p.dataset.chatId = row.id;
-    p.append(button(row.nick, () => { closeLounge(); U()?.visit(row.nick); }, 'social-nick'), make('small', '', stamp(row.created_at)), make('span', 'social-text', row.text));
+    p.append(button(row.nick, () => {window.ZERO?.navigate?.('lobby');closeLounge(); U()?.visit(row.nick); }, 'social-nick'), make('small', '', stamp(row.created_at)), make('span', 'social-text', row.text));
     p.append(button('신고', () => { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: 'report', id: row.id, reason: '부적절한 내용'})); }));
     log.append(p); while (log.children.length > 200) log.firstElementChild.remove(); log.scrollTop = log.scrollHeight;
     if (live) { plaza.bubbles.set(row.nick, {text: row.text, until: Date.now() + 6500}); paintBubbles(); }
@@ -327,6 +327,7 @@
     });
   }
   function openLounge() {
+    if(window.ZERO?.currentView?.()&&window.ZERO.currentView()!=='plaza'&&document.getElementById('plaza-view'))return window.ZERO.navigate('plaza');
     if (!U()?.session()?.nick) { U()?.openProfile(); return false; }
     if (active && lounge?.open) return true;
     if (!lounge) {
@@ -356,7 +357,8 @@
       const send = make('button', 'primary-button', '보내기'); send.id = 'lounge-send'; send.type = 'submit'; form.append(input, send);
       form.addEventListener('submit', event => { event.preventDefault(); const text = input.value.trim(); if (text && socket?.readyState === WebSocket.OPEN && !send.disabled) { socket.send(JSON.stringify({type: 'message', text})); input.value = ''; } });
       lounge.append(loading, status, count, scene, pad, make('p', 'muted-note', '캐릭터 닉네임을 누르면 사무실을 방문해요. 대화는 참가자에게 공개됩니다. 계좌번호·연락처·복구 코드를 올리지 마세요.'), log, form);
-      lounge.addEventListener('close', () => { document.dispatchEvent(new CustomEvent('zero-plaza-closed')); active = false; loungeGeneration++; closeSocket(); plaza.people.forEach(removePet); plaza.people.clear(); $('lounge-people').replaceChildren(); $('lounge-log').replaceChildren(); });
+      lounge.addEventListener('close', () => {if(lounge.open)return;closeLounge();document.dispatchEvent(new CustomEvent('zero-plaza-closed'));});
+      lounge.addEventListener('click',event=>{if(event.target!==lounge)return;const box=lounge.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)lounge.close();});
       new ResizeObserver(() => { const w = scene.clientWidth, h = scene.clientHeight; if (w && h) { const edge = Math.min(40, 34 / w * 100); plaza.bounds = {minX: edge, maxX: 100 - edge, minY: Math.min(70, 72 / h * 100), maxY: 100 - 8 / h * 100}; } plaza.people.forEach(paintPerson); paintBubbles(); }).observe(scene);
     }
     closeSocket(); active = true; retries = 0; loungeGeneration++; lounge.showModal(); connectLounge(); return true;
@@ -440,4 +442,5 @@
   document.addEventListener('zero-session-changed',()=>{sessionEpoch++;guestGeneration++;closeLounge();if(guest?.open)guest.close();guest?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());if(compose?.open)compose.close();compose?.querySelector('form')?.reset();if(closet?.open)closet.close();closet?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());paint();});
   window.ZEROSocial={openCommunity:()=>openCommunity(!loaded),openLounge,closeLounge,openGuestbook,openWardrobe,paintAppearance,updatePet,removePet};
   if(window.ZERO?.currentView?.()==='community')openCommunity(true);
+  if(window.ZERO?.currentView?.()==='plaza')openLounge();
 })();

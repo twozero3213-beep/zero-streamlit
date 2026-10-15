@@ -10,7 +10,7 @@
     [...wanted].sort((a, b) => a - b).forEach((n) => { if (n - previous > 1) numbers.push(null); numbers.push(n); previous = n; });
     return {pages, current, start: current * size, end: Math.min(count, current * size + size), numbers};
   }
-  function pageSize(kind,width){const mobile=width<768;return kind==='research'?mobile?6:10:kind==='cards'?mobile?2:4:kind==='news'?mobile?2:4:mobile?4:8;}
+  function pageSize(kind,width){const mobile=width<768;return kind==='research'?10:kind==='cards'?mobile?2:4:kind==='news'?mobile?2:4:mobile?4:8;}
   function researchControlsPage(doc){const controls=doc.querySelector?.('#research-view .table-toolbar .stock-analytics-controls'),target=doc.getElementById('research-options');if(controls&&target)target.append(controls);}
   if (typeof module !== 'undefined' && module.exports) module.exports = {pageModel,pageSize,researchControlsPage};
   if (typeof document === 'undefined') return;
@@ -51,6 +51,7 @@
         nav.append(button('다음', page + 1, {disabled: page === model.pages - 1}));
         const info = document.createElement('span'); info.className = 'pager-info'; info.textContent = list.length + '개 중 ' + (model.start + 1) + '–' + model.end; nav.append(info);
       }
+      document.dispatchEvent(new CustomEvent('zero-page-changed', {detail:{id:container.id,start:model.start,end:model.end}}));
       queueMicrotask(() => { applying = false; });
     }
     new MutationObserver(() => { if (!applying) apply(); }).observe(container, {childList: true,subtree:true,attributes:true,attributeFilter:['hidden']});

@@ -23,13 +23,13 @@ const stamp = (value, short = false) => {
 function node(tag, className, text) {
   const element = document.createElement(tag);
   if (className) element.className = className;
-  if (text !== undefined) element.textContent = String(text).replaceAll('모의', '');
+  if (text !== undefined) element.textContent = String(text);
   return element;
 }
 function svgNode(tag, attributes, text) {
   const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
   Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
-  if (text !== undefined) element.textContent = String(text).replaceAll('모의', '');
+  if (text !== undefined) element.textContent = String(text);
   return element;
 }
 const positionKey = (row) => row.market + ':' + row.symbol;
@@ -83,6 +83,7 @@ function render(data) {
   const summary = {...connectedSummary, holdings_value_krw: referenceAvailable ? scope.holdings_value_krw : null,
     holdings_performance: referenceAvailable ? scope.holdings_performance || {} : {}};
   state.data = {...data, summary, holdings, allocations: referenceAvailable ? scope.allocations : {}, history: []};
+  window.ZEROMTSPortfolio?.render(state.reference, data);
   const fx = summary.fx || {}, currencies = connectedSummary.by_currency || {};
   $('#holding-count').textContent = holdings.length + '개 종목';
   $('#holdings-value').textContent = money(summary.holdings_value_krw);
@@ -142,12 +143,12 @@ function render(data) {
   $('#policy-capital').textContent = money(context.policy_capital_krw);
   $('#fx-value').textContent = Number.isFinite(number(fx.usd_krw)) ? '1 USD = ' + format(fx.usd_krw, 2) + '원' : '미확인';
   $('#fx-date').textContent = fx.observed_at ? '환율 기준 ' + stamp(fx.observed_at) : '환율을 확인하지 못한 종목은 원화 평가를 보류합니다.';
-  $('#collected-at').textContent = context.collected_at ? '마지막 계좌 조회 ' + stamp(context.collected_at) + ' KST' : '아직 조회하지 않았습니다';
+  $('#collected-at').textContent = state.demo && context.data_kind === 'DEMO' ? '시연 자료 · 계좌 조회 없음' : context.collected_at ? '마지막 계좌 조회 ' + stamp(context.collected_at) + ' KST' : '아직 조회하지 않았습니다';
   const connected = status.connections || {};
   const observedEmpty = Boolean(context.collected_at) && (data.holdings || []).length === 0;
   // An observed empty account is a completed query; stale/partial evidence still wins.
   const live = data.live_quotes;
-  const connectionText = live ? '공개 시세 반영 · 수량은 이전 계좌 자료' : status.refreshing ? '계좌 조회 중' : status.state === 'STALE' ? '이전 조회 자료 표시 중' : status.state === 'PARTIAL' ? '일부 자료 미확인' : observedEmpty ? '조회 완료 · 보유 종목 없음' : status.state === 'EMPTY' ? '계좌 조회 준비' : '계좌 조회 완료';
+  const connectionText = state.demo && context.data_kind === 'DEMO' ? '시연 자료 · 실제 계좌 아님' : live ? '공개 시세 반영 · 수량은 이전 계좌 자료' : status.refreshing ? '계좌 조회 중' : status.state === 'STALE' ? '이전 조회 자료 표시 중' : status.state === 'PARTIAL' ? '일부 자료 미확인' : observedEmpty ? '조회 완료 · 보유 종목 없음' : status.state === 'EMPTY' ? '계좌 조회 준비' : '계좌 조회 완료';
   const ready = Boolean(live) || status.state === 'READY' || (status.state === 'EMPTY' && observedEmpty);
   $('#connection-status').replaceChildren(node('i', 'status-dot ' + (ready ? 'ready' : status.state === 'EMPTY' ? '' : 'stale')), document.createTextNode(connectionText));
   const important = (data.errors || []).filter((code) => ['REFRESH_FAILED', 'ACCOUNT_SNAPSHOT_INCOMPLETE', 'FX_UNAVAILABLE', 'HOLDING_PRICE_UNAVAILABLE', 'HOLDING_COST_UNAVAILABLE', 'SAVED_SNAPSHOT_INVALID', 'SNAPSHOT_SAVE_FAILED'].includes(code));
@@ -262,7 +263,7 @@ function renderRows() {
     if (!Number.isFinite(bv)) return -1;
     return (state.descending ? bv - av : av - bv)||tie;
   });
-  const direction=state.descending?'큰 순':'작은 순',sortButton=$('#sort-value-mobile');if(sortButton){sortButton.textContent=holdingSortLabels[state.sortMetric]+' '+direction;sortButton.setAttribute('aria-label',holdingSortLabels[state.sortMetric]+' '+direction+', 누르면 방향 변경');}
+  const direction=state.descending?'큰 순':'작은 순',sortButton=$('#sort-value-mobile');if(sortButton){sortButton.textContent=direction+(state.descending?' ↓':' ↑');sortButton.setAttribute('aria-label',holdingSortLabels[state.sortMetric]+' '+direction+', 누르면 방향 변경');}
   const sortDirection=document.getElementById('holding-sort-direction');if(sortDirection){sortDirection.textContent=direction+(state.descending?' ↓':' ↑');sortDirection.setAttribute('aria-label',holdingSortLabels[state.sortMetric]+' '+direction+' · 누르면 방향 변경');}
   const header=$('#sort-value')?.parentElement;if(header)header.setAttribute('aria-sort',state.sortMetric==='value'?(state.descending?'descending':'ascending'):'none');
   const body = $('#holdings-body'), list = $('#holding-list'); body.replaceChildren(); list.replaceChildren();
@@ -287,7 +288,8 @@ function renderRows() {
     tr.append(node('td', 'number position-return ' + signClass, percentText));
     body.append(tr);
     // Mobile reuses the same valuation and native price-only P&L; no new return math.
-    const item = node('li', tr.className); item.dataset.key = positionKey(row); item.append(positionButton(row));
+    const item = node('li', tr.className + ' mts-holding-card'); item.dataset.key = positionKey(row); item.append(positionButton(row));
+    window.ZEROMTSCards?.decorate?.(item, {...row, identity: positionKey(row), as_of: state.data?.context?.collected_at});
     const summary = node('dl', 'position-summary'), value = node('div'), change = node('div');
     value.append(node('dt', '', '평가액'), node('dd', '', valueText));
     const changeValue = node('dd', 'position-return ' + signClass, percentText);
@@ -303,6 +305,7 @@ function renderRows() {
   $('#table-empty').hidden = rows.length > 0;
   $('#table-empty').textContent = state.search || state.market !== 'ALL' ? '조건에 맞는 보유 종목이 없습니다. 검색어나 시장 필터를 바꿔 주세요.' : state.data?.summary?.zero_portfolio?.state !== 'REFERENCE' ? 'ZERO 운용 범위를 확인한 뒤 보유 종목을 표시합니다.' : 'ZERO 참고 원장에 보유 종목이 없습니다.';
   $('#table-count').textContent = rows.length + '개 표시 / 전체 ' + (state.data?.holdings?.length || 0) + '개 종목';
+  window.ZEROMTSCards?.observe?.(list);
 }
 function renderBenchmark(benchmark) {
   const fingerprint = JSON.stringify(benchmark || null);
@@ -895,6 +898,7 @@ async function loadTeam(event, force = false) {
 $('#team-event').addEventListener('change', () => loadTeam($('#team-event').value));
 const views = {
   lobby: ['ZERO 트레이딩 플로어', '지금 일하는 ZERO 팀을 보고, 내 캐릭터로 직원과 이야기해 보세요.'],
+  plaza: ['실시간 광장', '다른 참가자와 캐릭터를 움직이고 공개 대화를 나누세요.'],
   company: ['내 투자회사 · 전략 직원', '직원을 고용하고 과거 데이터로 전략과 리밸런싱 제안을 확인하세요.'],
   community: ['투자회사 커뮤니티', '페르소나와 전략 운용 경험을 함께 나눠 보세요.'],
   portfolio: ['내 자산', '1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.'],
@@ -908,6 +912,9 @@ const views = {
   guide: ['자료 설명', '숫자의 계산 기준과 아직 확인하지 못한 범위.']
 };
 let currentView = 'portfolio';
+const domainRoutes={investment:'portfolio',office:'lobby',plaza:'plaza',community:'community'};
+function domainFor(view){return view==='plaza'||view==='community'?view:['lobby','company','study','team'].includes(view)?'office':'investment';}
+let routeStarted=false,plazaReturn={view:'lobby',hash:'#lobby'};
 function closeMenu() {
   const menu = $('#more-menu');
   if (menu?.open) menu.close();
@@ -916,8 +923,11 @@ function closeMenu() {
 function navigate(view, updateAddress = true) {
   // One route updates desktop, bottom tabs and menus together; invalid links keep the current page.
   if (!Object.hasOwn(views, view) || !$('#' + view + '-view')) return false;
+  if(view==='plaza'&&currentView!=='plaza'&&routeStarted){const hash=window.location?.hash;plazaReturn={view:currentView,hash:hash?.slice(1).split('?')[0]===currentView?hash:'#'+currentView};}
   currentView = view;
+  routeStarted=true;
   document.documentElement.dataset.zeroView = view;
+  const domain=domainFor(view);document.documentElement.dataset.zeroDomain=domain;
   document.dispatchEvent?.(new CustomEvent('zero-view-changed', {detail:{view}}));
   if ($('#mobile-view')) $('#mobile-view').value = view;
   $('#refresh').hidden = view !== 'portfolio';
@@ -927,6 +937,8 @@ function navigate(view, updateAddress = true) {
     button.classList.toggle('active', active);
     if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
   });
+  document.querySelectorAll('[data-domain]').forEach(button=>{const active=button.dataset.domain===domain;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current',button.dataset.view===view?'page':'true');else button.removeAttribute('aria-current');});
+  const subnav=document.querySelector('.mts-subnav');if(subnav)subnav.hidden=!['portfolio','research','workbench'].includes(view);
   $('#page-title').textContent = views[view][0];
   $('#page-subtitle').textContent = views[view][1];
   closeMenu();
@@ -935,21 +947,30 @@ function navigate(view, updateAddress = true) {
   const skip = document.querySelector('.skip-link'); if (skip) skip.href = '#page-title';
   $('#page-title').tabIndex = -1;
   $('#page-title').focus?.({preventScroll: true});
-  document.querySelector('.mobile-tab.menu-open')?.classList.toggle('active', !['portfolio','research','news','macro'].includes(view));
+  document.querySelector('.mobile-tab.menu-open')?.classList.toggle('active', !Object.hasOwn(domainRoutes,domain));
   if (['study', 'macro', 'news', 'reports'].includes(view)) window.ZERODesk?.open(view);
   if (view === 'research') window.ZEROResearch?.load();
   if (view === 'workbench') window.ZEROExplore?.init();
   if (view === 'guide') loadReferences();
   if (view === 'community') window.ZEROSocial?.openCommunity();
   if (view === 'company') window.ZEROCompany?.open();
-  if (view !== 'lobby') window.ZEROSocial?.closeLounge();
+  if (view !== 'plaza') window.ZEROSocial?.closeLounge();
   window.ZEROLobby?.setActive(view === 'lobby');
   if (view === 'lobby') { window.ZEROLobby?.open(); window.ZEROLobbyUsers?.board?.(); }
+  if(view==='plaza'){const opened=window.ZEROSocial?.openLounge();if($('#plaza-status'))$('#plaza-status').textContent=opened===false?'닉네임으로 로그인한 뒤 광장에 참여하세요.':'실시간 광장 · 대화는 참가자에게 공개됩니다.';}
   if (view === 'team') loadTeam($('#team-event').value === 'ONBOARDING' ? undefined : $('#team-event').value, true);
   if (view === 'portfolio' && state.data) { renderAllocation(state.data.holdings, state.data.summary.holdings_value_krw); renderHistory(state.data.history || []); }
   return true;
 }
-window.ZERO = {...window.ZERO, navigate, currentView: () => currentView, getPortfolio: () => state.data};
+window.ZERO = {...window.ZERO, navigate, currentView: () => currentView, currentDomain:()=>domainFor(currentView),domainFor,getPortfolio: () => state.data};
+document.querySelectorAll('[data-domain]').forEach(button=>{if(!button.dataset.view)button.addEventListener('click',()=>navigate(domainRoutes[button.dataset.domain]));});
+$('#plaza-open')?.addEventListener('click',()=>navigate('plaza'));
+document.addEventListener?.('zero-plaza-closed',()=>{
+  if(currentView!=='plaza')return;
+  const back=Object.hasOwn(views,plazaReturn.view)&&$('#'+plazaReturn.view+'-view')?plazaReturn:{view:'lobby',hash:'#lobby'};
+  window.history?.replaceState?.({view:back.view},'',back.hash);navigate(back.view,false);
+  if(back.view==='workbench'&&!window.ZEROExplore?.restoreRoute?.())window.ZEROExplore?.openWatchlist(false);
+});
 document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => {
   navigate(button.dataset.view);
   if (button.dataset.view === 'workbench') window.ZEROExplore?.openWatchlist();
@@ -972,7 +993,7 @@ document.addEventListener?.('keydown', (event) => {
 function restoreRoute() {
   const view = window.location?.hash?.slice(1).split('?')[0];
   if (Object.hasOwn(views, view || '')) {
-    if (currentView !== view) navigate(view, false);
+    if (!routeStarted || currentView !== view) navigate(view, false);
     if (view === 'workbench' && !window.ZEROExplore?.restoreRoute?.()) window.ZEROExplore?.openWatchlist(false);
   }
 }

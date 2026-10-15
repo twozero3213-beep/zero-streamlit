@@ -1,0 +1,112 @@
+/* Financial surfaces share the fixed viewport; social renderers have separate routes. */
+.mts-subnav{display:flex;flex:none;gap:6px;align-items:center;min-height:40px}
+.mts-subnav button{min-height:40px;border:0;border-radius:10px;padding:6px 18px;background:transparent;color:var(--muted);font-weight:650}
+.mts-subnav button.active{background:#e8f1ff;color:#1b64da}
+.mts-subnav #refresh{margin-left:auto;color:#1b64da;background:#e8f1ff;padding:4px 8px;min-width:36px}
+.mts-subnav #refresh svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+html[data-zero-view=portfolio] .page-header,html[data-zero-view=research] .page-header,html[data-zero-view=workbench] .page-header{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;margin:0}
+@media(max-width:767px){.mts-subnav #refresh span{display:none}}
+html #portfolio-view .portfolio-summary{padding:20px 24px}
+html .account-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:16px 0}
+html .account-metrics>div,html .account-metrics .total-metric,html .account-metrics .performance-metric,html .account-metrics .secondary-metric:last-child{grid-column:auto}
+html .account-metrics>div{min-width:0;border:1px solid #eef0f3;border-radius:14px;padding:16px;background:#fff}
+html .account-metrics dt{font-size:14px;color:#626d7b;line-height:1.4}
+html .account-metrics dt small{font-size:11px;font-weight:400}
+html .account-metrics dd:not(.metric-note){font-size:clamp(18px,2.2vw,30px);line-height:1.35;letter-spacing:-.03em;margin:6px 0;overflow-wrap:anywhere}
+html .account-metrics .metric-note{font-size:12px;line-height:1.4;margin:0}
+html #portfolio-view .account-scope{font-size:16px;margin:0 0 8px}
+html #portfolio-view .summary-evidence>summary{min-height:36px;padding:8px 0}
+html #portfolio-view .account-reference-note{margin:8px 0;font-size:12px}
+.mts-allocation{margin:16px 0}
+.mts-allocation-track{height:12px;border-radius:8px;overflow:hidden;display:flex;background:#eef0f3}
+.mts-allocation-US_EQUITY{background:#3182f6}.mts-allocation-KR_EQUITY{background:#14a090}.mts-allocation-US_RESERVE{background:#7e8fa6}
+.mts-allocation-legend{display:flex;gap:18px;flex-wrap:wrap;list-style:none;padding:0;margin:10px 0;font-size:13px}
+.mts-allocation-legend li{background:transparent;display:flex;align-items:center;gap:6px}
+.mts-allocation-legend li:before{content:'';width:8px;height:8px;border-radius:50%;background:#3182f6}
+.mts-allocation-legend .mts-allocation-KR_EQUITY:before{background:#14a090}.mts-allocation-legend .mts-allocation-US_RESERVE:before{background:#7e8fa6}
+html #portfolio-view .summary-evidence{margin:12px 0 0}
+html #portfolio-view .summary-meta{padding-top:12px;margin-top:12px}
+html .holding-list{display:grid;list-style:none;padding:0;margin:4px 0;gap:0}
+html .holding-list .mts-holding-card{border:1px solid #eef0f3;border-radius:12px;padding:4px 10px;display:grid;grid-template-columns:minmax(100px,1fr) minmax(100px,1fr) minmax(130px,1fr);align-items:center;gap:12px;min-height:48px}
+html .mts-holding-card .position-button{min-height:44px;padding:0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
+html .mts-holding-card .ticker{font-size:14px;line-height:18px}
+html .mts-holding-card .market-label{font-size:11px;line-height:14px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html .mts-holding-card .position-summary{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px}
+html .mts-holding-card .position-summary dt{font-size:10px;margin:0}
+html .mts-holding-card .position-summary dd{font-size:13px;margin:0}
+html .mts-holding-card .position-pnl{font-size:10px}
+html .mts-holding-card .position-details{display:none}
+.mts-table-details{margin:6px 0;font-size:12px}
+html .mts-table-details .table-scroll{display:block}
+html .viewport-content-dialog .holdings-panel .stock-analytics-controls{display:flex;font-size:12px}
+.mts-table-details>summary{cursor:pointer;min-height:30px;display:flex;align-items:center;color:#1b64da}
+html .holdings-panel{padding:12px 18px}
+html .holdings-panel .table-toolbar{display:flex;align-items:center;flex-wrap:nowrap;margin:4px 0;padding:0;gap:8px}
+html .holdings-panel .table-foot{display:none}
+html .holdings-panel .panel-heading{margin:0 0 4px;padding:0;display:flex;align-items:center}
+html .mts-table-details>summary{padding:0;min-height:30px}
+html .holdings-panel .panel-heading p{font-size:11px;margin:2px 0}
+html .holdings-panel .stock-analytics-controls{font-size:12px}
+html .holdings-panel .stock-analytics-controls select,html .holdings-panel .stock-analytics-controls button{min-height:32px;padding:4px}
+html .holdings-panel .market-filter button,html .holdings-panel .search-label{min-height:32px}
+html .holdings-panel .panel-heading h2{font-size:16px}
+html .global-navigation .top-nav-item{font-size:13px;white-space:nowrap;padding:6px 9px}
+html .global-navigation small{font-size:10px}
+html[data-zero-view=portfolio] main>.notice,html[data-zero-view=research] main>.notice,html[data-zero-view=workbench] main>.notice{font-size:11px;max-height:48px;overflow:hidden}
+html[data-zero-domain=investment] .office-floor-ticker{display:none}
+@media(max-width:767px){
+ .mts-subnav{min-height:36px;gap:4px}.mts-subnav button{min-height:36px;padding:4px 14px;font-size:13px}
+ html .account-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+ html .account-metrics>div,html .account-metrics .secondary-metric:last-child{padding:10px;border:1px solid #eef0f3}
+ html .account-metrics dt{font-size:12px}html .account-metrics dd:not(.metric-note),html .account-metrics .total-metric>dd:first-of-type,html .account-metrics .performance-metric>dd:first-of-type,html .account-metrics .secondary-metric>dd:first-of-type{font-size:20px;white-space:nowrap;margin:4px 0}
+ html .account-metrics .metric-note{font-size:10px}
+ html #portfolio-view .portfolio-summary{padding:16px}
+ .mts-allocation{margin:12px 0}.mts-allocation-legend{font-size:11px;gap:10px;margin:8px 0}
+ html .holding-list .mts-holding-card{grid-template-columns:minmax(95px,1fr) minmax(125px,1.1fr);gap:6px;min-height:44px;padding:0 8px;border-radius:9px}
+ html .mts-holding-card .position-summary{display:none}
+ html .mts-holding-card .position-button{min-height:40px}
+ html .mts-holding-card .ticker{font-size:13px;line-height:16px}
+ html .mts-holding-card .market-label{font-size:10px;line-height:12px}
+ html .holdings-panel{padding:8px;position:relative}
+ html .holdings-panel .mts-table-details:not([open]){position:absolute;top:6px;right:8px;margin:0}
+ html .holdings-panel .table-foot{display:none}
+ html .holdings-panel .panel-heading .currency-switch{display:none}
+ html .holdings-panel .panel-heading p,html .holdings-panel .table-foot>span:last-child{display:none}
+ html .holdings-panel .table-toolbar{display:flex;flex-wrap:nowrap;gap:4px}
+ html .holdings-panel .search-label input{height:32px;min-height:32px;padding:4px;width:100px;font-size:12px}
+ html .holdings-panel .search-label svg{width:16px;height:16px}
+ html .holdings-panel .search-label{max-width:125px}
+ html .holdings-panel .market-filter button{font-size:11px;padding:2px 5px;min-height:32px}
+ html .holdings-panel .mobile-sort{display:block;min-height:32px;font-size:10px;padding:2px 4px;white-space:nowrap}
+ html .holdings-panel .stock-analytics-controls{display:none}
+ html .holdings-panel .stock-analytics-controls select{width:110px;font-size:11px}
+ html .holdings-panel .stock-analytics-controls button{font-size:11px}
+ html .mobile-tabbar{grid-template-columns:repeat(5,minmax(0,1fr))}
+ html .mobile-tabbar .mobile-tab{font-size:11px;gap:2px;min-height:44px}
+ html .mobile-tabbar small{font-size:9px}
+}
+html #research-view .research-panel>.panel-heading{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px}
+html #research-view .research-panel>.panel-heading h2{font-size:16px}
+html #research-view #research-reload{min-height:32px;padding:4px 8px;font-size:12px}
+html #research-view .research-panel>.table-toolbar{display:flex;flex-direction:row;align-items:center;flex-wrap:nowrap;gap:4px;margin:4px 0}
+@media(max-width:767px){
+ html #research-view #research-intro{display:none}
+ html #research-view .market-filter{gap:2px;flex:none}
+ html #research-view .market-filter button{min-height:32px;font-size:11px;padding:4px 5px}
+ html #research-view .market-filter button span{font-size:10px;margin:0}
+ html #research-view .search-label{min-width:0;min-height:32px;width:110px;flex:1}
+ html #research-view .search-label input{min-width:0;width:100%;height:32px;min-height:32px;font-size:11px;padding:2px}
+ html #research-view .search-label svg{width:14px;height:14px}
+ html #research-view .pager .pager-info{display:none}
+ html #research-view .pager{flex-wrap:nowrap;gap:4px}
+}
+html #stock-workbench .stock-detail-tabs{display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;min-height:44px;height:44px;gap:4px;margin-top:6px}
+html #stock-workbench .stock-detail-tabs button{white-space:nowrap;flex:0 0 auto;min-height:40px;padding:4px 8px}
+html #stock-workbench:has(#stock-tab-order[aria-selected=true])>.market-card{display:none}
+html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .stock-currency-label{display:none}
+html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .stock-header{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
+html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .stock-title{font-size:20px;line-height:1.3}
+html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .stock-meta{margin:0;font-size:11px}
+html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .stock-tab-pane{padding-top:4px}
+html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .mts-orders{margin:0;padding:8px}
+@media(prefers-reduced-motion:reduce){.mts-subnav button,.mobile-tab,.top-nav-item{transition:none}}

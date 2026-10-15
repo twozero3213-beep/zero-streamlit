@@ -197,7 +197,7 @@ function parseStockRoute(hash){
   const values=new URLSearchParams(query),keys=['identity','tab','range','interval','compareIdentity','compareRange'];
   if([...values.keys()].some(key=>!keys.includes(key)||values.getAll(key).length!==1))return null;
   const route={identity:values.get('identity'),tab:values.get('tab')??'chart',range:values.get('range')??'5Y',interval:values.get('interval')??'1d',compareIdentity:values.get('compareIdentity'),compareRange:values.get('compareRange')??'5Y'},identity=/^(US:[A-Z][A-Z0-9.-]{0,14}|KR:[A-Z0-9]{6})$/;
-  return identity.test(route.identity||'')&&['chart','company','financials','fund','news','compare','opinion'].includes(route.tab)&&['1D','1W','1M','3M','1Y','5Y'].includes(route.range)&&['1m','10m','60m','1d'].includes(route.interval)&&(route.compareIdentity===null||identity.test(route.compareIdentity)&&route.compareIdentity!==route.identity)&&['3M','1Y','5Y'].includes(route.compareRange)?route:null;
+  return identity.test(route.identity||'')&&['chart','order','company','financials','fund','news','compare','opinion'].includes(route.tab)&&['1D','1W','1M','3M','1Y','5Y'].includes(route.range)&&['1m','10m','60m','1d'].includes(route.interval)&&(route.compareIdentity===null||identity.test(route.compareIdentity)&&route.compareIdentity!==route.identity)&&['3M','1Y','5Y'].includes(route.compareRange)?route:null;
 }
 function stockRouteHash(route){
   if(!route.identity)return '#workbench';
@@ -227,7 +227,7 @@ if(typeof window!=='undefined') {
   (()=>{
     const explore={catalog:[],identity:null,tab:'chart',range:'5Y',interval:'1d',kind:'candle',averages:new Set([20]),chart:null,loading:false,count:100,start:0,cursor:null,sequence:0,searchSequence:0,compareSequence:0,compareIdentity:null,compareRange:'5Y',currency:'NATIVE'};
     const favoritesKey='zero-watchlist-v1',knownETF=new Set(['SPY','BIL','UUP','VNQ','GLD','TQQQ','QQQ','TMF','SCHD','JEPQ','JEPI','SPYD','HDV','VYM','NOBL','069500','148020']);
-    const companyNewsCache=new Map();let companyNewsSequence=0;
+    const companyNewsCache=new Map();let companyNewsSequence=0,orderTicket=null;
     const root=()=>document.getElementById('stock-workbench');
     const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text).replaceAll('모의','');return n;};
     const numeric=(value)=>value===null||value===undefined||value===''?NaN:Number(value);
@@ -236,7 +236,7 @@ if(typeof window!=='undefined') {
     function favoriteIds(){try{const raw=JSON.parse(localStorage.getItem(favoritesKey)||'[]');return Array.isArray(raw)?[...new Set(raw.filter(id=>typeof id==='string'&&/^(US:[A-Z][A-Z0-9.-]{0,14}|KR:[A-Z0-9]{6})$/.test(id)))].slice(0,30):[];}catch(_){return [];}}
     function favorite(identity){const ids=favoriteIds(),index=ids.indexOf(identity);if(index>=0)ids.splice(index,1);else if(ids.length<30)ids.push(identity);else throw Error('WATCHLIST_LIMIT');localStorage.setItem(favoritesKey,JSON.stringify(ids));return ids.includes(identity);}
     function favoriteLabel(target,active){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),path=document.createElementNS(svg.namespaceURI,'path');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('width','18');svg.setAttribute('height','18');svg.setAttribute('aria-hidden','true');path.setAttribute('d','m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.4-5.7-3-5.7 3 1.1-6.4L2.8 9.7l6.4-.9Z');path.setAttribute('stroke','#3182f6');path.setAttribute('stroke-width','1.7');path.setAttribute('fill',active?'#3182f6':'none');svg.append(path);target.replaceChildren(svg,el('span','','관심종목'));target.setAttribute('aria-pressed',String(active));target.setAttribute('aria-label','관심종목 '+(active?'해제':'추가'));}
-    function navigate(){window.ZERO?.navigate?.('workbench',false);}
+    function navigate(){orderTicket?.destroy();orderTicket=null;window.ZERO?.navigate?.('workbench',false);}
     function stockAddress(replace=false){
       // A bounded detail address restores context after reload/back; it carries no account values.
       if(window.ZERO?.currentView&&window.ZERO.currentView()!=='workbench')return;
@@ -291,7 +291,7 @@ if(typeof window!=='undefined') {
       const star=button('',()=>{try{favoriteLabel(star,favorite(company.id));}catch(error){const note=el('p','muted-note',error.message==='WATCHLIST_LIMIT'?'관심종목은 최대 30개입니다. 먼저 다른 종목을 해제하세요.':'이 브라우저에서 관심종목을 저장할 수 없습니다.');header.querySelector('.stock-favorite-notice')?.remove();note.classList.add('stock-favorite-notice');header.append(note);}},'stock-favorite');favoriteLabel(star,favoriteIds().includes(company.id));const currencyLabel=el('label','stock-currency-label','금액 통화 '),currency=el('select');currency.setAttribute('aria-label','종목 금액 표시 통화');[['NATIVE','원통화'],['KRW','원화 KRW'],['USD','달러 USD']].forEach(([value,label])=>{const option=el('option','',label);option.value=value;currency.append(option);});currency.value=explore.currency;currency.addEventListener('change',()=>{explore.currency=currency.value;renderQuote();if(['financials','opinion','compare'].includes(explore.tab))switchTab(explore.tab,false);});currencyLabel.append(currency);header.append(title,currencyLabel,star);
       const quote=el('div','stock-quote');quote.id='stock-quote';quote.append(el('strong','','가격 확인 중'),el('span','muted-note','공개 제공자 가격 · 실시간 호가와 다를 수 있습니다.'));
       const tabs=el('div','stock-detail-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','종목 상세');
-      [['chart','차트'],['compare','두 종목 비교'],['opinion','ZERO 의견'],['company','기업정보'],['financials','재무'],...(company.kind==='ETF'?[['fund','ETF 구성']]:[]),['news','관련 뉴스']].forEach(([key,label])=>{const b=button(label,()=>switchTab(key));b.id='stock-tab-'+key;b.dataset.stockTab=key;b.setAttribute('role','tab');b.setAttribute('aria-controls','stock-tab-pane');b.setAttribute('aria-selected',String(key===explore.tab));tabs.append(b);});
+      [['chart','차트'],['order','매수·매도'],['compare','두 종목 비교'],['opinion','ZERO 의견'],['company','기업정보'],['financials','재무'],...(company.kind==='ETF'?[['fund','ETF 구성']]:[]),['news','관련 뉴스']].forEach(([key,label])=>{const b=button(label,()=>switchTab(key));b.id='stock-tab-'+key;b.dataset.stockTab=key;b.setAttribute('role','tab');b.setAttribute('aria-controls','stock-tab-pane');b.setAttribute('aria-selected',String(key===explore.tab));tabs.append(b);});
       tabs.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const list=[...tabs.querySelectorAll('button')],index=list.indexOf(document.activeElement),next=event.key==='Home'?0:event.key==='End'?list.length-1:(index+(event.key==='ArrowRight'?1:-1)+list.length)%list.length;list[next]?.focus();list[next]?.click();});
       const pane=el('section','stock-tab-pane');pane.id='stock-tab-pane';pane.setAttribute('role','tabpanel');target.replaceChildren(header,quote,tabs,pane);
       window.ZEROCompany?.openMarketCard(company,target);
@@ -304,8 +304,16 @@ if(typeof window!=='undefined') {
       pane.setAttribute('aria-labelledby','stock-tab-'+tab);
       document.querySelectorAll('[data-stock-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.stockTab===tab);b.setAttribute('aria-selected',String(b.dataset.stockTab===tab));});
       delete pane.dataset.researchRequest;
+      orderTicket?.destroy();orderTicket=null;
       pane.replaceChildren();if(tab==='chart'){chartPanel(pane);if(explore.chart?.range===explore.range)rebuildChart();else await loadChart();return;}
-      pane.append(el('p','muted-note','자료를 불러오는 중입니다.'));const company=companyById(identity);
+      const company=companyById(identity);
+      if(tab==='order'){
+        orderTicket=window.ZEROMTSOrders?.mount(company,pane);
+        const ticket=pane.querySelector('.mts-orders');if(ticket)ticket.open=true;
+        if(!orderTicket)pane.append(el('p','stock-empty','주문 초안을 불러오지 못했습니다. 실제 제출은 차단되어 있습니다.'));
+        return;
+      }
+      pane.append(el('p','muted-note','자료를 불러오는 중입니다.'));
       if(tab==='compare'){await comparisonPanel(pane,company);return;}
       if(tab==='fund'){const section=await window.ZEROFunds?.section(identity);if(explore.identity===identity&&explore.tab===tab)pane.replaceChildren(section||el('p','stock-empty','이 ETF의 구성 자료는 수집되지 않았습니다.'));return;}
       if(tab==='company'){await window.ZEROResearch?.renderInto?.(identity,pane);return;}

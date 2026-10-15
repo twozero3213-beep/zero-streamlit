@@ -64,11 +64,13 @@ function renderETFResearch(data,u) {
   if(u?.source_url)evidence.append(researchLink('AUM 순위 출처',u.source_url));
   const rows=researchSortedRows((u?.rows||[]).filter(row=>window.ZEROExploreMath?.searchable?window.ZEROExploreMath.searchable(row,companyResearch.search):(row.name+' '+row.symbol).toLowerCase().includes(companyResearch.search)),data,null,companyResearch.sort,companyResearch.descending,'','');
   rows.forEach(row=>{
+    if(window.MTSCards){list.append(window.MTSCards.create({identity:row.id,name:row.name,symbol:row.symbol,currency:row.currency,subtitle:row.symbol+' · ETF · AUM '+money(row.market_cap,'USD'),onOpen:()=>showCompany(row.id,null,{range:'5Y',interval:'1d'})}));return;}
     const item=node('li','research-rank'),button=node('button','research-company');button.type='button';button.dataset.companyId=row.id;
     const title=node('span','research-company-name');title.append(node('strong','',row.name),node('span','market-label',row.symbol+' · ETF'));
     const values=node('span','research-rank-value etf-aum');values.append(node('strong','','AUM '+money(row.market_cap,'USD')),node('span','market-label','제공자 자산규모 순위 '+row.rank+'위'));
     button.append(node('span','research-rank-number',format(row.rank)),title,values);button.addEventListener('click',()=>showCompany(row.id,null,{range:'5Y',interval:'1d'}));item.append(button);list.append(item);
   });
+  window.MTSCards?.observe(list);
   $('#research-empty').hidden=rows.length>0;$('#research-empty').textContent=u?.rows?.length?'검색 결과가 없습니다.':'ETF 50 순위 자료가 없습니다. 주요 ETF 바로가기는 순위와 별도로 이용할 수 있습니다.';
   $('#research-count').textContent=(u?.rows?.length||0)+' / '+(u?.requested_count||50)+'개 · 운용자산(AUM) · 원문 USD · 제공자 순위 보존 · '+(u?.status||'UNAVAILABLE');
   const major=$('#research-etf-shortcuts');major.replaceChildren();
@@ -120,6 +122,7 @@ function renderResearch() {
   if (u?.source_url) $('#research-date').append(researchLink('순위 출처', u.source_url));
   const rows = researchSortedRows((u?.rows || []).filter((row) => window.ZEROExploreMath?.searchable?window.ZEROExploreMath.searchable(row,companyResearch.search):(row.name+' '+row.symbol).toLowerCase().includes(companyResearch.search)),data,companyResearch.desk,companyResearch.sort,companyResearch.descending,companyResearch.annualPeriod,companyResearch.quarterPeriod);
   rows.forEach((row) => {
+    if(window.MTSCards){const value=researchSortValue(row,data,companyResearch.desk,companyResearch.sort,companyResearch.annualPeriod,companyResearch.quarterPeriod);list.append(window.MTSCards.create({identity:row.id,name:row.name,symbol:row.symbol,currency:row.currency,subtitle:row.symbol+' · '+(companyResearch.sort==='market_cap'?'시총 '+researchDisplayMoney(row.market_cap,row.currency):researchSortLabels[companyResearch.sort]+' '+(Number.isFinite(number(value))?format(value,2):'근거 없음')),onOpen:()=>showCompany(row.id)}));return;}
     const item = node('li', 'research-rank');
     const button = node('button', 'research-company'); button.type = 'button'; button.dataset.companyId = row.id;
     const rank = node('span', 'research-rank-number', format(row.rank));
@@ -130,6 +133,7 @@ function renderResearch() {
     values.append(node('span', 'market-label', change === null || change === undefined ? '비교 기록 없음' : change === 0 ? '순위 동일' : (change > 0 ? '상승 ' : '하락 ') + format(Math.abs(change)) + '위'));
     button.append(rank, title, values); button.addEventListener('click', () => showCompany(row.id)); item.append(button); list.append(item);
   });
+  window.MTSCards?.observe(list);
   $('#research-empty').hidden = rows.length > 0;
   $('#research-empty').textContent = u?.status === 'UNAVAILABLE' ? '이 시장의 순위 자료를 확인하지 못했습니다.' : '검색 결과가 없습니다.';
   $('#research-count').textContent = (u?.rows.length || 0) + ' / ' + (u?.requested_count || ({KOSPI:50,KOSDAQ:50,SP500:100}[companyResearch.market])) + '개 · '+researchSortLabels[companyResearch.sort]+' '+(companyResearch.descending?'내림차순':'오름차순')+' · 원자료 순위 유지 · 미확인 값 마지막';

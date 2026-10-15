@@ -2,7 +2,13 @@
 (() => {
   'use strict';
   function sectionModel(count,page){return {count,current:Math.max(0,Math.min(page,Math.max(0,count-1)))};}
-  if(typeof module!=='undefined'&&module.exports)module.exports={sectionModel};
+  function collapsedAction(element,boundary){
+    for(let parent=element.parentElement;parent&&parent!==boundary;parent=parent.parentElement){
+      if(parent.tagName==='DETAILS'&&!parent.open){const summary=[...parent.children].find(child=>child.tagName==='SUMMARY');if(!summary?.contains(element))return true;}
+    }
+    return false;
+  }
+  if(typeof module!=='undefined'&&module.exports)module.exports={sectionModel,collapsedAction};
   if(typeof document==='undefined')return;
   const make=(tag,cls,text)=>{const element=document.createElement(tag);if(cls)element.className=cls;if(text)element.textContent=text;return element;};
   const dialog=make('dialog','viewport-content-dialog'),head=make('div','viewport-dialog-head'),title=make('h2','', '전체 내용'),close=make('button','secondary-button','닫기'),content=make('div');
@@ -16,7 +22,7 @@
   dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
   const controllers=[];
   for(const view of document.querySelectorAll('main > .view')){
-    if(view.id==='lobby-view')continue;
+    if(view.id==='lobby-view'||view.id==='plaza-view')continue;
     const body=make('div','viewport-pages-body'),preview=make('section','viewport-overflow-preview'),previewTitle=make('h2'),previewNote=make('p','muted-note','화면보다 긴 내용입니다. 아래 전체 내용 버튼에서 모든 자료와 작업 버튼을 확인하세요.'),nav=make('nav','viewport-controls'),previous=make('button','secondary-button','이전'),select=make('select'),next=make('button','secondary-button','다음'),detail=make('button','secondary-button viewport-detail','전체 내용');
     nav.setAttribute('aria-label','본문 섹션 페이지');select.setAttribute('aria-label','볼 내용 선택');
     for(const button of [previous,next,detail])button.type='button';
@@ -44,7 +50,7 @@
       if(selected&&typeof getComputedStyle==='function'){
         const boundary=body.getBoundingClientRect();
         for(const action of selected.querySelectorAll('button,a,input,select,textarea')){
-          if(!action.getClientRects().length)continue;const rect=action.getBoundingClientRect();
+          if(!action.getClientRects().length||collapsedAction(action,selected))continue;const rect=action.getBoundingClientRect();
           if(rect.bottom>boundary.bottom||rect.top<boundary.top)overflow=true;
           for(let parent=action.parentElement;parent&&parent!==body;parent=parent.parentElement){
             if(!['hidden','clip','auto','scroll'].includes(getComputedStyle(parent).overflowY))continue;
@@ -57,7 +63,7 @@
       nav.hidden=!sections.length;
     }
     function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;apply();});}
-    function change(target){selected=null;page=target;apply();select.focus?.({preventScroll:true});}
+    function change(target){selected=null;page=target;apply();window.ZEROMTSCards?.refresh?.();select.focus?.({preventScroll:true});}
     previous.addEventListener('click',()=>change(page-1));next.addEventListener('click',()=>change(page+1));select.addEventListener('change',()=>change(Number(select.value)));
     detail.addEventListener('click',()=>{
       if(!selected)return;const marker=make('div','viewport-dialog-placeholder');selected.replaceWith(marker);moved={element:selected,marker,button:detail};title.textContent=label(selected,page);content.replaceChildren(selected);dialog.showModal();
