@@ -365,3 +365,30 @@ html[data-zero-view='team'] #notice { display:none; }
 .office-map:not(.office-overview) .office-actor[data-room="MEETING"] .office-actor-name,.office-map:not(.office-overview) .office-actor[data-room="MEETING"] .office-actor-role{display:none}
 .office-map:not(.office-overview) .office-actor[data-room="MEETING"] .office-actor-label::after{content:attr(data-short);font-size:var(--office-phone-font,13px);font-weight:750;line-height:1.15;color:#25404a;background:#fff9e9eb;border-radius:4px;padding:0 4px;white-space:nowrap}
 }
+
+/* Reserve real drawable space between the sticky room list and scene guidance. */
+.office-scene-fit{margin:0 auto;flex:none}
+.office-scene-hint{position:sticky;top:auto;bottom:0;left:0;width:auto;max-width:none;margin:0;padding:6px 10px;border-radius:0;box-sizing:border-box}
+.office-actor .office-actor-bubble{visibility:hidden}
+.office-actor.show-bubble:not(.is-muted) .office-actor-bubble,.office-actor.is-speaking:not(.is-muted) .office-actor-bubble{visibility:visible}
+.office-owner{position:absolute;z-index:4;width:180px;height:166px;min-height:0;padding:0;border:0;background:transparent;color:#234d84;font:inherit;cursor:pointer;pointer-events:auto}
+.office-owner .office-actor-label{width:180px;left:0}
+.office-owner .office-actor-name{width:180px;color:#234d84;background:#fff1cceb;border:1px solid #c6a957}
+.office-owner .office-actor-role{width:180px;white-space:normal}
+.office-owner .office-actor-bubble{border-color:#c6a957;background:#fffae9}
+.office-owner .office-actor-bubble::after{background:#fffae9}
+.office-owner .office-actor-bubble[hidden]{display:none}
+.office-owner:focus-visible{outline:3px solid #2485b3;outline-offset:3px}
+.office-owner-figure{pointer-events:none}
+.office-overview .office-owner .office-actor-role{display:none}
+
+/* The room view is the readable entry; overview emphasizes rooms and the owner marker. */
+.office-actor .office-actor-label{visibility:hidden}
+.office-actor:hover .office-actor-label,.office-actor:focus-visible .office-actor-label,.office-actor.is-selected .office-actor-label{visibility:visible}
+.office-actor.is-muted .office-actor-label,.office-actor.is-muted .office-actor-bubble{visibility:hidden}
+.office-map:not(.office-overview) .office-actor-bubble{width:min(460px,calc(128px / var(--office-scene-scale,1)));left:calc(90px - min(230px,64px / var(--office-scene-scale,1)));font-size:clamp(13px,calc(11px / var(--office-scene-scale,1)),48px);line-height:1.3}
+.office-map:not(.office-overview) .office-actor-bubble .office-actor-status{display:none}
+.office-map:not(.office-overview) .office-actor-bubble{top:calc(-20px - 18px / var(--office-scene-scale,1))}
+.office-map .office-owner .office-actor-name{font-size:clamp(16px,calc(11px / var(--office-scene-scale,1)),50px)}
+.office-overview .office-actor .office-actor-label{visibility:hidden}
+.office-overview .office-actor:hover .office-actor-label,.office-overview .office-actor:focus-visible .office-actor-label{visibility:visible}

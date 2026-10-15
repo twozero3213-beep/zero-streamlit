@@ -14,7 +14,7 @@
   const store = { get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }, set(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* private mode */ } } };
 
   const S = {active: false, docked:false,dockRequested:false,dockStarted:false,dockHandoff:false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
-    chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: (store.get('zero-lobby-name') === '나' ? null : store.get('zero-lobby-name')) || '대표님', tutorial: null,
+    chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: (['나','대표님'].includes(store.get('zero-lobby-name')) ? null : store.get('zero-lobby-name')) || 'ZERO', tutorial: null,
     motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolLevel: 1, characterAuthenticated: false, schoolRank: '입문 전', boardMeta: null, chatterSeed:null, seedPending:null, seedAttemptAt:null, safe_keyword:null, trendFallback:true,market:null,
     layout:null,ownerLayout:null,ownerNick:null,sceneOwner:null,layoutRevision:null,ownerLayoutConfirmed:false,layoutPending:null,renderer:null,rendererObserver:null,visuals:[]};
 
@@ -951,7 +951,7 @@
       S.player.el.setAttribute('aria-label', S.playerName + ' · ' + label + (confirmed ? ' · 서버 검증 회사 경험치' : ' · 이 기기의 학습 기록'));
     }
   }
-  function setPlayerName(name) { S.playerName = name && name !== '나' ? name : '대표님'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
+  function setPlayerName(name) { S.playerName = name && name !== '나' ? name : 'ZERO'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
   function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; paintRanking(); if (S.active && S.player) loadReturns(); }
 
 

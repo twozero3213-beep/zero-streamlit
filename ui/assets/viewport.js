@@ -38,7 +38,7 @@
     function change(target){selected=null;page=target;apply();body.scrollTop=0;window.ZEROMTSCards?.refresh?.();window.dispatchEvent?.(new Event('resize'));select.focus?.({preventScroll:true});}
     previous.addEventListener('click',()=>change(page-1));next.addEventListener('click',()=>change(page+1));select.addEventListener('change',()=>change(Number(select.value)));
     new MutationObserver(records=>{if(records.some(record=>record.type==='childList'||record.target!==body))schedule();}).observe(body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
-    controllers.push(schedule);apply();
+    controllers.push(event=>{if(view.id==='team-view'&&event?.detail?.view==='team'){selected=null;page=0;body.scrollTop=0;}schedule();});apply();
   }
-  document.addEventListener('zero-view-changed',()=>controllers.forEach(update=>update()));
+  document.addEventListener('zero-view-changed',event=>controllers.forEach(update=>update(event)));
 })();

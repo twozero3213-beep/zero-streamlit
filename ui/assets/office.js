@@ -16,7 +16,7 @@
   const text = (value, limit = 4000) => typeof value === 'string' && value.length <= limit ? value : '';
   const exact = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value,key));
   const node = (tag, className = '', content) => { const element = document.createElement(tag); element.className = className; if (content !== undefined) element.textContent = content; return element; };
-  let rosterSource = null, actors = [], queue = null, selected = null, selectedDepartment = 'ALL', requestEpoch = 0, loadPromise = null, pending = null, submitting = false;
+  let rosterSource = null, actors = [], queue = null, selected = null, selectedDepartment = 'MEETING', requestEpoch = 0, loadPromise = null, pending = null, submitting = false;
   const actorButtons = new Map(), rooms = new Map(), clicks = new Map();
 
   function parseActors(team) {
@@ -107,7 +107,7 @@
     const aisle=side==='bottom'||side==='top'?{x:door.x,y:side==='bottom'?670:1950}:{x:side==='left'?1950:670,y:door.y};
     const inside=side==='bottom'||side==='top'?{x:door.x,y:door.y+(side==='bottom'?-30:80)}:{x:door.x+(side==='left'?80:-80),y:door.y};
     const home=record.actor.id==='ZERO_FINAL_MANAGER'?{x:room.x+200,y:room.y+180}:{x:room.x+520,y:room.y+125},columns=actors.filter(actor=>actor.department===room.id&&!isLeader(actor)).length>4?3:2,laneX=room.x+(columns===3?400:300);
-    const perimeter=side==='bottom'||side==='top'?[{x:edgeX,y:seat.y},{x:edgeX,y:entry.y===690?786:1834},{x:entry.x,y:entry.y===690?786:1834}]:[{x:seat.x,y:edgeY},{x:entry.x===690?786:1834,y:edgeY},{x:entry.x===690?786:1834,y:entry.y}];
+    const perimeter=side==='bottom'||side==='top'?[{x:edgeX,y:seat.y},{x:edgeX,y:entry.y===690?786:1834},{x:entry.x,y:entry.y===690?786:1834}]:[{x:entry.x===690?786:1834,y:seat.y},{x:entry.x===690?786:1834,y:edgeY},{x:entry.x===690?786:1834,y:entry.y}];
     const outside=side==='bottom'||side==='top'?{x:entry.x,y:aisle.y}:{x:aisle.x,y:entry.y};
     const route=[seat,...perimeter,entry,outside,aisle,door,inside,{x:laneX,y:inside.y},{x:laneX,y:room.y+120},{x:home.x,y:room.y+120},home];
     return route.filter((point,index)=>!index||point.x!==route[index-1].x||point.y!==route[index-1].y);
@@ -142,6 +142,8 @@
     const doorSize=64;
     if(room.door==='top'||room.door==='bottom'){const dy=room.door==='top'?y:y+height-4;rect(layer,x+width/2-doorSize/2,dy,doorSize,8,'#d3e0d9');line(layer,x+width/2-doorSize/2,dy,x+width/2-doorSize/2,dy+(room.door==='top'?32:-32),'#69908f',2);}
     else{const dx=room.door==='left'?x:x+width-8;rect(layer,dx,y+height/2-doorSize/2,8,doorSize,'#d3e0d9');line(layer,dx,y+height/2-doorSize/2,dx+(room.door==='left'?32:-32),y+height/2-doorSize/2,'#69908f',2);}
+    rect(layer,x+width-165,y+85,52,36,'#b89568',{rx:3});rect(layer,x+width-160,y+90,42,26,'#dce8d7');line(layer,x+width-156,y+111,x+width-124,y+98,'#699d8a',3);
+    rect(layer,x+30,y+88,76,12,'#b99d7b',{rx:2});for(let book=0;book<5;book++)rect(layer,x+34+book*13,y+70,9,18,shirtColors[(book+Math.floor(x/600))%shirtColors.length]);
     const inbox=svgNode('g',{'class':'office-room-inbox','data-office-inbox':room.id,visibility:'hidden'});rect(inbox,x+width-130,y+height-72,100,42,'#fff9e9',{rx:5,stroke:'#aac0b4'});inbox.append(svgNode('text',{x:x+width-80,y:y+height-46,'class':'office-room-inbox-count','text-anchor':'middle',fill:'#345f69','font-size':14},'접수 기록'));layer.append(inbox);
     layer.append(svgNode('text',{x:x+20,y:y+25,'class':'office-room-title',fill:'#284e61','font-weight':750,'font-size':20},departmentNames[room.id]||'휴게실'));
     if(room.id==='LOUNGE'){
@@ -183,7 +185,7 @@
     // Canonical IDs keep portraits stable across scene/board ordering and queue updates.
     const identityIndex=actors.map(member=>member.id).sort().indexOf(actor.id);
     if(identityIndex>=0)index=identityIndex;
-    const skin=['#e5b086','#ba7d5d','#eec7a6','#d49c74','#ac7256','#f0d4b6','#935c43','#efba96'][index%8],hair=['#383634','#b2aba0','#795542','#252f35','#c79265','#5a2f2a','#e3ddd0'][Math.floor(index/8)%7],shirt=shirtColors[Math.floor(index/5)%shirtColors.length],trim='#ebefe9',ink='#303a3e';
+    const skin=['#e5b086','#ba7d5d','#eec7a6','#d49c74','#ac7256','#f0d4b6','#935c43','#efba96'][index%8],hair=['#383634','#b2aba0','#795542','#252f35','#c79265','#5a2f2a','#e3ddd0'][Math.floor(index/8)%7],shirt=actor.id==='OFFICE_OWNER'?'#234d84':shirtColors[Math.floor(index/5)%shirtColors.length],trim=actor.id==='OFFICE_OWNER'?'#edc45c':'#ebefe9',ink='#303a3e';
     outer.setAttribute('data-office-face',skin+':'+hair);
     const pixel=(x,y,width,height,fill,group=person)=>group.append(svgNode('rect',{x,y,width,height,fill}));
     const path=(group,d,stroke=ink,fill='none')=>group.append(svgNode('path',{d,stroke,fill,'stroke-width':1.5,'stroke-linecap':'round','stroke-linejoin':'round'}));
@@ -229,14 +231,75 @@
     return {outer,travel};
   }
 
-  const teamChatRecent=[];
-  function actorBubble(actor){
+  const chairpersonRoom={id:'CHAIRPERSON',x:1510,y:710,width:290,height:190,door:'bottom'};
+  const officeOwner={id:'OFFICE_OWNER',name:'ZERO',department:'CHAIRPERSON',kind:'의장'};
+  let ownerScene=null,chatTurn=0;
+  const teamChatRecent=[],teamChatCache=new Map();
+  // Social visits stay outside the canonical roster, meeting reports and job assignees.
+  function ownerTour(){
+    const home={x:1655,y:870},route=[home],stops=[];
+    const visit=(point,room)=>route.push({...point,room,pause:6500});
+    visit(home,'CHAIRPERSON');route.push({x:1655,y:900},{x:1655,y:990},{x:1834,y:990});
+    visit({x:1834,y:1310},'MEETING');route.push({x:1930,y:1310},{x:1950,y:1310},{x:1950,y:670});
+    for(const room of roomLayout()){
+      const vertical=room.door==='bottom'||room.door==='top';
+      const door=vertical?{x:room.x+300,y:room.door==='bottom'?room.y+600:room.y}:{x:room.door==='left'?room.x:room.x+600,y:room.y+300};
+      const aisle=vertical?{x:door.x,y:room.door==='bottom'?670:1950}:{x:room.door==='left'?1950:670,y:door.y};
+      const previous=route.at(-1);
+      if(vertical)route.push({x:previous.x,y:aisle.y});else route.push({x:aisle.x,y:previous.y});
+      route.push(aisle,door);
+      visit({x:door.x+(vertical?0:room.door==='left'?70:-70),y:door.y+(vertical?(room.door==='bottom'?-70:70):0)},room.id);
+      route.push(door,aisle);
+    }
+    route.push({x:670,y:670},{x:1950,y:670},{x:1950,y:1310},{x:1930,y:1310},{x:1834,y:1310},{x:1834,y:990},{x:1655,y:990},{x:1655,y:900},home);
+    let elapsed=0;const frames=[{time:0,transform:'translate(0px, 0px)'}];
+    route.forEach((point,index)=>{
+      const previous=route[Math.max(0,index-1)];elapsed+=Math.hypot(point.x-previous.x,point.y-previous.y)/160*1000;
+      const transform='translate('+(point.x-home.x)+'px, '+(point.y-home.y)+'px)';frames.push({time:elapsed,transform});
+      if(point.pause){const start=elapsed;elapsed+=point.pause;stops.push({room:point.room,start,end:elapsed});frames.push({time:elapsed,transform});}
+    });
+    return {duration:elapsed,frames:frames.map(({time,transform})=>({offset:time/elapsed,transform})),stops,home};
+  }
+  function drawChairperson(svg){
+    const {x,y,width,height}=chairpersonRoom,layer=svgNode('g',{'class':'office-chairperson-room','data-office-room':'CHAIRPERSON'});
+    rect(layer,x,y,width,height,'#e6edf2',{rx:8,stroke:'#71899c','stroke-width':3});
+    rect(layer,x+10,y+10,width-20,52,'#f8fbff',{rx:5});
+    layer.append(svgNode('text',{x:x+20,y:y+36,fill:'#264d72','font-size':24,'font-weight':800},'ZERO 의장실'));
+    layer.append(svgNode('text',{x:x+20,y:y+58,fill:'#49667b','font-size':13},'의장 ZERO · 직원 직무와 별도'));
+    rect(layer,x+26,y+84,130,64,'#b5936a',{rx:8});rect(layer,x+38,y+90,106,44,'#eadcc7',{rx:4});
+    rect(layer,x+48,y+99,42,26,'#466d89',{rx:3});rect(layer,x+103,y+104,26,18,'#faf8ef');
+    rect(layer,x+width-100,y+90,70,94,'#83a6b7',{rx:10});rect(layer,x+width-94,y+98,58,26,'#aec5cf',{rx:5});
+    rect(layer,x+width/2-32,y+height-4,64,8,'#d3e0d9');
+    drawPlant(layer,x+36,y+height-32);drawPlant(layer,x+width-30,y+76);
+    svg.append(layer);rooms.set('CHAIRPERSON',layer);
+  }
+  function renderOwner(svg,hotspots){
+    const tour=ownerTour(),person=figure(officeOwner,45,tour.home),button=node('button','office-owner');
+    person.outer.removeAttribute('data-office-figure');person.outer.setAttribute('class','office-owner-figure');person.outer.setAttribute('data-office-owner-figure','ZERO');
+    const badge=svgNode('path',{d:'M -5 -29 L 5 -29 L 5 -24 L -5 -24 Z',fill:'#edc45c'});person.outer.querySelector('.office-person').append(badge);
+    button.type='button';button.dataset.officeOwner='ZERO';button.dataset.owner='ZERO';button.style.left=(tour.home.x-90)+'px';button.style.top=(tour.home.y-76)+'px';
+    const bubble=node('span','office-actor-bubble'),duty=node('span','office-actor-duty','다들 수고 많아요. 잠깐 쉬어 가요.'),label=node('span','office-actor-label');
+    bubble.append(duty);label.append(node('span','office-actor-name','ZERO'),node('span','office-actor-role','의장 · 일상 순회'));
+    button.append(bubble,label);button.setAttribute('aria-label','ZERO 의장 · 의장실과 일상 순회 보기');
+    button.addEventListener('click',()=>{selectedDepartment='CHAIRPERSON';$('office-department').value=selectedDepartment;filterDepartment();});
+    svg.append(person.outer);hotspots.append(button);ownerScene={button,figure:person.outer,travel:person.travel,bubble,duty,tour};
+  }
+  function updateOwnerSpeech(){
+    if(!ownerScene)return;const record=ownerScene,time=(record.animation?.currentTime||0)%record.tour.duration;
+    const stop=record.tour.stops.find(stop=>time>=stop.start&&time<=stop.end);
+    const lines=['다들 수고 많아요. 잠깐 쉬어 가요.','커피 한잔할까요? 오늘 점심은 어땠어요?','서로 도와가며 천천히 해봐요.','좋은 하루 보내요. 물도 한잔 챙겨요.'];
+    record.duty.textContent=stop?.room==='CHAIRPERSON'?'잠깐 쉬었다가 팀에 인사하러 갈게요.':lines[Math.max(0,record.tour.stops.indexOf(stop))%lines.length];
+    record.bubble.hidden=meetingRecordsOnly||!stop;
+    record.button.setAttribute('aria-label','ZERO 의장 · '+(stop?.room==='MEETING'?'중앙 회의실':stop?.room==='CHAIRPERSON'?'ZERO 의장실':departmentNames[stop?.room]||'팀 사이 이동')+' · 일상 순회 연출');
+  }
+  function actorBubble(actor,preserve=false){
     const job=latestJob(actor),available=queue&&['EMPTY','AVAILABLE'].includes(queue.state);
     const logic=window.ZEROLobbyLogic,world=window.ZEROLobbyWorld,publicScene=window.ZEROLobby?.state;
-    if(!job&&!meetingRecordsOnly&&logic&&world?.chooseChatter){
+    if(!meetingRecordsOnly&&!job&&logic&&world?.chooseChatter){
+      if(preserve&&teamChatCache.has(actor.id))return teamChatCache.get(actor.id);
       const line=world.chooseChatter(logic,{now:new Date(),weather:publicScene?.weather,trends:publicScene?.trends||[],trendFallback:publicScene?.trendFallback!==false,level:1},[],teamChatRecent);
       teamChatRecent.push(line);if(teamChatRecent.length>12)teamChatRecent.shift();
-      return {text:'잡담 · '+excerpt(line,36),status:available?'요청 대기':'진행 미확인',detail:'가상 직원의 일상 대사 · 실제 업무 처리나 계좌 확인 결과가 아닙니다. '+line};
+      const chat={text:'잡담 · '+excerpt(line,26),status:available?'요청 대기':'진행 미확인',detail:'가상 직원의 일상 대사 · 실제 업무 처리나 계좌 확인 결과가 아닙니다. '+line};teamChatCache.set(actor.id,chat);return chat;
     }
     return {text:job&&available?types[job.job_type]:excerpt(actor.principles[0]||'직무 원칙',24),status:available?job?statusNames[job.status]:'요청 대기':'진행 미확인',detail:job?.result_summary||actor.principles[0]||''};
   }
@@ -275,9 +338,9 @@
     const map=$('office-map'),selector=$('office-department'),assignee=$('office-assignee');
     clearTimeout(meetingTimer);meetingTimer=null;meetingTask=null;meetingPhase='REPORT';
     for(const animation of motionAnimations)animation.cancel();motionAnimations.clear();
-    map.replaceChildren();selector.replaceChildren();assignee.replaceChildren();actorButtons.clear();sceneActors.clear();rooms.clear();directoryMembers.clear();
+    map.replaceChildren();selector.replaceChildren();assignee.replaceChildren();actorButtons.clear();sceneActors.clear();rooms.clear();directoryMembers.clear();teamChatCache.clear();
     actors.forEach(actor=>{const option=node('option','',actor.name);option.value=actor.id;assignee.append(option);});
-    for(const [id,name]of [['ALL','전체 사무실'],['MEETING','중앙 회의실'],...Object.entries(departmentNames)]){const option=node('option','',name);option.value=id;selector.append(option);}
+    for(const [id,name]of [['ALL','전체 사무실'],['MEETING','중앙 회의실'],...Object.entries(departmentNames),['CHAIRPERSON','ZERO 의장실']]){const option=node('option','',name);option.value=id;selector.append(option);}
     fit=node('div','office-scene-fit');world=node('div','office-scene-world');
     const svg=svgNode('svg',{viewBox:'0 0 '+WORLD_WIDTH+' '+WORLD_HEIGHT,'class':'office-scene-svg','aria-hidden':'true'});drawOffice(svg);
     const furniture=svgNode('g'),people=svgNode('g'),hotspots=node('div','office-hotspots'),layout=seatLayout();
@@ -292,17 +355,16 @@
       bubble.append(duty,status);label.dataset.short=departmentNames[actor.department]||'';label.append(node('span','office-actor-name',actor.name),node('span','office-actor-role',departmentNames[actor.department]+' · '+actor.kind));button.append(bubble,label);
       button.addEventListener('click',()=>openActor(actor));hotspots.append(button);actorButtons.set(actor.id,button);sceneActors.set(actor.id,{actor,button,figure:person.outer,travel:person.travel,point,duty,bubble});
     });
-    svg.append(furniture,people);world.append(svg,hotspots);fit.append(world);map.append(fit);
-    const hint=node('p','office-scene-hint','이동·책상 동작은 화면 연출입니다 · 캐릭터를 눌러 업무를 요청하세요');map.append(hint);
+    svg.append(furniture,people);drawChairperson(svg);renderOwner(svg,hotspots);world.append(svg,hotspots);fit.append(world);map.append(fit);
+    const hint=node('p','office-scene-hint','이동·잡담은 가상 연출 · ZERO 의장과 직원 선택 · 업무는 별도 요청');map.append(hint);
     const navigator=node('nav','office-room-navigator');navigator.setAttribute('aria-label','방 목록');
-    for(const [id,name]of [['MEETING','중앙 회의실'],...Object.entries(departmentNames)]){const button=node('button','office-room-link',name);button.type='button';button.dataset.room=id;button.addEventListener('click',()=>{selectedDepartment=id;selector.value=id;filterDepartment();});navigator.append(button);}map.replaceChildren(navigator,fit,hint);
+    for(const [id,name]of [['MEETING','중앙 회의실'],...Object.entries(departmentNames),['CHAIRPERSON','ZERO 의장실']]){const button=node('button','office-room-link',name);button.type='button';button.dataset.room=id;button.addEventListener('click',()=>{selectedDepartment=id;selector.value=id;filterDepartment();});navigator.append(button);}map.replaceChildren(navigator,fit,hint);
     // Keep the initial twelve seats visible, with readable unscaled mobile controls nearby.
-    let central=$('office-central-roster');if(!central){central=node('nav','office-central-roster');central.id='office-central-roster';central.setAttribute('aria-label','중앙 팀장 선택');$('office-scene-surface')?.append(central);}central.replaceChildren();
+    let central=$('office-central-roster');if(!central){central=node('nav','office-central-roster');central.id='office-central-roster';central.setAttribute('aria-label','중앙 팀장 선택');$('office-records')?.append(central);}central.replaceChildren();
     for(const actor of actors.filter(isLeader)){const button=node('button','',actor.name+' · '+departmentNames[actor.department]);button.type='button';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','office-request-dialog');button.addEventListener('click',()=>openActor(actor));central.append(button);}
     if($('team-meeting-state')&&!$('office-actual-meeting')){const link=node('button','office-reload','실제 자문회의 제출 현황 보기');link.id='office-actual-meeting';link.type='button';link.addEventListener('click',()=>{const target=$('team-meeting-state');for(let parent=target?.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;target?.scrollIntoView?.({block:'center',behavior:reducedMotion?.matches?'auto':'smooth'});});$('office-meeting')?.append(link);}
-    if(map.clientWidth<600)selectedDepartment='MEETING';
-    selector.value=selectedDepartment;$('office-roster-count').textContent=actors.length+'개 직무 · 12개 사무실 · 중앙 회의 12명';$('office-empty').hidden=true;
-    selected=actors.find(actor=>actor.id==='ZERO_FINAL_MANAGER');renderDirectory();selectActor(selected);filterDepartment();showMeetingReport(0);startSceneMotion();syncMotion();
+    selector.value=selectedDepartment;$('office-roster-count').textContent=actors.length+'개 직무 · 12개 팀 사무실 · 별도 ZERO 의장실 · 중앙 회의 12명';$('office-empty').hidden=true;
+    selected=actors.find(actor=>actor.id==='ZERO_FINAL_MANAGER');renderDirectory();selectActor(selected);filterDepartment();showMeetingReport(0);startSceneMotion();startOwnerMotion();syncMotion();
   }
   function selectActor(actor){
     if(!actor)return;selected=actor;
@@ -326,16 +388,18 @@
   }
   function fitScene(){
     if(!world||!fit)return;const map=$('office-map'),overview=selectedDepartment==='ALL';
-    const area=overview?{x:0,y:0,width:WORLD_WIDTH,height:WORLD_HEIGHT}:selectedDepartment==='MEETING'?{x:690,y:690,width:1240,height:1240}:roomLayout().find(room=>room.id===selectedDepartment);
+    const area=overview?{x:0,y:0,width:WORLD_WIDTH,height:WORLD_HEIGHT}:selectedDepartment==='CHAIRPERSON'?chairpersonRoom:selectedDepartment==='MEETING'?{x:690,y:690,width:1240,height:1240}:roomLayout().find(room=>room.id===selectedDepartment);
     if(!area)return;map.classList.toggle('office-overview',overview);
-    const viewportWidth=map.clientWidth||1200,viewportHeight=map.clientHeight||720,base=overview?Math.min(viewportWidth/WORLD_WIDTH,viewportHeight/WORLD_HEIGHT):Math.min(viewportWidth/(area.width+70),viewportHeight/(area.height+80)),scale=Math.max(overview?Math.min(.16,(viewportWidth-4)/WORLD_WIDTH):.16,Math.min(1.65,Math.max(!overview&&viewportWidth<600&&selectedDepartment!=='MEETING'?Math.min(.57,(viewportWidth-12)/area.width):0,base)))*zoom;
-    world.style.transform='scale('+scale+')';world.style.setProperty('--office-label-font',Math.min(26,Math.max(13,(overview?10:14)/scale))+'px');world.style.setProperty('--office-meta-font',Math.min(22,Math.max(11,(overview?10:12)/scale))+'px');
+    const viewportWidth=Math.max(1,(map.clientWidth||1200)-8),navigatorHeight=map.querySelector('.office-room-navigator')?.offsetHeight||0,hintHeight=map.querySelector('.office-scene-hint')?.offsetHeight||0;
+    const viewportHeight=Math.max(1,(map.clientHeight||720)-navigatorHeight-hintHeight-8);
+    const base=Math.min(viewportWidth/(area.width+(overview?0:70)),viewportHeight/(area.height+(overview?0:80))),scale=Math.min(1.65,base)*zoom;
+    world.style.transform='scale('+scale+')';world.style.setProperty('--office-scene-scale',scale);world.style.setProperty('--office-label-font',Math.min(26,Math.max(13,(overview?10:14)/scale))+'px');world.style.setProperty('--office-meta-font',Math.min(22,Math.max(11,(overview?10:12)/scale))+'px');
     world.style.setProperty('--office-summary-font',Math.min(48,14/scale)+'px');world.style.setProperty('--office-phone-font',(11/scale)+'px');world.style.setProperty('--office-summary-meta-font',Math.min(42,12/scale)+'px');
     fit.style.width=(WORLD_WIDTH*scale)+'px';fit.style.height=(WORLD_HEIGHT*scale)+'px';map.scrollTo?.({left:overview?0:Math.max(0,(area.x+area.width/2)*scale-viewportWidth/2),top:overview?0:Math.max(0,(area.y+area.height/2)*scale-viewportHeight/2),behavior:'auto'});
     if($('office-zoom-out'))$('office-zoom-out').disabled=zoom<=.8;if($('office-zoom-in'))$('office-zoom-in').disabled=zoom>=2.5;
   }
   function setZoom(value){zoom=Math.max(.8,Math.min(2.5,value));fitScene();}
-  function startMeeting(){selectedDepartment='MEETING';$('office-department').value='MEETING';filterDepartment();}
+  function startMeeting(){selectedDepartment='MEETING';if(!actors.length)return;$('office-department').value='MEETING';filterDepartment();}
   function finishMeeting(){selectedDepartment='ALL';$('office-department').value='ALL';filterDepartment();}
   function meetingReports(){
     const available=queue&&['EMPTY','AVAILABLE'].includes(queue.state),saved=available?queue.jobs.filter(job=>['RECORDED','BLOCKED','FAILED'].includes(job.status)&&job.result_summary):[],recorded=saved.filter(job=>job.status==='RECORDED');
@@ -354,17 +418,25 @@
     return reports;
   }
   function updateSceneVisibility(){
-    const overview=selectedDepartment==='ALL',report=meetingReports()[meetingIndex],staff=actors.filter(actor=>isLeader(actor)&&actor.id!==report?.actor.id),bubbles=new Set(report?[report.actor.id]:[]);
-    for(let index=0;index<Math.min(5,staff.length);index++)bubbles.add(staff[(meetingIndex*5+index)%staff.length].id);
+    const report=meetingReports()[meetingIndex],eligible=actors.filter(actor=>selectedDepartment==='ALL'||selectedDepartment==='MEETING'&&isLeader(actor)||actor.department===selectedDepartment),bubbles=new Set();
+    if(report&&eligible.includes(report.actor))bubbles.add(report.actor.id);
+    const maxBubbles=$('office-map').clientWidth<600?1:3;
+    for(let index=0;index<eligible.length&&bubbles.size<maxBubbles;index++)bubbles.add(eligible[(chatTurn+index*Math.ceil(eligible.length/3))%eligible.length].id);
     for(const record of sceneActors.values()){
       const inRoom=selectedDepartment==='MEETING'?isLeader(record.actor):record.actor.department===selectedDepartment;
-      if(!latestJob(record.actor)){const chat=actorBubble(record.actor);record.duty.textContent=chat.text;record.bubble.title=chat.detail;}
-      record.button.classList.toggle('show-bubble',overview?bubbles.has(record.actor.id)||!isLeader(record.actor):inRoom);
-      record.button.classList.toggle('show-label',!overview&&inRoom);
+      {const chat=actorBubble(record.actor,!motionAllowed());record.duty.textContent=chat.text;record.bubble.title=chat.detail;}
+      record.button.classList.toggle('show-bubble',bubbles.has(record.actor.id));
+      record.button.classList.toggle('show-label',selectedDepartment!=='ALL'&&inRoom);
     }
+    updateOwnerSpeech();
     for(const [id,room]of rooms){const count=room.querySelector?.('.office-room-headcount');if(!count)continue;const members=actors.filter(actor=>actor.department===id),available=queue&&['EMPTY','AVAILABLE'].includes(queue.state),pending=available?queue.jobs.filter(job=>members.some(actor=>actor.id===job.actor_id)&&job.status==='QUEUED').length:null;count.textContent='팀 '+members.length+'명 · 방 '+members.filter(actor=>!isLeader(actor)).length+'명 · '+(pending===null?'진행 미확인':pending?'대기 '+pending+'건':'새 요청 없음')+' · 정원 미정';}
   }
-  function motionAllowed(){return !motionPaused&&!document.hidden&&sceneInView&&!reducedMotion?.matches;}
+  function sceneVisible(){
+    if(document.hidden||$('office-scene-surface')?.hidden)return false;
+    for(let parent=$('office-map');parent;parent=parent.parentElement)if(parent.hidden)return false;
+    const bounds=$('office-map').getBoundingClientRect();return sceneInView&&bounds.bottom>0&&bounds.top<window.innerHeight;
+  }
+  function motionAllowed(){return !motionPaused&&sceneVisible()&&!reducedMotion?.matches;}
   function startSceneMotion(){
     const clock=document.timeline?.currentTime,layouts=roomLayout();let index=0;
     for(const record of sceneActors.values()){
@@ -384,11 +456,17 @@
       record.figure.classList.add('is-scene-cycle');record.figure.style.setProperty('--office-cycle-duration',duration+'ms');record.figure.style.setProperty('--office-cycle-delay',delay+'ms');
     }
   }
+  function startOwnerMotion(){
+    if(!ownerScene?.travel.animate||!ownerScene.button.animate)return;
+    const {tour}=ownerScene,timing={duration:tour.duration,iterations:Infinity,easing:'linear'};
+    for(const target of [ownerScene.travel,ownerScene.button]){const animation=target.animate(tour.frames,timing);if(Number.isFinite(document.timeline?.currentTime))animation.startTime=document.timeline.currentTime;motionAnimations.add(animation);if(target===ownerScene.travel)ownerScene.animation=animation;}
+  }
   function scheduleMeeting(task,delay){
     clearTimeout(meetingTimer);meetingTask=task;meetingRemaining=delay;meetingDue=Date.now()+delay;if(motionAllowed())meetingTimer=setTimeout(()=>{meetingTimer=null;meetingTask=null;task();},delay);
   }
   function showMeetingReport(index,advance=true){
-    if(meetingPhase!=='REPORT'){renderMeetingPhase();return;}
+    if(advance&&motionAllowed())chatTurn=(chatTurn+1)%Math.max(1,actors.length);
+    if(meetingPhase!=='REPORT'){renderMeetingPhase();updateSceneVisibility();return;}
     const reports=meetingReports();if(!reports.length)return;meetingIndex=index%reports.length;const report=reports[meetingIndex];
     if($('office-meeting'))$('office-meeting').hidden=$('office-board')?!$('office-board').hidden:false;
     if($('office-meeting-label'))$('office-meeting-label').textContent='회의 연출 · '+report.source+' · 실제 실행 상태는 저장 기록';
@@ -453,7 +531,7 @@
       button.dataset.jobStatus=actorState(actor);
       button.querySelector('.office-actor-status').textContent=available ? job ? ({QUEUED:'실제 요청 · 대기',RUNNING:'실제 실행 중',RECORDED:'결과 제출됨',BLOCKED:'보류',FAILED:'실행 실패',ATTENTION_REQUIRED:'진행 확인 필요'})[job.status] : '상시 업무' : '실행 미확인';
       button.setAttribute('aria-label',actor.name+' · '+actor.kind+' · '+button.querySelector('.office-actor-status').textContent+' · 직무와 기록 보기');
-      const record=sceneActors.get(actor.id);if(record){record.figure.dataset.jobStatus=button.dataset.jobStatus;record.figure.classList.toggle('is-working',button.dataset.jobStatus==='RUNNING');const bubble=actorBubble(actor);record.duty.textContent=bubble.text;record.bubble.title=bubble.detail;}
+      const record=sceneActors.get(actor.id);if(record){record.figure.dataset.jobStatus=button.dataset.jobStatus;record.figure.classList.toggle('is-working',button.dataset.jobStatus==='RUNNING');const bubble=actorBubble(actor,!motionAllowed());record.duty.textContent=bubble.text;record.bubble.title=bubble.detail;}
       const screen=world?.querySelector('[data-office-screen="'+actor.id+'"]');if(screen)screen.dataset.jobStatus=button.dataset.jobStatus;
     }
     renderActorFacts(selected);renderInspector();renderDirectory();renderPolicy();renderOfficeMetrics();renderOfficeBoard();renderOfficeStaffLedger();if(actors.length)showMeetingReport(meetingIndex,false);
@@ -714,7 +792,7 @@
   map.addEventListener('pointermove',event=>{if(!drag||drag.id!==event.pointerId)return;map.scrollLeft=drag.left-(event.clientX-drag.x);map.scrollTop=drag.top-(event.clientY-drag.y);});
   const stopPan=()=>{if(drag)map.releasePointerCapture?.(drag.id);drag=null;map.classList.remove('is-panning');};
   map.addEventListener('pointerup',stopPan);map.addEventListener('pointercancel',stopPan);
-  const adjacentRoom=direction=>{const ids=['MEETING',...roomLayout().map(room=>room.id)],index=ids.indexOf(selectedDepartment);$('office-department').value=ids[(Math.max(0,index)+direction+ids.length)%ids.length];filterDepartment();};
+  const adjacentRoom=direction=>{const ids=['MEETING',...roomLayout().map(room=>room.id),'CHAIRPERSON'],index=ids.indexOf(selectedDepartment);$('office-department').value=ids[(Math.max(0,index)+direction+ids.length)%ids.length];filterDepartment();};
   map.addEventListener('keydown',event=>{if(event.target!==map||!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();adjacentRoom(event.key==='ArrowRight'?1:-1);});
   let touchOrigin=null;
   map.addEventListener('touchstart',event=>{const touch=event.touches[0];touchOrigin=touch&&map.clientWidth<600&&!event.target.closest?.('button')&&selectedDepartment!=='ALL'?{x:touch.clientX,y:touch.clientY}:null;},{passive:true});
@@ -722,13 +800,14 @@
   $('office-assignee').addEventListener('change',()=>{if(submitting)return;const actor=actors.find(item=>item.id===$('office-assignee').value);if(actor){const kind=$('office-job-type').value;openActor(actor,$('office-instruction').value);$('office-job-type').value=kind;}});
   $('office-request-form').addEventListener('submit',submit);
   $('office-lobby-request').addEventListener('click',()=>{const actor=actors.find(item=>item.id==='ZERO_FINAL_MANAGER');if(actor)openActor(actor);});
-  const switchOfficeView=board=>{$('office-board').hidden=!board;$('office-scene-surface').hidden=board;$('office-meeting').hidden=board;$('office-view-board').setAttribute('aria-pressed',String(board));$('office-view-scene').setAttribute('aria-pressed',String(!board));if(!board)fitScene();};
+  const switchOfficeView=board=>{$('office-board').hidden=!board;$('office-scene-surface').hidden=board;$('office-meeting').hidden=board;$('office-view-board').setAttribute('aria-pressed',String(board));$('office-view-scene').setAttribute('aria-pressed',String(!board));if(!board)fitScene();syncMotion();};
   $('office-view-board').addEventListener('click',()=>switchOfficeView(true));$('office-view-scene').addEventListener('click',()=>switchOfficeView(false));
+  document.addEventListener?.('zero-view-changed',event=>{if(event.detail?.view==='team'){startMeeting();switchOfficeView(false);}syncMotion();});
   $('office-request-close').addEventListener('click',()=>$('office-request-dialog').close());
   $('office-reload').addEventListener('click',()=>{if(!submitting)load();});
   $('office-request-dialog').addEventListener('close',()=>{if(!submitting)$('office-instruction').value='';});
   window.ZEROOffice={load,requestResearch};
-  const visible=()=>!document.hidden && !$('office-panel').closest('.view')?.hidden && $('office-panel').getBoundingClientRect().top < window.innerHeight && $('office-panel').getBoundingClientRect().bottom > 0;
+  const visible=()=>!document.hidden && !$('team-view')?.hidden;
   setInterval(()=>{if(visible() && !submitting){loadPromise=load();loadPromise.catch(()=>{});}},30000);
   document.addEventListener?.('visibilitychange',()=>{syncMotion();if(visible() && !submitting)load();});
   if(visible()){loadPromise=load(); loadPromise.catch(()=>{});}

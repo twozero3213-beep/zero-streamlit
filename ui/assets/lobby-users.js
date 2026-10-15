@@ -124,7 +124,7 @@
       catch (error) { if (error.code !== 'UNAUTHORIZED') { const note = status(); note.textContent = '로그아웃 요청을 완료하지 못했습니다. 다시 시도해 주세요.'; body.append(note); out.disabled = false; return; } }
       if (U.token !== token) return;
       store.del(KEY); memberSession.clear(); store.del('zero-lobby-name'); U.token = null; U.me = null;
-      window.ZEROLobby.setPlayerName(U.visitor || '대표님'); body.replaceChildren(); dialog.close(); window.ZEROLobby.open(); render();
+      window.ZEROLobby.setPlayerName(U.visitor || 'ZERO'); body.replaceChildren(); dialog.close(); window.ZEROLobby.open(); render();
     });
     const company = node('button', 'secondary-button', '투자회사 · 전략 직원 관리'); company.addEventListener('click',()=>{dialog.close();window.ZERO?.navigate('company');});
     const layout = node('button','secondary-button','사무실 꾸미기(배치 편집)');layout.type='button';layout.addEventListener('click',()=>{if(!U.me)return;dialog.close();window.ZEROOfficeEditor?.open();});
@@ -214,7 +214,7 @@
     render();
   }
   let sessionNick, sessionToken;
-  function render() { button.textContent = U.me ? (U.me.membership?.kind === 'MEMBER' ? '내 사무실' : '방문자 계정') : U.token ? '로그인 확인' : U.visitor ? '방문자 · ' + U.visitor : '로그인 · 회원가입'; $('lobby-name-chip').textContent = U.me?.nick || U.visitor || '대표님';
+  function render() { button.textContent = U.me ? (U.me.membership?.kind === 'MEMBER' ? '내 사무실' : '방문자 계정') : U.token ? '로그인 확인' : U.visitor ? '방문자 · ' + U.visitor : '로그인 · 회원가입'; $('lobby-name-chip').textContent = U.me?.nick || U.visitor || 'ZERO';
     if (entry) { entry.textContent = U.me ? '내 계정' : U.token ? '로그인 확인' : U.visitor ? '방문자' : '로그인'; entry.title = button.textContent; entry.setAttribute('aria-label', U.me ? U.me.nick + ' 계정 관리' : '이메일·휴대폰으로 가입 또는 로그인'); }
     const nick = U.me?.nick || null; if (sessionNick !== nick || sessionToken !== U.token) { sessionNick = nick; sessionToken = U.token; U.generation++; document.dispatchEvent(new CustomEvent('zero-session-changed')); }
     document.dispatchEvent(new CustomEvent('zero-profile-updated')); }

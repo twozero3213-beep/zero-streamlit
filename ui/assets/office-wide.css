@@ -70,11 +70,19 @@ html #lobby-view .lobby-ranking-board{grid-column:2;grid-row:1;min-width:0;min-h
 @media(max-height:500px){html #lobby-view .lobby-ranking-board{height:82px;padding:2px 6px;}html #lobby-view .lobby-ranking-live-status{display:none;}.lobby-ranking-board:has(#lobby-ranking-live:empty) .lobby-ranking-live-status{display:block;}html #lobby-view .lobby-board{grid-template-rows:20px 24px 20px;}html #lobby-view .board-source{display:none;}}
 /* The team scene keeps its own roster, movement and controls. Only release its canvas cap. */
 html #team-view{overflow-y:auto;}
-html #team-view #office-panel{display:flex;flex-direction:column;min-height:100%;}
+html #team-view #office-panel{display:flex;flex-direction:column;height:100%;min-height:0;gap:6px;}
+html #team-view #office-panel > :not(#office-scene-surface):not(#office-board){flex:none;}
+html #team-view #office-records{padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;}
+html #team-view #office-panel .office-heading p{margin:2px 0;font-size:12px;}
+html #team-view #office-panel .office-view-switch{margin:0;gap:6px;}
+html #team-view #office-board:not([hidden]){flex:1;min-height:0;overflow:auto;}
 html #team-view #office-panel .office-heading{margin-bottom:6px;gap:12px;}
 html #team-view #office-panel .office-heading h2{font-size:22px;}
 html #team-view #office-panel .office-toolbar{margin-bottom:6px;gap:6px;}
-html #team-view #office-scene-surface:not([hidden]){flex:none;display:flex;height:clamp(240px,calc(100dvh - 320px),760px);min-height:0;max-height:none;}
+html #team-view #office-scene-surface:not([hidden]){flex:1;display:flex;height:auto;min-height:160px;max-height:none;overflow:hidden;}
+html #team-view #office-scene-surface[hidden]{display:none;}
+html #team-view #office-panel .office-heading-status{max-width:40%;}
+@media(max-width:767px){html #team-view #office-panel .office-heading{flex-wrap:wrap;gap:4px;}html #team-view #office-panel .office-heading-status{max-width:100%;}html #team-view #office-panel .office-heading-status p{display:none;}html #team-view #office-panel .office-toolbar{gap:4px;margin:0;}html #team-view #office-panel .office-scene-controls{flex-wrap:nowrap;max-width:100%;overflow:auto;scrollbar-width:thin;}html #team-view #office-panel .office-scene-controls button{white-space:nowrap;flex:none;}html #team-view #office-scene-surface:not([hidden]){min-height:160px;}}
 html #team-view #office-map{flex:1;min-width:0;width:100%;height:100%;min-height:0;max-height:none;}
 /* Long scripted greetings must never take space away from the dealing room. */
 html #lobby-view .lobby-hero{flex-wrap:nowrap;gap:8px;}
