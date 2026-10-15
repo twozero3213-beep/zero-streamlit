@@ -15,7 +15,8 @@
 
   const S = {active: false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
     chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: (store.get('zero-lobby-name') === '나' ? null : store.get('zero-lobby-name')) || '대표님', tutorial: null,
-    motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolLevel: 1, characterAuthenticated: false, schoolRank: '입문 전', boardMeta: null, chatterSeed:null, seedPending:null, seedAttemptAt:null, safe_keyword:null, trendFallback:true,market:null};
+    motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolLevel: 1, characterAuthenticated: false, schoolRank: '입문 전', boardMeta: null, chatterSeed:null, seedPending:null, seedAttemptAt:null, safe_keyword:null, trendFallback:true,market:null,
+    layout:null,ownerLayout:null,ownerNick:null,sceneOwner:null,layoutRevision:null,ownerLayoutConfirmed:false,layoutPending:null,renderer:null,rendererObserver:null,visuals:[]};
 
   const shortName = (full) => String(full).split(' · ')[0].replace(/^가상\s*/, '').replace(/\s*담당$/, '');
   function rosterFrom(team) {
@@ -47,14 +48,17 @@
     fig.append(head, node('i', 'body'), node('i', 'arm l'), node('i', 'arm r'), node('i', 'legs')); return fig;
   }
   function buildNpc(npc) {
+    npc.motion=null;npc.away=false;
     const button = node('button', 'npc ' + npc.kind); button.type = 'button'; button.dataset.id = npc.id; button.style.setProperty('--hue', npc.hue);
     button.setAttribute('aria-label', npc.name + ' · ' + npc.role + ' · 눌러서 대화');
-    const desk = node('span', 'office-desk'); desk.style.left = pct(npc.home.x, L.STAGE.w); desk.style.top = pct(npc.home.y - 2, L.STAGE.h); desk.style.zIndex = String(Math.round((npc.home.y - 3) * 10)); stage.append(desk);
-    button.dataset.activity = npc.kind === 'staff' ? 'typing' : 'reading'; button.style.setProperty('--blink-delay', (npc.face.eyes * .7) + 's');
+    if(!S.world.layout){const desk = node('span', 'office-desk'); desk.style.left = pct(npc.home.x, L.STAGE.w); desk.style.top = pct(npc.home.y - 2, L.STAGE.h); desk.style.zIndex = String(Math.round((npc.home.y - 3) * 10)); stage.append(desk);S.visuals.push(desk);}
+    button.dataset.activity = npc.homeActivity||(npc.kind === 'staff' ? 'typing' : 'reading'); button.style.setProperty('--blink-delay', (npc.face.eyes * .7) + 's');
     npc.behavior={phase:'ACT',state:'WORK',intent:'WORK',until:0,activity:button.dataset.activity,path:[]};button.dataset.npcPhase='ACT';button.dataset.npcState='WORK';
-    button.append(figure(npc.kind, npc.face, L.appearanceAt(S.npcs.indexOf(npc))), node('span', 'npc-name', npc.name), node('span', 'npc-bubble'));
-    button.addEventListener('click', (event) => { event.stopPropagation(); talkTo(npc); });
-    npc.el = button; place(npc); stage.append(button);
+    npc.figEl=figure(npc.kind, npc.face, L.appearanceForId(npc.id));
+    npc.nameEl=node('span','npc-name',npc.name);npc.bubbleEl=node('span','npc-bubble');npc.bubbleEl.id='lobby-speech-'+npc.id;button.append(npc.figEl,npc.nameEl,npc.bubbleEl);
+    button.addEventListener('click', (event) => { event.stopPropagation();if(event.target?.closest?.('.npc-bubble')&&npc.lastSmallTalk)openChat(npc);else talkTo(npc); });
+    for(const [event,flag,on] of [['pointerenter','hovered',true],['pointerleave','hovered',false],['focus','focused',true],['blur','focused',false]])button.addEventListener(event,()=>{npc[flag]=on;syncNpcLabel(npc);});
+    npc.el = button;button.hidden=!!npc.hidden;button.disabled=!!npc.hidden;place(npc);stage.append(button);
   }
   function place(entity) {
     const size = S.viewport || {w: stage.clientWidth, h: stage.clientHeight};
@@ -62,12 +66,87 @@
     entity.el.style.zIndex = String(Math.round(entity.pos.y * 10));
     entity.el.classList.toggle('edge-left', entity.pos.x < 24); entity.el.classList.toggle('edge-right', entity.pos.x > 136);
     if(entity.el.classList.contains('speaking')&&!fitSpeech(entity.el.querySelector('.npc-bubble'),entity)){entity.el.classList.remove('speaking');S.speaker=S.speaker.filter(item=>item.id!==entity.id);}
-    if (entity === S.player) window.ZEROSocial?.updatePet(entity);
+    if (entity === S.player && stage.dataset.spriteRendering!=='ready') window.ZEROSocial?.updatePet(entity);
+    syncNpcLabel(entity);
   }
 
+  const board=$('lobby-board'),boardHome=board?.parentElement,boardNext=board?.nextSibling;
+  let fullBoardDialog=null;
+  function syncNpcLabel(entity){
+    const ready=stage.dataset.spriteRendering==='ready';
+    const visible=!entity.hidden&&(!ready||entity===S.player||entity.hovered||entity.focused||entity.el.classList.contains('near')||entity.el.classList.contains('speaking')||S.chatNpc?.id===entity.id&&chat.dialog.open);
+    if(entity.nameEl){entity.nameEl.hidden=!visible;entity.nameEl.style.display=visible?'':'none';}
+    if(entity.levelEl){entity.levelEl.hidden=ready;entity.levelEl.style.display=ready?'none':'';}
+  }
+  function openFullBoard(){if(!fullBoardDialog)return;if(!fullBoardDialog.open)fullBoardDialog.showModal();fullBoardDialog.querySelector('button')?.focus();advanceTutorial('board');}
+  function boardPopup(){
+    if(!fullBoardDialog){fullBoardDialog=node('dialog','floor-help-dialog lobby-full-board-dialog office-sprites-ready');fullBoardDialog.id='lobby-full-board-dialog';fullBoardDialog.setAttribute('aria-label','전광판 · 지수·뉴스·연습 랭킹·검색 관심');const close=node('button','secondary-button','닫기');close.type='button';close.addEventListener('click',()=>fullBoardDialog.close());fullBoardDialog.append(node('h2','','전광판'),close);document.body.append(fullBoardDialog);}
+    fullBoardDialog.append(board);
+  }
+  function stopSprites(){S.rendererObserver?.disconnect();S.rendererObserver=null;S.renderer?.destroy();S.renderer=null;stage.dataset.spriteRendering='fallback';}
+  function spriteActors(){
+    return [...S.npcs.filter(entity=>!entity.hidden),...(S.player?[S.player]:[])].map(entity=>{
+      const fallback=L.appearanceForId(entity.id),outfit=entity.figEl?.dataset.outfit||fallback.outfit,activity=entity.el.dataset.walking==='true'?'walking':entity.el.dataset.activity;
+      const bound=entity===S.player?window.ZEROLobbyUsers?.session()?.appearance:entity.id==='host'?S.visit?.appearance:null;
+      const appearance={outfit,hair:Number(entity.figEl?.dataset.hair)||0,shoes:entity.el.dataset.shoes||'dark',accessory:entity.el.dataset.accessory||'none',pet:entity.pet?.kind||'none',...bound};
+      return {id:entity.id,pos:entity.pos,rootel:entity.el,outfit:appearance.outfit,facing:entity.el.dataset.facing||'down',activity:['walking','typing','coffee'].includes(activity)?activity:'idle',appearance};
+    });
+  }
+  function attachSprites(){
+    if(S.renderer||!S.world?.layout||!window.ZEROOfficeSprites?.attach)return;
+    const world=S.world;
+    const sync=()=>{
+      if(S.world!==world)return;
+      const ready=stage.querySelector('.office-sprites-canvas')?.dataset.sprites==='ready';
+      stage.dataset.spriteRendering=ready?'ready':'fallback';
+      roleDeck?.root.classList.toggle('office-sprites-ready',ready);
+      S.visuals.forEach(el=>{el.hidden=ready;el.style.visibility=ready?'hidden':'';});
+      [...S.npcs,S.player].filter(Boolean).forEach(entity=>{if(entity.figEl)entity.figEl.style.visibility=ready?'hidden':'';});
+      [...S.npcs,S.player].filter(Boolean).forEach(syncNpcLabel);
+      [...S.npcs,S.player].filter(Boolean).forEach(entity=>{if(entity.pet?.el){entity.pet.el.hidden=ready;if(ready&&entity.pet.raf){cancelAnimationFrame(entity.pet.raf);entity.pet.raf=0;}}});
+    };
+    try{S.renderer=window.ZEROOfficeSprites.attach(stage,{getActors:spriteActors,getLayout:()=>S.layout,onObject:object=>{if(S.world===world)interactObject(object);}});S.renderer.setActive(S.active&&!S.paused);}
+    catch(_){stage.dataset.spriteRendering='fallback';return;}
+    if(typeof MutationObserver==='function'){S.rendererObserver=new MutationObserver(sync);S.rendererObserver.observe(stage,{childList:true,subtree:true,attributes:true,attributeFilter:['data-sprites']});}sync();
+  }
+  function interactObject(object){
+    if(!S.active||S.portalBusy||!S.player||!S.world?.layout)return false;
+    const actual=S.layout.objects.find(row=>row.id===object?.id);if(!actual)return false;
+    const goal=W.objectApproach(S.world,actual,S.player.pos);if(!goal){$('lobby-near').textContent='가구까지 갈 수 있는 길을 확인하지 못했어요.';return false;}
+    const world=S.world,player=S.player;
+    if(actual.kind==='billboard'){openFullBoard();return true;}
+    walkTo(goal,()=>{if(S.world!==world||S.player!==player||!S.active)return;if(actual.kind==='portal')enterPlaza();else if(actual.kind==='guestbook'&&(S.mode==='own'||S.mode==='visit'))window.ZEROSocial?.openGuestbook(S.visit?.nick||S.ownerNick||window.ZEROLobbyUsers?.session()?.nick);});return true;
+  }
+  function setLayout(raw,revision){
+    const layout=window.ZEROOfficeLayout?.validate(raw);if(!layout)return false;
+    const nick=window.ZEROLobbyUsers?.session()?.nick||S.ownerNick;if(!nick)return false;
+    if(revision!==undefined&&(!Number.isSafeInteger(revision)||revision<0||S.ownerNick===nick&&S.layoutRevision!==null&&revision<S.layoutRevision))return false;
+    S.ownerNick=nick;S.ownerLayout=layout;S.layoutRevision=revision??null;S.ownerLayoutConfirmed=true;
+    if(S.mode==='own'&&S.sceneOwner===nick&&S.player){S.layout=layout;sceneEpoch++;S.chatNpc=null;buildStage();if(S.active){proximity();ensureLoop();}}return true;
+  }
+  function loadOwnerLayout(){
+    const user=window.ZEROLobbyUsers;if(S.layoutPending||S.ownerLayoutConfirmed||!window.ZEROOfficeLayout||!user?.request||user.session()?.nick!==S.sceneOwner)return;
+    const nick=S.sceneOwner,epoch=sceneEpoch;
+    S.layoutPending=(async()=>{try{const data=await user.request('/me/office-layout');if(epoch===sceneEpoch&&S.mode==='own'&&S.sceneOwner===nick&&user.session()?.nick===nick&&Number.isSafeInteger(data?.revision)&&data.revision>=0)setLayout(data.layout,data.revision);}catch(_){if(epoch===sceneEpoch)$('lobby-near').textContent='저장 배치를 불러오지 못해 기본 배치를 표시합니다.';}})().finally(()=>{S.layoutPending=null;});
+  }
+  document.addEventListener('zero-office-layout',event=>setLayout(event.detail?.layout,event.detail?.revision));
+  document.addEventListener('zero-session-changed',()=>{S.ownerNick=null;S.ownerLayout=null;S.layoutRevision=null;S.ownerLayoutConfirmed=false;});
+
   function buildStage() {
+    stopSprites();
+    if(fullBoardDialog?.open)fullBoardDialog.close();
+    if(boardHome&&board?.parentElement!==boardHome)boardHome.insertBefore(board,boardNext?.parentElement===boardHome?boardNext:null);
+    if(board){for(const key of ['position','left','top','width','height','zIndex'])board.style[key]='';}
     S.motions.forEach(motion => motion.cancel()); S.motions.clear(); S.speaker = []; S.target = null;
-    S.viewport = {w: stage.clientWidth, h: stage.clientHeight}; S.world = W.createWorld(S.npcs, S.space || L.DEFAULT_SPACE, {...L.FLOOR, minX: 9, maxX: 151, minY: 30});
+    S.keys.clear();if(S.rafId)cancelAnimationFrame(S.rafId);S.rafId=0;S.visuals=[];
+    S.viewport = {w: stage.clientWidth, h: stage.clientHeight}; S.world = W.createWorld(S.npcs, S.space || L.DEFAULT_SPACE, {...L.FLOOR, minX: 9, maxX: 151, minY: 30},S.layout,window.ZEROOfficeLayout);
+    let playerSpawn={x:64,y:96};S.portalGoal=null;S.billboardButton=null;S.hotspots=[];
+    if(S.world.layout){
+      S.layout=S.world.layout;playerSpawn=W.spawn(S.world,{x:64,y:96});const occupied=[playerSpawn],desks=S.layout.objects.filter(o=>['desk','standingdesk'].includes(o.kind));
+      S.npcs.forEach((npc,index)=>{const desk=desks[index],chair=desk?W.objectApproach(S.world,desk,playerSpawn):null,available=chair&&!occupied.some(p=>Math.hypot(p.x-chair.x,p.y-chair.y)<10),home=available?chair:W.spawn(S.world,npc.home||playerSpawn,occupied);npc.hidden=!home;npc.home=home||{...playerSpawn};npc.pos={...npc.home};npc.homeActivity=available?'typing':'idle';npc.away=false;npc.motion=null;if(home)occupied.push(home);});
+      const portal=S.layout.objects.find(o=>o.kind==='portal');S.portalGoal=portal?W.objectApproach(S.world,portal,playerSpawn):null;
+    }else S.npcs.forEach(npc=>{npc.hidden=false;});
+    S.hiddenCount=S.npcs.filter(npc=>npc.hidden).length;
     if (S.player) window.ZEROSocial?.removePet(S.player);
     S.portalBusy = false; S.portalLatch = false; stage.classList.remove('portal-travel');
     stage.replaceChildren();
@@ -75,18 +154,30 @@
     const windowBox = node('div', 'lobby-window'); windowBox.id = 'lobby-weather'; windowBox.append(node('b', '', '창밖'), node('span', '', '날씨 확인 중'));
     const clock = node('div', 'lobby-clock'); clock.id = 'lobby-clock';
     wall.append(windowBox, node('strong', 'floor-brand', 'ZERO EXCHANGE · 모의 투자'), clock); stage.append(wall);
-    stage.append(node('div', 'prop table'));
+    if(!S.world.layout){const table=node('div','prop table');stage.append(table);S.visuals.push(table);}
     const space = S.space || L.DEFAULT_SPACE; stage.dataset.floor = space.floor; stage.dataset.wall = space.wall;
     const EMOJI = {plant: '🪴', coffee: '☕', sofa: '🛋️', books: '📚', fish: '🐠', poster: '🖼️', clock: '🕰️'};
-    space.props.forEach((name) => { if (EMOJI[name]) { const prop = node('div', 'prop ' + name, EMOJI[name]); prop.dataset.prop = name; stage.append(prop); } });
-    if (space.props.includes('plant')) stage.append(node('div', 'prop plant right', '🪴'));
-    const portal = node('button', 'floor-portal', '광장'); portal.type = 'button'; portal.setAttribute('aria-label', '문까지 걸어가 공용 광장 입장');
-    portal.addEventListener('click', event => { event.stopPropagation(); if (!S.portalBusy) walkTo({x: 144, y: 32}, enterPlaza); }); stage.append(portal);
+    if(!S.world.layout){space.props.forEach((name) => { if (EMOJI[name]) { const prop = node('div', 'prop ' + name, EMOJI[name]); prop.dataset.prop = name; stage.append(prop);S.visuals.push(prop); } });
+      if (space.props.includes('plant')){const plant=node('div','prop plant right','🪴');stage.append(plant);S.visuals.push(plant);}
+      const portal = node('button', 'floor-portal', '광장'); portal.type = 'button'; portal.setAttribute('aria-label', '문까지 걸어가 공용 광장 입장');portal.addEventListener('click', event => { event.stopPropagation(); if (!S.portalBusy) walkTo({x: 144, y: 32}, enterPlaza); });stage.append(portal);
+    }else{
+      stage.dataset.officeTheme=S.layout.theme;
+      S.layout.objects.forEach(object=>{
+        const def=window.ZEROOfficeLayout.FURNITURE[object.kind],rotated=object.rotation===90||object.rotation===270,w=rotated?def.height:def.width,h=rotated?def.width:def.height;
+        const prop=node('div','office-layout-object',({desk:'책상',server:'서버',billboard:'전광판',meeting:'회의',partition:'칸막이',plant:'🪴',coffee:'☕',guestbook:'방명록',portal:'광장',sofa:'소파',standingdesk:'책상'})[object.kind]);
+        prop.style.position='absolute';prop.style.left=pct(object.x*10,160);prop.style.top=pct(object.y*10,100);prop.style.width=pct(w*10,160);prop.style.height=pct(h*10,100);prop.style.zIndex=String(Math.round((object.y+h)*100));prop.dataset.kind=object.kind;stage.append(prop);S.visuals.push(prop);
+        if(['portal','guestbook'].includes(object.kind)){const label=object.kind==='portal'?'광장':'방명록',hit=node('button','office-object-hit'),icon=node('span','office-object-icon',object.kind==='portal'?'↗':'✎'),spoken=node('span','sr-only',label);icon.setAttribute('aria-hidden','true');hit.append(icon,spoken);hit.type='button';hit.style.position='absolute';hit.style.left=prop.style.left;hit.style.top=prop.style.top;hit.style.width=prop.style.width;hit.style.height=prop.style.height;hit.style.zIndex='1800';hit.setAttribute('aria-label',object.kind==='portal'?'문까지 걸어가 공용 광장 입장':'방명록까지 걸어가 열기');hit.addEventListener('click',event=>{event.stopPropagation();interactObject(object);});stage.append(hit);S.hotspots.push(hit);}
+      });
+      const billboard=S.layout.objects.find(o=>o.kind==='billboard');
+      if(board&&billboard){boardPopup();const def=window.ZEROOfficeLayout.FURNITURE.billboard,rotate=billboard.rotation===90||billboard.rotation===270,trigger=node('button','floor-billboard','전광판 · 공개 자료');trigger.type='button';trigger.style.position='absolute';trigger.style.left=pct(billboard.x*10,160);trigger.style.top=pct(billboard.y*10,100);trigger.style.width=pct((rotate?def.height:def.width)*10,160);trigger.style.height=pct((rotate?def.width:def.height)*10,100);trigger.style.zIndex='2200';trigger.setAttribute('aria-label','전광판 상세 열기 · 지수·뉴스·연습 랭킹·검색 관심');trigger.addEventListener('click',event=>{event.stopPropagation();openFullBoard();});stage.append(trigger);S.billboardButton=trigger;S.hotspots.push(trigger);}else if(board){for(const key of ['position','left','top','width','height','zIndex'])board.style[key]='';}
+    }
     S.npcs.forEach(buildNpc);
-    S.player = {id: 'player', pos: {x: 64, y: 96}, el: node('div', 'npc player')};
-    S.player.el.append(figure('player', {eyes: 1, mouth: 1}), node('span', 'npc-name', S.playerName), node('span', 'player-level', (S.characterAuthenticated ? 'Lv.' : '학교 Lv.') + S.level), node('span', 'npc-bubble')); place(S.player); stage.append(S.player.el);
+    S.player = {id: 'player', pos: playerSpawn, el: node('div', 'npc player'),figEl:figure('player', {eyes: 1, mouth: 1})};
+    S.player.nameEl=node('span','npc-name',S.playerName);S.player.levelEl=node('span','player-level',(S.characterAuthenticated?'Lv.':'학교 Lv.')+S.level);
+    S.player.el.append(S.player.figEl,S.player.nameEl,S.player.levelEl,node('span','npc-bubble'));place(S.player);stage.append(S.player.el);
     $('lobby-player-level').textContent = (S.characterAuthenticated ? 'Lv.' : '학교 Lv.') + S.level;
     renderRoleDeck();
+    attachSprites();
   }
 
   const roleMedia=window.matchMedia?.('(max-width: 767px)');
@@ -114,14 +205,15 @@
       const index=start+offset,card=node('article','lobby-role-card');card.dataset.npcIndex=String(index);card.setAttribute('role','listitem');
       if(S.mode==='zero'){const display=W.chatterContext(L,{mode:'zero'},npc).persona;card.setAttribute('aria-description','공식 연출 성향: '+({value:'가치형',momentum:'추세형',dividend:'배당형',risk:'위험형',common:'일반'}[display])+' · 실제 전략 설정 아님');}
       const name=visiting?(npc.id==='host'?S.visit.nick:'익명 직원 '+(index+1)):npc.name,title=visiting?'역할 비공개':npc.role;
-      const talk=node('button','lobby-role-chat','대화');talk.type='button';talk.setAttribute('aria-label',name+'와 대화');
+      const talk=node('button','lobby-role-chat secondary-button','대화');talk.type='button';talk.setAttribute('aria-label',name+'와 대화');
       talk.addEventListener('click',()=>{if(S.active&&S.npcs.includes(npc))openChat(visiting?{...npc,name,role:'역할 비공개',mandate:''}:npc);});
       card.append(node('strong','lobby-role-name',name),node('span','lobby-role-title',title),talk);return card;
     }));
     roleDeck.previous.disabled=start===0;roleDeck.next.disabled=start+size>=count;
     roleDeck.page.textContent=count?(Math.floor(start/size)+1)+' / '+Math.ceil(count/size)+' · 직원 '+count+'명':'아직 직원이 없어요';
-    roleDeck.caption.textContent=FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'');roleDeck.caption.title=chatterNotice();roleDeck.caption.setAttribute('aria-description',chatterNotice());
+    roleDeck.caption.textContent=roleCaptionText();roleDeck.caption.title=chatterNotice();roleDeck.caption.setAttribute('aria-description',chatterNotice());
   }
+  function roleCaptionText(){return FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'')+(S.hiddenCount?' · 공간이 부족해 일부 직원은 역할 카드에서 확인하세요.':'');}
   roleMedia?.addEventListener?.('change',()=>{if(roleDeck)renderRoleDeck();});
 
   // ---- movement -------------------------------------------------------------------------------
@@ -132,7 +224,7 @@
     let next = null, arrived = null;
     if (direction) {
       S.target = null;
-      const candidate = L.clampToFloor({x: S.player.pos.x + direction.x * speed, y: S.player.pos.y + direction.y * speed});
+      const candidate = clampFloor({x: S.player.pos.x + direction.x * speed, y: S.player.pos.y + direction.y * speed});
       if (W.canTraverse(S.world,S.player.pos,candidate)) next = candidate;
       else {
         const slideX = {x: candidate.x, y: S.player.pos.y}, slideY = {x: S.player.pos.x, y: candidate.y};
@@ -156,7 +248,8 @@
     entity.el.dataset.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
   }
   function checkPortal() {
-    const distance = Math.hypot(S.player.pos.x - 144, S.player.pos.y - 32);
+    const goal=S.portalGoal||(S.world?.layout?null:{x:144,y:32});if(!goal)return;
+    const distance = Math.hypot(S.player.pos.x - goal.x, S.player.pos.y - goal.y);
     if (distance > 9) S.portalLatch = false;
     if (distance <= 6 && !S.portalLatch) enterPlaza();
   }
@@ -178,19 +271,22 @@
     scroller.scrollLeft += (want - scroller.scrollLeft) * 0.15;
   }
   function proximity() {
-    const close = L.nearest(S.npcs, S.player.pos, 11);
-    S.npcs.forEach((npc) => npc.el.classList.toggle('near', npc === close));
+    const close = L.nearest(S.npcs.filter(npc=>!npc.hidden), S.player.pos, 11);
+    S.npcs.forEach((npc) => {npc.el.classList.toggle('near',npc===close);syncNpcLabel(npc);});
     $('lobby-near').title=FICTION_NOTICE;$('lobby-near').textContent = (close ? close.name + '와(과) 가까워요 · Enter 또는 누르기로 대화 · ' : '') + FICTION_CAPTION;
     S.nearNpc = close;
   }
   function walkTo(pos, after) {
-    const path = W.route(S.world, S.player.pos, L.clampToFloor(pos));
+    const path = W.route(S.world, S.player.pos, clampFloor(pos));
     if (!path.length) { if (Math.hypot(pos.x - S.player.pos.x, pos.y - S.player.pos.y) < 1) after?.(); else $('lobby-near').textContent = '가구 사이로 갈 수 있는 바닥을 눌러 주세요.'; return; }
     S.target = {path, after}; ensureLoop();
   }
+  function clampFloor(pos){const floor=S.world?.layout?S.world.floor:L.FLOOR;return {x:Math.max(floor.minX,Math.min(floor.maxX,pos.x)),y:Math.max(floor.minY,Math.min(floor.maxY,pos.y))};}
   function ensureLoop() { if (S.active && S.player && !S.portalBusy && !S.rafId) { S.last = 0; S.rafId = requestAnimationFrame(frame); } }
   function talkTo(npc) {
-    const stand = L.clampToFloor({x: npc.pos.x + (S.player.pos.x < npc.pos.x ? -6 : 6), y: npc.pos.y + 6});
+    if(npc.hidden){openChat(npc);return;}
+    const hint={x:npc.pos.x+(S.player.pos.x<npc.pos.x?-6:6),y:npc.pos.y+6};
+    const stand = S.world?.layout?W.spawn(S.world,hint):L.clampToFloor(hint);
     // A nearby person's standing point may be inside a desk/table; do not require walking into furniture to talk.
     if (Math.hypot(S.player.pos.x - npc.pos.x, S.player.pos.y - npc.pos.y) < 16) openChat(npc); else walkTo(stand, () => openChat(npc));
   }
@@ -205,36 +301,36 @@
   }
   function openChat(npc) {
     S.chatNpc = npc; chat.title.textContent = npc.name;chat.title.title=FICTION_NOTICE;chat.role.textContent = (S.visit ? '이 사무실의 직원' : npc.role)+' · '+FICTION_NOTICE;
-    chat.log.replaceChildren(); say('bot', S.visit ? '안녕하세요! 이 사무실에 오신 걸 환영해요.' : '안녕하세요, ' + npc.name + '입니다. 가상 직원이라 정해진 대본으로 답해요. 무엇이든 물어보세요.');
+    chat.log.replaceChildren();if(npc.lastSmallTalk)say('bot',npc.lastSmallTalk);say('bot', S.visit ? '안녕하세요! 이 사무실에 오신 걸 환영해요.' : '안녕하세요, ' + npc.name + '입니다. 가상 직원이라 정해진 대본으로 답해요. 무엇이든 물어보세요.');
     chat.topics.replaceChildren(...L.TOPICS.map(([label, question]) => { const chip = node('button', 'chat-chip', label); chip.type = 'button'; chip.addEventListener('click', () => ask(question)); return chip; }));
     if (!chat.dialog.open) chat.dialog.showModal?.();
+    S.npcs.forEach(syncNpcLabel);
     if (npc.id === 'ZERO_FINAL_MANAGER') advanceTutorial('manager'); else if (npc.kind === 'chief') advanceTutorial('chief');
     chat.input.value = '';
   }
   chat.form.addEventListener('submit', (event) => { event.preventDefault(); const text = chat.input.value.trim(); if (text) { ask(text.slice(0, 80)); chat.input.value = ''; } });
   $('lobby-chat-close').addEventListener('click', () => chat.dialog.close());
+  chat.dialog.addEventListener('close',()=>S.npcs.forEach(syncNpcLabel));
 
   // ---- chatter and roaming --------------------------------------------------------------------
   function chatterNotice() {return FICTION_NOTICE+(S.mode==='zero'?' · 공식 연출 성향이며 실제 전략 설정 아님':'')+(S.trendFallback?' · 키워드 출처: 가상 대화 소재 · 실제 검색 순위 아님':'')+(W.marketContext(S.market)!=='unknown'?' · 시세 전일 변동 구간 · 예측·매매 판단 아님':'');}
   function fitSpeech(bubble,entity) {
     const bounds=stage.getBoundingClientRect();
     if(![bounds.left,bounds.top,bounds.right,bounds.bottom,bounds.width,bounds.height].every(Number.isFinite)||bounds.width<=16||bounds.height<=16)return false;
-    bubble.style.boxSizing='border-box';bubble.style.maxWidth=Math.min(roleMedia?.matches?240:360,bounds.width-16)+'px';bubble.style.translate='0px 0px';bubble.style.transition='opacity .2s';
+    bubble.style.boxSizing='border-box';bubble.style.maxWidth=Math.min(roleMedia?.matches?170:360,roleMedia?.matches?bounds.width*.45:bounds.width-16)+'px';bubble.style.translate='0px 0px';
     const box=bubble.getBoundingClientRect(),actor=entity.el.getBoundingClientRect();
     if(box.width>bounds.width-16||box.height>bounds.height-16)return false;
-    let left=Math.min(Math.max(box.left,bounds.left+8),bounds.right-8-box.width),top=Math.min(Math.max(box.top,bounds.top+8),bounds.bottom-8-box.height);
-    if(left<actor.right+6&&left+box.width>actor.left-6&&top<actor.bottom+6&&top+box.height>actor.top-6){
-      const sides=[actor.right+8,actor.left-8-box.width].filter(x=>x>=bounds.left+8&&x+box.width<=bounds.right-8);
-      if(sides.length)left=sides.sort((a,b)=>Math.abs(a-left)-Math.abs(b-left))[0];
-      else if(actor.bottom+8+box.height<=bounds.bottom-8)top=actor.bottom+8;
-      else return false;
-    }
+    const blocked=[actor,...(S.hotspots||[]).map(hit=>hit.getBoundingClientRect())].filter(rect=>rect.right>rect.left&&rect.bottom>rect.top);
+    if(stage.dataset?.spriteRendering==='ready')S.npcs.filter(npc=>npc!==entity&&!npc.hidden).forEach(npc=>{const x=bounds.left+npc.pos.x/160*bounds.width,y=bounds.top+(npc.pos.y-9)/100*bounds.height;blocked.push({left:x-bounds.width*3/160,right:x+bounds.width*3/160,top:y,bottom:y+bounds.height*4/100});});
+    const candidates=[];for(let top=bounds.top+8;top+box.height<=bounds.bottom-8;top+=8)for(let left=bounds.left+8;left+box.width<=bounds.right-8;left+=8){if(blocked.every(rect=>left+box.width<=rect.left-6||left>=rect.right+6||top+box.height<=rect.top-6||top>=rect.bottom+6))candidates.push({left,top});}
+    candidates.sort((a,b)=>Math.hypot(a.left-box.left,a.top-box.top)-Math.hypot(b.left-box.left,b.top-box.top));if(!candidates.length)return false;
+    const {left,top}=candidates[0];
     bubble.style.translate=(left-box.left)+'px '+(top-box.top)+'px';return true;
   }
   function speak(entity, text, ms = 6500) {
-    if (!entity.el.isConnected || !S.npcs.includes(entity)) return false;
+    if (!entity.el.isConnected || entity.hidden || !S.npcs.includes(entity)) return false;
     if (S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || S.speaker.some((item) => item.id === entity.id)) return;
-    const bubble = entity.el.querySelector('.npc-bubble'); bubble.title=chatterNotice();bubble.setAttribute('aria-description',chatterNotice());
+    const bubble = entity.bubbleEl||entity.el.querySelector('.npc-bubble');bubble.title=text+'\n'+chatterNotice();bubble.setAttribute('aria-label',text);bubble.setAttribute('aria-description',chatterNotice());
     bubble.textContent=text;entity.el.classList.add('speaking');
     if(!fitSpeech(bubble,entity)){entity.el.classList.remove('speaking');return false;}
     const box = bubble.getBoundingClientRect();
@@ -244,9 +340,10 @@
     });
     if (overlaps) { entity.el.classList.remove('speaking'); return; }
     const record = {id: entity.id, pos: entity.pos}; S.speaker.push(record);
+    entity.lastSmallTalk=text;entity.el.setAttribute?.('aria-describedby',bubble.id);syncNpcLabel(entity);
     S.recent.push(text); S.recent = S.recent.slice(-12);
     entity.el.dataset.activity = 'chatting'; gesture(entity, 'talk');
-    setTimeout(() => { entity.el.classList.remove('speaking'); entity.el.dataset.activity = entity.kind === 'staff' ? 'typing' : 'reading'; S.speaker = S.speaker.filter((item) => item !== record); }, ms);
+    setTimeout(() => { entity.el.classList.remove('speaking');entity.el.dataset.activity=entity.homeActivity||(entity.kind==='staff'?'typing':'reading');S.speaker=S.speaker.filter(item=>item!==record);syncNpcLabel(entity); }, ms);
     return true;
   }
   const MAX_BUBBLES = 4, BUBBLE_GAP = 26;
@@ -255,13 +352,13 @@
   function chatterTick() {
     if (!S.active || S.paused || document.hidden || S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || !S.npcs.length) return;
     const active = S.speaker.map((item) => ({id: item.id, pos: item.pos}));
-    const npc = L.pickSpeaker(S.npcs.filter((item) => !item.away && (item.kind !== 'staff' || Math.random() < 0.7)), active, narrow() ? 44 : BUBBLE_GAP);
+    const npc = L.pickSpeaker(S.npcs.filter((item) => !item.hidden&&!item.away && (item.kind !== 'staff' || Math.random() < 0.7)), active, narrow() ? 44 : BUBBLE_GAP);
     if (!npc) return;
     const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), mode:S.mode, npc, seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, level: S.level, trends: S.trends || [],safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market};
     const text = W.chooseChatter(L, context, persona, S.recent);
     if (!speak(npc, text)) return;
     // A neighbour answers a moment later, so it reads as a small conversation, not isolated captions.
-    const buddy = L.nearest(S.npcs.filter((item) => item !== npc && !item.away && !item.el.classList.contains('speaking')), npc.pos, 24);
+    const buddy = L.nearest(S.npcs.filter((item) => !item.hidden&&item !== npc && !item.away && !item.el.classList.contains('speaking')), npc.pos, 24);
     if (buddy && Math.random() < 0.7) setTimeout(() => { if (S.active && !S.paused && !buddy.away) speak(buddy, W.chatReply(text, S.recent)); }, 2800);
   }
   function greet() {
@@ -279,7 +376,8 @@
   }
   function setNpcBehavior(npc,behavior) {
     npc.behavior=behavior;npc.el.dataset.npcPhase=behavior.phase;npc.el.dataset.npcState=behavior.state;
-    if(behavior.intent!=='WAIT'&&!['MOVE','RETURN'].includes(behavior.state))npc.el.dataset.activity=behavior.activity;
+    if(behavior.state==='BLOCKED')npc.el.dataset.activity='idle';
+    else if(behavior.intent!=='WAIT'&&!['MOVE','RETURN'].includes(behavior.state))npc.el.dataset.activity=behavior.activity;
   }
   function walkNpc(npc, destination, done, preparedPath) {
     if (!M?.animate || !S.npcs.includes(npc)) return false;
@@ -310,7 +408,7 @@
   function roamTick() {
     if (!S.active || S.paused || document.hidden || reduceMotion) return;
     const now=Date.now(),hour=L.kstParts(new Date(now)).hour;
-    S.npcs.forEach(npc=>{
+    S.npcs.filter(npc=>!npc.hidden).forEach(npc=>{
       const seen=W.perceiveNpc(S.world,npc,{now,hour,active:S.active,paused:S.paused,hidden:document.hidden,reduced:reduceMotion,player:S.player?.pos,speaking:npc.el.classList.contains('speaking')||S.chatNpc===npc&&chat.dialog.open,roaming:S.npcs.filter(other=>other.away).length,reserved:S.npcs.filter(other=>other!==npc&&other.away).map(other=>other.behavior?.target||other.pos)});
       npc.el.dataset.npcPhase=seen.phase;
       const plan=W.planNpc(npc,seen);npc.el.dataset.npcPhase=plan.phase;
@@ -334,7 +432,7 @@
     const say = $('lobby-hero-say'); if (!say) return;
     say.title=chatterNotice();
     say.textContent = '“' + W.chooseChatter(L, {now: new Date(),mode:S.mode,seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, trends: S.trends || [], level: S.level,safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market}, [], S.recent) + '” · ' + FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'');
-    if(roleDeck){roleDeck.caption.textContent=FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'');roleDeck.caption.title=chatterNotice();roleDeck.caption.setAttribute('aria-description',chatterNotice());}
+    if(roleDeck){roleDeck.caption.textContent=roleCaptionText();roleDeck.caption.title=chatterNotice();roleDeck.caption.setAttribute('aria-description',chatterNotice());}
   }
 
   // ---- outside world: weather, holidays, news board -------------------------------------------
@@ -388,7 +486,7 @@
   function track(id, entries, emptyText = '표시할 항목을 불러오는 중이에요…') {
     const root = $(id); const lane = root.querySelector('.lobby-track'); lane.replaceChildren();
     if (!entries.length) { lane.append(node('span', 'lobby-tick muted', emptyText)); root.style.setProperty('--tick-seconds', '0s'); return; }
-    for (let copy = 0; copy < 2; copy++) entries.forEach((entry) => lane.append(entry(copy)));
+    for (let copy = 0; copy < 2; copy++) entries.forEach((entry,index) => {const item=entry(copy);lane.append(item);if(copy===0&&index===0&&id==='lobby-news'&&S.billboardButton){S.billboardButton.textContent=item.textContent;S.billboardButton.title=item.textContent;}});
     root.style.setProperty('--tick-seconds', Math.max(36, entries.length * 8) + 's');
   }
   const linkTick = (item) => (copy) => {
@@ -541,7 +639,7 @@
     const request = {epoch: ++sceneEpoch, controller: new AbortController(), retry, promise: null};
     teamRequest = request;
     const current = () => teamRequest === request && request.epoch === sceneEpoch && S.active && S.mode === 'zero';
-    S.visit = null; S.mode = 'zero'; S.space = null; setBanner('');
+    S.visit = null; S.mode = 'zero'; S.space = null;S.layout=window.ZEROOfficeLayout?.defaultLayout('wallstreet')||null;setBanner('');
     $('lobby-title').textContent = '지금 근무 중인 팀'; $('lobby-sub').textContent = '지금 근무 중인 ZERO 팀이에요. 캐릭터를 움직여 직원에게 말을 걸어 보세요.';
     $('lobby-error').hidden = false; $('lobby-error').querySelector('p').textContent = '팀 명부를 불러오는 중이에요. 오래 걸리면 다시 시도해 주세요.';
     retryButton.disabled = retry; retryButton.textContent = retry ? '다시 불러오는 중…' : '다시 시도';
@@ -572,6 +670,7 @@
   function showOwn(info) {
     invalidateRoster();
     S.visit = null; S.mode = 'own'; S.space = info.space || L.DEFAULT_SPACE;
+    const sameOwner=S.ownerNick===info.nick,cached=sameOwner?S.ownerLayout:null,supplied=window.ZEROOfficeLayout?.validate(info.layout);if(!sameOwner){S.layoutRevision=null;S.ownerLayoutConfirmed=false;}S.ownerNick=info.nick;S.sceneOwner=info.nick;S.layout=supplied||cached||window.ZEROOfficeLayout?.defaultLayout('startup')||null;S.ownerLayout=S.layout;if(supplied)S.ownerLayoutConfirmed=true;
     const list = [], chiefs = [], staffByChief = {}, person = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : (value || {name: '', persona: '', duty: ''});
     const make = (id, department, kind, who, role, mandate, hue, index) => {
       const persona = L.PERSONAS[who.persona];
@@ -585,7 +684,7 @@
     const spots = L.layoutTeams(chiefs, staffByChief);
     list.forEach((npc) => { npc.home = spots.get(npc.id); npc.pos = {...npc.home}; });
     S.npcs = list; setBanner(list.length ? (info.team.company || info.nick + '의 회사') + ' · 직원 ' + list.length + '명 · 이 화면은 나만 볼 수 있어요' : '아직 직원이 없어요. "내 사무실" 창에서 팀을 만들어 보세요.', true);
-    $('lobby-count').textContent = '직원 ' + list.length + '명'; buildStage(); finish();
+    $('lobby-count').textContent = '직원 ' + list.length + '명'; buildStage(); finish();loadOwnerLayout();
   }
   // Visits use only the public projection; roles, conditions and allocation never enter this scene.
   function visitOffice(info) {
@@ -593,7 +692,7 @@
     const teams = Array.isArray(info.teams) ? info.teams.filter(name => typeof name === 'string').slice(0, 8).map(name => name.slice(0, 12)) : [];
     const count = Number.isSafeInteger(info.staffCount) && info.staffCount >= 0 ? info.staffCount : 0;
     S.visit = {nick: info.nick, staffCount: count, teams, space: {floor: L.SPACE.floor.includes(info.space?.floor) ? info.space.floor : L.DEFAULT_SPACE.floor, wall: L.SPACE.wall.includes(info.space?.wall) ? info.space.wall : L.DEFAULT_SPACE.wall, props: Array.isArray(info.space?.props) ? info.space.props.filter(name => L.SPACE.props.includes(name)) : L.DEFAULT_SPACE.props}, appearance: info.appearance ? {outfit: /^(suit|vest|cardigan|hoodie|shirt|jacket|knit|polo)$/.test(info.appearance.outfit) ? info.appearance.outfit : 'suit', hair: Number.isInteger(info.appearance.hair) && info.appearance.hair >= 0 && info.appearance.hair <= 3 ? info.appearance.hair : 0, shoes: ['dark', 'white', 'blue', 'red'].includes(info.appearance.shoes) ? info.appearance.shoes : 'dark', accessory: ['none', 'glasses', 'cap', 'headphones'].includes(info.appearance.accessory) ? info.appearance.accessory : 'none', pet: ['cat', 'dog', 'bird'].includes(info.appearance.pet) ? info.appearance.pet : 'none'} : null, level: Number.isInteger(info.level) && info.level >= 1 ? info.level : null};
-    S.mode = 'visit'; S.space = S.visit.space;
+    S.mode = 'visit'; S.space = S.visit.space;S.visit.layout=window.ZEROOfficeLayout?.validate(info.layout)||window.ZEROOfficeLayout?.defaultLayout('boutique')||null;S.layout=S.visit.layout;
     const spots = L.layoutGrid(Math.min(40, count));
     S.npcs = spots.map((spot, index) => ({id: 'guest-' + index, department: 'GUEST', kind: 'staff', name: '직원', role: '🔒 역할 비공개', mandate: '', hue: (index * 47 + 20) % 360, home: spot, pos: {...spot}, face: L.faceAt(index + 3)}));
     S.npcs.push({id: 'host', department: 'HOST', kind: 'manager', name: info.nick, role: '사무실 주인', mandate: '', hue: 40, face: {eyes: 1, mouth: 1}, home: {x: 80, y: 27}, pos: {x: 80, y: 27}});
@@ -615,7 +714,8 @@
   // ---- input and lifecycle --------------------------------------------------------------------
   stage.addEventListener('click', (event) => {
     if (event.target.closest('.npc, a, button')) return;
-    const box = stage.getBoundingClientRect(); walkTo({x: (event.clientX - box.left) / box.width * L.STAGE.w, y: (event.clientY - box.top) / box.height * L.STAGE.h});
+    const box = stage.getBoundingClientRect(),position={x:(event.clientX-box.left)/box.width*L.STAGE.w,y:(event.clientY-box.top)/box.height*L.STAGE.h};
+    if(S.world?.layout&&W.objectAt(S.world,position)){if(stage.dataset.spriteRendering!=='ready')interactObject(W.objectAt(S.world,position));return;}walkTo(position);
   });
   window.addEventListener('keydown', (event) => {
     if (!S.active || S.portalBusy || chat.dialog.open || event.target.closest?.('input, textarea, select, dialog') || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -640,7 +740,12 @@
     if (on === S.active && (!on || S.timers.length || !S.player)) return; S.active = on; stage.dataset.suspended = String(!on);
     S.timers.forEach(clearInterval); S.timers = [];
     S.motions.forEach(motion => { if (on && !S.paused && !document.hidden) motion.resume(); else motion.pause(); });
-    if (!on) { invalidateRoster(); S.worldLoaded = false; S.keys.clear(); if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return; }
+    S.renderer?.setActive(on&&!S.paused);
+    if (!on) {
+      invalidateRoster();S.motions.forEach(motion=>motion.cancel());S.motions.clear();
+      S.npcs.forEach(npc=>{npc.motion=null;npc.el.dataset.walking='false';npc.away=Math.hypot(npc.pos.x-npc.home.x,npc.pos.y-npc.home.y)>=.5;setNpcBehavior(npc,{...npc.behavior,intent:npc.away?'REST':'WORK',state:npc.away?'REST':'WORK',activity:npc.away?'idle':npc.homeActivity||(npc.kind==='staff'?'typing':'reading'),until:0,path:[]});});
+      S.worldLoaded = false; S.keys.clear();S.target=null; if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return;
+    }
     if (!S.player) return;
     loadSceneResources();
     S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000),setInterval(loadChatterSeed,60000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000), setInterval(loadMarket, 60000), setInterval(loadTrends, 600000), setInterval(loadWeather, 1800000));
@@ -684,10 +789,11 @@
   S.tutorial = initialTutorial || {step: 0, done: false};
   if (!initialTutorial) store.set(TUT_KEY, JSON.stringify(S.tutorial));
   retryButton.addEventListener('click', () => open(true));
-  window.ZEROLobby = {showOwn, open: () => { setActive(true); if (!S.team || !S.player || S.mode !== 'zero') return open(); }, close: () => setActive(false), setActive, visit: visitOffice, setPlayerName, setCharacterProgress, setUserBoard, state: S};
+  window.ZEROLobby = {showOwn, open: () => { setActive(true); if (!S.team || !S.player || S.mode !== 'zero') return open(); }, close: () => setActive(false), setActive, visit: visitOffice, setLayout,setPlayerName, setCharacterProgress, setUserBoard, state: S};
+  window.ZEROOffice={...(window.ZEROOffice||{}),setLayout};
   document.addEventListener('zero-plaza-closed', () => {
     S.portalBusy = false; S.keys.clear(); S.target = null; stage.classList.remove('portal-travel');
-    if (S.player && S.portalLatch) { S.player.pos = {x: 136, y: 40}; place(S.player); }
+    if (S.player && S.portalLatch) { S.player.pos = S.world?.layout?W.spawn(S.world,{x:S.portalGoal.x-12,y:S.portalGoal.y+10})||S.player.pos:{x:136,y:40};place(S.player); }
     S.portalLatch = false; proximity();
   });
   document.addEventListener('zero-lobby-open', () => window.ZEROLobby.open());
@@ -703,6 +809,7 @@
   $('lobby-pause').addEventListener('click', () => {
     S.paused = !S.paused; stage.dataset.paused = String(S.paused); $('lobby-pause').textContent = S.paused ? '연출 재개' : '연출 멈춤'; $('lobby-pause').setAttribute('aria-pressed', String(S.paused));
     S.motions.forEach(motion => { if (S.paused) motion.pause(); else if (S.active && !document.hidden) motion.resume(); });
+    S.renderer?.setActive(S.active&&!S.paused);
     if (!S.paused) { roamTick(); chatterTick(); }
   });
   document.addEventListener('zero-academy-progress', event => {

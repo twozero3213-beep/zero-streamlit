@@ -48,7 +48,24 @@
       .map(row=>row.text.replace(/\{trend_keyword\}/g,()=>keyword).replace(/\{weather\}/g,()=>row.weather==='cold'?'쌀쌀함':row.weather==='hot'?'더움':weather)).filter(text=>!recent.includes(text));
     return choices.length?choices[Math.min(choices.length-1,Math.floor(rng()*choices.length))]:null;
   }
-  function createWorld(npcs, space, floor) {
+  function createWorld(npcs, space, floor, layout, layoutApi) {
+    const saved=layoutApi?.validate(layout);
+    if(saved){
+      const tiles=layoutApi.collision(saved);
+      if(Array.isArray(tiles)&&tiles.length===16&&tiles.every(column=>Array.isArray(column)&&column.length===10&&column.every(value=>value===0||value===1||value===false||value===true))){
+        const grid=Array.from({length:WIDTH/CELL},(_,x)=>Array.from({length:HEIGHT/CELL},(_,y)=>tiles[Math.floor(x*CELL/10)][Math.floor(y*CELL/10)]?1:0));
+        const world={grid,graph:new search.Graph(grid),floor:{minX:1,maxX:159,minY:1,maxY:99},layout:saved,layers:{collision:grid,objects:saved.objects},locations:[]};
+        // The shared validator checks paths from tile (8,9); keep actors in that same component.
+        const visited=new Set(),area=[],start=cell({x:85,y:95}),queue=grid[start.x]?.[start.y]?[start]:[];
+        visited.add(start.x+','+start.y);
+        for(let i=0;i<queue.length;i++){const p=queue[i];area.push(point(world,p));for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=p.x+dx,ny=p.y+dy,k=nx+','+ny;if(grid[nx]?.[ny]&&!visited.has(k)){visited.add(k);queue.push({x:nx,y:ny});}}}
+        if(area.length){
+          world.spawns=area;
+          saved.objects.filter(o=>['coffee','sofa','meeting','billboard'].includes(o.kind)).forEach(o=>{const position=objectApproach(world,o,area[0]);if(position)world.locations.push({id:o.kind+':'+o.id,kind:o.kind,activity:o.kind==='coffee'?'coffee':'idle',position});});
+          return world;
+        }
+      }
+    }
     const grid = Array.from({length: WIDTH / CELL}, (_, x) => Array.from({length: HEIGHT / CELL}, (_, y) =>
       x * CELL <= floor.maxX && (x + 1) * CELL >= floor.minX && y * CELL <= floor.maxY && (y + 1) * CELL >= floor.minY ? 1 : 0));
     // SkyOffice Game.ts (MIT) separates collidable objects from interaction locations; no upstream code/assets copied.
@@ -66,6 +83,27 @@
     const locations=[{id:'meeting',activity:'reading',position:{x:80,y:40}},{id:'window',activity:'reading',position:{x:144,y:32}},{id:'review',activity:'reading',position:{x:96,y:62}}];
     if(space?.props?.includes('coffee'))locations.unshift({id:'coffee',activity:'coffee',position:{x:15,y:32}});
     return {grid, graph: new search.Graph(grid), floor,layers:{collision:grid,objects},locations};
+  }
+  const OBJECT_SIZE={desk:[2,1],server:[1,2],billboard:[4,1],meeting:[3,2],partition:[1,2],plant:[1,1],coffee:[1,1],guestbook:[1,1],portal:[1,1],sofa:[2,1],standingdesk:[1,1]};
+  function objectBounds(object){let [w,h]=OBJECT_SIZE[object.kind];if(object.rotation===90||object.rotation===270)[w,h]=[h,w];return {left:object.x*10,top:object.y*10,right:(object.x+w)*10,bottom:(object.y+h)*10};}
+  function objectAt(world,position){return world.layout?.objects.find(object=>{const b=objectBounds(object);return position.x>=b.left&&position.x<b.right&&position.y>=b.top&&position.y<b.bottom;})||null;}
+  function spawn(world,preferred,occupied=[]){
+    const points=world.spawns||world.graph.nodes.filter(n=>!n.isWall()).map(n=>point(world,n));
+    if(canStand(world,preferred)&&points.some(p=>cell(p).x===cell(preferred).x&&cell(p).y===cell(preferred).y)&&!occupied.some(other=>Math.hypot(other.x-preferred.x,other.y-preferred.y)<(world.layout?10:4)))return {...preferred};
+    let best=null,score=Infinity;
+    for(const p of points){if(!canStand(world,p)||occupied.some(other=>Math.hypot(other.x-p.x,other.y-p.y)<(world.layout?10:4)))continue;const d=Math.hypot(p.x-preferred.x,p.y-preferred.y);if(d<score){score=d;best=p;}}
+    return best?{...best}:null;
+  }
+  function objectApproach(world,object,from){
+    const actual=world.layout?.objects.find(row=>row.id===object?.id);if(!actual)return null;
+    const b=objectBounds(actual),cx=(b.left+b.right)/2,cy=(b.top+b.bottom)/2;
+    const sides=[{x:cx,y:b.bottom+1},{x:b.left-1,y:cy},{x:cx,y:b.top-1},{x:b.right+1,y:cy}];
+    const preferred=(actual.rotation||0)/90;
+    const perimeter=[...sides];for(let x=b.left+5;x<b.right;x+=10)perimeter.push({x,y:b.top-1},{x,y:b.bottom+1});for(let y=b.top+5;y<b.bottom;y+=10)perimeter.push({x:b.left-1,y},{x:b.right+1,y});
+    const candidates=perimeter.filter(p=>canStand(world,p)&&(!world.spawns||world.spawns.some(s=>cell(s).x===cell(p).x&&cell(s).y===cell(p).y))&&(!from||Math.hypot(p.x-from.x,p.y-from.y)<.01||route(world,from,p).length));
+    if(['desk','standingdesk'].includes(actual.kind)&&candidates.includes(sides[preferred]))return {...sides[preferred]};
+    candidates.sort((a,b)=>Math.hypot(a.x-(from?.x||cx),a.y-(from?.y||cy))-Math.hypot(b.x-(from?.x||cx),b.y-(from?.y||cy)));
+    return candidates[0]?{...candidates[0]}:null;
   }
   const cell = p => ({x: Math.max(0, Math.min(WIDTH/CELL-1, Math.floor(p.x / CELL))), y: Math.max(0, Math.min(HEIGHT/CELL-1, Math.floor(p.y / CELL)))});
   function canStand(world, p) {
@@ -110,7 +148,7 @@
   function perceiveNpc(world,npc,scene) {
     const now=scene.now,state=npc.behavior?.state||'WORK',until=npc.behavior?.until||0;
     const distance=(a,b)=>a&&b?Math.hypot(a.x-b.x,a.y-b.y):Infinity;
-    return {phase:'PERCEIVE',now,allowed:Number.isFinite(now)&&scene.active===true&&!scene.paused&&!scene.hidden&&!scene.reduced&&canStand(world,npc.pos),state,until,due:now>=until,at_home:distance(npc.pos,npc.home)<0.5,moving:!!npc.motion,speaking:scene.speaking===true,player_near:distance(npc.pos,scene.player)<12,stationary:npc.kind==='manager'||npc.kind==='product',room_busy:scene.roaming>=3,hour:scene.hour,
+    return {phase:'PERCEIVE',now,allowed:!npc.hidden&&Number.isFinite(now)&&scene.active===true&&!scene.paused&&!scene.hidden&&!scene.reduced&&canStand(world,npc.pos),state,until,due:now>=until,at_home:distance(npc.pos,npc.home)<0.5,moving:!!npc.motion,speaking:scene.speaking===true,player_near:distance(npc.pos,scene.player)<12,stationary:!world.layout&&(npc.kind==='manager'||npc.kind==='product'),room_busy:scene.roaming>=3,hour:scene.hour,
       locations:world.locations.filter(point=>canStand(world,point.position)&&distance(point.position,scene.player)>=6&&!(scene.reserved||[]).some(position=>distance(point.position,position)<4)).map(point=>({...point,position:{...point.position}}))};
   }
   function planNpc(npc,seen,rng=Math.random) {
@@ -119,10 +157,11 @@
     if(seen.stationary)return {...base,intent:'WORK'};
     if(seen.state==='REST'&&!seen.due)return {...base,intent:'REST'};
     if(seen.state==='BLOCKED'&&!seen.due)return {...base,intent:'WAIT'};
-    if(!seen.at_home)return {...base,intent:'RETURN',target:{...npc.home},activity:npc.kind==='staff'?'typing':'reading'};
+    if(!seen.at_home)return {...base,intent:'RETURN',target:{...npc.home},activity:npc.homeActivity||(npc.kind==='staff'?'typing':'reading')};
     if(seen.room_busy||!seen.locations.length)return {...base,intent:'WORK'};
-    const coffee=seen.hour>=6&&seen.hour<11?seen.locations.find(point=>point.id==='coffee'):null;
-    const goal=coffee||seen.locations[Math.min(seen.locations.length-1,Math.max(0,Math.floor(rng()*seen.locations.length)))];
+    const coffee=seen.hour>=6&&seen.hour<11?seen.locations.find(point=>(point.kind||point.id)==='coffee'):null;
+    const sofa=seen.hour>=11&&seen.hour<13?seen.locations.find(point=>point.kind==='sofa'):null;
+    const goal=coffee||sofa||seen.locations[Math.min(seen.locations.length-1,Math.max(0,Math.floor(rng()*seen.locations.length)))];
     return {...base,intent:'WALK',target:{...goal.position},activity:goal.activity};
   }
   function executeNpc(world,npc,plan) {
@@ -169,5 +208,5 @@
     const fresh = pool.filter(line => !recent.includes(line)), choices = fresh.length ? fresh : pool;
     return choices[Math.min(choices.length - 1, Math.floor(rng() * choices.length))];
   }
-  return {CELL, FICTION_NOTICE, validateChatterSeed, chatterContext, marketContext, safeTrendData, createWorld, canStand, canTraverse, route, perceiveNpc,planNpc,executeNpc,rankUsers, chooseChatter, chatReply};
+  return {CELL, FICTION_NOTICE, validateChatterSeed, chatterContext, marketContext, safeTrendData, createWorld, canStand, canTraverse, route, spawn,objectAt,objectApproach,perceiveNpc,planNpc,executeNpc,rankUsers, chooseChatter, chatReply};
 });

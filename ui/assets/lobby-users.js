@@ -26,7 +26,7 @@
     // A template literal on purpose: the Streamlit build rewrites quote-led slash-api paths into relative ones, which would break this absolute address.
     const response = await fetch(`${BASE}/api/lobby${path}`, {method, headers: {...(body ? {'Content-Type': 'application/json'} : {}), ...(token ? {Authorization: 'Bearer ' + token} : {})}, body: body ? JSON.stringify(body) : undefined, cache: 'no-store', signal: AbortSignal.timeout(15000)});
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw Object.assign(new Error(data.error || 'LOBBY_ERROR'), {code: data.error || 'LOBBY_ERROR'});
+    if (!response.ok) throw Object.assign(new Error(data.error || 'LOBBY_ERROR'), {code: data.error || 'LOBBY_ERROR',status:response.status});
     return data;
   }
   const say = (error) => messages[error?.code] || '지금은 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
@@ -89,6 +89,7 @@
     team.addEventListener('click', viewTeam); portfolio.addEventListener('click', viewPortfolio); see.addEventListener('click', () => { dialog.close(); window.ZEROLobby.showOwn(window.ZEROCompany?.officeFor(U.me)||{nick: U.me.nick, team: U.me.team, space: U.me.space}); });
     out.addEventListener('click', () => { store.del(KEY); store.del('zero-lobby-name'); U.token = null; U.me = null; window.ZEROLobby.setPlayerName('대표님'); body.replaceChildren(); dialog.close(); window.ZEROLobby.open(); render(); });
     const company = node('button', 'secondary-button', '투자회사 · 전략 직원 관리'); company.addEventListener('click',()=>{dialog.close();window.ZERO?.navigate('company');});
+    const layout = node('button','secondary-button','사무실 꾸미기(배치 편집)');layout.type='button';layout.addEventListener('click',()=>{if(!U.me)return;dialog.close();window.ZEROOfficeEditor?.open();});
     const wardrobe = node('button', 'secondary-button', '내 캐릭터 · 성장과 꾸미기'); wardrobe.type = 'button'; wardrobe.addEventListener('click', () => { dialog.close(); window.ZEROSocial?.openWardrobe(); });
     const renew = node('button', 'secondary-button', '복구 코드 교체 · 다른 기기 로그아웃'); renew.type = 'button';
     renew.addEventListener('click', async () => {
@@ -97,7 +98,7 @@
       try { const result = await api('/me/token', {method: 'POST', token: requestToken}); if (U.token !== requestToken || U.generation !== requestGeneration) return; U.token = result.token; store.set(KEY, result.token); render(); viewToken(result.token); }
       catch (error) { note.textContent = say(error); renew.disabled = false; }
     });
-    body.replaceChildren(node('p', 'muted-note', '직원 이름과 업무, 배분은 대표님만 조회해요. 팀 이름은 공개를 선택하면 방문자에게 표시됩니다. 닉네임·직원 수·방 꾸밈·캐릭터 꾸밈·연습 수익률은 공개해요. 복구 코드를 아는 사람은 내 정보를 볼 수 있어요. 로그아웃은 이 기기의 저장 정보만 지우며, 코드 교체는 이전 코드를 폐기해요.'), team, company, portfolio, see, wardrobe, renew, out);
+    body.replaceChildren(node('p', 'muted-note', '직원 이름과 업무, 배분은 대표님만 조회해요. 팀 이름은 공개를 선택하면 방문자에게 표시됩니다. 닉네임·직원 수·방 꾸밈·캐릭터 꾸밈·연습 수익률은 공개해요. 복구 코드를 아는 사람은 내 정보를 볼 수 있어요. 로그아웃은 이 기기의 저장 정보만 지우며, 코드 교체는 이전 코드를 폐기해요.'), team, company, portfolio, see, layout, wardrobe, renew, out);
   }
 
   const select = (options, value, blank) => {
@@ -180,7 +181,7 @@
     try { const data = await api('/leaderboard'); window.ZEROLobby.setUserBoard(data.state === 'AVAILABLE' ? data.items : [], {state: data.state, checkedAt: data.checked_at}); } catch (_) { window.ZEROLobby.setUserBoard([], {state: 'UNAVAILABLE'}); }
   }
   async function visit(nick) {
-    try { const data = await api('/office?nick=' + encodeURIComponent(nick)); window.ZEROLobby.visit({nick: data.nick, staffCount: data.staff_count, returnPercent: data.return_percent, space: data.space, teams: data.teams, appearance: data.appearance, level: data.level}); }
+    try { const data = await api('/office?nick=' + encodeURIComponent(nick)); window.ZEROLobby.visit({nick: data.nick, staffCount: data.staff_count, returnPercent: data.return_percent, space: data.space, teams: data.teams, appearance: data.appearance, level: data.level, layout: window.ZEROOfficeLayout?.validate(data.layout) || null}); }
     catch (_) { /* a missing office leaves the current scene */ }
   }
   window.ZEROLobbyUsers = {visit, refresh: refreshMe, board: loadBoard,

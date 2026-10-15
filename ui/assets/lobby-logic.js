@@ -83,6 +83,7 @@
       hair: ['#343a40', '#73533c', '#292f3b', '#9a7852', '#b5aba0', '#563c37', '#565d65'][Math.floor(i / 7) % 7],
       hairStyle: i % 4, pattern: Math.floor(i / 16) % 3};
   }
+  function appearanceForId(id){return appearanceAt(Array.from(typeof id==='string'?id:'').reduce((sum,char)=>sum+char.codePointAt(0),0));}
   const hour12 = (h) => (h % 12) || 12, ampm = (h) => h < 12 ? '오전' : '오후';
   // Lines that name the real Korean date and clock, so the office visibly lives on the visitor's calendar.
   function dayLines(parts) {
@@ -225,7 +226,7 @@
     {id: 'done', title: '5. 길잡이 끝', text: '주식이 처음이라면 "주식 입문 학교"에서 문제를 풀며 레벨을 올려 보세요. 메뉴에서 내 자산·주식 탐색·뉴스·경제 지표도 열어 볼 수 있어요. 이 길잡이는 "사무실 길잡이" 버튼으로 다시 볼 수 있어요.'}
   ];
 
-  const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, trendLines, safeTrendKeyword, appearanceAt, chatterLine, personaFor, pickSpeaker, clamp,
+  const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, trendLines, safeTrendKeyword, appearanceAt,appearanceForId, chatterLine, personaFor, pickSpeaker, clamp,
     moveToward, keyDirection, clampToFloor, nearest, layoutZero, layoutTeams, layoutGrid, reply, TOPICS, TUTORIAL, SYSTEM_TEXT,
     dayLines, replyLine, faceAt, PERSONAS, PERSONA_NAMES, FACE_EYES, FACE_MOUTHS, SPACE, SPACE_NAMES, DEFAULT_SPACE, daypart};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

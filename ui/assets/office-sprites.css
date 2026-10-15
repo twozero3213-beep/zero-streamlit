@@ -1,0 +1,20 @@
+html #lobby-view .lobby-stage.office-sprites-ready{
+  width:min(100%,calc(var(--zero-canvas,360px)*1.6)) !important;
+  height:auto !important;
+  aspect-ratio:16/10 !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  max-height:var(--zero-canvas,360px);
+  margin-inline:auto;
+  box-sizing:border-box !important;
+  border:0 !important;
+  padding:0 !important;
+  flex:none;
+}
+.office-sprites-canvas{display:block;box-sizing:border-box;border:0;padding:0;position:absolute;inset:0;width:100%;height:100%;aspect-ratio:8/5;image-rendering:pixelated;pointer-events:none;z-index:1}
+.office-sprites-credits{max-width:min(680px,90vw);max-height:80vh;overflow:auto;border:1px solid #c8cfcc;border-radius:12px;padding:24px;background:#fff;color:#26332c}
+.office-sprites-credits article{border-top:1px solid #dfe5e1;padding:12px 0;overflow-wrap:anywhere}
+.office-sprites-credits a{display:inline-block;margin:4px 16px 4px 0}
+.office-sprites-credits::backdrop{background:rgb(0 0 0 / .45)}
+
+.office-sprites-credit-status{font:inherit;overflow-wrap:anywhere}

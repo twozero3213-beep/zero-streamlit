@@ -1,0 +1,2787 @@
+{
+  "schema_version": 1,
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "sheets": [
+    {
+      "id": "body-light-idle",
+      "layer": "body",
+      "variant": "light",
+      "action": "idle",
+      "path": "/assets/sprites/body/body-light/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "body-light-idle",
+      "z": 10
+    },
+    {
+      "id": "body-light-walk",
+      "layer": "body",
+      "variant": "light",
+      "action": "walk",
+      "path": "/assets/sprites/body/body-light/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "body-light-walk",
+      "z": 10
+    },
+    {
+      "id": "body-light-sit",
+      "layer": "body",
+      "variant": "light",
+      "action": "sit",
+      "path": "/assets/sprites/body/body-light/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "body-light-sit",
+      "z": 10
+    },
+    {
+      "id": "head-light-idle",
+      "layer": "head",
+      "variant": "light",
+      "action": "idle",
+      "path": "/assets/sprites/body/head-light/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "head-light-idle",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#99423c",
+        "#cc8665": "#cc8665",
+        "#e4a47c": "#e4a47c",
+        "#f9d5ba": "#f9d5ba",
+        "#faece7": "#faece7"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-light-walk",
+      "layer": "head",
+      "variant": "light",
+      "action": "walk",
+      "path": "/assets/sprites/body/head-light/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "head-light-walk",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#99423c",
+        "#cc8665": "#cc8665",
+        "#e4a47c": "#e4a47c",
+        "#f9d5ba": "#f9d5ba",
+        "#faece7": "#faece7"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-light-sit",
+      "layer": "head",
+      "variant": "light",
+      "action": "sit",
+      "path": "/assets/sprites/body/head-light/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "head-light-sit",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#99423c",
+        "#cc8665": "#cc8665",
+        "#e4a47c": "#e4a47c",
+        "#f9d5ba": "#f9d5ba",
+        "#faece7": "#faece7"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-amber-idle",
+      "layer": "head",
+      "variant": "amber",
+      "action": "idle",
+      "path": "/assets/sprites/body/head-amber/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "head-amber-idle",
+      "palette": {
+        "#271920": "#281716",
+        "#99423c": "#8b4f3a",
+        "#cc8665": "#ba7955",
+        "#e4a47c": "#d99a6b",
+        "#f9d5ba": "#efbb8e",
+        "#faece7": "#ffdec0"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-amber-walk",
+      "layer": "head",
+      "variant": "amber",
+      "action": "walk",
+      "path": "/assets/sprites/body/head-amber/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "head-amber-walk",
+      "palette": {
+        "#271920": "#281716",
+        "#99423c": "#8b4f3a",
+        "#cc8665": "#ba7955",
+        "#e4a47c": "#d99a6b",
+        "#f9d5ba": "#efbb8e",
+        "#faece7": "#ffdec0"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-amber-sit",
+      "layer": "head",
+      "variant": "amber",
+      "action": "sit",
+      "path": "/assets/sprites/body/head-amber/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "head-amber-sit",
+      "palette": {
+        "#271920": "#281716",
+        "#99423c": "#8b4f3a",
+        "#cc8665": "#ba7955",
+        "#e4a47c": "#d99a6b",
+        "#f9d5ba": "#efbb8e",
+        "#faece7": "#ffdec0"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-olive-idle",
+      "layer": "head",
+      "variant": "olive",
+      "action": "idle",
+      "path": "/assets/sprites/body/head-olive/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "head-olive-idle",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#443329",
+        "#cc8665": "#715748",
+        "#e4a47c": "#9b7b60",
+        "#f9d5ba": "#c2a17e",
+        "#faece7": "#e1c5a0"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-olive-walk",
+      "layer": "head",
+      "variant": "olive",
+      "action": "walk",
+      "path": "/assets/sprites/body/head-olive/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "head-olive-walk",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#443329",
+        "#cc8665": "#715748",
+        "#e4a47c": "#9b7b60",
+        "#f9d5ba": "#c2a17e",
+        "#faece7": "#e1c5a0"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-olive-sit",
+      "layer": "head",
+      "variant": "olive",
+      "action": "sit",
+      "path": "/assets/sprites/body/head-olive/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "head-olive-sit",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#443329",
+        "#cc8665": "#715748",
+        "#e4a47c": "#9b7b60",
+        "#f9d5ba": "#c2a17e",
+        "#faece7": "#e1c5a0"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-dark-idle",
+      "layer": "head",
+      "variant": "dark",
+      "action": "idle",
+      "path": "/assets/sprites/body/head-dark/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "head-dark-idle",
+      "palette": {
+        "#271920": "#211823",
+        "#99423c": "#392724",
+        "#cc8665": "#59413a",
+        "#e4a47c": "#79584a",
+        "#f9d5ba": "#98715f",
+        "#faece7": "#b58e76"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-dark-walk",
+      "layer": "head",
+      "variant": "dark",
+      "action": "walk",
+      "path": "/assets/sprites/body/head-dark/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "head-dark-walk",
+      "palette": {
+        "#271920": "#211823",
+        "#99423c": "#392724",
+        "#cc8665": "#59413a",
+        "#e4a47c": "#79584a",
+        "#f9d5ba": "#98715f",
+        "#faece7": "#b58e76"
+      },
+      "z": 100
+    },
+    {
+      "id": "head-dark-sit",
+      "layer": "head",
+      "variant": "dark",
+      "action": "sit",
+      "path": "/assets/sprites/body/head-dark/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "head-dark-sit",
+      "palette": {
+        "#271920": "#211823",
+        "#99423c": "#392724",
+        "#cc8665": "#59413a",
+        "#e4a47c": "#79584a",
+        "#f9d5ba": "#98715f",
+        "#faece7": "#b58e76"
+      },
+      "z": 100
+    },
+    {
+      "id": "legs-default-idle",
+      "layer": "legs",
+      "variant": "default",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/legs-default/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "legs-default-idle",
+      "z": 20
+    },
+    {
+      "id": "legs-default-walk",
+      "layer": "legs",
+      "variant": "default",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/legs-default/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "legs-default-walk",
+      "z": 20
+    },
+    {
+      "id": "legs-default-sit",
+      "layer": "legs",
+      "variant": "default",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/legs-default/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "legs-default-sit",
+      "z": 20
+    },
+    {
+      "id": "shoes-dark-idle",
+      "layer": "shoes",
+      "variant": "dark",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/shoes-dark/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "shoes-dark-idle",
+      "z": 25
+    },
+    {
+      "id": "shoes-dark-walk",
+      "layer": "shoes",
+      "variant": "dark",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/shoes-dark/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "shoes-dark-walk",
+      "z": 25
+    },
+    {
+      "id": "shoes-dark-sit",
+      "layer": "shoes",
+      "variant": "dark",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/shoes-dark/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "shoes-dark-sit",
+      "z": 25
+    },
+    {
+      "id": "clothes-shirt-idle",
+      "layer": "clothes",
+      "variant": "shirt",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/clothes-shirt/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-shirt-idle",
+      "z": 35
+    },
+    {
+      "id": "clothes-shirt-walk",
+      "layer": "clothes",
+      "variant": "shirt",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/clothes-shirt/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "clothes-shirt-walk",
+      "z": 35
+    },
+    {
+      "id": "clothes-shirt-sit",
+      "layer": "clothes",
+      "variant": "shirt",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/clothes-shirt/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-shirt-sit",
+      "z": 35
+    },
+    {
+      "id": "clothes-polo-idle",
+      "layer": "clothes",
+      "variant": "polo",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/clothes-polo/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-polo-idle",
+      "z": 35
+    },
+    {
+      "id": "clothes-polo-walk",
+      "layer": "clothes",
+      "variant": "polo",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/clothes-polo/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "clothes-polo-walk",
+      "z": 35
+    },
+    {
+      "id": "clothes-polo-sit",
+      "layer": "clothes",
+      "variant": "polo",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/clothes-polo/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-polo-sit",
+      "z": 35
+    },
+    {
+      "id": "clothes-hoodie-idle",
+      "layer": "clothes",
+      "variant": "hoodie",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/clothes-hoodie/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-hoodie-idle",
+      "z": 35
+    },
+    {
+      "id": "clothes-hoodie-walk",
+      "layer": "clothes",
+      "variant": "hoodie",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/clothes-hoodie/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "clothes-hoodie-walk",
+      "z": 35
+    },
+    {
+      "id": "clothes-hoodie-sit",
+      "layer": "clothes",
+      "variant": "hoodie",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/clothes-hoodie/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-hoodie-sit",
+      "z": 35
+    },
+    {
+      "id": "clothes-cardigan-idle",
+      "layer": "clothes",
+      "variant": "cardigan",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/clothes-cardigan/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-cardigan-idle",
+      "z": 35
+    },
+    {
+      "id": "clothes-cardigan-walk",
+      "layer": "clothes",
+      "variant": "cardigan",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/clothes-cardigan/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "clothes-cardigan-walk",
+      "z": 35
+    },
+    {
+      "id": "clothes-cardigan-sit",
+      "layer": "clothes",
+      "variant": "cardigan",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/clothes-cardigan/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-cardigan-sit",
+      "z": 35
+    },
+    {
+      "id": "hair-0-idle",
+      "layer": "hair",
+      "variant": "0",
+      "action": "idle",
+      "path": "/assets/sprites/hair/hair-0/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "hair-0-idle",
+      "z": 120
+    },
+    {
+      "id": "hair-0-walk",
+      "layer": "hair",
+      "variant": "0",
+      "action": "walk",
+      "path": "/assets/sprites/hair/hair-0/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "hair-0-walk",
+      "z": 120
+    },
+    {
+      "id": "hair-0-sit",
+      "layer": "hair",
+      "variant": "0",
+      "action": "sit",
+      "path": "/assets/sprites/hair/hair-0/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "hair-0-sit",
+      "z": 120
+    },
+    {
+      "id": "hair-1-idle",
+      "layer": "hair",
+      "variant": "1",
+      "action": "idle",
+      "path": "/assets/sprites/hair/hair-1/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "hair-1-idle",
+      "z": 120
+    },
+    {
+      "id": "hair-1-walk",
+      "layer": "hair",
+      "variant": "1",
+      "action": "walk",
+      "path": "/assets/sprites/hair/hair-1/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "hair-1-walk",
+      "z": 120
+    },
+    {
+      "id": "hair-1-sit",
+      "layer": "hair",
+      "variant": "1",
+      "action": "sit",
+      "path": "/assets/sprites/hair/hair-1/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "hair-1-sit",
+      "z": 120
+    },
+    {
+      "id": "hair-2-idle",
+      "layer": "hair",
+      "variant": "2",
+      "action": "idle",
+      "path": "/assets/sprites/hair/hair-2/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "hair-2-idle",
+      "z": 120
+    },
+    {
+      "id": "hair-2-walk",
+      "layer": "hair",
+      "variant": "2",
+      "action": "walk",
+      "path": "/assets/sprites/hair/hair-2/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "hair-2-walk",
+      "z": 120
+    },
+    {
+      "id": "hair-2-sit",
+      "layer": "hair",
+      "variant": "2",
+      "action": "sit",
+      "path": "/assets/sprites/hair/hair-2/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "hair-2-sit",
+      "z": 120
+    },
+    {
+      "id": "hair-3-idle",
+      "layer": "hair",
+      "variant": "3",
+      "action": "idle",
+      "path": "/assets/sprites/hair/hair-3/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "hair-3-idle",
+      "z": 120
+    },
+    {
+      "id": "hair-3-walk",
+      "layer": "hair",
+      "variant": "3",
+      "action": "walk",
+      "path": "/assets/sprites/hair/hair-3/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "hair-3-walk",
+      "z": 120
+    },
+    {
+      "id": "hair-3-sit",
+      "layer": "hair",
+      "variant": "3",
+      "action": "sit",
+      "path": "/assets/sprites/hair/hair-3/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "hair-3-sit",
+      "z": 120
+    },
+    {
+      "id": "accessories-glasses-idle",
+      "layer": "accessories",
+      "variant": "glasses",
+      "action": "idle",
+      "path": "/assets/sprites/accessories/accessories-glasses/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "accessories-glasses-idle",
+      "z": 130
+    },
+    {
+      "id": "accessories-glasses-walk",
+      "layer": "accessories",
+      "variant": "glasses",
+      "action": "walk",
+      "path": "/assets/sprites/accessories/accessories-glasses/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "accessories-glasses-walk",
+      "z": 130
+    },
+    {
+      "id": "accessories-glasses-sit",
+      "layer": "accessories",
+      "variant": "glasses",
+      "action": "sit",
+      "path": "/assets/sprites/accessories/accessories-glasses/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "accessories-glasses-sit",
+      "z": 130
+    },
+    {
+      "id": "accessories-cap-idle",
+      "layer": "accessories",
+      "variant": "cap",
+      "action": "idle",
+      "path": "/assets/sprites/accessories/accessories-cap/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "accessories-cap-idle",
+      "z": 130
+    },
+    {
+      "id": "accessories-cap-walk",
+      "layer": "accessories",
+      "variant": "cap",
+      "action": "walk",
+      "path": "/assets/sprites/accessories/accessories-cap/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "accessories-cap-walk",
+      "z": 130
+    },
+    {
+      "id": "accessories-cap-sit",
+      "layer": "accessories",
+      "variant": "cap",
+      "action": "sit",
+      "path": "/assets/sprites/accessories/accessories-cap/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "accessories-cap-sit",
+      "z": 130
+    },
+    {
+      "id": "body-amber-idle",
+      "layer": "body",
+      "variant": "amber",
+      "action": "idle",
+      "path": "/assets/sprites/body/body-light/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "body-light-idle",
+      "palette": {
+        "#271920": "#281716",
+        "#99423c": "#8b4f3a",
+        "#cc8665": "#ba7955",
+        "#e4a47c": "#d99a6b",
+        "#f9d5ba": "#efbb8e",
+        "#faece7": "#ffdec0"
+      },
+      "z": 10
+    },
+    {
+      "id": "body-olive-idle",
+      "layer": "body",
+      "variant": "olive",
+      "action": "idle",
+      "path": "/assets/sprites/body/body-light/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "body-light-idle",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#443329",
+        "#cc8665": "#715748",
+        "#e4a47c": "#9b7b60",
+        "#f9d5ba": "#c2a17e",
+        "#faece7": "#e1c5a0"
+      },
+      "z": 10
+    },
+    {
+      "id": "body-dark-idle",
+      "layer": "body",
+      "variant": "dark",
+      "action": "idle",
+      "path": "/assets/sprites/body/body-light/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "body-light-idle",
+      "palette": {
+        "#271920": "#211823",
+        "#99423c": "#392724",
+        "#cc8665": "#59413a",
+        "#e4a47c": "#79584a",
+        "#f9d5ba": "#98715f",
+        "#faece7": "#b58e76"
+      },
+      "z": 10
+    },
+    {
+      "id": "body-amber-walk",
+      "layer": "body",
+      "variant": "amber",
+      "action": "walk",
+      "path": "/assets/sprites/body/body-light/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "body-light-walk",
+      "palette": {
+        "#271920": "#281716",
+        "#99423c": "#8b4f3a",
+        "#cc8665": "#ba7955",
+        "#e4a47c": "#d99a6b",
+        "#f9d5ba": "#efbb8e",
+        "#faece7": "#ffdec0"
+      },
+      "z": 10
+    },
+    {
+      "id": "body-olive-walk",
+      "layer": "body",
+      "variant": "olive",
+      "action": "walk",
+      "path": "/assets/sprites/body/body-light/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "body-light-walk",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#443329",
+        "#cc8665": "#715748",
+        "#e4a47c": "#9b7b60",
+        "#f9d5ba": "#c2a17e",
+        "#faece7": "#e1c5a0"
+      },
+      "z": 10
+    },
+    {
+      "id": "body-dark-walk",
+      "layer": "body",
+      "variant": "dark",
+      "action": "walk",
+      "path": "/assets/sprites/body/body-light/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "body-light-walk",
+      "palette": {
+        "#271920": "#211823",
+        "#99423c": "#392724",
+        "#cc8665": "#59413a",
+        "#e4a47c": "#79584a",
+        "#f9d5ba": "#98715f",
+        "#faece7": "#b58e76"
+      },
+      "z": 10
+    },
+    {
+      "id": "body-amber-sit",
+      "layer": "body",
+      "variant": "amber",
+      "action": "sit",
+      "path": "/assets/sprites/body/body-light/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "body-light-sit",
+      "palette": {
+        "#271920": "#281716",
+        "#99423c": "#8b4f3a",
+        "#cc8665": "#ba7955",
+        "#e4a47c": "#d99a6b",
+        "#f9d5ba": "#efbb8e",
+        "#faece7": "#ffdec0"
+      },
+      "z": 10
+    },
+    {
+      "id": "body-olive-sit",
+      "layer": "body",
+      "variant": "olive",
+      "action": "sit",
+      "path": "/assets/sprites/body/body-light/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "body-light-sit",
+      "palette": {
+        "#271920": "#271920",
+        "#99423c": "#443329",
+        "#cc8665": "#715748",
+        "#e4a47c": "#9b7b60",
+        "#f9d5ba": "#c2a17e",
+        "#faece7": "#e1c5a0"
+      },
+      "z": 10
+    },
+    {
+      "id": "body-dark-sit",
+      "layer": "body",
+      "variant": "dark",
+      "action": "sit",
+      "path": "/assets/sprites/body/body-light/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "body-light-sit",
+      "palette": {
+        "#271920": "#211823",
+        "#99423c": "#392724",
+        "#cc8665": "#59413a",
+        "#e4a47c": "#79584a",
+        "#f9d5ba": "#98715f",
+        "#faece7": "#b58e76"
+      },
+      "z": 10
+    },
+    {
+      "id": "clothes-vest-idle",
+      "layer": "clothes",
+      "variant": "vest",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/clothes-cardigan/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-cardigan-idle",
+      "z": 35,
+      "palette": {
+        "#281820": "#182332",
+        "#4d4a5d": "#263e57",
+        "#958080": "#3b5c77",
+        "#c4b59f": "#56758f",
+        "#e5e6c7": "#7795ae",
+        "#ffffff": "#a3bccf"
+      }
+    },
+    {
+      "id": "clothes-vest-walk",
+      "layer": "clothes",
+      "variant": "vest",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/clothes-cardigan/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "clothes-cardigan-walk",
+      "z": 35,
+      "palette": {
+        "#281820": "#182332",
+        "#4d4a5d": "#263e57",
+        "#958080": "#3b5c77",
+        "#c4b59f": "#56758f",
+        "#e5e6c7": "#7795ae",
+        "#ffffff": "#a3bccf"
+      }
+    },
+    {
+      "id": "clothes-vest-sit",
+      "layer": "clothes",
+      "variant": "vest",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/clothes-cardigan/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-cardigan-sit",
+      "z": 35,
+      "palette": {
+        "#281820": "#182332",
+        "#4d4a5d": "#263e57",
+        "#958080": "#3b5c77",
+        "#c4b59f": "#56758f",
+        "#e5e6c7": "#7795ae",
+        "#ffffff": "#a3bccf"
+      }
+    },
+    {
+      "id": "clothes-suit-idle",
+      "layer": "clothes",
+      "variant": "suit",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/clothes-shirt/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-shirt-idle",
+      "z": 35,
+      "palette": {
+        "#281820": "#101827",
+        "#4d4a5d": "#1b293b",
+        "#c4b59f": "#2d4054",
+        "#e5e6c7": "#70889d",
+        "#ffffff": "#9bb0c1"
+      }
+    },
+    {
+      "id": "clothes-suit-walk",
+      "layer": "clothes",
+      "variant": "suit",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/clothes-shirt/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "clothes-shirt-walk",
+      "z": 35,
+      "palette": {
+        "#281820": "#101827",
+        "#4d4a5d": "#1b293b",
+        "#c4b59f": "#2d4054",
+        "#e5e6c7": "#70889d",
+        "#ffffff": "#9bb0c1"
+      }
+    },
+    {
+      "id": "clothes-suit-sit",
+      "layer": "clothes",
+      "variant": "suit",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/clothes-shirt/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-shirt-sit",
+      "z": 35,
+      "palette": {
+        "#281820": "#101827",
+        "#4d4a5d": "#1b293b",
+        "#958080": "#2d4054",
+        "#c4b59f": "#455d75",
+        "#e5e6c7": "#70889d",
+        "#ffffff": "#9bb0c1"
+      }
+    },
+    {
+      "id": "clothes-jacket-idle",
+      "layer": "clothes",
+      "variant": "jacket",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/clothes-hoodie/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-hoodie-idle",
+      "z": 35,
+      "palette": {
+        "#281820": "#27172a",
+        "#4d4a5d": "#43274a",
+        "#c4b59f": "#6c3d6e",
+        "#e5e6c7": "#b588bd",
+        "#ffffff": "#d7b6dd"
+      }
+    },
+    {
+      "id": "clothes-jacket-walk",
+      "layer": "clothes",
+      "variant": "jacket",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/clothes-hoodie/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "clothes-hoodie-walk",
+      "z": 35,
+      "palette": {
+        "#281820": "#27172a",
+        "#4d4a5d": "#43274a",
+        "#c4b59f": "#6c3d6e",
+        "#e5e6c7": "#b588bd",
+        "#ffffff": "#d7b6dd"
+      }
+    },
+    {
+      "id": "clothes-jacket-sit",
+      "layer": "clothes",
+      "variant": "jacket",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/clothes-hoodie/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-hoodie-sit",
+      "z": 35,
+      "palette": {
+        "#281820": "#27172a",
+        "#4d4a5d": "#43274a",
+        "#c4b59f": "#6c3d6e",
+        "#e5e6c7": "#b588bd",
+        "#ffffff": "#d7b6dd"
+      }
+    },
+    {
+      "id": "clothes-knit-idle",
+      "layer": "clothes",
+      "variant": "knit",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/clothes-shirt/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-shirt-idle",
+      "z": 35,
+      "palette": {
+        "#281820": "#182c23",
+        "#4d4a5d": "#2d4936",
+        "#c4b59f": "#4f6950",
+        "#e5e6c7": "#9eba9c",
+        "#ffffff": "#c5d8bb"
+      }
+    },
+    {
+      "id": "clothes-knit-walk",
+      "layer": "clothes",
+      "variant": "knit",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/clothes-shirt/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "clothes-shirt-walk",
+      "z": 35,
+      "palette": {
+        "#281820": "#182c23",
+        "#4d4a5d": "#2d4936",
+        "#c4b59f": "#4f6950",
+        "#e5e6c7": "#9eba9c",
+        "#ffffff": "#c5d8bb"
+      }
+    },
+    {
+      "id": "clothes-knit-sit",
+      "layer": "clothes",
+      "variant": "knit",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/clothes-shirt/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "clothes-shirt-sit",
+      "z": 35,
+      "palette": {
+        "#281820": "#182c23",
+        "#4d4a5d": "#2d4936",
+        "#958080": "#4f6950",
+        "#c4b59f": "#739278",
+        "#e5e6c7": "#9eba9c",
+        "#ffffff": "#c5d8bb"
+      }
+    },
+    {
+      "id": "shoes-white-idle",
+      "layer": "shoes",
+      "variant": "white",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/shoes-dark/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "shoes-dark-idle",
+      "z": 25,
+      "palette": {
+        "#281820": "#383e4a",
+        "#4d4a5d": "#667184",
+        "#958080": "#939dae",
+        "#c4b59f": "#bcc4ce",
+        "#e5e6c7": "#dde2e8",
+        "#ffffff": "#f6f8fb"
+      }
+    },
+    {
+      "id": "shoes-white-walk",
+      "layer": "shoes",
+      "variant": "white",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/shoes-dark/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "shoes-dark-walk",
+      "z": 25,
+      "palette": {
+        "#281820": "#383e4a",
+        "#4d4a5d": "#667184",
+        "#958080": "#939dae",
+        "#c4b59f": "#bcc4ce",
+        "#e5e6c7": "#dde2e8",
+        "#ffffff": "#f6f8fb"
+      }
+    },
+    {
+      "id": "shoes-white-sit",
+      "layer": "shoes",
+      "variant": "white",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/shoes-dark/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "shoes-dark-sit",
+      "z": 25,
+      "palette": {
+        "#281820": "#383e4a",
+        "#4d4a5d": "#667184",
+        "#958080": "#939dae",
+        "#c4b59f": "#bcc4ce",
+        "#e5e6c7": "#dde2e8",
+        "#ffffff": "#f6f8fb"
+      }
+    },
+    {
+      "id": "shoes-blue-idle",
+      "layer": "shoes",
+      "variant": "blue",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/shoes-dark/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "shoes-dark-idle",
+      "z": 25,
+      "palette": {
+        "#281820": "#172337",
+        "#4d4a5d": "#213c69",
+        "#958080": "#31599b",
+        "#c4b59f": "#507db4",
+        "#e5e6c7": "#87aada",
+        "#ffffff": "#bcd3ef"
+      }
+    },
+    {
+      "id": "shoes-blue-walk",
+      "layer": "shoes",
+      "variant": "blue",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/shoes-dark/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "shoes-dark-walk",
+      "z": 25,
+      "palette": {
+        "#281820": "#172337",
+        "#4d4a5d": "#213c69",
+        "#958080": "#31599b",
+        "#c4b59f": "#507db4",
+        "#e5e6c7": "#87aada",
+        "#ffffff": "#bcd3ef"
+      }
+    },
+    {
+      "id": "shoes-blue-sit",
+      "layer": "shoes",
+      "variant": "blue",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/shoes-dark/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "shoes-dark-sit",
+      "z": 25,
+      "palette": {
+        "#281820": "#172337",
+        "#4d4a5d": "#213c69",
+        "#958080": "#31599b",
+        "#c4b59f": "#507db4",
+        "#e5e6c7": "#87aada",
+        "#ffffff": "#bcd3ef"
+      }
+    },
+    {
+      "id": "shoes-red-idle",
+      "layer": "shoes",
+      "variant": "red",
+      "action": "idle",
+      "path": "/assets/sprites/clothes/shoes-dark/idle.png",
+      "columns": 2,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "shoes-dark-idle",
+      "z": 25,
+      "palette": {
+        "#281820": "#2f1722",
+        "#4d4a5d": "#602434",
+        "#958080": "#964557",
+        "#c4b59f": "#bd6570",
+        "#e5e6c7": "#de95a4",
+        "#ffffff": "#f7c4d0"
+      }
+    },
+    {
+      "id": "shoes-red-walk",
+      "layer": "shoes",
+      "variant": "red",
+      "action": "walk",
+      "path": "/assets/sprites/clothes/shoes-dark/walk.png",
+      "columns": 9,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 8,
+      "credit_id": "shoes-dark-walk",
+      "z": 25,
+      "palette": {
+        "#281820": "#2f1722",
+        "#4d4a5d": "#602434",
+        "#958080": "#964557",
+        "#c4b59f": "#bd6570",
+        "#e5e6c7": "#de95a4",
+        "#ffffff": "#f7c4d0"
+      }
+    },
+    {
+      "id": "shoes-red-sit",
+      "layer": "shoes",
+      "variant": "red",
+      "action": "sit",
+      "path": "/assets/sprites/clothes/shoes-dark/sit.png",
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ],
+      "fps": 3,
+      "credit_id": "shoes-dark-sit",
+      "z": 25,
+      "palette": {
+        "#281820": "#2f1722",
+        "#4d4a5d": "#602434",
+        "#958080": "#964557",
+        "#c4b59f": "#bd6570",
+        "#e5e6c7": "#de95a4",
+        "#ffffff": "#f7c4d0"
+      }
+    },
+    {
+      "id": "pet-cat-idle",
+      "layer": "pets",
+      "variant": "cat",
+      "action": "idle",
+      "path": "/assets/sprites/pets/catdog.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "frameOffsetX": 96,
+      "frameOffsetY": 0,
+      "columns": 1,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "right",
+        "down"
+      ],
+      "fps": 6,
+      "credit_id": "pet-catdog"
+    },
+    {
+      "id": "pet-cat-walk",
+      "layer": "pets",
+      "variant": "cat",
+      "action": "walk",
+      "path": "/assets/sprites/pets/catdog.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "frameOffsetX": 96,
+      "frameOffsetY": 0,
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "right",
+        "down"
+      ],
+      "fps": 6,
+      "credit_id": "pet-catdog"
+    },
+    {
+      "id": "pet-dog-idle",
+      "layer": "pets",
+      "variant": "dog",
+      "action": "idle",
+      "path": "/assets/sprites/pets/catdog.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "frameOffsetX": 0,
+      "frameOffsetY": 128,
+      "columns": 1,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "right",
+        "down"
+      ],
+      "fps": 6,
+      "credit_id": "pet-catdog"
+    },
+    {
+      "id": "pet-dog-walk",
+      "layer": "pets",
+      "variant": "dog",
+      "action": "walk",
+      "path": "/assets/sprites/pets/catdog.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "frameOffsetX": 0,
+      "frameOffsetY": 128,
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "up",
+        "left",
+        "right",
+        "down"
+      ],
+      "fps": 6,
+      "credit_id": "pet-catdog"
+    },
+    {
+      "id": "pet-bird-idle",
+      "layer": "pets",
+      "variant": "bird",
+      "action": "idle",
+      "path": "/assets/sprites/pets/bird.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "frameOffsetX": 0,
+      "frameOffsetY": 128,
+      "columns": 1,
+      "rows": 4,
+      "directions": [
+        "left",
+        "up",
+        "down",
+        "right"
+      ],
+      "fps": 6,
+      "credit_id": "pet-bird"
+    },
+    {
+      "id": "pet-bird-walk",
+      "layer": "pets",
+      "variant": "bird",
+      "action": "walk",
+      "path": "/assets/sprites/pets/bird.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "frameOffsetX": 0,
+      "frameOffsetY": 128,
+      "columns": 3,
+      "rows": 4,
+      "directions": [
+        "left",
+        "up",
+        "down",
+        "right"
+      ],
+      "fps": 6,
+      "credit_id": "pet-bird"
+    }
+  ],
+  "credits": [
+    {
+      "id": "body-light-idle",
+      "name": "body/bodies/male/idle.png",
+      "author": "bluecarrot16,JaidynReiman,Benjamin K. Smith (BenCreating),Evert,Eliza Wyatt (ElizaWy),TheraHedwig,MuffinElZangano,Durrani,Johannes Sjölund (wulax),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/body/bodies/male/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "9c3d17def9bd0574e25ce3162a243f18654479e38c04164bc12607429b013fa2",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-male-jumping-animation-by-durrani,https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle,https://opengameart.org/content/lpc-revised-character-basics,https://opengameart.org/content/lpc-be-seated,https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads,https://opengameart.org/content/lpc-jump-expanded,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/body-light/idle.png"
+    },
+    {
+      "id": "body-light-walk",
+      "name": "body/bodies/male/walk.png",
+      "author": "bluecarrot16,JaidynReiman,Benjamin K. Smith (BenCreating),Evert,Eliza Wyatt (ElizaWy),TheraHedwig,MuffinElZangano,Durrani,Johannes Sjölund (wulax),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/body/bodies/male/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "1e0e8f0c11ba5f4f7b3d4439fc416802b4227da2fe146c13de3de254d9f87f77",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-male-jumping-animation-by-durrani,https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle,https://opengameart.org/content/lpc-revised-character-basics,https://opengameart.org/content/lpc-be-seated,https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads,https://opengameart.org/content/lpc-jump-expanded,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/body-light/walk.png"
+    },
+    {
+      "id": "body-light-sit",
+      "name": "body/bodies/male/sit.png",
+      "author": "bluecarrot16,JaidynReiman,Benjamin K. Smith (BenCreating),Evert,Eliza Wyatt (ElizaWy),TheraHedwig,MuffinElZangano,Durrani,Johannes Sjölund (wulax),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/body/bodies/male/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "ff339e6b3e34894d32db67c61d6a396e2d4286764aa26be79f0660f439317d0c",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-male-jumping-animation-by-durrani,https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle,https://opengameart.org/content/lpc-revised-character-basics,https://opengameart.org/content/lpc-be-seated,https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads,https://opengameart.org/content/lpc-jump-expanded,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/body-light/sit.png"
+    },
+    {
+      "id": "head-light-idle",
+      "name": "head/heads/human/male/idle.png",
+      "author": "bluecarrot16,Benjamin K. Smith (BenCreating),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "10d58c1dd05592dfb436da42e4d6e582058306e1b6c98c85697ad97d1a5b82f4",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/head-light/idle.png"
+    },
+    {
+      "id": "head-light-walk",
+      "name": "head/heads/human/male/walk.png",
+      "author": "bluecarrot16,Benjamin K. Smith (BenCreating),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "7e863954dc8c3c748d0727415c39888106bdd3779beb2e3b18011a3a9ef3e53c",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/head-light/walk.png"
+    },
+    {
+      "id": "head-light-sit",
+      "name": "head/heads/human/male/sit.png",
+      "author": "bluecarrot16,Benjamin K. Smith (BenCreating),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "5902e48ed23e8ce593e4fbf4d9f6371aba0f1d71966441075118fad0d8debd21",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/head-light/sit.png"
+    },
+    {
+      "id": "head-amber-idle",
+      "name": "head/heads/human/female/idle.png",
+      "author": "bluecarrot16,Benjamin K. Smith (BenCreating),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/female/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "a225e256118c2a5a060d3f8d577e710079322ee0afc8e04e31f65441069e9d87",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/head-amber/idle.png"
+    },
+    {
+      "id": "head-amber-walk",
+      "name": "head/heads/human/female/walk.png",
+      "author": "bluecarrot16,Benjamin K. Smith (BenCreating),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/female/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "7ac84c09c9e126e5fd0b648c180901e24ddb116c7965cd3db6f2f653947b90bd",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/head-amber/walk.png"
+    },
+    {
+      "id": "head-amber-sit",
+      "name": "head/heads/human/female/sit.png",
+      "author": "bluecarrot16,Benjamin K. Smith (BenCreating),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/female/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "8180341d3c2d7208f01e462fc606a81b8a72edacda6f9161fcd37de79b9af135",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/,https://opengameart.org/content/lpc-character-bases",
+      "path": "/assets/sprites/body/head-amber/sit.png"
+    },
+    {
+      "id": "head-olive-idle",
+      "name": "head/heads/human/male_plump/idle.png",
+      "author": "Stephen Challener (Redshrike),??",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male_plump/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "31a80bf8235bd6e62e0f0dcd52489e630d88255e02b482999161fbfa83422c3a",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-folk",
+      "path": "/assets/sprites/body/head-olive/idle.png"
+    },
+    {
+      "id": "head-olive-walk",
+      "name": "head/heads/human/male_plump/walk.png",
+      "author": "Stephen Challener (Redshrike),??",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male_plump/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "4e7797d12043bcb23aa178aec2ba1563dc17e53d58cc2a0431223c535918684b",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-folk",
+      "path": "/assets/sprites/body/head-olive/walk.png"
+    },
+    {
+      "id": "head-olive-sit",
+      "name": "head/heads/human/male_plump/sit.png",
+      "author": "Stephen Challener (Redshrike),??",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male_plump/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "99a0c41f879139ceef1d28890f790b26719e85dccf39528c2c532a451c63552f",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-folk",
+      "path": "/assets/sprites/body/head-olive/sit.png"
+    },
+    {
+      "id": "head-dark-idle",
+      "name": "head/heads/human/male_gaunt/idle.png",
+      "author": "Stephen Challener (Redshrike),bluecarrot16",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male_gaunt/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "9e4040f6c976bc49f18367f01503d539e9128d30966aa64c4a53e3d5858e27e7",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-folk",
+      "path": "/assets/sprites/body/head-dark/idle.png"
+    },
+    {
+      "id": "head-dark-walk",
+      "name": "head/heads/human/male_gaunt/walk.png",
+      "author": "Stephen Challener (Redshrike),bluecarrot16",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male_gaunt/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "4138b320b1c74866f925695ab8f2c321263d33ffcad48ac4d0b12cde8f88bfd9",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-folk",
+      "path": "/assets/sprites/body/head-dark/walk.png"
+    },
+    {
+      "id": "head-dark-sit",
+      "name": "head/heads/human/male_gaunt/sit.png",
+      "author": "Stephen Challener (Redshrike),bluecarrot16",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/head/heads/human/male_gaunt/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "2305f58d52a13e4f8d9d8ad72a8e5c535410f818f53263c1dd020eeea05c8d94",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-folk",
+      "path": "/assets/sprites/body/head-dark/sit.png"
+    },
+    {
+      "id": "legs-default-idle",
+      "name": "legs/formal/male/idle.png",
+      "author": "bluecarrot16,JaidynReiman,ElizaWy,Johannes Sjölund (wulax),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/legs/formal/male/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "12406def0dfec622f435ff46b7b0c61412fe40cf666fb4d6b6b616e214585bd8",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-2-characters,https://opengameart.org/content/lpc-gentleman,https://opengameart.org/content/lpc-expanded-pants",
+      "path": "/assets/sprites/clothes/legs-default/idle.png"
+    },
+    {
+      "id": "legs-default-walk",
+      "name": "legs/formal/male/walk.png",
+      "author": "bluecarrot16,JaidynReiman,ElizaWy,Johannes Sjölund (wulax),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/legs/formal/male/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "cfd7ad4d0d64b3d580b5f8cddd8b9622e14f506ecef2d979a5c7674f627b16ad",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-2-characters,https://opengameart.org/content/lpc-gentleman,https://opengameart.org/content/lpc-expanded-pants",
+      "path": "/assets/sprites/clothes/legs-default/walk.png"
+    },
+    {
+      "id": "legs-default-sit",
+      "name": "legs/formal/male/sit.png",
+      "author": "bluecarrot16,JaidynReiman,ElizaWy,Johannes Sjölund (wulax),Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/legs/formal/male/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "6d61307f4af77c135039956c97dff288854780455c3a3d5ee694a46353157373",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-2-characters,https://opengameart.org/content/lpc-gentleman,https://opengameart.org/content/lpc-expanded-pants",
+      "path": "/assets/sprites/clothes/legs-default/sit.png"
+    },
+    {
+      "id": "shoes-dark-idle",
+      "name": "feet/shoes/basic/male/idle.png",
+      "author": "JaidynReiman,bluecarrot16,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/feet/shoes/basic/male/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "5b4c7ebda343325425fbb9ceb1350e05d148816d672dafa521b3b2f8880334d1",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-expanded-socks-shoes",
+      "path": "/assets/sprites/clothes/shoes-dark/idle.png"
+    },
+    {
+      "id": "shoes-dark-walk",
+      "name": "feet/shoes/basic/male/walk.png",
+      "author": "JaidynReiman,bluecarrot16,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/feet/shoes/basic/male/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "f544c6f65a3d87f08d8449e87a4f889bd1bc1bf6d714066ef5c30ab2bdafab46",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-expanded-socks-shoes",
+      "path": "/assets/sprites/clothes/shoes-dark/walk.png"
+    },
+    {
+      "id": "shoes-dark-sit",
+      "name": "feet/shoes/basic/male/sit.png",
+      "author": "JaidynReiman,bluecarrot16,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/feet/shoes/basic/male/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "f181e8d8248a7a57a559d9faccefa2a73b2223cb0c8988dd8593ea28d6bec6e9",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-expanded-socks-shoes",
+      "path": "/assets/sprites/clothes/shoes-dark/sit.png"
+    },
+    {
+      "id": "clothes-shirt-idle",
+      "name": "torso/clothes/longsleeve/longsleeves/male/idle.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/longsleeve/longsleeves/male/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "923c7f16e8a6d49d0e91aad30a218c1ba1cbdb49e574273f0e0dcfdb090c96a6",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-shirt/idle.png"
+    },
+    {
+      "id": "clothes-shirt-walk",
+      "name": "torso/clothes/longsleeve/longsleeves/male/walk.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/longsleeve/longsleeves/male/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "ee5ee8a777a8c66d8a98db8b022b09635bc9bf15d74ac45e7cfe4510312747cc",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-shirt/walk.png"
+    },
+    {
+      "id": "clothes-shirt-sit",
+      "name": "torso/clothes/longsleeve/longsleeves/male/sit.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/longsleeve/longsleeves/male/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "89452650a0b923cbe61650743f051b4d79042f51fb07cf94743d271ab79cced8",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-shirt/sit.png"
+    },
+    {
+      "id": "clothes-polo-idle",
+      "name": "torso/clothes/shortsleeve/shortsleeves/male/idle.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/shortsleeve/shortsleeves/male/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "293eecd5d3088748e120b4c12588f100863b1294935427e5743c3364f1185807",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-polo/idle.png"
+    },
+    {
+      "id": "clothes-polo-walk",
+      "name": "torso/clothes/shortsleeve/shortsleeves/male/walk.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/shortsleeve/shortsleeves/male/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "148b809aad3c95889714750fc72327ac2e40eeaa3b4420f3f1ce256f72e3f923",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-polo/walk.png"
+    },
+    {
+      "id": "clothes-polo-sit",
+      "name": "torso/clothes/shortsleeve/shortsleeves/male/sit.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/shortsleeve/shortsleeves/male/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "08c359f10a7b60120108fa8f387fe999894b0ac0d02008c94a86bfb4c994401e",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-polo/sit.png"
+    },
+    {
+      "id": "clothes-hoodie-idle",
+      "name": "torso/clothes/longsleeve/longsleeve/male/idle.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/longsleeve/longsleeve/male/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "c543a71e589b7a7142b860813fed42a3752e71b8fa074058796afb1f7772d807",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-hoodie/idle.png"
+    },
+    {
+      "id": "clothes-hoodie-walk",
+      "name": "torso/clothes/longsleeve/longsleeve/male/walk.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/longsleeve/longsleeve/male/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "8b1c79d535d7a233371c9398ca51b196aa8fdf06117bd0eafd7fbcbf438d711b",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-hoodie/walk.png"
+    },
+    {
+      "id": "clothes-hoodie-sit",
+      "name": "torso/clothes/longsleeve/longsleeve/male/sit.png",
+      "author": "JaidynReiman,Johannes Sjölund (wulax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/longsleeve/longsleeve/male/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "151c715412c988c4d3de1dac42c06b1c9eb468f93971fa5f03a8ea8dfb17d9b7",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,http://opengameart.org/content/lpc-clothing-updates,https://opengameart.org/content/lpc-revised-character-basics,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-hoodie/sit.png"
+    },
+    {
+      "id": "clothes-cardigan-idle",
+      "name": "torso/clothes/sleeveless/sleeveless1/male/idle.png",
+      "author": "bluecarrot16,ElizaWy,JaidynReiman,Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/sleeveless/sleeveless1/male/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "3798092f2f87e5772da20e739ff549522248e87bdbc0c826c5aeabfd92bc8e17",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,http://opengameart.org/content/lpc-revised-character-basics,http://opengameart.org/content/lpc-clothing-updates,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-cardigan/idle.png"
+    },
+    {
+      "id": "clothes-cardigan-walk",
+      "name": "torso/clothes/sleeveless/sleeveless1/male/walk.png",
+      "author": "bluecarrot16,ElizaWy,JaidynReiman,Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/sleeveless/sleeveless1/male/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "559d1ad6e8740ba17a653c9346a6ee17390af7c5dbc9e6af8c423979f5ced5a8",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,http://opengameart.org/content/lpc-revised-character-basics,http://opengameart.org/content/lpc-clothing-updates,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-cardigan/walk.png"
+    },
+    {
+      "id": "clothes-cardigan-sit",
+      "name": "torso/clothes/sleeveless/sleeveless1/male/sit.png",
+      "author": "bluecarrot16,ElizaWy,JaidynReiman,Stephen Challener (Redshrike)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/torso/clothes/sleeveless/sleeveless1/male/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "0ff549373609cee50021a919f12b6cfca6aaddf7d9b6fd16a4afb306731a3b05",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,http://opengameart.org/content/lpc-revised-character-basics,http://opengameart.org/content/lpc-clothing-updates,https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing,https://opengameart.org/content/lpc-expanded-sit-run-jump-more,https://opengameart.org/content/lpc-expanded-simple-shirts",
+      "path": "/assets/sprites/clothes/clothes-cardigan/sit.png"
+    },
+    {
+      "id": "hair-0-idle",
+      "name": "hair/plain/adult/idle.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast),Joe White",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/plain/adult/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "b3eed6441080adcb418a50e323f9fd46aa1b2ba042aea662a82c9f1bc596fd85",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/ponytail-and-plain-hairstyles,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-0/idle.png"
+    },
+    {
+      "id": "hair-0-walk",
+      "name": "hair/plain/adult/walk.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast),Joe White",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/plain/adult/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "4198b372f7381b7d12e516ddc69818dd50132224d1e6d8825f3dd920b0995b28",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/ponytail-and-plain-hairstyles,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-0/walk.png"
+    },
+    {
+      "id": "hair-0-sit",
+      "name": "hair/plain/adult/sit.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast),Joe White",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/plain/adult/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "053cdd196f34f1d2ceb8de1bccaf3ab8a28dbf677a624788eab22a23a099ea0d",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/ponytail-and-plain-hairstyles,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-0/sit.png"
+    },
+    {
+      "id": "hair-1-idle",
+      "name": "hair/parted/adult/idle.png",
+      "author": "JaidynReiman,Joe White,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/parted/adult/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "9b3f559fe16ca9fd9529b8eed5e8d3f7ed84e899a915efd9b5d1e8d38c8ad10c",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://github.com/jrconway3/Universal-LPC-spritesheet/commit/46ddcf05a0e43e7aa6ffd47d350eef0eb529ac24,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-1/idle.png"
+    },
+    {
+      "id": "hair-1-walk",
+      "name": "hair/parted/adult/walk.png",
+      "author": "JaidynReiman,Joe White,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/parted/adult/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "aa86f9c6af54afb0b5ec52417fabf48f8d667a40ab9ccb44c8c46569b085898e",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://github.com/jrconway3/Universal-LPC-spritesheet/commit/46ddcf05a0e43e7aa6ffd47d350eef0eb529ac24,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-1/walk.png"
+    },
+    {
+      "id": "hair-1-sit",
+      "name": "hair/parted/adult/sit.png",
+      "author": "JaidynReiman,Joe White,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/parted/adult/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "60b9a0839868f47d5762b778a3b32e22053e85711c2d7c1dbc3843d34b98d8de",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://github.com/jrconway3/Universal-LPC-spritesheet/commit/46ddcf05a0e43e7aa6ffd47d350eef0eb529ac24,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-1/sit.png"
+    },
+    {
+      "id": "hair-2-idle",
+      "name": "hair/bangs/adult/idle.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/bangs/adult/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "3e69ff6dbf389b3a0c3ef9997a06a4d1926a1d1c1a0dcda6d03263ed95cf89cf",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-2/idle.png"
+    },
+    {
+      "id": "hair-2-walk",
+      "name": "hair/bangs/adult/walk.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/bangs/adult/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "4a651dd4a38627a2efd176a65fdc2027e220643136426dec292c8bcaa00e3280",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-2/walk.png"
+    },
+    {
+      "id": "hair-2-sit",
+      "name": "hair/bangs/adult/sit.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/bangs/adult/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "196fbaa329aeec7ffcf809c637b8fcd23f82ec4bfa700c1997d7ad9c7e917a31",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-2/sit.png"
+    },
+    {
+      "id": "hair-3-idle",
+      "name": "hair/bangslong/adult/idle.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/bangslong/adult/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "7eb9f5c6d8d1c0501e788280d1834c52ead576b9054064d41b139870aef2646a",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-3/idle.png"
+    },
+    {
+      "id": "hair-3-walk",
+      "name": "hair/bangslong/adult/walk.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/bangslong/adult/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "3622fbc8d4a267d294d3d7923797a2f4fb5f850db2972605d702c333fa1e42f3",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-3/walk.png"
+    },
+    {
+      "id": "hair-3-sit",
+      "name": "hair/bangslong/adult/sit.png",
+      "author": "JaidynReiman,Manuel Riecke (MrBeast)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hair/bangslong/adult/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "9125e695ba253dec0210c6095200588df2742e4763ae6dc2689312e443345b12",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-expanded-hair",
+      "path": "/assets/sprites/hair/hair-3/sit.png"
+    },
+    {
+      "id": "accessories-glasses-idle",
+      "name": "facial/glasses/nerd/adult/idle.png",
+      "author": "JaidynReiman,Thane Brimhall (pennomi),laetissima",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/facial/glasses/nerd/adult/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "8c22f79ecdd080f8c4766e84db323790882516707a11da94d58d7ec1e9d18f87",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-base-character-expressions",
+      "path": "/assets/sprites/accessories/accessories-glasses/idle.png"
+    },
+    {
+      "id": "accessories-glasses-walk",
+      "name": "facial/glasses/nerd/adult/walk.png",
+      "author": "JaidynReiman,Thane Brimhall (pennomi),laetissima",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/facial/glasses/nerd/adult/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "1f3c66f3703ee1df9d33765b942641d14804c3cfbf453405145e0648f2cd2593",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-base-character-expressions",
+      "path": "/assets/sprites/accessories/accessories-glasses/walk.png"
+    },
+    {
+      "id": "accessories-glasses-sit",
+      "name": "facial/glasses/nerd/adult/sit.png",
+      "author": "JaidynReiman,Thane Brimhall (pennomi),laetissima",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/facial/glasses/nerd/adult/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "40e62d5f2e5632d3ee040dcef2bc83f6fad45952e4dd93eaafb78593667d4cda",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-base-character-expressions",
+      "path": "/assets/sprites/accessories/accessories-glasses/sit.png"
+    },
+    {
+      "id": "accessories-cap-idle",
+      "name": "hat/cloth/leather_cap/adult/idle.png",
+      "author": "Johannes Sjölund (wulax),Matthew Krohn (Makrohn),JaidynReiman",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hat/cloth/leather_cap/adult/idle.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "06fce48822b6131eb270b539106a255812574670da25de17f8624a5dec6ac76c",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-expanded-hats-facial-helmets",
+      "path": "/assets/sprites/accessories/accessories-cap/idle.png"
+    },
+    {
+      "id": "accessories-cap-walk",
+      "name": "hat/cloth/leather_cap/adult/walk.png",
+      "author": "Johannes Sjölund (wulax),Matthew Krohn (Makrohn),JaidynReiman",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hat/cloth/leather_cap/adult/walk.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "b24f37d8141e4b2f47c1b5ff6fd8de65dae655040d09d41f65e88483d7b6640d",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-expanded-hats-facial-helmets",
+      "path": "/assets/sprites/accessories/accessories-cap/walk.png"
+    },
+    {
+      "id": "accessories-cap-sit",
+      "name": "hat/cloth/leather_cap/adult/sit.png",
+      "author": "Johannes Sjölund (wulax),Matthew Krohn (Makrohn),JaidynReiman",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://raw.githubusercontent.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/9bf06be193b053db256b2536824af426de046aa2/spritesheets/hat/cloth/leather_cap/adult/sit.png",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "13e474ced4c123e83c5363be9d6f7900bcf632df2a6b4b6e0b1b8fd367338744",
+      "info": "Original PNG unchanged; selected CC-BY-SA 3.0 from dual licenses. Runtime color composites shared under CC-BY-SA 4.0.",
+      "original_urls": "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites,https://opengameart.org/content/lpc-expanded-hats-facial-helmets",
+      "path": "/assets/sprites/accessories/accessories-cap/sit.png"
+    },
+    {
+      "id": "kenney-indoors.png",
+      "name": "Roguelike indoors.png",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source_url": "https://kenney.nl/assets/roguelike-indoors",
+      "license_path": "/assets/sprites/tilesets/indoors.png.LICENSE.txt",
+      "sha256": "ade984d5cbe3f16d9e23e6dc516246649de1a7eec2540cf31d53852b690c446f",
+      "info": "Original transparent tilesheet unchanged.",
+      "path": "/assets/sprites/tilesets/indoors.png"
+    },
+    {
+      "id": "kenney-city.png",
+      "name": "Roguelike city.png",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source_url": "https://kenney.nl/assets/roguelike-modern-city",
+      "license_path": "/assets/sprites/tilesets/city.png.LICENSE.txt",
+      "sha256": "e7791156bfe5fd238a698e900ca5c749dec49c8f58b0c570af2f288ced34500c",
+      "info": "Original transparent tilesheet unchanged.",
+      "path": "/assets/sprites/tilesets/city.png"
+    },
+    {
+      "id": "pet-catdog",
+      "name": "catdog",
+      "author": "Tuomo Untinen (Reemax)",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://opengameart.org/content/lpc-rat-cat-and-dog",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "0b75ac03f97869209dac353142c1a78b002950f88c0b2e2aef0a9135e58d1270",
+      "info": "Original PNG unchanged; 32px source frames rendered inside a 64px destination cell.",
+      "path": "/assets/sprites/pets/catdog.png"
+    },
+    {
+      "id": "pet-bird",
+      "name": "bird",
+      "author": "bluecarrot16; commissioned by castelonia",
+      "license": "CC-BY-SA-3.0",
+      "source_url": "https://opengameart.org/content/lpc-birds",
+      "license_path": "/assets/sprites/licenses/CC-BY-SA-3.0.txt",
+      "sha256": "4e560d5d5bc1000d532beb499bc9af21ea7fc912d28e89e28b1fb4149c975bd3",
+      "info": "Original PNG unchanged; 32px source frames rendered inside a 64px destination cell.",
+      "path": "/assets/sprites/pets/bird.png"
+    },
+    {
+      "id": "kenney-rpg.png",
+      "name": "Roguelike RPG",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source_url": "https://kenney.nl/assets/roguelike-rpg-pack",
+      "license_path": "/assets/sprites/tilesets/rpg.png.LICENSE.txt",
+      "sha256": "808c8d734480bc949b284f3bcc252e87e1ee53b24178791a6838cce6a319c439",
+      "info": "Original transparent tilesheet unchanged.",
+      "path": "/assets/sprites/tilesets/rpg.png"
+    }
+  ],
+  "tiles": {
+    "path": "/assets/sprites/tilesets/indoors.png",
+    "tileWidth": 16,
+    "tileHeight": 16,
+    "spacing": 1,
+    "credit_id": "kenney-indoors.png"
+  },
+  "themes": {
+    "wallstreet": {
+      "path": "/assets/sprites/tilesets/city.png",
+      "sx": 136,
+      "sy": 17,
+      "sw": 16,
+      "sh": 16,
+      "credit_id": "kenney-city.png"
+    },
+    "boutique": {
+      "path": "/assets/sprites/tilesets/rpg.png",
+      "sx": 17,
+      "sy": 425,
+      "sw": 16,
+      "sh": 16,
+      "credit_id": "kenney-rpg.png"
+    },
+    "startup": {
+      "path": "/assets/sprites/tilesets/rpg.png",
+      "sx": 68,
+      "sy": 425,
+      "sw": 16,
+      "sh": 16,
+      "credit_id": "kenney-rpg.png"
+    }
+  },
+  "furniture": {
+    "desk": {
+      "path": "/assets/sprites/tilesets/indoors.png",
+      "sx": 0,
+      "sy": 0,
+      "sw": 50,
+      "sh": 33,
+      "credit_id": "kenney-indoors.png",
+      "parts": [
+        {
+          "path": "/assets/sprites/tilesets/city.png",
+          "sx": 391,
+          "sy": 102,
+          "sw": 16,
+          "sh": 16,
+          "credit_id": "kenney-city.png",
+          "dx": 0,
+          "dy": 0,
+          "dw": 14,
+          "dh": 12
+        },
+        {
+          "path": "/assets/sprites/tilesets/city.png",
+          "sx": 391,
+          "sy": 102,
+          "sw": 16,
+          "sh": 16,
+          "credit_id": "kenney-city.png",
+          "dx": 16,
+          "dy": 0,
+          "dw": 14,
+          "dh": 12
+        },
+        {
+          "path": "/assets/sprites/tilesets/city.png",
+          "sx": 391,
+          "sy": 102,
+          "sw": 16,
+          "sh": 16,
+          "credit_id": "kenney-city.png",
+          "dx": 32,
+          "dy": 0,
+          "dw": 14,
+          "dh": 12
+        },
+        {
+          "path": "/assets/sprites/tilesets/city.png",
+          "sx": 391,
+          "sy": 102,
+          "sw": 16,
+          "sh": 16,
+          "credit_id": "kenney-city.png",
+          "dx": 0,
+          "dy": 12,
+          "dw": 14,
+          "dh": 12
+        },
+        {
+          "path": "/assets/sprites/tilesets/city.png",
+          "sx": 391,
+          "sy": 102,
+          "sw": 16,
+          "sh": 16,
+          "credit_id": "kenney-city.png",
+          "dx": 16,
+          "dy": 12,
+          "dw": 14,
+          "dh": 12
+        },
+        {
+          "path": "/assets/sprites/tilesets/city.png",
+          "sx": 391,
+          "sy": 102,
+          "sw": 16,
+          "sh": 16,
+          "credit_id": "kenney-city.png",
+          "dx": 32,
+          "dy": 12,
+          "dw": 14,
+          "dh": 12
+        }
+      ]
+    },
+    "server": {
+      "path": "/assets/sprites/tilesets/city.png",
+      "sx": 391,
+      "sy": 68,
+      "sw": 16,
+      "sh": 33,
+      "credit_id": "kenney-city.png"
+    },
+    "billboard": {
+      "path": "/assets/sprites/tilesets/city.png",
+      "sx": 323,
+      "sy": 119,
+      "sw": 67,
+      "sh": 16,
+      "credit_id": "kenney-city.png"
+    },
+    "meeting": {
+      "path": "/assets/sprites/tilesets/indoors.png",
+      "sx": 34,
+      "sy": 0,
+      "sw": 33,
+      "sh": 33,
+      "credit_id": "kenney-indoors.png"
+    },
+    "partition": {
+      "path": "/assets/sprites/tilesets/city.png",
+      "sx": 204,
+      "sy": 102,
+      "sw": 16,
+      "sh": 50,
+      "credit_id": "kenney-city.png"
+    },
+    "plant": {
+      "path": "/assets/sprites/tilesets/indoors.png",
+      "sx": 272,
+      "sy": 0,
+      "sw": 16,
+      "sh": 16,
+      "credit_id": "kenney-indoors.png"
+    },
+    "coffee": {
+      "path": "/assets/sprites/tilesets/indoors.png",
+      "sx": 306,
+      "sy": 204,
+      "sw": 16,
+      "sh": 33,
+      "credit_id": "kenney-indoors.png"
+    },
+    "guestbook": {
+      "path": "/assets/sprites/tilesets/city.png",
+      "sx": 391,
+      "sy": 136,
+      "sw": 16,
+      "sh": 33,
+      "credit_id": "kenney-city.png"
+    },
+    "portal": {
+      "path": "/assets/sprites/tilesets/city.png",
+      "sx": 204,
+      "sy": 170,
+      "sw": 33,
+      "sh": 50,
+      "credit_id": "kenney-city.png"
+    },
+    "sofa": {
+      "path": "/assets/sprites/tilesets/indoors.png",
+      "sx": 0,
+      "sy": 136,
+      "sw": 50,
+      "sh": 33,
+      "credit_id": "kenney-indoors.png"
+    },
+    "standingdesk": {
+      "path": "/assets/sprites/tilesets/indoors.png",
+      "sx": 102,
+      "sy": 0,
+      "sw": 33,
+      "sh": 33,
+      "credit_id": "kenney-indoors.png"
+    }
+  },
+  "source_commit": "9bf06be193b053db256b2536824af426de046aa2"
+}
