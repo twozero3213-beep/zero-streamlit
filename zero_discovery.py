@@ -13,6 +13,7 @@ from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, HTTPRedirectHandler, build_opener
 from urllib.error import HTTPError
 import xml.etree.ElementTree as ET
+from zero_trend_filter import clean_trend_keyword, get_safe_trend_keyword, fallback_keywords
 
 TRENDS_URL = 'https://trends.google.com/trending/rss?geo=KR'
 RSS_LIMIT = 1_048_576
@@ -81,13 +82,36 @@ def parse_rss(body, limit):
     return root
 
 
+def filtered_trends(value=None, now=None, *, failed=False):
+    now = now or datetime.now(timezone.utc)
+    value = value if isinstance(value, dict) else {}
+    rows, seen = [], set()
+    items = value.get('items', [])
+    for row in (items[:200] if isinstance(items, list) else []):
+        if not isinstance(row, dict):
+            continue
+        keyword = clean_trend_keyword(row.get('keyword'))
+        key = keyword.casefold() if keyword else None
+        if not keyword or key in seen:
+            continue
+        seen.add(key)
+        rows.append({'keyword': keyword, 'traffic': row.get('traffic'), 'published_at': row.get('published_at')})
+        if len(rows) >= TREND_LIMIT:
+            break
+    keywords = [row['keyword'] for row in rows]
+    return {'schema_version': 1, 'items': rows, 'retrieved_at': value.get('retrieved_at') or now.astimezone(timezone.utc).isoformat(),
+            'source_url': TRENDS_URL, 'provider': 'GOOGLE_TRENDS_RSS',
+            'state': 'UNAVAILABLE' if failed else 'AVAILABLE', 'fallback': not bool(keywords),
+            'safe_keywords': keywords or fallback_keywords(now), 'safe_keyword': get_safe_trend_keyword(keywords, now=now)}
+
+
 def collect_trends(now=None, *, fetch=_fetch_trends):
     now = now or datetime.now(timezone.utc)
     root = parse_rss(fetch(TRENDS_URL), RSS_LIMIT)
     ns = {'ht': TRENDS_URL.split('?')[0]}
     rows, seen = [], set()
     for item in root.findall('./channel/item')[:200]:
-        keyword = plain_text(item.findtext('title'), 200)
+        keyword = clean_trend_keyword(item.findtext('title'))
         try:
             published = parsedate_to_datetime(item.findtext('pubDate') or '')
             if published.tzinfo is None:
@@ -103,7 +127,7 @@ def collect_trends(now=None, *, fetch=_fetch_trends):
                      'published_at': published.astimezone(timezone.utc).isoformat()})
         if len(rows) >= TREND_LIMIT:
             break
-    return {'schema_version': 1, 'items': rows, 'retrieved_at': now.astimezone(timezone.utc).isoformat(), 'source_url': TRENDS_URL}
+    return filtered_trends({'items': rows, 'retrieved_at': now.astimezone(timezone.utc).isoformat()}, now)
 
 
 def title_bytes(title):

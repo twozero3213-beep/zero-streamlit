@@ -28,12 +28,12 @@
   }
 
   function weatherKind(code) {
-    if (!Number.isFinite(code)) return null;
+    if (!Number.isInteger(code)||![0,1,2,3,45,48,51,53,55,56,57,61,63,65,66,67,71,73,75,77,80,81,82,85,86,95,96,99].includes(code)) return null;
     if (code === 0) return 'clear';
     if (code <= 3) return 'cloud';
     if (code <= 48) return 'fog';
     if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'rain';
-    if (code >= 71 && code <= 77) return 'snow';
+    if (code >= 71 && code <= 77 || code===85 || code===86) return 'snow';
     if (code >= 95) return 'storm';
     return null;
   }
@@ -60,9 +60,17 @@
     if (h < 20) return ['오늘 해낸 일이 작아 보여도 수고한 건 사라지지 않아요.', '퇴근 전에 마음의 미결 주문부터 취소할래요.', '저녁은 성과급 없어도 맛있게 먹을 수 있어요.'];
     return ['늦게까지 고생했어요. 남은 일보다 지금의 나도 중요해요.', '미국장은 열리지만 제 배터리는 마감할 수 있어요.', '오늘의 마지막 업무는 나에게 “수고했어”라고 말하기예요.'];
   }
+  function safeTrendKeyword(value) {
+    if (typeof value !== 'string' || value.length>100) return null;
+    const normalized=value.normalize('NFKC').trim(); if (/\p{C}/u.test(normalized)) return null;
+    const keyword=normalized.replace(/ +/g,' '), compact=keyword.replace(/[^\p{L}\p{N}]/gu,''),rawCompact=value.replace(/[^\p{L}\p{N}]/gu,''),letters=keyword.replace(/[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\ud7b0-\ud7ff]/g,'');
+    const sensitive=/국민의힘|민주당|조국혁신당|개혁신당|정의당|진보당|기본소득당|사회민주당|녹색당|새누리당|국민의당|자유한국당|공화당|노동당|정치|정당|선거|대통령|탄핵|국회|대선|총선|여당|야당|시위|파업|사망|사고|폭행|참사|재난|지진|홍수|침수|태풍|산불|화재|붕괴|테러|전쟁|학대|성폭행|성추행|성폭력|성범죄|강간|자살|살인|실종|구속|체포|혐의|피해|논란|폭로|혐오|욕설|혈당|당뇨|암환자|성인|야동|포르노|음란|도박|카지노|토토|마약|씨발|시발|씨팔|병신|지랄|좆|새끼|개년|개놈|엿먹|\b(?:war|death|murder|arrest|porn|casino|betting|suicide|terror|fuck|shit|sex|av)\b/i;
+    const extra=/민생당|자유통일당|ㅂㅅ|ㅈㄹ|ㄲㅈ|ᄇᄉ|ᄌᄅ|ᄁᄌ|썅|꺼져/;
+    if([value,normalized,rawCompact,compact].some(text=>extra.test(text)))return null;
+    return [...keyword].length>=2&&[...keyword].length<=15&&/^[\p{L}\p{N} ·&.+-]+$/u.test(keyword)&&/\p{L}/u.test(letters)&&!sensitive.test(value)&&!sensitive.test(rawCompact)&&!sensitive.test(normalized)&&!sensitive.test(compact)&&!/[ᄉᄊ]ᄇ/.test(compact)?keyword:null;
+  }
   function trendLines(rows) {
-    const sensitive = /사망|사고|재난|테러|전쟁|학대|성폭력|자살|살인|실종|구속|체포|혐의|피해|혈당|당뇨|암환자/;
-    return (Array.isArray(rows) ? rows : []).filter(row => typeof row?.keyword === 'string' && row.keyword.length <= 48 && !/[<>\x00-\x1f]/.test(row.keyword) && !sensitive.test(row.keyword)).slice(0, 5).flatMap(row => [
+    return (Array.isArray(rows) ? rows : []).map(row=>({keyword:safeTrendKeyword(row?.keyword)})).filter(row=>row.keyword).slice(0, 5).flatMap(row => [
       '검색창에는 “' + row.keyword + '” 얘기가 보이네요. 제 관심 키워드는 “퇴근”인데요.',
       '“' + row.keyword + '”도 궁금하지만 커피가 식기 전에 잠깐 이야기해요.'
     ]);
@@ -217,7 +225,7 @@
     {id: 'done', title: '5. 길잡이 끝', text: '주식이 처음이라면 "주식 입문 학교"에서 문제를 풀며 레벨을 올려 보세요. 메뉴에서 내 자산·주식 탐색·뉴스·경제 지표도 열어 볼 수 있어요. 이 길잡이는 "사무실 길잡이" 버튼으로 다시 볼 수 있어요.'}
   ];
 
-  const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, trendLines, appearanceAt, chatterLine, personaFor, pickSpeaker, clamp,
+  const api = {STAGE, FLOOR, KR_HOLIDAYS, kstParts, shiftDay, isRestDay, holidayNote, weatherKind, weatherLines, timeLines, trendLines, safeTrendKeyword, appearanceAt, chatterLine, personaFor, pickSpeaker, clamp,
     moveToward, keyDirection, clampToFloor, nearest, layoutZero, layoutTeams, layoutGrid, reply, TOPICS, TUTORIAL, SYSTEM_TEXT,
     dayLines, replyLine, faceAt, PERSONAS, PERSONA_NAMES, FACE_EYES, FACE_MOUTHS, SPACE, SPACE_NAMES, DEFAULT_SPACE, daypart};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

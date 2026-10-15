@@ -160,7 +160,8 @@ def get_trends():
         try:
             value = zero_discovery.collect_trends()
         except (OSError, ValueError, ET.ParseError):
-            raise Unavailable('TRENDS_UNAVAILABLE') from None
+            value = zero_discovery.filtered_trends(failed=True)
+        value = zero_discovery.filtered_trends(value, failed=value.get('state') == 'UNAVAILABLE')
         return json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     return _cached('trends', TRENDS_SECONDS, load)
 
@@ -200,7 +201,7 @@ def _status():
         site = 'OK'
     except Unavailable as error:
         site = str(error)
-    return {**shape, 'site': site, 'bridge_version': '0.6.50', 'translation_diagnostic': zero_discovery.get_diagnostic()}
+    return {**shape, 'site': site, 'bridge_version': '0.6.51', 'translation_diagnostic': zero_discovery.get_diagnostic()}
 
 
 async def status(request):

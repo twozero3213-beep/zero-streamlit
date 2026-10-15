@@ -5,6 +5,8 @@
   const view = document.getElementById('lobby-view');
   if (!view) return;
   const L = window.ZEROLobbyLogic, W = window.ZEROLobbyWorld, M = window.anime;
+  const FICTION_NOTICE=W.FICTION_NOTICE;
+  const FICTION_CAPTION='가상 대사 · 실제 계좌 확인 아님';
   const $ = (id) => document.getElementById(id);
   const node = (tag, className = '', text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
   const stage = $('lobby-stage'), reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
@@ -13,7 +15,7 @@
 
   const S = {active: false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
     chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: (store.get('zero-lobby-name') === '나' ? null : store.get('zero-lobby-name')) || '대표님', tutorial: null,
-    motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolLevel: 1, characterAuthenticated: false, schoolRank: '입문 전', boardMeta: null};
+    motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolLevel: 1, characterAuthenticated: false, schoolRank: '입문 전', boardMeta: null, chatterSeed:null, seedPending:null, seedAttemptAt:null, safe_keyword:null, trendFallback:true,market:null};
 
   const shortName = (full) => String(full).split(' · ')[0].replace(/^가상\s*/, '').replace(/\s*담당$/, '');
   function rosterFrom(team) {
@@ -21,11 +23,13 @@
     list.push({id: 'ZERO_FINAL_MANAGER', department: 'ZERO_FINAL_MANAGER', kind: 'manager', name: '총괄 관리자', role: manager.name, mandate: String(manager.instruction || '').slice(0, 200), hue: 210});
     chiefs.forEach((id, index) => {
       const role = team.roles[id], hue = (index * 36 + 8) % 360;
-      list.push({id, department: id, kind: 'chief', name: shortName(role.name), role: String(role.name).split(' · ')[1] || '수석 자문', mandate: String(role.mandate || ''), hue});
-      (role.support_staff || []).forEach((staff) => list.push({id: staff.id, department: id, kind: 'staff', name: shortName(staff.name), role: staff.name, mandate: String(staff.mandate || staff.work_order?.instruction || role.mandate || ''), hue}));
+      list.push({id, department: id, kind: 'chief', name: shortName(role.name), role: String(role.name).split(' · ')[1] || '수석 자문', mandate: String(role.mandate || ''), persona:role.strategy_persona||role.persona||'', hue});
+      (role.support_staff || []).forEach((staff) => list.push({id: staff.id, department: id, kind: 'staff', name: shortName(staff.name), role: staff.name, mandate: String(staff.mandate || staff.work_order?.instruction || role.mandate || ''), persona:staff.strategy_persona||staff.persona||'', hue}));
     });
     (team.operating_policy.product_staff || []).forEach((staff) => list.push({id: staff.id, department: 'PRODUCT_QUALITY_TEAM', kind: 'product', name: shortName(staff.name), role: staff.name, mandate: String(staff.instruction || ''), hue: 280}));
-    list.forEach((npc, index) => { npc.face = L.faceAt(index); });
+    // Display-only chatter cast follows documented duties; this does not assign a trading strategy.
+    const displayByDepartment={GREENBLATT:'VALUE',THORP:'VOLATILITY',QUANT_RESEARCH_CHIEF:'TREND'};
+    list.forEach((npc, index) => {npc.face = L.faceAt(index);npc.display_persona=npc.id==='CORPORATE_ACTIONS_RECONCILER'?'DIVIDEND':displayByDepartment[npc.department]||'';});
     return {list, chiefs};
   }
   function placeZero(roster) {
@@ -56,6 +60,7 @@
     entity.el.style.transform = 'translate(' + (entity.pos.x / L.STAGE.w * size.w) + 'px, ' + (entity.pos.y / L.STAGE.h * size.h) + 'px) translate(-50%, -100%)';
     entity.el.style.zIndex = String(Math.round(entity.pos.y * 10));
     entity.el.classList.toggle('edge-left', entity.pos.x < 24); entity.el.classList.toggle('edge-right', entity.pos.x > 136);
+    if(entity.el.classList.contains('speaking')&&!fitSpeech(entity.el.querySelector('.npc-bubble'),entity)){entity.el.classList.remove('speaking');S.speaker=S.speaker.filter(item=>item.id!==entity.id);}
     if (entity === S.player) window.ZEROSocial?.updatePet(entity);
   }
 
@@ -80,7 +85,43 @@
     S.player = {id: 'player', pos: {x: 64, y: 96}, el: node('div', 'npc player')};
     S.player.el.append(figure('player', {eyes: 1, mouth: 1}), node('span', 'npc-name', S.playerName), node('span', 'player-level', (S.characterAuthenticated ? 'Lv.' : '학교 Lv.') + S.level), node('span', 'npc-bubble')); place(S.player); stage.append(S.player.el);
     $('lobby-player-level').textContent = (S.characterAuthenticated ? 'Lv.' : '학교 Lv.') + S.level;
+    renderRoleDeck();
   }
+
+  const roleMedia=window.matchMedia?.('(max-width: 767px)');
+  let roleDeck=null,roleAnchor=0,roleScene='';
+  function renderRoleDeck() {
+    if(!roleDeck) {
+      const root=node('section','lobby-role-deck');root.id='lobby-role-deck';root.setAttribute('aria-label','사무실 직원 역할 카드');
+      const list=node('div','lobby-role-list lobby-role-cards');list.id='lobby-role-list';list.setAttribute('role','list');
+      const previous=node('button','lobby-role-prev','‹'),next=node('button','lobby-role-next','›'),page=node('span','lobby-role-page'),nav=node('div','lobby-role-nav lobby-role-pager'),caption=node('p','lobby-role-caption',FICTION_CAPTION);
+      caption.title=FICTION_NOTICE;caption.setAttribute('aria-description',FICTION_NOTICE);
+      previous.id='lobby-role-prev';next.id='lobby-role-next';page.id='lobby-role-page';previous.type=next.type='button';
+      previous.setAttribute('aria-label','이전 직원 페이지');next.setAttribute('aria-label','다음 직원 페이지');previous.setAttribute('aria-controls',list.id);next.setAttribute('aria-controls',list.id);page.setAttribute('aria-live','polite');page.setAttribute('role','status');
+      const move=direction=>{const size=roleMedia?.matches?2:4,start=Math.floor(roleAnchor/size)*size;roleAnchor=Math.max(0,Math.min(Math.max(0,S.npcs.length-1),start+direction*size));renderRoleDeck();};
+      previous.addEventListener('click',()=>{if(!previous.disabled)move(-1);});next.addEventListener('click',()=>{if(!next.disabled)move(1);});
+      nav.append(previous,page,next);root.append(list,nav,caption);(view.querySelector('.lobby-main')||view).append(root);
+      roleDeck={root,list,previous,next,page,caption};
+    }
+    const scene=S.mode+'|'+(S.visit?.nick||'')+'|'+S.npcs.map(npc=>npc.id).join(',');
+    if(scene!==roleScene){roleScene=scene;roleAnchor=0;}
+    const size=roleMedia?.matches?2:4,count=S.npcs.length;
+    roleAnchor=Math.max(0,Math.min(roleAnchor,Math.max(0,count-1)));
+    const start=Math.floor(roleAnchor/size)*size,visiting=S.mode==='visit';
+    roleDeck.root.dataset.mode=S.mode;roleDeck.root.dataset.pageSize=String(size);
+    roleDeck.list.replaceChildren(...S.npcs.slice(start,start+size).map((npc,offset)=>{
+      const index=start+offset,card=node('article','lobby-role-card');card.dataset.npcIndex=String(index);card.setAttribute('role','listitem');
+      if(S.mode==='zero'){const display=W.chatterContext(L,{mode:'zero'},npc).persona;card.setAttribute('aria-description','공식 연출 성향: '+({value:'가치형',momentum:'추세형',dividend:'배당형',risk:'위험형',common:'일반'}[display])+' · 실제 전략 설정 아님');}
+      const name=visiting?(npc.id==='host'?S.visit.nick:'익명 직원 '+(index+1)):npc.name,title=visiting?'역할 비공개':npc.role;
+      const talk=node('button','lobby-role-chat','대화');talk.type='button';talk.setAttribute('aria-label',name+'와 대화');
+      talk.addEventListener('click',()=>{if(S.active&&S.npcs.includes(npc))openChat(visiting?{...npc,name,role:'역할 비공개',mandate:''}:npc);});
+      card.append(node('strong','lobby-role-name',name),node('span','lobby-role-title',title),talk);return card;
+    }));
+    roleDeck.previous.disabled=start===0;roleDeck.next.disabled=start+size>=count;
+    roleDeck.page.textContent=count?(Math.floor(start/size)+1)+' / '+Math.ceil(count/size)+' · 직원 '+count+'명':'아직 직원이 없어요';
+    roleDeck.caption.textContent=FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'');roleDeck.caption.title=chatterNotice();roleDeck.caption.setAttribute('aria-description',chatterNotice());
+  }
+  roleMedia?.addEventListener?.('change',()=>{if(roleDeck)renderRoleDeck();});
 
   // ---- movement -------------------------------------------------------------------------------
   function frame(timestamp) {
@@ -138,7 +179,7 @@
   function proximity() {
     const close = L.nearest(S.npcs, S.player.pos, 11);
     S.npcs.forEach((npc) => npc.el.classList.toggle('near', npc === close));
-    $('lobby-near').textContent = close ? close.name + '와(과) 가까워요 · Enter 또는 누르기로 대화' : '';
+    $('lobby-near').title=FICTION_NOTICE;$('lobby-near').textContent = (close ? close.name + '와(과) 가까워요 · Enter 또는 누르기로 대화 · ' : '') + FICTION_CAPTION;
     S.nearNpc = close;
   }
   function walkTo(pos, after) {
@@ -162,7 +203,7 @@
     say('bot', S.visit ? '이 사무실의 직원 구성과 맡은 일은 주인이 공개하지 않았어요. 제가 아는 건 오늘 날씨 이야기 정도예요.' : L.reply(S.chatNpc, question, {now: new Date(), weather: S.weather}));
   }
   function openChat(npc) {
-    S.chatNpc = npc; chat.title.textContent = npc.name; chat.role.textContent = S.visit ? '이 사무실의 직원' : npc.role;
+    S.chatNpc = npc; chat.title.textContent = npc.name;chat.title.title=FICTION_NOTICE;chat.role.textContent = (S.visit ? '이 사무실의 직원' : npc.role)+' · '+FICTION_NOTICE;
     chat.log.replaceChildren(); say('bot', S.visit ? '안녕하세요! 이 사무실에 오신 걸 환영해요.' : '안녕하세요, ' + npc.name + '입니다. 가상 직원이라 정해진 대본으로 답해요. 무엇이든 물어보세요.');
     chat.topics.replaceChildren(...L.TOPICS.map(([label, question]) => { const chip = node('button', 'chat-chip', label); chip.type = 'button'; chip.addEventListener('click', () => ask(question)); return chip; }));
     if (!chat.dialog.open) chat.dialog.showModal?.();
@@ -173,10 +214,28 @@
   $('lobby-chat-close').addEventListener('click', () => chat.dialog.close());
 
   // ---- chatter and roaming --------------------------------------------------------------------
+  function chatterNotice() {return FICTION_NOTICE+(S.mode==='zero'?' · 공식 연출 성향이며 실제 전략 설정 아님':'')+(S.trendFallback?' · 키워드 출처: 가상 대화 소재 · 실제 검색 순위 아님':'')+(W.marketContext(S.market)!=='unknown'?' · 시세 전일 변동 구간 · 예측·매매 판단 아님':'');}
+  function fitSpeech(bubble,entity) {
+    const bounds=stage.getBoundingClientRect();
+    if(![bounds.left,bounds.top,bounds.right,bounds.bottom,bounds.width,bounds.height].every(Number.isFinite)||bounds.width<=16||bounds.height<=16)return false;
+    bubble.style.boxSizing='border-box';bubble.style.maxWidth=Math.min(roleMedia?.matches?240:360,bounds.width-16)+'px';bubble.style.translate='0px 0px';bubble.style.transition='opacity .2s';
+    const box=bubble.getBoundingClientRect(),actor=entity.el.getBoundingClientRect();
+    if(box.width>bounds.width-16||box.height>bounds.height-16)return false;
+    let left=Math.min(Math.max(box.left,bounds.left+8),bounds.right-8-box.width),top=Math.min(Math.max(box.top,bounds.top+8),bounds.bottom-8-box.height);
+    if(left<actor.right+6&&left+box.width>actor.left-6&&top<actor.bottom+6&&top+box.height>actor.top-6){
+      const sides=[actor.right+8,actor.left-8-box.width].filter(x=>x>=bounds.left+8&&x+box.width<=bounds.right-8);
+      if(sides.length)left=sides.sort((a,b)=>Math.abs(a-left)-Math.abs(b-left))[0];
+      else if(actor.bottom+8+box.height<=bounds.bottom-8)top=actor.bottom+8;
+      else return false;
+    }
+    bubble.style.translate=(left-box.left)+'px '+(top-box.top)+'px';return true;
+  }
   function speak(entity, text, ms = 6500) {
     if (!entity.el.isConnected || !S.npcs.includes(entity)) return false;
     if (S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || S.speaker.some((item) => item.id === entity.id)) return;
-    const bubble = entity.el.querySelector('.npc-bubble'); bubble.textContent = text; entity.el.classList.add('speaking');
+    const bubble = entity.el.querySelector('.npc-bubble'); bubble.title=chatterNotice();bubble.setAttribute('aria-description',chatterNotice());
+    bubble.textContent=text;entity.el.classList.add('speaking');
+    if(!fitSpeech(bubble,entity)){entity.el.classList.remove('speaking');return false;}
     const box = bubble.getBoundingClientRect();
     const overlaps = S.speaker.some((item) => {
       const other = S.npcs.find((npc) => npc.id === item.id)?.el.querySelector('.npc-bubble').getBoundingClientRect();
@@ -197,7 +256,7 @@
     const active = S.speaker.map((item) => ({id: item.id, pos: item.pos}));
     const npc = L.pickSpeaker(S.npcs.filter((item) => !item.away && (item.kind !== 'staff' || Math.random() < 0.7)), active, narrow() ? 44 : BUBBLE_GAP);
     if (!npc) return;
-    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), weather: S.weather, holidays: S.holidays, level: S.level, trends: S.trends || []};
+    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), mode:S.mode, npc, seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, level: S.level, trends: S.trends || [],safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market};
     const text = W.chooseChatter(L, context, persona, S.recent);
     if (!speak(npc, text)) return;
     // A neighbour answers a moment later, so it reads as a small conversation, not isolated captions.
@@ -206,7 +265,8 @@
   }
   function greet() {
     const host = S.npcs.find((item) => item.kind === 'manager'); if (!host || S.visit) return;
-    speak(host, '어서 오세요, ' + S.playerName + '님! ' + (S.level > 1 ? 'Lv.' + S.level + ' 학습을 이어가 볼까요?' : '입문 학교에서 첫 레벨부터 같이 배워요.'), 7000);
+    const name=S.playerName.endsWith('님')?S.playerName:S.playerName+'님';
+    speak(host, '어서 오세요, ' + name + '! ' + (S.level > 1 ? 'Lv.' + S.level + ' 학습을 이어가 볼까요?' : '입문 학교에서 첫 레벨부터 같이 배워요.'), 7000);
     gesture(host, 'wave');
   }
   function gesture(entity, kind) {
@@ -258,16 +318,39 @@
   // The hero line under the title: today's small talk, rotating, so the first screen always says something new.
   function heroTick() {
     const say = $('lobby-hero-say'); if (!say) return;
-    say.textContent = '“' + W.chooseChatter(L, {now: new Date(), weather: S.weather, holidays: S.holidays, trends: S.trends || [], level: S.level}, [], S.recent) + '”';
+    say.title=chatterNotice();
+    say.textContent = '“' + W.chooseChatter(L, {now: new Date(),mode:S.mode,seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, trends: S.trends || [], level: S.level,safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market}, [], S.recent) + '” · ' + FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'');
+    if(roleDeck){roleDeck.caption.textContent=FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'');roleDeck.caption.title=chatterNotice();roleDeck.caption.setAttribute('aria-description',chatterNotice());}
   }
 
   // ---- outside world: weather, holidays, news board -------------------------------------------
+  function loadChatterSeed() {
+    if(!S.active||!S.player||document.hidden||S.chatterSeed||S.seedPending||S.seedAttemptAt!==null&&Date.now()-S.seedAttemptAt<60000) return S.seedPending;
+    S.seedAttemptAt=Date.now();
+    S.seedPending=(async()=>{
+      try {
+        const response=await fetch('assets/office-chatter.json',{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if(!response.ok||Number(response.headers?.get('Content-Length'))>60000) {await response.body?.cancel();throw Error('CHATTER_UNAVAILABLE');}
+        const reader=response.body?.getReader();if(!reader)throw Error('CHATTER_INVALID');
+        const decoder=new TextDecoder();let text='',size=0;
+        try {
+          while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>60000){await reader.cancel();throw Error('CHATTER_INVALID');}text+=decoder.decode(value,{stream:true});}
+          text+=decoder.decode();
+        } finally {reader.releaseLock();}
+        const seed=W.validateChatterSeed(JSON.parse(text)); if(!seed) throw Error('CHATTER_INVALID');
+        S.chatterSeed=seed; if(S.active&&S.player&&!document.hidden) heroTick();
+      } catch (_) { /* retain the context-safe embedded script */ }
+    })().finally(()=>{S.seedPending=null;});
+    return S.seedPending;
+  }
   async function loadWeather() {
     if (!S.active || !S.player) return;
     const epoch = sceneEpoch;
     try {
       const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=temperature_2m,weather_code&timezone=Asia%2FSeoul', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
-      const current = (await response.json()).current; if (!S.active || epoch !== sceneEpoch) return; S.weather = {temp: current.temperature_2m, code: current.weather_code}; clockTick(); heroTick();
+      const current = (await response.json()).current; if (!S.active || epoch !== sceneEpoch) return;
+      if(!current||!L.weatherKind(current.weather_code)||typeof current.temperature_2m!=='number'||!Number.isFinite(current.temperature_2m)||current.temperature_2m< -90||current.temperature_2m>60)throw Error('WEATHER_INVALID');
+      S.weather = {temp: current.temperature_2m, code: current.weather_code}; clockTick(); heroTick();
       const box = $('lobby-weather'); box.replaceChildren(node('b', '', {clear: '☀️', cloud: '☁️', fog: '🌫️', rain: '🌧️', snow: '❄️', storm: '⛈️'}[L.weatherKind(S.weather.code)] || '🌤️'), node('span', '', '서울 ' + Math.round(S.weather.temp) + '°'));
     } catch (_) { if (S.active && epoch === sceneEpoch) S.weather = null; }
   }
@@ -320,15 +403,19 @@
         const response = await fetch('api/trends', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
         const data = response.ok ? await response.json() : null;
         if (!S.active || epoch !== sceneEpoch) return;
-        if (data?.schema_version !== 1 || !Array.isArray(data.items)) throw new Error('TRENDS_UNAVAILABLE');
-        S.trends = data.items.filter(row => typeof row.keyword === 'string' && row.keyword.length <= 48 && !/[<>\x00-\x1f]/.test(row.keyword)).slice(0, 10);
+        const safe=W.safeTrendData(L,data); if(!safe) throw new Error('TRENDS_UNAVAILABLE');
+        S.safe_keyword=safe.safe_keyword; S.trendFallback=safe.fallback;
+        S.trends=safe.safe_keywords.map(keyword=>{
+          const reported=!safe.fallback&&Array.isArray(data.items)?data.items.slice(0,200).find(row=>L.safeTrendKeyword(row?.keyword)===keyword)?.traffic:null;
+          return {keyword,traffic:typeof reported==='string'&&/^\d{1,12}(?:[.,]\d{1,3})?[KkMm]?\+?$/.test(reported)?reported:null};
+        });
         const fetched = new Date(data.retrieved_at), stamp = Number.isFinite(fetched.getTime()) ? fetched.toLocaleTimeString('ko-KR', {timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit'}) + ' KST' : '시각 미확인';
         track('lobby-trends', S.trends.map(row => copy => {
-          const item = node('span', 'lobby-tick', row.keyword + (row.traffic ? ' · ' + row.traffic : '') + ' · ' + stamp);
-          item.title = 'Google Trends 한국 검색 관심 · 원천 평균 10분 갱신 · 전체 검색 순위가 아닙니다';
+          const item = node('span', 'lobby-tick', row.keyword + (row.traffic?' · '+row.traffic:'') + ' · ' + (safe.fallback?'가상 대화 소재 · 실제 검색 순위 아님':stamp));
+          item.title = safe.fallback?'가상 대화 소재 · 검색 관심을 확인하지 못해 사용하는 참고 키워드입니다':'Google Trends 한국 검색 관심 · 원천 평균 10분 갱신 · 전체 검색 순위가 아닙니다';
           if (copy) item.setAttribute('aria-hidden', 'true'); return item;
-        }), 'Google 검색 관심 키워드를 확인하지 못했어요');
-      } catch (_) { if (!S.active || epoch !== sceneEpoch) return; S.trends = []; track('lobby-trends', [], '검색 관심 키워드 확인 불가 · 다음 갱신 때 다시 확인'); }
+        }), 'Google 검색 관심 키워드를 확인하지 못했어요');heroTick();
+      } catch (_) { if (!S.active || epoch !== sceneEpoch) return; S.trends = []; S.safe_keyword=null;S.trendFallback=true;track('lobby-trends', [], '검색 관심 키워드 확인 불가 · 다음 갱신 때 다시 확인');heroTick(); }
       finally { S.trendsLoading = false; }
     }
     async function loadMarket() {
@@ -338,6 +425,9 @@
         const data = response.ok ? await response.json() : null;
         if (!S.active || epoch !== sceneEpoch) return;
         if (!data) throw new Error('MARKET_UNAVAILABLE');
+        const marketQuote=data.markets?.KOSPI||data.benchmarks?.SP500;
+        S.market=W.marketContext(marketQuote)!=='unknown'?{price:marketQuote.price,previous_close:marketQuote.previous_close,market_time:marketQuote.market_time,source_url:marketQuote.source_url}:null;
+        heroTick();
         const rows = [['S&P 500', data.benchmarks?.SP500, 'pt'], ['NASDAQ', data.markets?.NASDAQ, 'pt'], ['DOW', data.markets?.DOW, 'pt'], ['KOSPI', data.markets?.KOSPI, 'pt'], ['KOSDAQ', data.markets?.KOSDAQ, 'pt'], ['USD/KRW', data.exchange_rates?.USD_KRW || (data.fx ? {...data.fx, price: data.fx.usd_krw} : null), '원'], ['EUR/KRW', data.exchange_rates?.EUR_KRW, '원'], ['JPY/KRW · 1엔', data.exchange_rates?.JPY_KRW, '원']];
         track('lobby-market', rows.map(([name, quote, unit]) => copy => {
           const item = node('button', 'lobby-tick market-tick'); item.type = 'button'; item.append(node('b', '', name));
@@ -350,7 +440,7 @@
           item.addEventListener('click', () => showBoardDetail(name + ' · ' + item.title));
           if (copy) { item.setAttribute('aria-hidden', 'true'); item.tabIndex = -1; } return item;
         }));
-      } catch (_) { if (!S.active || epoch !== sceneEpoch) return; track('lobby-market', [], '시장 시세를 확인하지 못했어요 · 다음 갱신 때 다시 확인'); }
+      } catch (_) { if (!S.active || epoch !== sceneEpoch) return; S.market=null;heroTick();track('lobby-market', [], '시장 시세를 확인하지 못했어요 · 다음 갱신 때 다시 확인'); }
       finally { S.marketLoading = false; }
     }
     const money = (value) => (value > 0 ? '+' : '') + Number(value).toFixed(2) + '%';
@@ -471,7 +561,7 @@
     const list = [], chiefs = [], staffByChief = {}, person = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : (value || {name: '', persona: '', duty: ''});
     const make = (id, department, kind, who, role, mandate, hue, index) => {
       const persona = L.PERSONAS[who.persona];
-      return {id, department, kind, name: who.name || '이름 없음', role, mandate, hue, duty: who.duty || '', persona: who.persona || '', personaLines: persona?.lines, face: L.faceAt(index)};
+      return {id, department, kind, name: who.name || '이름 없음', role, mandate, hue, duty: who.duty || '', persona: who.persona || '', strategy_persona:who.strategy_persona||'', personaLines: persona?.lines, face: L.faceAt(index)};
     };
     (info.team?.teams || []).slice(0, 8).forEach((team, index) => {
       const id = 'own-' + index, hue = (index * 45 + 10) % 360, leader = person(team.leader); chiefs.push(id); staffByChief[id] = [];
@@ -530,7 +620,7 @@
   function loadSceneResources() {
     if (!S.active || !S.player || document.hidden) return;
     if (!S.worldLoaded) { S.worldLoaded = true; loadWeather(); loadHolidays(); }
-    loadNews(); loadReturns(); loadMarket(); loadTrends();
+    loadChatterSeed(); loadNews(); loadReturns(); loadMarket(); loadTrends();
   }
   function setActive(on) {
     if (on === S.active && (!on || S.timers.length || !S.player)) return; S.active = on; stage.dataset.suspended = String(!on);
@@ -539,7 +629,7 @@
     if (!on) { invalidateRoster(); S.worldLoaded = false; S.keys.clear(); if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return; }
     if (!S.player) return;
     loadSceneResources();
-    S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000), setInterval(loadMarket, 60000), setInterval(loadTrends, 600000), setInterval(loadWeather, 1800000));
+    S.timers.push(setInterval(chatterTick, 2200), setInterval(roamTick, 6000), setInterval(heroTick, 9000), setInterval(clockTick, 15000),setInterval(loadChatterSeed,60000), setInterval(loadNews, 300000), setInterval(loadReturns, 60000), setInterval(loadMarket, 60000), setInterval(loadTrends, 600000), setInterval(loadWeather, 1800000));
     clockTick(); heroTick(); ensureLoop(); [900, 1800, 2700].forEach((ms) => setTimeout(chatterTick, ms)); setTimeout(greet, 400);
   }
   function setCharacterProgress(progress) {

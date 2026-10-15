@@ -9,10 +9,10 @@ import streamlit as st
 
 CANVAS = '#f7f8fa'  # the ZERO UI's own background, so nothing dark shows before or around it
 
-# The ZERO UI scrolls by itself. Pin its frame to the whole viewport and stop the Streamlit page from
+# ZERO section paging owns the viewport. Pin its frame to the whole viewport and stop the Streamlit page from
 # scrolling; a 100vh frame inside a taller element left a dark band and a second scrollbar.
 FULL_SCREEN = f"""<style>
-html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"],[data-testid="stMain"]{{background:{CANVAS}!important;overflow:hidden!important}}
+html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"],[data-testid="stMain"]{{background:{CANVAS}!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;padding:0!important;overflow:hidden!important}}
 header,footer,[data-testid="stToolbar"],[data-testid="stDecoration"]{{display:none!important}}
 .block-container,[data-testid="stMainBlockContainer"]{{padding:0!important;max-width:100%!important}}
 iframe{{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;border:0!important;background:{CANVAS}}}

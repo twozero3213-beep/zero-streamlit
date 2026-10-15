@@ -24,6 +24,10 @@ def relative(text):
 def build(source, checkout=None):
     source = Path(source).resolve()
     output = OUT.resolve()
+    filter_source = None
+    if checkout:
+        filter_source = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/trend_filter.py'],
+                                       capture_output=True, check=True, encoding='utf-8').stdout
     if not (source / 'assets').is_dir() or not (source / 'index.html').is_file():
         raise ValueError('HOSTED_SOURCE_MISSING')
     if output == source or output in source.parents or source in output.parents or OUT.is_symlink() or OUT.is_junction():
@@ -60,6 +64,8 @@ def build(source, checkout=None):
         refs = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/data/research_connections.json'],
                               capture_output=True, check=True, encoding='utf-8').stdout
         (OUT / 'assets' / 'research-references.json').write_text(refs, encoding='utf-8')
+    if filter_source is not None:
+        (Path(__file__).parent / 'zero_trend_filter.py').write_text(filter_source, encoding='utf-8')
     print('built', sum(1 for _ in OUT.rglob('*') if _.is_file()), 'files')
 
 

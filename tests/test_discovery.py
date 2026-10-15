@@ -38,11 +38,24 @@ class DiscoveryTests(unittest.TestCase):
     def translate(self, row=None, fetch=None, now=100000):
         return discovery.translate_public_headline(ROW if row is None else row, store=self.store, fetch=fetch or (lambda url: GOOD), now=now)
 
+    def test_filtered_network_keywords_and_no_unsafe_cache_bypass(self):
+        raw = {'items': [{'keyword': keyword, 'traffic': None, 'published_at': NOW.isoformat()}
+                         for keyword in ['탄 핵', '사망', '국민의힘', 'ㅋㅋㅋ', '!!!', '인공지능 반도체']]}
+        filtered = discovery.filtered_trends(raw, NOW)
+        self.assertEqual(filtered['safe_keywords'], ['인공지능 반도체'])
+        self.assertEqual(filtered['safe_keyword'], '인공지능 반도체')
+        self.assertFalse(filtered['fallback'])
+        with mock.patch.object(discovery, 'collect_trends', return_value=raw):
+            body = json.loads(proxy.get_trends())
+        self.assertEqual(body['safe_keywords'], ['인공지능 반도체'])
+        for bad in ['탄 핵', '사망', '국민의힘', 'ㅋㅋㅋ', '!!!']:
+            self.assertNotIn(bad, str(body))
+
     def test_fixed_rss_schema_namespace_dates_plain_text_and_limits(self):
         fetch = mock.Mock(return_value=RSS)
         value = discovery.collect_trends(NOW, fetch=fetch)
         fetch.assert_called_once_with('https://trends.google.com/trending/rss?geo=KR')
-        self.assertEqual(set(value), {'schema_version', 'items', 'retrieved_at', 'source_url'})
+        self.assertEqual(set(value), {'schema_version', 'items', 'retrieved_at', 'source_url', 'provider', 'state', 'fallback', 'safe_keyword', 'safe_keywords'})
         self.assertEqual(value['schema_version'], 1)
         self.assertEqual(value['items'], [{'keyword': 'alpha & beta', 'traffic': '200+', 'published_at': '2026-10-14T16:40:00+00:00'}])
         self.assertEqual(value['retrieved_at'], NOW.isoformat())
@@ -59,7 +72,10 @@ class DiscoveryTests(unittest.TestCase):
             return asyncio.run(proxy.api(Request(scope)))
         value = {'schema_version': 1, 'items': [], 'retrieved_at': NOW.isoformat(), 'source_url': discovery.TRENDS_URL}
         with mock.patch.object(discovery, 'collect_trends', return_value=value) as collect, mock.patch.object(proxy.time, 'monotonic', return_value=100):
-            self.assertEqual(json.loads(call().body), value)
+            first = json.loads(call().body)
+            self.assertEqual(first['items'], value['items'])
+            self.assertTrue(first['fallback'])
+            self.assertEqual(json.loads(call().body), first)
             self.assertEqual(call().status_code, 200)
             self.assertEqual(proxy._cache['trends'][0], 700)
         collect.assert_called_once()
@@ -68,7 +84,12 @@ class DiscoveryTests(unittest.TestCase):
         proxy._cache.clear()
         with mock.patch.object(discovery, 'collect_trends', side_effect=ValueError('PRIVATE')):
             r = call()
-        self.assertEqual((r.status_code, json.loads(r.body)), (503, {'error': 'TRENDS_UNAVAILABLE'}))
+        body = json.loads(r.body)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(body['state'], 'UNAVAILABLE')
+        self.assertTrue(body['fallback'])
+        self.assertIsNotNone(discovery.clean_trend_keyword(body['safe_keyword']))
+        self.assertNotIn('PRIVATE', r.body.decode())
 
     def test_exact_persistent_cache_anonymous_query_and_charge_before_send(self):
         def fetch(url):
@@ -137,7 +158,8 @@ class DiscoveryTests(unittest.TestCase):
         value = discovery.collect_trends(NOW, fetch=lambda url: ('<rss><channel>' + items + '</channel></rss>').encode())
         self.assertEqual(len(value['items']), 50)
         html = b'<rss><channel><item><title>&lt;b&gt;headline&lt;/b&gt;</title><pubDate>Wed, 14 Oct 2026 09:40:00 -0700</pubDate></item></channel></rss>'
-        self.assertEqual(discovery.collect_trends(NOW, fetch=lambda url: html)['items'][0]['keyword'], 'headline')
+        self.assertEqual(discovery.collect_trends(NOW, fetch=lambda url: html)['items'], [])
+        self.assertTrue(discovery.collect_trends(NOW, fetch=lambda url: html)['fallback'])
         body = b'<rss><channel><item><title>Senate vote</title><link>https://news.google.com/rss/articles/x</link><source>Reuters</source><pubDate>Wed, 14 Oct 2026 09:40:00</pubDate></item></channel></rss>'
         translate = mock.Mock()
         self.assertEqual(headlines.collect(NOW, fetch=lambda url: body, translate=translate)['items'], [])

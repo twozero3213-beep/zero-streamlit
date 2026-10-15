@@ -10,7 +10,9 @@
     [...wanted].sort((a, b) => a - b).forEach((n) => { if (n - previous > 1) numbers.push(null); numbers.push(n); previous = n; });
     return {pages, current, start: current * size, end: Math.min(count, current * size + size), numbers};
   }
-  if (typeof module !== 'undefined' && module.exports) module.exports = {pageModel};
+  function pageSize(kind,width){const mobile=width<768;return kind==='research'?mobile?6:10:kind==='cards'?mobile?2:4:kind==='news'?mobile?2:4:mobile?4:8;}
+  function researchControlsPage(doc){const controls=doc.querySelector?.('#research-view .table-toolbar .stock-analytics-controls'),target=doc.getElementById('research-options');if(controls&&target)target.append(controls);}
+  if (typeof module !== 'undefined' && module.exports) module.exports = {pageModel,pageSize,researchControlsPage};
   if (typeof document === 'undefined') return;
 
   // ---- loading splash -------------------------------------------------------------------------
@@ -31,17 +33,19 @@
   // ---- paging ---------------------------------------------------------------------------------
   function pager(container, size) {
     const nav = document.createElement('nav'); nav.className = 'pager'; nav.setAttribute('aria-label', '페이지 이동'); nav.hidden = true;
-    container.after(nav);
+    if(container.tagName==='TBODY')container.closest('.table-scroll').after(nav);else container.after(nav);
     let page = 0, lastCount = -1, applying = false;
-    const items = () => [...container.children];
+    const items = () => [...container.children].filter(item=>!item.hidden);
+    const width=()=>window.innerWidth||1024;
     function apply() {
       applying = true;
-      const list = items(), model = pageModel(list.length, size, list.length === lastCount ? page : 0);
+      const list = items(), model = pageModel(list.length, typeof size==='function'?size(width()):size, list.length === lastCount ? page : 0);
+      if(container.id==='research-ranks')list.forEach(item=>{item.classList.add('zero-table-row');const button=item.querySelector('button');if(button){button.setAttribute('aria-label',button.textContent);button.title=button.textContent;}});
       page = model.current; lastCount = list.length;
       list.forEach((item, index) => item.classList.toggle('pager-hidden', index < model.start || index >= model.end));
       nav.hidden = model.pages <= 1; nav.replaceChildren();
       if (model.pages > 1) {
-        const button = (label, target, extra = {}) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; Object.assign(b, extra); b.addEventListener('click', () => { page = target; lastCount = list.length; apply(); container.scrollIntoView?.({block: 'start', behavior: 'smooth'}); }); return b; };
+        const button = (label, target, extra = {}) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; Object.assign(b, extra); b.addEventListener('click', () => { page = target; lastCount = list.length; apply();  }); return b; };
         nav.append(button('이전', page - 1, {disabled: page === 0}));
         model.numbers.forEach((n) => { if (n === null) { const gap = document.createElement('span'); gap.className = 'pager-info'; gap.textContent = '…'; nav.append(gap); } else { const b = button(String(n + 1), n); if (n === page) b.setAttribute('aria-current', 'page'); b.setAttribute('aria-label', (n + 1) + '쪽'); nav.append(b); } });
         nav.append(button('다음', page + 1, {disabled: page === model.pages - 1}));
@@ -49,10 +53,20 @@
       }
       queueMicrotask(() => { applying = false; });
     }
-    new MutationObserver(() => { if (!applying) apply(); }).observe(container, {childList: true});
+    new MutationObserver(() => { if (!applying) apply(); }).observe(container, {childList: true,subtree:true,attributes:true,attributeFilter:['hidden']});
+    window.addEventListener?.('resize',apply);
     apply();
   }
-  [['news-list', 6], ['macro-list', 10], ['research-ranks', 20], ['source-library-list', 10], ['holding-list', 10]].forEach(([id, size]) => { const container = document.getElementById(id); if (container) pager(container, size); });
+  const registered=new WeakSet();
+  function registerPagers(){
+    researchControlsPage(document);
+    [['news-list','news'],['macro-list','list'],['research-ranks','research'],['source-library-list','list'],['holding-list','research'],['holdings-body','research'],['team-grid','cards'],['office-directory','cards']].forEach(([id,kind])=>{
+      const container=document.getElementById(id);if(container&&!registered.has(container)){registered.add(container);pager(container,width=>pageSize(kind,width));}
+    });
+    document.querySelectorAll?.('.office-directory-members').forEach(container=>{if(!registered.has(container)){registered.add(container);pager(container,width=>pageSize('cards',width));}});
+  }
+  registerPagers();
+  if(typeof MutationObserver!=='undefined'&&document.body)new MutationObserver(registerPagers).observe(document.body,{childList:true,subtree:true});
 
   // ---- economic indicators open in a modal ----------------------------------------------------
   const macro = document.getElementById('macro-list');

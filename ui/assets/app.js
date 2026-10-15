@@ -44,7 +44,17 @@ function positionButton(row) {
   button.addEventListener('click', () => { selectPosition(row); window.ZEROResearch?.open(positionKey(row)); });
   return button;
 }
-function notice(text) { $('#notice').textContent = text; $('#notice').hidden = !text; }
+function notice(text) {
+  const host=$('#notice'),value=String(text||'');host.replaceChildren();host.hidden=!value;if(!value)return;
+  const copy=document.createElement('p');copy.textContent=value.length>160?value.slice(0,120)+'…':value;host.append(copy);
+  if(value.length<=160)return;
+  const more=document.createElement('button');more.type='button';more.className='secondary-button';more.textContent='안내 전체';
+  more.addEventListener('click',()=>{
+    let dialog=$('#notice-detail-dialog');
+    if(!dialog){dialog=document.createElement('dialog');dialog.id='notice-detail-dialog';dialog.className='notice-detail-dialog';dialog.setAttribute('aria-label','안내 전체 내용');document.body.append(dialog);}
+    const full=document.createElement('p'),close=document.createElement('button');full.textContent=value;close.type='button';close.className='secondary-button';close.textContent='닫기';close.addEventListener('click',()=>{dialog.close();more.focus?.({preventScroll:true});});dialog.replaceChildren(full,close);dialog.showModal();
+  });host.append(more);
+}
 function render(data) {
   if (!state.demo) state.savedData = data;
   // Cached status polling must not replace a keyboard-focused position or chart.

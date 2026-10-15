@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="assets/lobby.css">
   <link rel="stylesheet" href="assets/social.css"><link rel="stylesheet" href="assets/company.css">
   <link rel="stylesheet" href="assets/lobby-polish.css">
+  <link rel="stylesheet" href="assets/viewport.css">
   <script src="assets/app.js" defer></script>
   <script src="assets/office.js" defer></script>
   <script src="assets/company-research.js" defer></script>
@@ -36,12 +37,13 @@
   <script src="assets/outlook.js" defer></script>
   <script src="assets/numfmt.js" defer></script>
   <script src="assets/ux.js" defer></script>
+  <script src="assets/viewport.js" defer></script>
 </head>
 <body>
 <div id="boot-splash" class="boot-splash" role="status" aria-live="polite"><div class="boot-ring" aria-hidden="true"></div><p class="boot-text">로딩중…</p><p class="boot-sub">ZERO 트레이딩 플로어를 열고 있어요</p></div>
 <a class="skip-link" href="#page-title">본문으로 이동</a>
 <aside class="rail"><a class="brand" href="#lobby" aria-label="ZERO 트레이딩 플로어 홈"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M9 10h18L10 26h17"/></svg><span>ZERO</span></a><p class="rail-description">투자를 이해하는 일상</p><nav aria-label="전체 화면 선택"><button type="button" class="nav-item" data-view="lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M9 21v-6h6v6M8 11h2M14 11h2"/></svg><span>ZERO 트레이딩 플로어</span></button><p class="nav-group-label">투자</p><button type="button" class="nav-item active" data-view="portfolio" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8v10h-6v-7H9v7H3Z"/></svg><span>내 자산</span></button><button type="button" class="nav-item" data-view="research"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l4-6 4 3 5-8"/></svg><span>주식 탐색</span></button><button type="button" class="nav-item" data-view="workbench"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v15M3 8h4v7H3ZM12 2v20M10 5h4v9h-4ZM19 5v15M17 11h4v6h-4Z"/></svg><span>종목·차트</span></button><p class="nav-group-label">정보와 공부</p><button type="button" class="nav-item" data-view="news"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span>주요 뉴스</span></button><button type="button" class="nav-item" data-view="macro"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a16 16 0 0 1 0 18M12 3a16 16 0 0 0 0 18"/></svg><span>경제 지표</span></button><button type="button" class="nav-item" data-view="reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5ZM14 3v5h5M8 12h8M8 16h6"/></svg><span>보고서 자료실</span></button><button type="button" class="nav-item" data-view="study"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h6a3 3 0 0 1 3 3v14a4 4 0 0 0-4-2H3ZM12 7a3 3 0 0 1 3-3h6v15h-5a4 4 0 0 0-4 2"/></svg><span>주식 공부</span></button><p class="nav-group-label">ZERO</p><button type="button" class="nav-item" data-view="company"><span>내 투자회사 · 전략 직원</span></button><button type="button" class="nav-item" data-view="community"><span>투자회사 커뮤니티</span></button><button type="button" class="nav-item" data-view="team"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 21v-3a6 6 0 0 1 12 0v3M4 5a3 3 0 0 0 0 6M20 5a3 3 0 0 1 0 6"/></svg><span>ZERO 팀</span></button><button type="button" class="nav-item" data-view="guide"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg><span>자료 설명 · 앱 설치</span></button></nav><div class="rail-bottom"><span class="private-dot"></span>공개 참고 화면<p>마지막 저장 자료 기준</p></div></aside><header class="global-header"><a class="mobile-brand brand" href="#portfolio" aria-label="ZERO 홈"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M9 10h18L10 26h17"/></svg><span>ZERO</span></a><nav class="global-navigation" aria-label="빠른 화면 선택"><button type="button" class="top-nav-item" data-view="lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M9 21v-6h6v6M8 11h2M14 11h2"/></svg><span>트레이딩 플로어</span></button><button type="button" class="top-nav-item active" data-view="portfolio" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8v10h-6v-7H9v7H3Z"/></svg><span>내 자산</span></button><button type="button" class="top-nav-item" data-view="research"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l4-6 4 3 5-8"/></svg><span>주식 탐색</span></button><button type="button" class="top-nav-item" data-view="news"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span>주요 뉴스</span></button></nav><div class="global-search-wrap"><label for="global-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="global-search" type="search" placeholder="어떤 종목이 궁금하세요?" aria-label="전체 종목 검색" aria-controls="global-search-results" aria-expanded="false" autocomplete="off"><kbd aria-hidden="true">/</kbd></label><div id="global-search-results" class="global-search-results" role="listbox" aria-label="종목 검색 결과" hidden></div></div><button type="button" id="global-watchlist" class="icon-button" aria-label="관심 종목 보기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></svg></button><button type="button" class="icon-button menu-open" aria-label="전체 메뉴 열기" aria-haspopup="dialog" aria-controls="more-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></header>
-<main id="main">
+<main id="main" class="zero-main-viewport">
   <header class="page-header"><div><h1 id="page-title" tabindex="-1">내 자산</h1><p id="page-subtitle">1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.</p></div><div class="header-actions"><button id="refresh" class="primary-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M18 17a7 7 0 0 1-12 1l-2-3"/></svg><span>시세 새로고침</span></button></div></header>
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
   <section id="portfolio-view" class="view">
@@ -143,7 +145,7 @@
             <div class="lobby-board-row trend-row"><span class="lobby-board-tag">검색 관심</span><div id="lobby-trends" class="lobby-marquee"><div class="lobby-track"></div></div></div>
               <small id="lobby-board-source" class="board-source">공개 지연 시세 · Google Trends · 기사 원제와 기계 번역</small>
           </div>
-          <div class="lobby-scroll"><div id="lobby-stage" class="lobby-stage" tabindex="0" role="application" aria-label="ZERO 트레이딩 플로어. 방향키로 이동하고 직원을 눌러 대화합니다."></div></div>
+          <div class="lobby-scroll zero-office-canvas-wrap"><div id="lobby-stage" class="lobby-stage" tabindex="0" role="application" aria-label="ZERO 트레이딩 플로어. 방향키로 이동하고 직원을 눌러 대화합니다."></div></div>
           <div class="lobby-meta"><span class="lobby-chip">내 캐릭터<b id="lobby-name-chip">대표님</b><small id="lobby-player-level" class="character-level">Lv.1</small></span><span class="lobby-chip" id="lobby-count" role="status">직원 불러오는 중</span><button id="lobby-ranking-open" type="button" class="secondary-button">연습 랭킹</button><button id="lobby-pause" type="button" class="secondary-button" aria-pressed="false">연출 멈춤</button><p id="lobby-near" class="lobby-near" role="status" aria-live="polite"></p></div>
           <div class="lobby-pad" aria-label="이동 버튼"><button type="button" data-pad="up" aria-label="위로">▲</button><button type="button" data-pad="left" aria-label="왼쪽으로">◀</button><button type="button" data-pad="down" aria-label="아래로">▼</button><button type="button" data-pad="right" aria-label="오른쪽으로">▶</button></div>
         </div>
@@ -181,7 +183,7 @@
       </div></div>
       <p id="office-empty" class="office-job-empty" role="status">팀원 명부를 불러오는 중…</p>
       <div class="office-view-switch" role="group" aria-label="사무실과 작업 보드"><button id="office-view-scene" type="button" aria-pressed="true">사무실</button><button id="office-view-board" type="button" aria-pressed="false">작업 보드</button><button id="office-lobby-request" type="button">총괄에게 업무 맡기기</button></div>
-      <div id="office-scene-surface" class="office-layout"><div id="office-map" class="office-map" role="region" aria-label="12개 팀 사무실과 중앙 회의실. 캐릭터를 누르면 일을 맡길 수 있습니다. 팀 선택으로 확대할 수 있습니다." tabindex="0"></div></div>
+      <div id="office-scene-surface" class="office-layout zero-office-canvas-wrap"><div id="office-map" class="office-map" role="region" aria-label="12개 팀 사무실과 중앙 회의실. 캐릭터를 누르면 일을 맡길 수 있습니다. 팀 선택으로 확대할 수 있습니다." tabindex="0"></div></div>
       <section id="office-board" class="office-board" aria-label="실제 요청 작업 보드" hidden></section>
       <section id="office-meeting" class="office-meeting" aria-label="중앙 회의실"><div class="office-meeting-heading"><p id="office-meeting-label">회의 연출 · 총괄과 팀장들의 업무 협의</p><div><button id="office-meeting-mode" class="office-reload" type="button" aria-pressed="false">실제 기록 보고 보기</button><button id="office-meeting-exit" class="office-reload" type="button">전체 사무실 보기</button></div></div><h3 id="office-meeting-speaker"></h3><p id="office-meeting-copy" aria-live="polite"></p><details class="office-meeting-details"><summary>발표 근거와 전체 내용</summary><p id="office-meeting-detail"></p></details></section>
       <nav class="office-library-links" aria-label="사무실 자료실"><span>자료실</span><a href="#news">주요 뉴스</a><a href="#study">주식 공부</a><a href="#reports">보고서 자료실</a></nav>
@@ -227,14 +229,17 @@
     <section class="panel research-panel" aria-labelledby="research-title">
       <div class="panel-heading"><div><h2 id="research-title">오늘의 기업 순위</h2><p id="research-intro">시가총액으로 보는 시장 · 기업을 누르면 사업과 실적을 확인합니다.</p></div><button id="research-reload" class="secondary-button">다시 불러오기</button></div>
       <div class="table-toolbar" style="flex-wrap:wrap"><div class="market-filter" role="group" aria-label="연구 시장"><button class="active" data-research-market="SP500" aria-pressed="true">미국 100</button><button data-research-market="KOSPI" aria-pressed="false">코스피 50</button><button data-research-market="KOSDAQ" aria-pressed="false">코스닥 50</button><button data-research-market="ETF" aria-pressed="false">ETF 50</button></div><label class="search-label"><input id="research-search" type="search" placeholder="기업·ETF명 또는 코드 검색" aria-label="연구 기업·ETF명 또는 코드 검색" autocomplete="off"></label></div>
+      <ol id="research-ranks" class="research-ranks" aria-label="기업 시가총액 순위"></ol>
+      <p id="research-empty" class="table-empty">기업 자료를 아직 불러오지 않았습니다.</p>
+    </section>
+    <section class="panel research-panel" aria-label="순위 기준·출처와 주요 ETF"><h2>순위 기준·출처와 주요 ETF</h2>
+      <h3>정렬·통화·기간</h3><div id="research-options"></div>
       <p id="research-status" class="muted-note" role="status" aria-live="polite">기업 자료를 불러오면 표시합니다.</p>
+      <div class="table-foot"><span id="research-count">자료 미확인</span><span>사업·재무 요약은 공개 제공자 자료 · 독립 검토 별도</span></div>
       <p id="research-date" class="research-date muted-note"></p>
       <p id="research-basis" class="muted-note"></p>
       <details id="research-etf-details" class="desk-details" hidden><summary>순위 기준·출처</summary><div id="research-etf-evidence"></div></details>
       <section id="research-etf-major" class="company-section" hidden aria-labelledby="research-etf-major-title"><h3 id="research-etf-major-title">주요 ETF · 순위와 별도</h3><div id="research-etf-shortcuts" class="market-filter" role="group" aria-label="주요 ETF 바로가기"></div></section>
-      <ol id="research-ranks" class="research-ranks" aria-label="기업 시가총액 순위"></ol>
-      <p id="research-empty" class="table-empty">기업 자료를 아직 불러오지 않았습니다.</p>
-      <div class="table-foot"><span id="research-count">자료 미확인</span><span>사업·재무 요약은 공개 제공자 자료 · 독립 검토 별도</span></div>
     </section>
     <div id="institution-panel"></div>
   </section>

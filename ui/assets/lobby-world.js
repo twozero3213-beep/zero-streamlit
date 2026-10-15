@@ -5,6 +5,49 @@
 })(function (search) {
   'use strict';
   const CELL = 4, WIDTH = 160, HEIGHT = 100;
+  const FICTION_NOTICE='가상 직원의 연출 대사 · 실제 계좌 확인 결과 아님';
+  function validateChatterSeed(rows) {
+    const fields=['id','team','persona','market','time','weather','text'];
+    if (!Array.isArray(rows)||rows.length!==50) return null;
+    for (let i=0;i<rows.length;i++) {
+      const row=rows[i];
+      if (!row||typeof row!=='object'||Array.isArray(row)||Object.keys(row).length!==fields.length||!fields.every(key=>Object.hasOwn(row,key))||row.id!==i+1||!['all','zero_team','my_office'].includes(row.team)||!['common','value','momentum','dividend','risk'].includes(row.persona)||!['any','bull','bear','sideways'].includes(row.market)||!['morning_coffee','lunch_hungry','afternoon','night_overtime','late_comfort'].includes(row.time)||!['any','clear','cloud','fog','rain','snow','storm','cold','hot'].includes(row.weather)||typeof row.text!=='string'||!row.text.trim()||row.text.length>500||/[<>\x00-\x1f\x7f]/.test(row.text)) return null;
+      if (/[{}]/.test(row.text.replace(/\{(?:trend_keyword|weather)\}/g,''))) return null;
+    }
+    return Object.freeze(rows.map(row=>Object.freeze({...row})));
+  }
+  function chatterContext(logic, context, npc={}) {
+    const hour=logic.kstParts(context.now || new Date()).hour;
+    const time=hour<6||hour>=23?'late_comfort':hour<11?'morning_coffee':hour<13?'lunch_hungry':hour<18?'afternoon':'night_overtime';
+    const own=context.mode==='own',official=context.mode==='zero',visible=own||official;
+    const personas={VALUE:'value',TREND:'momentum',DIVIDEND:'dividend',VOLATILITY:'risk'};
+    return {time,team:official?'zero_team':own?'my_office':'common',persona:visible?(personas[npc.strategy_persona]||personas[npc.persona]||(official?personas[npc.display_persona]:null)||'common'):'common',weather:logic.weatherKind(context.weather?.code)||'unknown',market:marketContext(context.market_quote,Number(context.now||new Date()))};
+  }
+  function marketContext(quote,now=Date.now()) {
+    if(!quote||typeof quote!=='object'||typeof quote.price!=='number'||!Number.isFinite(quote.price)||quote.price<=0||typeof quote.previous_close!=='number'||!Number.isFinite(quote.previous_close)||quote.previous_close<=0||typeof quote.market_time!=='string'||!/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(quote.market_time)||typeof quote.source_url!=='string'||!/^https:\/\/query[12]\.finance\.yahoo\.com\/v8\/finance\/chart\/(?:%5EKS11|%5EGSPC)$/.test(quote.source_url)||!Number.isFinite(now))return 'unknown';
+    const time=Date.parse(quote.market_time);if(!Number.isFinite(time)||time>now+300000||now-time>72*3600000)return 'unknown';
+    const change=(quote.price/quote.previous_close-1)*100;if(!Number.isFinite(change))return 'unknown';
+    // Roundoff at exactly +/-0.5% must not turn a neutral reference interval into a direction.
+    return change>0.5+1e-10?'bull':change< -0.5-1e-10?'bear':'sideways';
+  }
+  function safeTrendData(logic,data) {
+    if(data?.schema_version!==1||typeof data.fallback!=='boolean'||!Array.isArray(data.safe_keywords)||data.safe_keywords.length>200||typeof data.safe_keyword!=='string') return null;
+    const seen=new Set(),safe_keywords=data.safe_keywords.map(value=>logic.safeTrendKeyword(value)).filter(value=>{if(!value||seen.has(value.toLowerCase()))return false;seen.add(value.toLowerCase());return true;}).slice(0,10);
+    const safe_keyword=logic.safeTrendKeyword(data.safe_keyword);
+    const trusted=!!safe_keyword&&safe_keywords.includes(safe_keyword);
+    return {safe_keyword:trusted?safe_keyword:safe_keywords[0]||null,safe_keywords,fallback:data.fallback||!trusted};
+  }
+  function seededChatter(logic, context, recent, rng) {
+    const seed=validateChatterSeed(context.seed); if (!seed) return null;
+    const scene=chatterContext(logic,context,context.npc),temp=context.weather?.temp;
+    const weathers=[scene.weather]; if (typeof temp==='number'&&Number.isFinite(temp)) { if(temp<=3) weathers.push('cold'); else if(temp>=29) weathers.push('hot'); }
+    const safe=logic.safeTrendKeyword(context.safe_keyword),fallback=context.trendFallback!==false||!safe;
+    const keyword=safe||'잠깐 휴식';
+    const weather={clear:'맑음',cloud:'흐림',fog:'안개',rain:'비',snow:'눈',storm:'천둥',unknown:'날씨 확인 전'}[scene.weather];
+    const choices=seed.filter(row=>(row.team==='all'||row.team===scene.team)&&(row.persona==='common'||row.persona===scene.persona)&&row.time===scene.time&&(row.market==='any'||row.market===scene.market)&&(row.weather==='any'||weathers.includes(row.weather))&&!(fallback&&row.text.includes('{trend_keyword}')&&/검색|실시간|트렌드|화제|들썩/.test(row.text)))
+      .map(row=>row.text.replace(/\{trend_keyword\}/g,()=>keyword).replace(/\{weather\}/g,()=>row.weather==='cold'?'쌀쌀함':row.weather==='hot'?'더움':weather)).filter(text=>!recent.includes(text));
+    return choices.length?choices[Math.min(choices.length-1,Math.floor(rng()*choices.length))]:null;
+  }
   function createWorld(npcs, space, floor) {
     const grid = Array.from({length: WIDTH / CELL}, (_, x) => Array.from({length: HEIGHT / CELL}, (_, y) =>
       x * CELL <= floor.maxX && (x + 1) * CELL >= floor.minX && y * CELL <= floor.maxY && (y + 1) * CELL >= floor.minY ? 1 : 0));
@@ -65,12 +108,14 @@
     night: ['늦은 시간엔 따뜻한 차가 좋더라고요.', '화면에서 눈을 떼고 먼 곳을 잠깐 볼게요.', '내일을 위해 기록은 짧게 정리할래요.', '밤 사무실은 키보드 소리가 더 크게 들리네요.', '커피 대신 물 한 잔 더 마실게요.']
   };
   function chooseChatter(logic, context, persona, recent, rng = Math.random) {
+    recent=(Array.isArray(recent)?recent:[]).slice(-12);
+    const seeded=seededChatter(logic,context,recent,rng); if(seeded) return seeded;
     const parts = logic.kstParts(context.now || new Date());
     const phase = logic.daypart(parts.hour), extras = DAY_CHAT[phase] || DAY_CHAT.day;
     const study = context.level >= 7 ? ['학교를 졸업했네요! 숫자의 출처도 잊지 마세요.'] : context.level > 1 ? ['퀴즈를 하나씩 풀면 모르는 말이 줄어들어요.', '오늘 배운 내용을 다음 설명에서 써 봐요.'] : ['주식이 처음이면 입문 학교부터 같이 시작해요.', '매수는 사기, 매도는 팔기예요. 학교에서 연습해 봐요.'];
     const pool = [...new Set([...logic.timeLines(parts), ...logic.dayLines(parts), ...logic.weatherLines(context.weather), ...persona, ...extras, ...study])];
     const holiday = logic.holidayNote(context.now || new Date(), context.holidays || logic.KR_HOLIDAYS); if (holiday) pool.push(holiday);
-    const contextPool = [...logic.timeLines(parts), ...logic.trendLines(context.trends || [])];
+    const contextPool = [...logic.timeLines(parts), ...logic.trendLines(context.trendFallback===true?[]:context.trends || [])];
     const selected = rng() < 0.65 ? contextPool : pool;
     const fresh = selected.filter(line => !recent.includes(line)), rest = pool.filter(line => !recent.includes(line));
     const choices = fresh.length ? fresh : rest.length ? rest : selected;
@@ -81,5 +126,5 @@
     const fresh = pool.filter(line => !recent.includes(line)), choices = fresh.length ? fresh : pool;
     return choices[Math.min(choices.length - 1, Math.floor(rng() * choices.length))];
   }
-  return {CELL, createWorld, canStand, route, rankUsers, chooseChatter, chatReply};
+  return {CELL, FICTION_NOTICE, validateChatterSeed, chatterContext, marketContext, safeTrendData, createWorld, canStand, route, rankUsers, chooseChatter, chatReply};
 });
