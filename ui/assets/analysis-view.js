@@ -47,7 +47,7 @@ function paint(){const host=doc.getElementById('analysis-content'),status=doc.ge
  const trends=make('section','analysis-card');trends.append(make('h3','','시장 흐름 요약'));const lines=chatter(saved);for(const line of lines.slice(0,2))trends.append(make('p','analysis-trend',line));if(!lines.length)trends.append(make('p','muted-note','새로운 가격 근거를 확인한 뒤 요약합니다.'));
  const source=make('button','secondary-button analysis-source','출처·관측 시각 전체 보기');source.type='button';source.addEventListener('click',detail);host.append(quotes,calendar,trends,source);
 }
-function endpoint(){const base=doc.querySelector('meta[name="zero-lobby-api"]')?.content;return base==='https://zero-lobby.zero-cloudflare.workers.dev'?base+'api/analysis-feed':'api/analysis-feed';}
+function endpoint(){const base=doc.querySelector('meta[name="zero-lobby-api"]')?.content;return base==='https://zero-lobby.zero-cloudflare.workers.dev'?`${base}/api/analysis-feed`:'api/analysis-feed';}
 async function boundedJSON(response){
  const reader=response.body?.getReader();if(!reader){const text=await response.text();if(text.length>100000)throw Error('ANALYSIS_INVALID');return JSON.parse(text);}
  const chunks=[];let size=0;try{for(;;){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>100000)throw Error('ANALYSIS_INVALID');chunks.push(value);}}catch(error){await reader.cancel().catch(()=>{});throw error;}finally{reader.releaseLock();}
