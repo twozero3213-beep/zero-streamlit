@@ -229,8 +229,15 @@
     return {outer,travel};
   }
 
+  const teamChatRecent=[];
   function actorBubble(actor){
     const job=latestJob(actor),available=queue&&['EMPTY','AVAILABLE'].includes(queue.state);
+    const logic=window.ZEROLobbyLogic,world=window.ZEROLobbyWorld,publicScene=window.ZEROLobby?.state;
+    if(!job&&!meetingRecordsOnly&&logic&&world?.chooseChatter){
+      const line=world.chooseChatter(logic,{now:new Date(),weather:publicScene?.weather,trends:publicScene?.trends||[],trendFallback:publicScene?.trendFallback!==false,level:1},[],teamChatRecent);
+      teamChatRecent.push(line);if(teamChatRecent.length>12)teamChatRecent.shift();
+      return {text:'잡담 · '+excerpt(line,36),status:available?'요청 대기':'진행 미확인',detail:'가상 직원의 일상 대사 · 실제 업무 처리나 계좌 확인 결과가 아닙니다. '+line};
+    }
     return {text:job&&available?types[job.job_type]:excerpt(actor.principles[0]||'직무 원칙',24),status:available?job?statusNames[job.status]:'요청 대기':'진행 미확인',detail:job?.result_summary||actor.principles[0]||''};
   }
   function policyDescription(){
@@ -351,6 +358,7 @@
     for(let index=0;index<Math.min(5,staff.length);index++)bubbles.add(staff[(meetingIndex*5+index)%staff.length].id);
     for(const record of sceneActors.values()){
       const inRoom=selectedDepartment==='MEETING'?isLeader(record.actor):record.actor.department===selectedDepartment;
+      if(!latestJob(record.actor)){const chat=actorBubble(record.actor);record.duty.textContent=chat.text;record.bubble.title=chat.detail;}
       record.button.classList.toggle('show-bubble',overview?bubbles.has(record.actor.id)||!isLeader(record.actor):inRoom);
       record.button.classList.toggle('show-label',!overview&&inRoom);
     }
