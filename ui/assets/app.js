@@ -175,6 +175,7 @@ function render(data) {
   // Hosted refresh: the saved comparison is repriced with the live S&P 500 quote when one is available.
   const repriced = window.ZEROExploreMath?.liveBenchmark;
   renderBenchmark(hostedView && state.live && repriced ? repriced(data.benchmark, state.live, 'SP500', 'index_close') : data.benchmark);
+  renderComparison();
 }
 let portfolioRequest = 0;
 function showDemo() {
@@ -197,6 +198,23 @@ async function exitDemo() {
   state.demo=false; state.fingerprint=null; state.live=null;
   if(state.savedData)render(state.savedData);
   await loadPortfolio().catch(()=>notice('저장 자료를 불러오지 못했습니다. 다시 조회해 주세요.'));
+}
+function renderComparison() {
+  const host = $('#comparison-zero');
+  if (!host) return;
+  host.replaceChildren(node('h2', '', 'ZERO 참고 원장'));
+  const scope = state.reference;
+  if (state.demo || !scope) {
+    host.append(node('p', 'muted-note', state.demo ? '시연 자료는 실제 비교에 사용하지 않습니다. 시연을 종료하면 저장된 원장을 확인할 수 있습니다.' : '검증된 ZERO 참고 원장 근거 없음 · 수익률 비교 보류'));
+    return;
+  }
+  const metrics = node('dl', 'benchmark-metrics');
+  for (const [label, value] of [['참고 총자산', money(scope.total_value_krw)], ['원장 누적 참고 수익률', signedPercent(scope.gross_return_percent)], ['참고 평가차액', money(scope.gross_gain_krw)]]) {
+    const field = node('div'); field.append(node('dt', '', label), node('dd', '', value)); metrics.append(field);
+  }
+  host.append(metrics,
+    node('p', 'muted-note', '동결 계획 시작 ' + stamp(scope.start_at) + ' KST → 원장 관측 ' + stamp(scope.observed_at) + ' KST' + (state.live ? ' · 공개 지연 시세 반영 ' + stamp(state.live.checked_at) + ' KST' : '')),
+    node('p', 'muted-note', 'ZERO는 참고 현금과 확정 체결을 반영한 동결 계획 기준입니다. 아래 전액 투자 가정의 첫 매수 기록·미국 거래일·가격 및 환율 종료일과 다를 수 있습니다. 기간을 맞춘 ZERO 성과 근거가 없어 세 수익률의 우열 비교를 보류합니다. 수수료·세금·배당·결제·환전 내역 미확정.'));
 }
 function renderAllocationComparison() {
   const box=$('#allocation-comparison'), scope=state.reference;
@@ -905,6 +923,7 @@ const views = {
   analysis: ['시장 브리핑', '공개 지수·선물·발표 일정 · 1시간 캐시와 출처를 확인하세요.'],
   audit: ['회계 감사', '예수금·미결제 현금·비용·실현 손익의 원장 대조 결과를 확인하세요.'],
   portfolio: ['내 자산', '1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.'],
+  comparison: ['ZERO · TQQQ · S&P 500 비교', '첫 매수 기록과 각 종료일·환율 기준을 확인하세요. 기간이 다르면 같은 기간 성과로 비교하지 않습니다.'],
   research: ['주식 탐색', '미국 100 · 코스피 50 · 코스닥 50 기업을 찾아보세요.'],
   workbench: ['종목과 차트', '시세와 차트, 기업 정보를 한 화면에서 확인하세요.'],
   macro: ['경제 지표', '공식 발표값과 과거 흐름을 함께 읽어 보세요.'],
@@ -917,7 +936,17 @@ const views = {
 let currentView = 'portfolio';
 const domainRoutes={investment:'portfolio',office:'lobby',plaza:'plaza',community:'community'};
 function domainFor(view){return view==='plaza'||view==='community'?view:['lobby','company','study','team'].includes(view)?'office':'investment';}
-let routeStarted=false,plazaReturn={view:'lobby',hash:'#lobby'};
+let routeStarted=false,plazaReturn={view:'lobby',hash:'#lobby'},lastWorkbenchHash='';
+function openDefaultStock(updateAddress = true) {
+  const explore = window.ZEROExplore;
+  if (explore?.restoreRoute?.()) return;
+  if (lastWorkbenchHash) {
+    window.history?.replaceState?.({view:'workbench'}, '', lastWorkbenchHash);
+    if (explore?.restoreRoute?.()) return;
+  }
+  const holding = state.data?.holdings?.find(row => /^(US:[A-Z][A-Z0-9.-]{0,14}|KR:[A-Z0-9]{6})$/.test(positionKey(row)));
+  explore?.openCompany?.(holding ? positionKey(holding) : 'US:SPY', {updateAddress});
+}
 function closeMenu() {
   const menu = $('#more-menu');
   if (menu?.open) menu.close();
@@ -927,13 +956,14 @@ function navigate(view, updateAddress = true) {
   // One route updates desktop, bottom tabs and menus together; invalid links keep the current page.
   if (!Object.hasOwn(views, view) || !$('#' + view + '-view')) return false;
   if(view==='plaza'&&currentView!=='plaza'&&routeStarted){const hash=window.location?.hash;plazaReturn={view:currentView,hash:hash?.slice(1).split('?')[0]===currentView?hash:'#'+currentView};}
+  if (currentView === 'workbench' && window.location?.hash?.startsWith('#workbench?')) lastWorkbenchHash = window.location.hash;
   currentView = view;
   routeStarted=true;
   document.documentElement.dataset.zeroView = view;
   const domain=domainFor(view);document.documentElement.dataset.zeroDomain=domain;
   document.dispatchEvent?.(new CustomEvent('zero-view-changed', {detail:{view}}));
   if ($('#mobile-view')) $('#mobile-view').value = view;
-  $('#refresh').hidden = view !== 'portfolio';
+  $('#refresh').hidden = !['portfolio', 'comparison'].includes(view);
   document.querySelectorAll('.view').forEach((section) => { section.hidden = section.id !== view + '-view'; });
   document.querySelectorAll('[data-view]').forEach((button) => {
     const active = button.dataset.view === view;
@@ -941,7 +971,7 @@ function navigate(view, updateAddress = true) {
     if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
   });
   document.querySelectorAll('[data-domain]').forEach(button=>{const active=button.dataset.domain===domain;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current',button.dataset.view===view?'page':'true');else button.removeAttribute('aria-current');});
-  const subnav=document.querySelector('.mts-subnav');if(subnav)subnav.hidden=!['portfolio','research','workbench','analysis','audit'].includes(view);
+  const subnav=document.querySelector('.mts-subnav');if(subnav)subnav.hidden=!['portfolio','comparison','research','workbench','analysis','audit'].includes(view);
   $('#page-title').textContent = views[view][0];
   $('#page-subtitle').textContent = views[view][1];
   closeMenu();
@@ -955,7 +985,8 @@ function navigate(view, updateAddress = true) {
   if (view === 'research') window.ZEROResearch?.load();
   if (view === 'analysis') window.ZEROAnalysis?.open();
   if (view === 'audit') window.ZEROAccountAudit?.open();
-  if (view === 'workbench') window.ZEROExplore?.init();
+  if (view === 'workbench') { window.ZEROExplore?.init(); if (updateAddress) openDefaultStock(); }
+  if (view === 'comparison') renderComparison();
   if (view === 'guide') loadReferences();
   if (view === 'community') window.ZEROSocial?.openCommunity();
   if (view === 'company') window.ZEROCompany?.open();
@@ -974,11 +1005,10 @@ document.addEventListener?.('zero-plaza-closed',()=>{
   if(currentView!=='plaza')return;
   const back=Object.hasOwn(views,plazaReturn.view)&&$('#'+plazaReturn.view+'-view')?plazaReturn:{view:'lobby',hash:'#lobby'};
   window.history?.replaceState?.({view:back.view},'',back.hash);navigate(back.view,false);
-  if(back.view==='workbench'&&!window.ZEROExplore?.restoreRoute?.())window.ZEROExplore?.openWatchlist(false);
+  if(back.view==='workbench')openDefaultStock(false);
 });
 document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => {
   navigate(button.dataset.view);
-  if (button.dataset.view === 'workbench') window.ZEROExplore?.openWatchlist();
 }));
 document.querySelectorAll('.menu-open').forEach((button) => {
   button.setAttribute('aria-expanded', 'false');
@@ -990,7 +1020,7 @@ document.querySelectorAll('.menu-open').forEach((button) => {
 });
 $('#menu-close')?.addEventListener('click', closeMenu);
 $('#more-menu')?.addEventListener('close', () => document.querySelectorAll('.menu-open').forEach((button) => button.setAttribute('aria-expanded', 'false')));
-$('#global-watchlist')?.addEventListener('click', () => { navigate('workbench'); window.ZEROExplore?.openWatchlist(); });
+$('#global-watchlist')?.addEventListener('click', () => { navigate('workbench', false); window.ZEROExplore?.openWatchlist(); });
 // Slash is a convenience only outside text inputs; it never steals a typing shortcut.
 document.addEventListener?.('keydown', (event) => {
   if (event.key === '/' && !event.ctrlKey && !event.metaKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName) && !event.target?.isContentEditable) { event.preventDefault(); $('#global-search')?.focus(); }
@@ -999,7 +1029,7 @@ function restoreRoute() {
   const view = window.location?.hash?.slice(1).split('?')[0];
   if (Object.hasOwn(views, view || '')) {
     if (!routeStarted || currentView !== view) navigate(view, false);
-    if (view === 'workbench' && !window.ZEROExplore?.restoreRoute?.()) window.ZEROExplore?.openWatchlist(false);
+    if (view === 'workbench') openDefaultStock(false);
   }
 }
 window.addEventListener?.('popstate', restoreRoute);

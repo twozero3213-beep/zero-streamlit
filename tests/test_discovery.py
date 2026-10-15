@@ -264,15 +264,13 @@ class DiscoveryTests(unittest.TestCase):
         self.translate(dict(ROW, title=TITLE.upper()), fetch=fetch)
         self.assertEqual(fetch.call_count, 2)
 
-    def test_translation_count_bound_and_failed_original_retained(self):
+    def test_translation_count_bound_and_failed_original_omitted(self):
         items = ''.join('<item><title>Headline %d uniqueword%d - Reuters</title><link>https://news.google.com/rss/articles/%d</link><source>Reuters</source><pubDate>Thu, 15 Oct 2026 00:00:00 GMT</pubDate></item>' % (i,i,i) for i in range(12))
         translate = mock.Mock(return_value=None)
         with mock.patch.object(headlines, 'similar', return_value=False):
             value = headlines.collect(NOW, fetch=lambda url: ('<rss><channel>'+items+'</channel></rss>').encode(), translate=translate)
         self.assertEqual(translate.call_count, 2)
-        self.assertTrue(all(row['title_ko'] is None and row['title'] for row in value['items']))
-        self.assertEqual([row['translation_status'] for row in value['items'][:2]], ['PROVIDER_UNAVAILABLE'] * 2)
-        self.assertTrue(all(row['translation_status'] == 'PENDING' for row in value['items'][2:]))
+        self.assertEqual(value['items'], [])
 
     def test_standard_google_news_article_query_is_allowed_but_private_parameters_are_not(self):
         fetch = mock.Mock(return_value=GOOD)
@@ -288,12 +286,12 @@ class DiscoveryTests(unittest.TestCase):
         fetch.assert_not_called()
         self.assertFalse(self.store.with_suffix('.lock').exists())
 
-    def test_long_original_title_is_retained_without_transmitting_truncated_text(self):
+    def test_long_english_title_is_omitted_without_transmitting_truncated_text(self):
         title = 'Scientists ' + 'x' * 501
         body = ('<rss><channel><item><title>' + title + ' - Reuters</title><link>https://news.google.com/rss/articles/x</link><source>Reuters</source><pubDate>Thu, 15 Oct 2026 00:00:00 GMT</pubDate></item></channel></rss>').encode()
         translate = mock.Mock()
         value = headlines.collect(NOW, fetch=lambda url: body, translate=translate)
-        self.assertEqual(value['items'][0]['title'], title)
+        self.assertEqual(value['items'], [])
         translate.assert_not_called()
 
     def test_corrupt_or_locked_persistence_fails_closed(self):
@@ -363,10 +361,7 @@ class DiscoveryTests(unittest.TestCase):
         translate.assert_called(); self.assertEqual(translate.call_count,2)
         row=next(row for row in value['items'] if row['title'].startswith('Headline 3 '))
         self.assertEqual((row['title_ko'],row['translation_status']),('캐시 제목','TRANSLATED'))
-        failed=next(row for row in value['items'] if row['title'].startswith('Headline 4 '))
-        self.assertEqual((failed['title_ko'],failed['translation_status']),(None,'PROVIDER_UNAVAILABLE'))
-        pending=next(row for row in value['items'] if row['title'].startswith('Headline 5 '))
-        self.assertEqual((pending['title_ko'],pending['translation_status']),(None,'PENDING'))
+        self.assertEqual({row['title'] for row in value['items']}, {'Headline 3 uniqueword3'})
 
     def test_collector_deadline_returns_without_overlapping_cold_fetches(self):
         entered,release=threading.Event(),threading.Event()
@@ -389,7 +384,7 @@ class DiscoveryTests(unittest.TestCase):
         self.assertFalse(headlines._collect_lock.locked())
         self.assertEqual(len(calls),1,'deadline prevents remaining RSS and translation requests')
 
-    def test_translation_deadline_retains_independent_original_snapshot_and_real_feed_failures(self):
+    def test_translation_deadline_omits_untranslated_original_and_retains_real_feed_failures(self):
         body = ('<rss><channel><item><title>BREAKING: Senate vote - Reuters</title><link>https://news.google.com/rss/articles/x</link><source>Reuters</source><pubDate>Thu, 15 Oct 2026 00:00:00 GMT</pubDate></item></channel></rss>').encode()
         for partial in (False, True):
             with self.subTest(partial=partial):
@@ -410,9 +405,7 @@ class DiscoveryTests(unittest.TestCase):
                     self.assertLess(time.monotonic()-start, 0.7)
                     self.assertTrue(headlines._collect_lock.locked(), 'HTTP worker remains alive after deadline')
                     self.assertEqual(value['failed'], ['한국'] if partial else [])
-                    self.assertEqual(len(value['items']), 1)
-                    row = value['items'][0]
-                    self.assertEqual((row['title'],row['title_ko'],row['translation_status'],row['kind']), ('BREAKING: Senate vote',None,'PENDING','BREAKING'))
+                    self.assertEqual(value['items'], [])
                     before = json.dumps(value,ensure_ascii=False)
                 finally:
                     release.set()

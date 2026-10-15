@@ -12,6 +12,7 @@ import json
 import re
 import threading
 import time
+import unicodedata
 from urllib.parse import quote, urlsplit
 import xml.etree.ElementTree as ET
 
@@ -40,6 +41,31 @@ def _clean(text):
 
 def _fetch(url):
     return zero_discovery._get(url, FEED_LIMIT)
+
+
+def _language(text):
+    """Conservative script gate, including cached translations; not semantic language detection."""
+    if not isinstance(text, str) or not text.strip():
+        return None
+    for char in text:
+        if (char in '<>\ufffd' or unicodedata.category(char)[0] in 'MC'
+                or (char.isalpha() and not ('A' <= char <= 'Z' or 'a' <= char <= 'z' or '가' <= char <= '힣'))):
+            return None
+    return 'ko' if re.search(r'[가-힣]', text) else 'en' if re.search(r'[A-Za-z]', text) else None
+
+
+def _supported_feed_languages(*elements):
+    """Explicit declarations must be KR/EN; absent metadata relies on the fixed KR/EN query locale."""
+    for element in elements:
+        if element is None:
+            continue
+        declared = [element.get('{http://www.w3.org/XML/1998/namespace}lang'),
+                    element.findtext('language'),
+                    element.findtext('{http://purl.org/dc/elements/1.1/}language')]
+        if any(value is not None and not re.fullmatch(r'(?:en|ko)(?:-[a-z0-9]{1,8})*', value.strip(), re.I)
+               for value in declared):
+            return False
+    return True
 
 
 def classify(title):
@@ -84,12 +110,17 @@ def _collect(now, *, fetch, translate, cached, deadline, snapshot):
                 failed.append(market)
             continue
         try:
-            root = zero_discovery.parse_rss(fetch(f'https://news.google.com/rss/search?q={quote(query)}&{parameters}'), FEED_LIMIT)
+            body = fetch(f'https://news.google.com/rss/search?q={quote(query)}&{parameters}')
+            zero_discovery.parse_rss(body, FEED_LIMIT)
+            # The shared RSS adapter omits language declarations; retain the validated original XML.
+            root = ET.fromstring(body)
         except (OSError, ValueError, ET.ParseError):
             if market not in failed:
                 failed.append(market)
             continue
         for item in root.findall('./channel/item')[:200]:
+            if not _supported_feed_languages(root, root.find('channel'), item, item.find('title'), item.find('source')):
+                continue
             link, title, source = _clean(item.findtext('link')), _clean(item.findtext('title')), _clean(item.findtext('source'))
             try:
                 published = parsedate_to_datetime(item.findtext('pubDate') or '')
@@ -106,33 +137,39 @@ def _collect(now, *, fetch, translate, cached, deadline, snapshot):
                 continue
             if title.endswith(' - ' + source):
                 title = title[:-len(source) - 3]
-            if not title:
+            if _language(title) is None:
                 continue
             pool.append({'market': market, 'title': title, 'publisher': source, 'url': link[:2000], 'published_at': published.astimezone(timezone.utc).isoformat(), 'kind': classify(title)})
     items = dedupe(pool)[:LIMIT]
     for row in items:
         row['title_ko'] = None
-        row['translation_status'] = 'PENDING' if zero_discovery.is_public_english(row) else 'NOT_APPLICABLE'
-    # Serialized before optional translation: the returned fallback never shares mutable rows.
-    snapshot.set_result(json.dumps({'schema_version': 1, 'scope': 'PUBLIC_POLITICS_ECONOMY_HEADLINES',
-                                   'checked_at': now.astimezone(timezone.utc).isoformat(), 'items': items, 'failed': failed, 'translation_diagnostic': zero_discovery.get_diagnostic()},
-                                  ensure_ascii=False).encode('utf-8'))
-    attempts = 0
-    for row in items:
-        if not zero_discovery.is_public_english(row):
+        row['translation_status'] = 'NOT_APPLICABLE' if _language(row['title']) == 'ko' else 'PROVIDER_UNAVAILABLE'
+        if row['translation_status'] == 'NOT_APPLICABLE' or not zero_discovery.is_public_english(row):
             continue
         found, title_ko = cached(row)
-        if found:
-            row['translation_status'] = 'PROVIDER_UNAVAILABLE'
-        if not found and attempts < MAX_TRANSLATIONS and time.monotonic() < deadline:
-            attempts += 1
-            row['translation_status'] = 'PROVIDER_UNAVAILABLE'
-            title_ko = translate(row)
-        row['title_ko'] = title_ko
-        if title_ko:
-            row['translation_status'] = 'TRANSLATED'
-    return {'schema_version': 1, 'scope': 'PUBLIC_POLITICS_ECONOMY_HEADLINES', 'checked_at': now.astimezone(timezone.utc).isoformat(),
-            'items': items, 'failed': failed, 'translation_diagnostic': zero_discovery.get_diagnostic()}
+        if not found:
+            row['translation_status'] = 'PENDING'
+        elif _language(title_ko) == 'ko':
+            row['title_ko'], row['translation_status'] = title_ko.strip(), 'TRANSLATED'
+
+    def result():
+        return {'schema_version': 1, 'scope': 'PUBLIC_POLITICS_ECONOMY_HEADLINES',
+                'checked_at': now.astimezone(timezone.utc).isoformat(),
+                'items': [row for row in items if row['translation_status'] in ('NOT_APPLICABLE', 'TRANSLATED')],
+                'failed': failed, 'translation_diagnostic': zero_discovery.get_diagnostic()}
+
+    # Cache hits are available even if a new translation stalls; never snapshot untranslated English.
+    snapshot.set_result(json.dumps(result(), ensure_ascii=False).encode('utf-8'))
+    attempts = 0
+    for row in items:
+        if row['translation_status'] != 'PENDING' or attempts >= MAX_TRANSLATIONS or time.monotonic() >= deadline:
+            continue
+        attempts += 1
+        row['translation_status'] = 'PROVIDER_UNAVAILABLE'
+        title_ko = translate(row)
+        if _language(title_ko) == 'ko':
+            row['title_ko'], row['translation_status'] = title_ko.strip(), 'TRANSLATED'
+    return result()
 
 
 def collect(now=None, *, fetch=_fetch, translate=zero_discovery.translate_public_headline,

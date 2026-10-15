@@ -5,7 +5,7 @@
 .mts-subnav #refresh{margin-left:auto;color:#1b64da;background:#e8f1ff;padding:4px 8px;min-width:36px}
 .mts-subnav #refresh svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
 html[data-zero-view=portfolio] .page-header,html[data-zero-view=research] .page-header,html[data-zero-view=workbench] .page-header{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;margin:0}
-@media(max-width:767px){.mts-subnav #refresh span{display:none}}
+@media(max-width:767px){.mts-subnav{max-width:100%;overflow-x:auto}.mts-subnav button{flex-shrink:0}.mts-subnav #refresh span{display:none}}
 html #portfolio-view .portfolio-summary{padding:20px 24px}
 html .account-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:16px 0}
 html .account-metrics>div,html .account-metrics .total-metric,html .account-metrics .performance-metric,html .account-metrics .secondary-metric:last-child{grid-column:auto}
@@ -109,4 +109,11 @@ html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .stock-title{fon
 html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .stock-meta{margin:0;font-size:11px}
 html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .stock-tab-pane{padding-top:4px}
 html #stock-workbench:has(#stock-tab-order[aria-selected=true]) .mts-orders{margin:0;padding:8px}
+html #comparison-view .comparison-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+html #comparison-view .comparison-cards>.panel{min-width:0;margin:0;padding:16px}
+html #comparison-view .benchmark-metrics{grid-template-columns:1fr}
+html #comparison-view .comparison-cards h2{font-size:18px;line-height:1.4}
+html #comparison-view .comparison-cards p,html #comparison-view .comparison-cards dd{overflow-wrap:anywhere}
+html #comparison-view .period-comparison{margin-top:12px}
+@media(max-width:1023px){html #comparison-view .comparison-cards{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.mts-subnav button,.mobile-tab,.top-nav-item{transition:none}}

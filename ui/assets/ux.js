@@ -10,7 +10,7 @@
     [...wanted].sort((a, b) => a - b).forEach((n) => { if (n - previous > 1) numbers.push(null); numbers.push(n); previous = n; });
     return {pages, current, start: current * size, end: Math.min(count, current * size + size), numbers};
   }
-  function pageSize(kind,width){const mobile=width<768;return kind==='research'?10:kind==='cards'?mobile?2:4:kind==='news'?mobile?2:4:mobile?4:8;}
+  function pageSize(kind,width){const mobile=width<768;return kind==='research'?(mobile?6:10):kind==='cards'?mobile?2:4:kind==='news'?(mobile?1:4):kind==='macro'||kind==='reports'?(mobile?2:4):mobile?4:8;}
   function researchControlsPage(doc){const controls=doc.querySelector?.('#research-view .table-toolbar .stock-analytics-controls'),target=doc.getElementById('research-options');if(controls&&target)target.append(controls);}
   if (typeof module !== 'undefined' && module.exports) module.exports = {pageModel,pageSize,researchControlsPage};
   if (typeof document === 'undefined') return;
@@ -61,7 +61,7 @@
   const registered=new WeakSet();
   function registerPagers(){
     researchControlsPage(document);
-    [['news-list','news'],['macro-list','list'],['research-ranks','research'],['source-library-list','list'],['holding-list','research'],['holdings-body','research'],['team-grid','cards'],['office-directory','cards']].forEach(([id,kind])=>{
+    [['news-list','news'],['macro-list','macro'],['research-ranks','research'],['source-library-list','reports'],['holding-list','research'],['holdings-body','research'],['team-grid','cards'],['office-directory','cards']].forEach(([id,kind])=>{
       const container=document.getElementById(id);if(container&&!registered.has(container)){registered.add(container);pager(container,width=>pageSize(kind,width));}
     });
     document.querySelectorAll?.('.office-directory-members').forEach(container=>{if(!registered.has(container)){registered.add(container);pager(container,width=>pageSize('cards',width));}});

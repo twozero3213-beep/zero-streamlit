@@ -78,7 +78,7 @@
 <main id="main" class="zero-main-viewport">
   <header class="page-header"><div><h1 id="page-title" tabindex="-1">내 자산</h1><p id="page-subtitle">1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.</p></div></header>
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
-  <nav class="mts-subnav" aria-label="투자 화면"><button type="button" data-view="portfolio" aria-label="내 자산" class="active">자산</button><button type="button" data-view="research" aria-label="주식 탐색">탐색</button><button type="button" data-view="workbench" aria-label="종목과 주문">종목</button><button type="button" data-view="analysis">시장</button><button type="button" data-view="audit">감사</button><button id="refresh" class="primary-button" type="button" aria-label="자료 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M18 17a7 7 0 0 1-12 1l-2-3"/></svg><span>시세 새로고침</span></button></nav>
+  <nav class="mts-subnav" aria-label="투자 화면"><button type="button" data-view="portfolio" aria-label="내 자산" class="active">자산</button><button type="button" data-view="comparison" aria-label="ZERO · TQQQ · S&P 500 비교">비교</button><button type="button" data-view="research" aria-label="주식 탐색">탐색</button><button type="button" data-view="workbench" aria-label="종목과 주문">종목</button><button type="button" data-view="analysis">시장</button><button type="button" data-view="audit">감사</button><button id="refresh" class="primary-button" type="button" aria-label="자료 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M18 17a7 7 0 0 1-12 1l-2-3"/></svg><span>시세 새로고침</span></button></nav>
   <section id="analysis-view" class="view" hidden><section class="panel analysis-panel" aria-label="시장 브리핑"><div class="analysis-heading"><h2>오늘의 시장</h2><button type="button" id="analysis-retry" class="secondary-button">다시 확인</button></div><p id="analysis-status" class="muted-note" role="status">시장 탭을 열면 확인합니다.</p><div id="analysis-content"></div></section></section>
   <section id="audit-view" class="view" hidden><section id="account-audit" class="panel" aria-label="계좌 회계 감사"></section></section>
   <section id="portfolio-view" class="view">
@@ -117,36 +117,7 @@
       <p id="risk-basis" class="muted-note">버튼을 누르면 보유 종목과 S&amp;P 500(SPY)의 5년 일별 종가로 계산합니다. 참고 자료일 뿐 검증된 백테스트가 아니며, 어떤 값도 적용되지 않습니다. 손실 한도는 대표님이 정합니다.</p>
       <div id="risk-table" class="risk-table"></div>
     </section>
-    <section class="panel period-comparison" aria-labelledby="period-title"><h2 id="period-title">대표님의 참고 비교 기간</h2><p>첫 매수 기록 없이도 ETF 가격수익률을 살펴볼 수 있어요. 실제 계좌 성과와 별개이며 배당·세금·수수료·환율을 제외합니다.</p><label for="comparison-range">비교 기간</label> <select id="comparison-range"><option value="1Y">최근 1년</option><option value="5Y">최근 5년</option></select> <button id="comparison-run" type="button" class="secondary-button">S&amp;P 500(SPY) · TQQQ 참고 비교</button><div id="comparison-result" class="muted-note" role="status" aria-live="polite"></div></section><section id="benchmark-panel" class="panel benchmark-panel" aria-labelledby="benchmark-title">
-      <div class="panel-heading"><div><h2 id="benchmark-title">S&amp;P 500에 투자했다면</h2><p>지수 가격으로 계산한 참고값 · 배당·세금·수수료·환전 비용 제외</p></div></div>
-      <p id="benchmark-basis" class="muted-note">첫 매수 기록과 지수·환율의 기준일을 확인한 뒤 표시합니다.</p>
-      <div id="benchmark-empty" class="small-empty">비교 자료를 아직 확인하지 못했습니다.</div>
-      <div id="benchmark-content" hidden>
-        <dl class="benchmark-metrics">
-          <div><dt>달러 기준 지수 가격수익률</dt><dd id="benchmark-price-return">—</dd><dd id="benchmark-price-period" class="metric-note">기준일 미확인</dd></div>
-          <div><dt>환율 고정 참고 평가액</dt><dd id="benchmark-fixed-value">—</dd><dd id="benchmark-fixed-gain" class="metric-note">참고 평가이익 미확인</dd></div>
-          <div><dt>환율 반영 원화 참고 평가액</dt><dd id="benchmark-krw-value">—</dd><dd id="benchmark-krw-return" class="metric-note">수익률 미확인</dd><dd id="benchmark-fx-period" class="metric-note">공식 공통 관측일 미확인</dd></div>
-        </dl>
-        <p class="muted-note">달러 기준 지수가 올라도 달러 값이 원화 대비 내려가면, 원화 기준 이익은 작아지거나 손실이 될 수 있습니다.</p>
-        <details class="source-details"><summary>시작 기준·계산 가정과 출처</summary><p id="benchmark-assumptions" class="muted-note"></p><p class="muted-note">실제 ETF의 배당·비용·세후 수익률과 다릅니다. 보유종목 평가수익률과 기준일·계산 범위가 달라 초과수익 비교를 하지 않습니다. ZERO 계좌 누적수익률은 원장 대조 후 확인합니다.</p><div id="benchmark-sources" class="benchmark-sources"></div></details>
-      </div>
-    </section>
-    <section id="tqqq-panel" class="panel benchmark-panel" aria-labelledby="tqqq-title">
-      <div class="panel-heading"><div><h2 id="tqqq-title">1억원을 TQQQ에 투자했다면</h2><p>실제 ETF 종가에 따른 별도 참고 가정 · 배당·수수료·세금·환전 비용 제외</p></div></div>
-      <p id="tqqq-basis" class="muted-note">기존 첫 매수 기록과 TQQQ 종가·공식 환율의 기준일을 확인한 뒤 표시합니다.</p>
-      <div id="tqqq-empty" class="small-empty" role="status" aria-live="polite">공개 비교 자료를 아직 확인하지 못했습니다.</div>
-      <div id="tqqq-content" hidden>
-        <dl class="benchmark-metrics">
-          <div><dt>달러 기준 ETF 가격수익률</dt><dd id="tqqq-price-return">근거 없음</dd><dd id="tqqq-price-period" class="metric-note">미국 거래일 미확인</dd></div>
-          <div><dt>환율 고정 참고 평가액</dt><dd id="tqqq-fixed-value">근거 없음</dd><dd id="tqqq-fixed-gain" class="metric-note">참고 차액 미확인</dd></div>
-          <div><dt>공식 환율 반영 원화 참고 평가액</dt><dd id="tqqq-krw-value">근거 없음</dd><dd id="tqqq-krw-return" class="metric-note">참고 수익률 미확인</dd><dd id="tqqq-fx-period" class="metric-note">공식 공통 관측일 미확인</dd></div>
-        </dl>
-        <p class="muted-note">액면분할을 반영한 실제 ETF 종가를 사용합니다. 펀드 운영비용의 영향은 ETF 가격에 이미 반영돼 있습니다. 배당 재투자·개인 거래 수수료·세금·환전 비용은 반영하지 않습니다.</p>
-        <p class="muted-note">TQQQ는 Nasdaq-100의 하루 수익률 3배를 목표로 합니다. 매일 달라지는 수익률이 누적되므로 장기 수익률이 지수의 3배가 된다는 보장은 없습니다.</p>
-        <p class="muted-note">출처 자료에 기반한 참고 계산이며 독립 검증은 미완료입니다. ZERO의 TQQQ 보유·실제 이익이나 기존 자산과 동일 기간의 성과를 뜻하지 않습니다.</p>
-        <details class="source-details"><summary>시작 기준·가격·환율의 확인 시각과 출처</summary><p id="tqqq-assumptions" class="muted-note"></p><div id="tqqq-sources" class="benchmark-sources"></div></details>
-      </div>
-    </section>
+
     <div class="overview-layout">
       <section class="panel asset-map-panel" aria-labelledby="map-title">
         <div class="panel-heading"><div><h2 id="map-title">종목별 보유 비중</h2><p>원화 환산 보유 평가액 기준 · 현금 제외</p></div><div class="chart-switch" role="group" aria-label="보유 비중 차트 방식"><button class="active" data-chart="bars" aria-pressed="true">막대 비교</button><button data-chart="map" aria-pressed="false">면적 지도</button></div></div>
@@ -171,6 +142,45 @@
     <h2 id="plaza-title">실시간 광장</h2>
     <p id="plaza-status" role="status">닉네임으로 로그인한 뒤 기존 공용 광장에 참여하세요.</p>
     <button id="plaza-open" type="button" class="primary-button">광장 입장</button>
+  </section>
+  <section id="comparison-view" class="view" hidden>
+    <section id="comparison-dashboard" class="comparison-dashboard" aria-labelledby="comparison-title">
+      <h2 id="comparison-title" class="sr-only">ZERO · 전액 TQQQ · S&amp;P 500 참고 비교</h2>
+      <div class="comparison-cards">
+        <section id="comparison-zero" class="panel" aria-label="ZERO 참고 원장"></section>
+        <section id="tqqq-panel" class="panel benchmark-panel" aria-labelledby="tqqq-title">
+      <div class="panel-heading"><div><h2 id="tqqq-title">1억원을 TQQQ에 투자했다면</h2><p>실제 ETF 종가에 따른 별도 참고 가정 · 배당·수수료·세금·환전 비용 제외</p></div></div>
+      <p id="tqqq-basis" class="muted-note">기존 첫 매수 기록과 TQQQ 종가·공식 환율의 기준일을 확인한 뒤 표시합니다.</p>
+      <div id="tqqq-empty" class="small-empty" role="status" aria-live="polite">공개 비교 자료를 아직 확인하지 못했습니다.</div>
+      <div id="tqqq-content" hidden>
+        <dl class="benchmark-metrics">
+          <div><dt>달러 기준 ETF 가격수익률</dt><dd id="tqqq-price-return">근거 없음</dd><dd id="tqqq-price-period" class="metric-note">미국 거래일 미확인</dd></div>
+          <div><dt>환율 고정 참고 평가액</dt><dd id="tqqq-fixed-value">근거 없음</dd><dd id="tqqq-fixed-gain" class="metric-note">참고 차액 미확인</dd></div>
+          <div><dt>공식 환율 반영 원화 참고 평가액</dt><dd id="tqqq-krw-value">근거 없음</dd><dd id="tqqq-krw-return" class="metric-note">참고 수익률 미확인</dd><dd id="tqqq-fx-period" class="metric-note">공식 공통 관측일 미확인</dd></div>
+        </dl>
+        <p class="muted-note">액면분할을 반영한 실제 ETF 종가를 사용합니다. 펀드 운영비용의 영향은 ETF 가격에 이미 반영돼 있습니다. 배당 재투자·개인 거래 수수료·세금·환전 비용은 반영하지 않습니다.</p>
+        <p class="muted-note">TQQQ는 Nasdaq-100의 하루 수익률 3배를 목표로 합니다. 매일 달라지는 수익률이 누적되므로 장기 수익률이 지수의 3배가 된다는 보장은 없습니다.</p>
+        <p class="muted-note">출처 자료에 기반한 참고 계산이며 독립 검증은 미완료입니다. ZERO의 TQQQ 보유·실제 이익이나 기존 자산과 동일 기간의 성과를 뜻하지 않습니다.</p>
+        <details class="source-details"><summary>시작 기준·가격·환율의 확인 시각과 출처</summary><p id="tqqq-assumptions" class="muted-note"></p><div id="tqqq-sources" class="benchmark-sources"></div></details>
+      </div>
+    </section>
+        <section id="benchmark-panel" class="panel benchmark-panel" aria-labelledby="benchmark-title">
+      <div class="panel-heading"><div><h2 id="benchmark-title">S&amp;P 500에 투자했다면</h2><p>지수 가격으로 계산한 참고값 · 배당·세금·수수료·환전 비용 제외</p></div></div>
+      <p id="benchmark-basis" class="muted-note">첫 매수 기록과 지수·환율의 기준일을 확인한 뒤 표시합니다.</p>
+      <div id="benchmark-empty" class="small-empty">비교 자료를 아직 확인하지 못했습니다.</div>
+      <div id="benchmark-content" hidden>
+        <dl class="benchmark-metrics">
+          <div><dt>달러 기준 지수 가격수익률</dt><dd id="benchmark-price-return">—</dd><dd id="benchmark-price-period" class="metric-note">기준일 미확인</dd></div>
+          <div><dt>환율 고정 참고 평가액</dt><dd id="benchmark-fixed-value">—</dd><dd id="benchmark-fixed-gain" class="metric-note">참고 평가이익 미확인</dd></div>
+          <div><dt>환율 반영 원화 참고 평가액</dt><dd id="benchmark-krw-value">—</dd><dd id="benchmark-krw-return" class="metric-note">수익률 미확인</dd><dd id="benchmark-fx-period" class="metric-note">공식 공통 관측일 미확인</dd></div>
+        </dl>
+        <p class="muted-note">달러 기준 지수가 올라도 달러 값이 원화 대비 내려가면, 원화 기준 이익은 작아지거나 손실이 될 수 있습니다.</p>
+        <details class="source-details"><summary>시작 기준·계산 가정과 출처</summary><p id="benchmark-assumptions" class="muted-note"></p><p class="muted-note">실제 ETF의 배당·비용·세후 수익률과 다릅니다. 보유종목 평가수익률과 기준일·계산 범위가 달라 초과수익 비교를 하지 않습니다. ZERO 계좌 누적수익률은 원장 대조 후 확인합니다.</p><div id="benchmark-sources" class="benchmark-sources"></div></details>
+      </div>
+    </section>
+      </div>
+      <section class="panel period-comparison" aria-labelledby="period-title"><h2 id="period-title">대표님의 참고 비교 기간</h2><p>첫 매수 기록 없이도 ETF 가격수익률을 살펴볼 수 있어요. 실제 계좌 성과와 별개이며 배당·세금·수수료·환율을 제외합니다.</p><label for="comparison-range">비교 기간</label> <select id="comparison-range"><option value="1Y">최근 1년</option><option value="5Y">최근 5년</option></select> <button id="comparison-run" type="button" class="secondary-button">S&amp;P 500(SPY) · TQQQ 참고 비교</button><div id="comparison-result" class="muted-note" role="status" aria-live="polite"></div></section>
+    </section>
   </section>
   <section id="lobby-view" class="view" hidden>
     <section class="lobby" aria-labelledby="lobby-title">

@@ -172,6 +172,7 @@
     if (plaza.raf) cancelAnimationFrame(plaza.raf); plaza.raf = 0; plaza.last = 0;
     clearTimeout(plaza.bubbleTimer); plaza.bubbleTimer = null; plaza.bubbles.clear();
     $('lounge-bubbles')?.replaceChildren();
+    if ($('lounge-count')) $('lounge-count').textContent = '접속 인원 확인 중';
   }
   function closeSocket() {
     clearInterval(heartbeat); clearTimeout(reconnect); heartbeat = null; reconnect = null; stopPlaza();
@@ -184,8 +185,9 @@
     updatePet(person, {w: 100, h: 100});
   }
   function roomPeople(rows) {
-    const people = Array.isArray(rows) ? rows.filter(row => typeof row.nick === 'string' && !blocked(row.nick)) : [];
-    $('lounge-count').textContent = '광장 ' + people.length + '명';
+    const online = new Map((Array.isArray(rows) ? rows : []).filter(row => typeof row?.nick === 'string' && row.nick && Number.isFinite(row.x) && Number.isFinite(row.y) && row.x >= 0 && row.x <= 100 && row.y >= 0 && row.y <= 100).map(row => [row.nick, row]));
+    $('lounge-count').textContent = '실제 접속 ' + online.size + '명';
+    const people = [...online.values()].filter(row => !blocked(row.nick));
     const keep = new Set();
     for (const row of people) {
       if (!Number.isFinite(row.x) || !Number.isFinite(row.y)) continue;
@@ -193,7 +195,7 @@
       if (!person) {
         const el = button('', () => { if (row.nick !== plaza.nick) { window.ZERO?.navigate?.('lobby');closeLounge(); U()?.visit(row.nick); } }, 'lounge-person'), fig = make('span', 'lounge-person-figure');
         let hue = 20; for (const char of row.nick) hue = (hue * 31 + char.charCodeAt(0)) % 360;
-        fig.style.setProperty('--person-hue', String(hue)); fig.append(make('i', 'head'), make('i', 'body'), make('i', 'legs'));
+        fig.style.setProperty('--person-hue', String(hue)); fig.append(make('i', 'head'), make('i', 'body'), make('i', 'arms'), make('i', 'legs'));
         el.append(fig, make('span', 'lounge-person-name', row.nick)); el.title = row.nick === plaza.nick ? '내 캐릭터 · 바닥을 눌러 이동' : '눌러서 사무실 방문';
         el.dataset.own = String(row.nick === plaza.nick); $('lounge-people').append(el);
         person = {el, pos: {x: row.x, y: row.y}, confirmed: {x: row.x, y: row.y}, direction: row.direction, seq: -1}; plaza.people.set(row.nick, person);
@@ -220,11 +222,16 @@
     for (const [nick, bubble] of plaza.bubbles) {
       const person = plaza.people.get(nick);
       if (bubble.until <= now || !person || blocked(nick)) { plaza.bubbles.delete(nick); continue; }
-      rows.push({...bubble, nick, x: person.pos.x, y: person.pos.y});
+      rows.push({...bubble, nick, x: person.pos.x, y: person.pos.y, headroom: Math.max(64, person.el.offsetHeight + 8)});
     }
     const laid = bubblePositions(rows, now); layer.replaceChildren();
     const width = layer.clientWidth, height = layer.clientHeight, boxes = [];
-    for (const row of laid) {
+    const avatars = [...plaza.people.values()].map(person => {
+      const x = person.pos.x / 100 * width, y = person.pos.y / 100 * height, w = person.el.offsetWidth, h = person.el.offsetHeight;
+      return {left: x - w / 2, right: x + w / 2, top: y - h, bottom: y};
+    });
+    // On a short floor, give the newest speaker the first safe bubble position.
+    for (const row of height < 260 ? laid.reverse() : laid) {
       const bubble = make('span', 'plaza-bubble', row.text); layer.append(bubble);
       const w = Math.min(width, bubble.offsetWidth || 150), h = bubble.offsetHeight || 48;
       const x = row.x / 100 * width, y = row.y / 100 * height;
@@ -232,9 +239,9 @@
       for (const offset of [0, -w, w]) {
         for (let lane = 0; lane < 5; lane++) {
           const left = Math.max(0, Math.min(width - w, x - w / 2 + offset));
-          const top = Math.max(0, Math.min(height - h, y - 64 - (row.lane + lane) * (h + 6)));
+          const top = Math.max(0, Math.min(height - h, y - row.headroom - h - (row.lane + lane) * (h + 6)));
           const candidate = {left, top, right: left + w, bottom: top + h};
-          if (!boxes.some(other => candidate.left < other.right + 4 && candidate.right + 4 > other.left && candidate.top < other.bottom + 4 && candidate.bottom + 4 > other.top)) { box = candidate; break; }
+          if (![...boxes, ...avatars].some(other => candidate.left < other.right + 4 && candidate.right + 4 > other.left && candidate.top < other.bottom + 4 && candidate.bottom + 4 > other.top)) { box = candidate; break; }
         }
         if (box) break;
       }
@@ -244,13 +251,17 @@
     if (laid.length) plaza.bubbleTimer = setTimeout(paintBubbles, Math.max(1, Math.min(...laid.map(row => row.until)) - now));
   }
   function appendChat(row, live = false) {
-    if (blocked(row.nick) || !row?.id || typeof row.text !== 'string') return;
+    if (!row?.id || typeof row.nick !== 'string' || blocked(row.nick) || typeof row.text !== 'string' || !row.text.trim() || row.text.length > 300) return;
     const log = $('lounge-log'); if (log.querySelector('[data-chat-id="' + CSS.escape(String(row.id)) + '"]')) return;
     const p = make('p', 'lounge-message'); p.dataset.chatId = row.id;
     p.append(button(row.nick, () => {window.ZERO?.navigate?.('lobby');closeLounge(); U()?.visit(row.nick); }, 'social-nick'), make('small', '', stamp(row.created_at)), make('span', 'social-text', row.text));
     p.append(button('신고', () => { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: 'report', id: row.id, reason: '부적절한 내용'})); }));
     log.append(p); while (log.children.length > 200) log.firstElementChild.remove(); log.scrollTop = log.scrollHeight;
-    if (live) { plaza.bubbles.set(row.nick, {text: row.text, until: Date.now() + 6500}); paintBubbles(); }
+    if (live) {
+      plaza.bubbles.delete(row.nick); plaza.bubbles.set(row.nick, {text: row.text, until: Date.now() + 6500});
+      while (plaza.bubbles.size > 8) plaza.bubbles.delete(plaza.bubbles.keys().next().value);
+      paintBubbles();
+    }
   }
   function plazaDirection() {
     const has = (...keys) => keys.some(key => plaza.keys.has(key));
@@ -338,7 +349,18 @@
       const scene = make('div', 'plaza-stage'); scene.id = 'plaza-stage'; scene.tabIndex = 0; scene.setAttribute('aria-label', '광장 · 바닥을 누르거나 방향키로 내 캐릭터 이동');
       const people = make('div', 'lounge-people'); people.id = 'lounge-people';
       const bubbles = make('div', 'plaza-bubbles'); bubbles.id = 'lounge-bubbles';
-      scene.append(make('span', 'plaza-sign', 'ZERO PLAZA'), people, bubbles);
+      const interior = make('div', 'plaza-interior'); interior.setAttribute('aria-hidden', 'true');
+      const wall = make('div', 'plaza-wall'), board = make('div', 'plaza-exchange-board');
+      board.append(make('b', 'plaza-sign', 'ZERO 거래소'), make('span', 'plaza-ticker', 'KOSPI · NASDAQ · ETF  /  시세는 투자 화면에서 확인'));
+      wall.append(board, make('span', 'plaza-wall-light plaza-wall-light-left'), make('span', 'plaza-wall-light plaza-wall-light-right'));
+      const desk = make('div', 'plaza-desk'); desk.append(make('i', 'plaza-terminal'), make('span', '', '안내 데스크'), make('i', 'plaza-terminal'));
+      interior.append(wall, make('div', 'plaza-floor-mark', 'ZERO'), desk, make('div', 'plaza-planter plaza-planter-left'), make('div', 'plaza-planter plaza-planter-right'));
+      scene.append(interior);
+      for (const [view, label] of [['lobby', '사무실'], ['analysis', '시장 보기'], ['community', '게시판']]) {
+        const door = button(label, () => { closeLounge(); window.ZERO?.navigate?.(view); }, 'plaza-door plaza-door-' + view);
+        door.setAttribute('aria-label', label + '로 이동'); scene.append(door);
+      }
+      scene.append(people, bubbles);
       scene.addEventListener('pointerdown', event => {
         if (event.target.closest?.('button') || !plaza.ready) return;
         const box = scene.getBoundingClientRect(); if (!box.width || !box.height) return;
@@ -355,7 +377,26 @@
       const log = make('div', 'lounge-log'); log.id = 'lounge-log'; log.setAttribute('role', 'log'); log.setAttribute('aria-live', 'polite');
       const form = make('form', 'lounge-chat-form'), input = make('input'); input.id = 'lounge-input'; input.maxLength = 300; input.placeholder = '광장에 공개할 이야기'; input.setAttribute('aria-label', '광장 메시지'); input.required = true;
       const send = make('button', 'primary-button', '보내기'); send.id = 'lounge-send'; send.type = 'submit'; form.append(input, send);
-      form.addEventListener('submit', event => { event.preventDefault(); const text = input.value.trim(); if (text && socket?.readyState === WebSocket.OPEN && !send.disabled) { socket.send(JSON.stringify({type: 'message', text})); input.value = ''; } });
+      let composing = false, imeEnter = false, lastChatAt = -Infinity;
+      input.addEventListener('compositionstart', () => { composing = true; });
+      input.addEventListener('compositionend', () => { composing = false; });
+      input.addEventListener('focus', () => { plaza.keys.clear(); plaza.target = null; });
+      input.addEventListener('keydown', event => {
+        if (event.key !== 'Enter') return;
+        if (composing || event.isComposing || event.keyCode === 229) {
+          // Let the IME commit text, but reject its implicit form submission.
+          imeEnter = true; setTimeout(() => { imeEnter = false; }, 0); return;
+        }
+        event.preventDefault(); event.stopPropagation?.();
+        if (!event.repeat) { imeEnter = false; form.requestSubmit(); }
+      });
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const text = input.value.trim();
+        if (composing || imeEnter || !text || text.length > 300 || socket?.readyState !== WebSocket.OPEN || send.disabled) return;
+        if (Date.now() - lastChatAt < 2000) { status.textContent = errors.CHAT_TOO_FAST; return; }
+        socket.send(JSON.stringify({type: 'message', text})); lastChatAt = Date.now(); input.value = '';
+      });
       lounge.append(loading, status, count, scene, pad, make('p', 'muted-note', '캐릭터 닉네임을 누르면 사무실을 방문해요. 대화는 참가자에게 공개됩니다. 계좌번호·연락처·복구 코드를 올리지 마세요.'), log, form);
       lounge.addEventListener('close', () => {if(lounge.open)return;closeLounge();document.dispatchEvent(new CustomEvent('zero-plaza-closed'));});
       lounge.addEventListener('click',event=>{if(event.target!==lounge)return;const box=lounge.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)lounge.close();});
@@ -364,7 +405,7 @@
     closeSocket(); active = true; retries = 0; loungeGeneration++; lounge.showModal(); connectLounge(); return true;
   }
   window.addEventListener('keydown', event => {
-    if (!active || !lounge?.open || event.ctrlKey || event.metaKey || event.altKey || event.target.closest?.('input, textarea, select, button') || event.key === 'Tab' || event.key === 'Escape') return;
+    if (!active || !lounge?.open || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.target.isContentEditable || event.target.closest?.('input, textarea, select, button') || event.key === 'Tab' || event.key === 'Escape') return;
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'].includes(event.key)) return;
     event.preventDefault(); plaza.target = null; plaza.keys.add(event.key); startPlazaMove();
   });

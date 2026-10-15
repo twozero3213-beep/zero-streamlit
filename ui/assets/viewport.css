@@ -1,4 +1,4 @@
-/* Reserve navigation space before sizing content; long content remains reachable in a dialog. */
+/* Keep navigation fixed while actual content and list paging remain visible in each tab. */
 :root { --header-h:56px; --footer-h:48px; --zero-header:var(--header-h); --zero-footer:var(--footer-h); --font-title:clamp(1rem,1.4vw,1.25rem); --font-body:clamp(.8125rem,1vw,.9375rem); --font-caption:clamp(.75rem,.85vw,.8125rem); --row-h:38px; --card-pad:12px; --zero-canvas:min(360px,40dvh); }
 html, body, .stApp { height:100dvh!important; max-height:100dvh!important; min-height:0; margin:0; padding:0; overflow:hidden!important; }
 html .global-header { height:var(--zero-header); min-height:0; padding:4px 24px; position:relative; }
@@ -11,18 +11,18 @@ html main > .view:not([hidden]) { flex:1; min-height:0; overflow:hidden; margin:
 html main > footer { position:fixed; left:194px; right:0; bottom:0; height:var(--zero-footer); padding:8px 24px; align-items:center; background:var(--surface); border-top:1px solid var(--line); font-size:12px; }
 html .mobile-tabbar { display:none; }
 .viewport-paged:not([hidden]) { display:flex; flex-direction:column; gap:8px; }
-.viewport-pages-body { flex:1; min-height:0; overflow:hidden; position:relative; }
+.viewport-pages-body { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; position:relative; scrollbar-width:thin; }
 .viewport-section-page { max-width:100%; margin-top:0!important; }
 .viewport-section-page.viewport-page-away { display:none!important; }
 .viewport-controls { flex:none; display:flex; align-items:center; gap:8px; min-height:44px; }
 .viewport-controls button,.viewport-controls select { min-height:44px; max-width:100%; }
 .viewport-controls select { flex:1; min-width:0; padding:6px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); }
-.viewport-detail { white-space:nowrap; }
-.viewport-content-dialog { width:min(1100px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); padding:16px; border:0; border-radius:14px; overflow:auto; }
-.viewport-content-dialog::backdrop { background:#10233899; }
-.viewport-dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; position:sticky; top:-16px; padding:8px 0; background:var(--surface); z-index:1; }
-.viewport-content-dialog .viewport-section-page { display:block!important; max-height:none; overflow:visible; }
-.viewport-content-dialog .viewport-pages-body { overflow:visible; }
+
+
+
+
+
+
 html #office-map { height:var(--zero-canvas); min-height:min(200px,var(--zero-canvas)); max-height:var(--zero-canvas); }
 html #lobby-view .lobby-scroll { flex:none; height:var(--zero-canvas); min-height:0; }
 html #lobby-view .lobby-scroll .lobby-stage { height:100%; min-height:0; max-height:var(--zero-canvas); }
@@ -55,9 +55,9 @@ html .team-grid,html .office-directory-members { grid-template-columns:repeat(4,
  html main,html[data-zero-view] main {padding-top:2px;padding-bottom:2px;gap:2px;}
 }
 
-.viewport-overflow-preview {flex:1;min-height:0;padding:20px;background:var(--surface);border-radius:var(--radius);}
-.viewport-overflow-preview p {margin-top:12px;}
-.viewport-content-dialog .panel,.viewport-content-dialog .table-scroll,.viewport-content-dialog .stock-tab-pane,.viewport-content-dialog .company-result,.viewport-content-dialog .desk-news-list,.viewport-content-dialog .desk-indicators {max-height:none!important;overflow:visible!important;}
+
+
+
 
 html body {font-size:var(--font-body);}
 .zero-main-viewport {height:calc(100dvh - var(--header-h) - var(--footer-h));}
@@ -77,8 +77,8 @@ html main > .notice p {min-width:0;overflow-wrap:anywhere;}
 .notice-detail-dialog p {white-space:pre-wrap;overflow-wrap:anywhere;}
 
 .viewport-paged {position:relative;}
-.viewport-pages-body.viewport-overflow {visibility:hidden;pointer-events:none;}
-.viewport-overflow-preview {position:absolute;inset:0 0 52px;z-index:2;}
+.viewport-page-count {flex:none;white-space:nowrap;font-size:var(--font-caption);color:var(--secondary);}
+
 html #research-view .research-panel {padding:var(--card-pad);}
 html #research-view .research-ranks {margin:8px 0;}
 html #research-view .table-toolbar {padding:0;margin:8px 0;gap:8px;}
@@ -117,3 +117,24 @@ html #research-view .zero-table-row .research-company-name,html #research-view .
 html #research-view .zero-table-row .research-rank-value strong {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 #lobby-view .lobby-role-caption {font-size:12px;line-height:14px;margin:0 0 2px;white-space:nowrap;}
+/* The chart stays ahead of diagnostic text; flex items without an explicit order came first. */
+#stock-tab-pane .stock-mdd {order:7;padding:12px 0;margin-top:8px;}
+#stock-tab-pane .stock-primary-controls {display:flex;flex-wrap:nowrap;gap:6px;align-items:center;overflow-x:auto;min-height:48px;}
+#stock-tab-pane .stock-primary-controls > .stock-controls {flex:none;flex-wrap:nowrap;margin:0;gap:4px;}
+#stock-tab-pane .stock-primary-controls .stock-button {min-height:44px;white-space:nowrap;}
+@media(max-width:767px){
+ #stock-tab-pane {padding-top:6px;}
+ #stock-tab-pane .stock-chart-wrap {flex:none;}
+ #stock-tab-pane #stock-chart {height:220px!important;min-height:0;}
+ #stock-workbench .stock-header {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;margin-bottom:4px;}
+ #stock-workbench .stock-title {font-size:20px;line-height:1.3;}
+ #stock-workbench .stock-meta {font-size:11px;margin-top:2px;}
+ #stock-workbench .stock-quote {margin:4px 0;gap:4px 8px;}
+ #stock-workbench .stock-quote > strong {font-size:26px;}
+ #stock-workbench .stock-quote > .muted-note {font-size:11px;line-height:1.4;}
+ #stock-workbench .stock-detail-tabs {margin-top:6px;}
+ .desk-view .panel-heading h2 {font-size:18px;line-height:1.35;}
+ .desk-view .panel-heading p {font-size:12px;line-height:1.5;}
+ .desk-view .panel-heading {gap:8px;}
+ .desk-view .desk-panel {padding:12px;}
+}

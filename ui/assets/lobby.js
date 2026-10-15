@@ -78,10 +78,13 @@
     if(entity.nameEl){entity.nameEl.hidden=!visible;entity.nameEl.style.display=visible?'':'none';}
     if(entity.levelEl){entity.levelEl.hidden=ready;entity.levelEl.style.display=ready?'none':'';}
   }
-  function openFullBoard(){if(!fullBoardDialog)return;if(!fullBoardDialog.open)fullBoardDialog.showModal();fullBoardDialog.querySelector('button')?.focus();advanceTutorial('board');}
+  function openFullBoard(){if(!fullBoardDialog)return;fullBoardDialog.append(board);if(!fullBoardDialog.open)fullBoardDialog.showModal();fullBoardDialog.querySelector('button')?.focus();advanceTutorial('board');}
   function boardPopup(){
-    if(!fullBoardDialog){fullBoardDialog=node('dialog','floor-help-dialog lobby-full-board-dialog office-sprites-ready');fullBoardDialog.id='lobby-full-board-dialog';fullBoardDialog.setAttribute('aria-label','전광판 · 지수·뉴스·연습 랭킹·검색 관심');const close=node('button','secondary-button','닫기');close.type='button';close.addEventListener('click',()=>fullBoardDialog.close());fullBoardDialog.append(node('h2','','전광판'),close);document.body.append(fullBoardDialog);}
-    fullBoardDialog.append(board);
+    if(!fullBoardDialog){fullBoardDialog=node('dialog','floor-help-dialog lobby-full-board-dialog office-sprites-ready');fullBoardDialog.id='lobby-full-board-dialog';fullBoardDialog.setAttribute('aria-label','전광판 · 지수·뉴스·연습 랭킹·검색 관심');const close=node('button','secondary-button','닫기');close.type='button';close.addEventListener('click',()=>fullBoardDialog.close());fullBoardDialog.append(node('h2','','전광판'),close);document.body.append(fullBoardDialog);fullBoardDialog.addEventListener('close',restoreBoard);}
+  }
+  function restoreBoard(){
+    if(boardHome&&board?.parentElement!==boardHome)boardHome.insertBefore(board,boardNext?.parentElement===boardHome?boardNext:null);
+    fitOfficeViewport();
   }
   function stopSprites(){S.rendererObserver?.disconnect();S.rendererObserver=null;S.renderer?.destroy();S.renderer=null;stage.dataset.spriteRendering='fallback';}
   function spriteActors(){
@@ -184,6 +187,15 @@
 
   const roleMedia=window.matchMedia?.('(max-width: 767px)');
   let roleDeck=null,roleAnchor=0,roleScene='';
+  let roleDialog=null;
+  function rolePopup(){
+    if(roleDialog)return roleDialog;
+    roleDialog=node('dialog','floor-help-dialog lobby-roles-dialog');roleDialog.id='lobby-roles-dialog';roleDialog.setAttribute('aria-label','사무실 직원 역할 카드');
+    const close=node('button','secondary-button','닫기');close.type='button';close.addEventListener('click',()=>roleDialog.close());
+    roleDialog.append(node('h2','','직원 역할 카드'),close);document.body.append(roleDialog);
+    const control=node('button','secondary-button','직원 카드');control.id='lobby-roles-open';control.type='button';control.setAttribute('aria-haspopup','dialog');control.addEventListener('click',()=>{roleDialog.showModal();close.focus();});
+    document.querySelector('.lobby-meta').append(control);return roleDialog;
+  }
   function renderRoleDeck() {
     if(!roleDeck) {
       const root=node('section','lobby-role-deck');root.id='lobby-role-deck';root.setAttribute('aria-label','사무실 직원 역할 카드');
@@ -194,7 +206,7 @@
       previous.setAttribute('aria-label','이전 직원 페이지');next.setAttribute('aria-label','다음 직원 페이지');previous.setAttribute('aria-controls',list.id);next.setAttribute('aria-controls',list.id);page.setAttribute('aria-live','polite');page.setAttribute('role','status');
       const move=direction=>{const size=roleMedia?.matches?2:4,start=Math.floor(roleAnchor/size)*size;roleAnchor=Math.max(0,Math.min(Math.max(0,S.npcs.length-1),start+direction*size));renderRoleDeck();};
       previous.addEventListener('click',()=>{if(!previous.disabled)move(-1);});next.addEventListener('click',()=>{if(!next.disabled)move(1);});
-      nav.append(previous,page,next);root.append(list,nav,caption);(view.querySelector('.lobby-main')||view).append(root);
+      nav.append(previous,page,next);root.append(list,nav,caption);rolePopup().append(root);
       roleDeck={root,list,previous,next,page,caption};
     }
     const scene=S.mode+'|'+(S.visit?.nick||'')+'|'+S.npcs.map(npc=>npc.id).join(',');
@@ -506,22 +518,31 @@
     for (let copy = 0; copy < 2; copy++) entries.forEach((entry,index) => {const item=entry(copy);lane.append(item);if(copy===0&&index===0&&id==='lobby-news'&&S.billboardButton){S.billboardButton.textContent=item.textContent;S.billboardButton.title=item.textContent;}});
     root.style.setProperty('--tick-seconds', Math.max(36, entries.length * 8) + 's');
   }
+  function headlineAllowed(item) {
+    const language = text => {
+      if (typeof text !== 'string' || !text.trim() || /[<>\uFFFD]/u.test(text)) return null;
+      if ([...text].some(char => /[\p{M}\p{C}]/u.test(char) || (/\p{L}/u.test(char) && !/[A-Za-z가-힣]/u.test(char)))) return null;
+      return /[가-힣]/u.test(text) ? 'ko' : /[A-Za-z]/u.test(text) ? 'en' : null;
+    };
+    return Boolean(item && /^https:\/\//.test(item.url) && (language(item.title) === 'ko'
+      || language(item.title) === 'en' && item.translation_status === 'TRANSLATED' && language(item.title_ko) === 'ko'));
+  }
   const linkTick = (item) => (copy) => {
     const link = node('a', 'lobby-tick'); link.href = item.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; if (copy) link.setAttribute('aria-hidden', 'true'), link.tabIndex = -1;
     const label = item.kind === 'BREAKING' ? '[속보] ' : item.kind === 'EXCLUSIVE' ? '[단독] ' : '';
-      const translated = typeof item.title_ko === 'string' && item.title_ko.trim() ? ' (' + item.title_ko + ')' : '';
+      const translated = !/[가-힣]/u.test(item.title) && typeof item.title_ko === 'string' && item.title_ko.trim() ? ' (' + item.title_ko + ')' : '';
       link.append(node('b', '', label + (item.publisher || '뉴스')), document.createTextNode(' ' + item.title + translated));
-      link.title = translated ? '원제 · 괄호 안은 기계 번역입니다. 기사 원문을 확인하세요.' : '기사 원제 · 번역이 없으면 원문을 표시합니다.'; link.addEventListener('click', () => advanceTutorial('board')); return link;
+      link.title = translated ? '원제 · 괄호 안은 기계 번역입니다. 기사 원문을 확인하세요.' : '한국어 기사 제목 · 기사 원문을 확인하세요.'; link.addEventListener('click', () => advanceTutorial('board')); return link;
   };
   async function loadNews() {
     if (!S.active || !S.player || document.hidden) return;
     const epoch = sceneEpoch;
     let items = [];
-    try { const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(30000)}); const data = response.ok ? await response.json() : null; if (data?.schema_version === 1) items = data.items.filter((row) => /^https:\/\//.test(row.url)); } catch (_) { /* fall back below */ }
+    try { const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(30000)}); const data = response.ok ? await response.json() : null; if (data?.schema_version === 1) items = data.items.filter(headlineAllowed); } catch (_) { /* fall back below */ }
     if (!S.active || epoch !== sceneEpoch) return;
     if (!items.length) {
       try { const response = await fetch('api/desk', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); const desk = response.ok ? await response.json() : null;
-        items = (desk?.news || []).map((row) => ({title: row.title, publisher: row.sources?.[0]?.label || '공식 자료', url: row.sources?.[0]?.url || ''})).filter((row) => /^https:\/\//.test(row.url)); } catch (_) { items = []; }
+        items = (desk?.news || []).map((row) => ({title: row.title, publisher: row.sources?.[0]?.label || '공식 자료', url: row.sources?.[0]?.url || ''})).filter(headlineAllowed); } catch (_) { items = []; }
     }
     if (!S.active || epoch !== sceneEpoch) return;
     track('lobby-news', items.slice(0, 30).map(linkTick), '뉴스를 확인하지 못했어요 · 다음 갱신 때 다시 확인해요');
@@ -595,7 +616,20 @@
     }]);
     paintRanking(ranked);
   }
+  let rankingBoard=null;
+  function paintRankingBoard(ranked){
+    if(!rankingBoard){
+      rankingBoard=node('aside','lobby-ranking-board');rankingBoard.id='lobby-ranking-board';rankingBoard.setAttribute('aria-label','인증 회원 연습 랭킹');
+      const title=node('h3','','연습 랭킹'),status=node('p','lobby-ranking-live-status'),list=node('ol','lobby-ranking-live');status.id='lobby-ranking-live-status';list.id='lobby-ranking-live';list.tabIndex=0;list.setAttribute('aria-label','인증 회원 연습 수익률 · 세로 스크롤');
+      rankingBoard.append(title,status,list);(view.querySelector('.lobby-main')||view).append(rankingBoard);
+    }
+    $('lobby-ranking-live-status').textContent=S.boardMeta?.state==='AVAILABLE'?(ranked.length?'인증 회원 · 연습 수익률':'참가한 인증 회원이 없어요'):'조회 중 · 순위 보류';
+    const list=$('lobby-ranking-live');list.replaceChildren();
+    ranked.forEach(row=>{const item=node('li','lobby-ranking-live-row'),visit=node('button','',''+row.nick);visit.type='button';visit.addEventListener('click',()=>window.ZEROLobbyUsers?.visit(row.nick));
+      item.append(node('span','',row.rank+'위'),visit,node('strong',row.percent>=0?'gain':'loss',money(row.percent)));list.append(item);});
+  }
   function paintRanking(ranked = W.rankUsers(S.userBoard)) {
+    paintRankingBoard(ranked);
     const root = $('lobby-ranking-list'); root.replaceChildren();
     $('lobby-ranking-status').textContent = S.boardMeta?.state === 'AVAILABLE'
       ? (ranked.length ? ranked.length + '명 · 수익률 내림차순 · 동률은 공동 순위' : '아직 참가자가 없어요. 내 사무실에서 닉네임으로 시작해 보세요.')
@@ -798,7 +832,7 @@
     }
   }
   function setPlayerName(name) { S.playerName = name && name !== '나' ? name : '대표님'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
-  function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; if (S.active && S.player) loadReturns(); }
+  function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; paintRanking(); if (S.active && S.player) loadReturns(); }
 
 
   const floorHelp = document.createElement('dialog');
@@ -813,7 +847,7 @@
   // Measure the shared shell rather than assuming a fixed mobile header height.
   function fitOfficeViewport() {
     const host=stage.parentElement;
-    if(!host||window.innerWidth<768)return;
+    if(!host)return;
     const width=host.clientWidth,height=host.clientHeight;
     if(!(width>0&&height>0))return;
     // Fit the same 16x10 saved world; no extra columns or collision coordinates are created.
@@ -833,6 +867,7 @@
   window.addEventListener('resize',()=>{if(S.dockRequested)setDocked(true);fitOfficeViewport();});
   if(stage.parentElement)new ResizeObserver(fitOfficeViewport).observe(stage.parentElement);
   fitOfficeViewport();
+  paintRanking();
 
   const initialTutorial = tutorialState();
   S.tutorial = initialTutorial || {step: 0, done: false};

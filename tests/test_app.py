@@ -157,13 +157,13 @@ class HeadlineTests(unittest.TestCase):
         return (self.NOW - timedelta(hours=hours)).strftime('%a, %d %b %Y %H:%M:%S GMT')
 
     def test_only_trusted_fresh_https_politics_economy_titles_survive_with_one_line_per_story(self):
-        body = feed(('Fed holds rates steady - Reuters', 'https://n.example/r', self.stamp(1), 'Reuters'),
-                    ('Fed holds interest rates steady as inflation cools - Bloomberg.com', 'https://n.example/b', self.stamp(2), 'Bloomberg.com'),
+        body = feed(('Fed holds rates steady - Reuters', 'https://news.google.com/rss/articles/r', self.stamp(1), 'Reuters'),
+                    ('Fed holds interest rates steady as inflation cools - Bloomberg.com', 'https://news.google.com/rss/articles/b', self.stamp(2), 'Bloomberg.com'),
                     ('Celebrity gossip of the day - Daily Gossip', 'https://n.example/g', self.stamp(1), 'Daily Gossip'),
                     ('Old Reuters story - Reuters', 'https://n.example/o', self.stamp(60), 'Reuters'),
                     ('Plain http - Reuters', 'http://n.example/p', self.stamp(1), 'Reuters'),
                     ('금리 동결 한은 총재 발언 - 연합뉴스', 'https://n.example/y', self.stamp(3), '연합뉴스'))
-        value = zero_headlines.collect(self.NOW, fetch=lambda url: body)
+        value = zero_headlines.collect(self.NOW, fetch=lambda url: body, cached=lambda row: (True, '연준 금리 동결'))
         self.assertEqual(value['failed'], [])
         titles = {row['title'] for row in value['items']}
         self.assertEqual(titles, {'Fed holds rates steady', '금리 동결 한은 총재 발언'}, 'duplicates collapse to the best-ranked publisher; untrusted, stale and http rows are dropped')

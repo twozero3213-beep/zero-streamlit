@@ -8,6 +8,11 @@
   panel.hidden = true; panel.setAttribute('aria-labelledby', 'live-headlines-title'); title.id = 'live-headlines-title';
   list.style.cssText = 'margin:12px 0 0;padding-left:20px;display:grid;gap:10px;line-height:1.5';
   panel.append(title, note, list); anchor.before(panel);
+  const language = (text) => {
+    if (typeof text !== 'string' || !text.trim() || /[<>\uFFFD]/u.test(text)) return null;
+    if ([...text].some((char) => /[\p{M}\p{C}]/u.test(char) || (/\p{L}/u.test(char) && !/[A-Za-z가-힣]/u.test(char)))) return null;
+    return /[가-힣]/u.test(text) ? 'ko' : /[A-Za-z]/u.test(text) ? 'en' : null;
+  };
   const kst = (iso) => new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date(iso));
   let loading = false;
   async function load() {
@@ -15,14 +20,18 @@
     try {
       const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(30000)}), data = response.ok ? await response.json() : null;
       if (data?.schema_version !== 1 || !Array.isArray(data.items) || !data.items.length) { panel.hidden = true; return; }
-      list.replaceChildren(...data.items.filter((item) => /^https:\/\//.test(item.url)).map((item) => {
-        const translated = typeof item.title_ko === 'string' && item.title_ko.trim() ? ' (' + item.title_ko + ')' : '';
+      const items = data.items.filter((item) => item && /^https:\/\//.test(item.url)
+        && (language(item.title) === 'ko' || (language(item.title) === 'en'
+          && item.translation_status === 'TRANSLATED' && language(item.title_ko) === 'ko')));
+      if (!items.length) { panel.hidden = true; return; }
+      list.replaceChildren(...items.map((item) => {
+        const translated = language(item.title) === 'en' ? ' (' + item.title_ko.trim() + ')' : '';
         const row = make('li'), link = make('a', '', item.title + translated);
         link.href = item.url; link.target = '_blank'; link.rel = 'noreferrer noopener';
         row.append(link, make('span', 'muted-note', ' · ' + (item.publisher || '출처 미표시') + ' · ' + item.market + ' · ' + kst(item.published_at)));
         return row;
       }));
-      note.textContent = '뉴스 검색 결과의 제목만 자동으로 모은 목록입니다(최근 36시간 · ' + kst(data.checked_at) + ' KST 확인). 본문을 읽거나 사실을 검증한 것이 아니며, 아래 기사 요약과는 별개입니다. 괄호 안 한글은 기계 번역이며, 번역이 없으면 원제를 표시합니다.'
+      note.textContent = '뉴스 검색 결과의 제목만 자동으로 모은 목록입니다(최근 36시간 · ' + kst(data.checked_at) + ' KST 확인). 본문을 읽거나 사실을 검증한 것이 아니며, 아래 기사 요약과는 별개입니다. 한국어·영어 제목만 표시하며, 영어 제목의 괄호 안 한글은 기계 번역입니다. 번역이 없는 영어와 다른 언어의 제목은 제외합니다.'
         + (data.failed?.length ? ' 수집하지 못한 곳: ' + data.failed.join(', ') + '.' : '');
       panel.hidden = false;
     } catch (_) { panel.hidden = true; } finally { loading = false; }
