@@ -35,14 +35,14 @@
   const say = (error) => messages[error?.code] || '지금은 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
 
   const U = {token: memberSession.get() || store.get(KEY), me: null, visitor: visitorName, generation: 0};
-  const button = $('lobby-profile-btn');
+  const button = $('lobby-profile-btn'), entry = $('member-entry');
   if (!BASE) { button.hidden = false; button.textContent = '로그인 연결 준비 중'; button.disabled = true; button.title = '공개 서버 연결 전이에요'; return; }
-  button.hidden = false;
+  button.hidden = false; if (entry) entry.hidden = false;
 
   // ---- dialog -----------------------------------------------------------------------------------
-  const dialog = document.createElement('dialog'); dialog.className = 'lobby-chat lobby-profile'; dialog.setAttribute('aria-labelledby', 'profile-title'); dialog.setAttribute('aria-describedby', 'profile-sub');
+  const dialog = document.createElement('dialog'); dialog.id = 'member-profile-dialog'; dialog.className = 'lobby-chat lobby-profile'; dialog.setAttribute('aria-labelledby', 'profile-title'); dialog.setAttribute('aria-describedby', 'profile-sub');
   dialog.innerHTML = '<div class="chat-head"><div><h2 id="profile-title"></h2><p id="profile-sub"></p></div><button type="button" class="secondary-button" id="profile-close">닫기</button></div><div id="profile-body" class="profile-body"></div>';
-  $('lobby-view').append(dialog);
+  document.body.append(dialog);
   $('profile-close').addEventListener('click', () => dialog.close());
   const body = $('profile-body');
   const field = (label, input) => { const wrap = node('label', 'profile-field'); wrap.append(node('span', '', label), input); return wrap; };
@@ -215,9 +215,12 @@
   }
   let sessionNick, sessionToken;
   function render() { button.textContent = U.me ? (U.me.membership?.kind === 'MEMBER' ? '내 사무실' : '방문자 계정') : U.token ? '로그인 확인' : U.visitor ? '방문자 · ' + U.visitor : '로그인 · 회원가입'; $('lobby-name-chip').textContent = U.me?.nick || U.visitor || '대표님';
+    if (entry) { entry.textContent = U.me ? '내 계정' : U.token ? '로그인 확인' : U.visitor ? '방문자' : '로그인'; entry.title = button.textContent; entry.setAttribute('aria-label', U.me ? U.me.nick + ' 계정 관리' : '이메일·휴대폰으로 가입 또는 로그인'); }
     const nick = U.me?.nick || null; if (sessionNick !== nick || sessionToken !== U.token) { sessionNick = nick; sessionToken = U.token; U.generation++; document.dispatchEvent(new CustomEvent('zero-session-changed')); }
     document.dispatchEvent(new CustomEvent('zero-profile-updated')); }
   button.addEventListener('click', () => { U.me ? viewHome() : U.token ? viewPending() : viewSignup(); if (!dialog.open) dialog.showModal?.(); });
+
+  entry?.addEventListener('click', () => button.click());
 
   async function loadBoard() {
     try { const data = await api('/leaderboard'); window.ZEROLobby.setUserBoard(data.state === 'AVAILABLE' ? data.items : [], {state: data.state, checkedAt: data.checked_at}); } catch (_) { window.ZEROLobby.setUserBoard([], {state: 'UNAVAILABLE'}); }
