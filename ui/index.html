@@ -27,6 +27,12 @@
   <link rel="stylesheet" href="assets/mts-cards.css">
   <link rel="stylesheet" href="assets/mts-orders.css">
   <link rel="stylesheet" href="assets/mts-shell.css">
+  <link rel="stylesheet" href="assets/analysis-view.css">
+  <link rel="stylesheet" href="assets/account-audit.css">
+  <link rel="stylesheet" href="assets/technical-chart.css">
+  <script src="assets/analysis-view.js" defer></script>
+  <script src="assets/account-audit.js" defer></script>
+  <script src="assets/technical-chart.js" defer></script>
   <script src="assets/mts-portfolio.js" defer></script>
   <script src="assets/mts-cards.js" defer></script>
   <script src="assets/mts-orders.js" defer></script>
@@ -62,7 +68,9 @@
 <main id="main" class="zero-main-viewport">
   <header class="page-header"><div><h1 id="page-title" tabindex="-1">내 자산</h1><p id="page-subtitle">1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.</p></div></header>
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
-  <nav class="mts-subnav" aria-label="투자 화면"><button type="button" data-view="portfolio" class="active">내 자산</button><button type="button" data-view="research">주식 탐색</button><button type="button" data-view="workbench">종목·주문</button><button id="refresh" class="primary-button" type="button" aria-label="시세 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M18 17a7 7 0 0 1-12 1l-2-3"/></svg><span>시세 새로고침</span></button></nav>
+  <nav class="mts-subnav" aria-label="투자 화면"><button type="button" data-view="portfolio" aria-label="내 자산" class="active">자산</button><button type="button" data-view="research" aria-label="주식 탐색">탐색</button><button type="button" data-view="workbench" aria-label="종목과 주문">종목</button><button type="button" data-view="analysis">시장</button><button type="button" data-view="audit">감사</button><button id="refresh" class="primary-button" type="button" aria-label="자료 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M18 17a7 7 0 0 1-12 1l-2-3"/></svg><span>시세 새로고침</span></button></nav>
+  <section id="analysis-view" class="view" hidden><section class="panel analysis-panel" aria-label="시장 브리핑"><div class="analysis-heading"><h2>오늘의 시장</h2><button type="button" id="analysis-retry" class="secondary-button">다시 확인</button></div><p id="analysis-status" class="muted-note" role="status">시장 탭을 열면 확인합니다.</p><div id="analysis-content"></div></section></section>
+  <section id="audit-view" class="view" hidden><section id="account-audit" class="panel" aria-label="계좌 회계 감사"></section></section>
   <section id="portfolio-view" class="view">
     <div class="portfolio-summary panel" aria-label="1억원 ZERO 참고 운용자산 요약">
       <div id="portfolio-empty" class="portfolio-empty" hidden><h2>대표님의 자산 화면을 준비했어요</h2><p>계좌를 조회하거나 시연 화면으로 사용 방법을 살펴보세요. 시연 자료는 실제 계좌에 저장되지 않습니다.</p><div class="empty-actions"><button id="empty-query" type="button" class="secondary-button">계좌 조회하기</button><button id="demo-toggle" type="button" class="secondary-button">시연 모드 보기</button></div><p id="empty-query-note" class="muted-note" hidden></p></div><button id="demo-exit" type="button" class="secondary-button" hidden>시연 종료 · 저장 자료로 돌아가기</button><h2 class="account-scope">총자산과 수익률 <span>시작 원금 1억원 · ZERO 참고 원장</span></h2>

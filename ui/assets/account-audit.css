@@ -1,0 +1,15 @@
+#account-audit .account-audit-content{display:grid;gap:7px;min-width:0}
+#account-audit .account-audit-title,#account-audit .account-audit-provider{margin:0}
+#account-audit .account-audit-note,#account-audit .account-audit-empty{margin:0;color:var(--secondary,#626d7b);font-size:.875rem;line-height:1.5;overflow-wrap:anywhere}
+#account-audit .account-audit-header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+#account-audit .account-audit-title{font-size:1.125rem}
+#account-audit .account-audit-refresh{font:inherit;font-size:.8125rem;min-height:32px;padding:4px 8px}
+#account-audit .account-audit-choice{display:flex;align-items:center;gap:8px;font-size:.8125rem;min-width:0}
+#account-audit .account-audit-select{font:inherit;min-width:0;max-width:100%;min-height:32px;padding:4px 8px}
+#account-audit .account-audit-state{margin:0;font-weight:600;line-height:1.4}
+#account-audit .account-audit-amounts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-auto-rows:minmax(20px,auto);column-gap:8px;row-gap:0;margin:0;font-size:.8125rem;line-height:20px}
+#account-audit .account-audit-amounts dt{color:var(--secondary,#626d7b)}
+#account-audit .account-audit-amounts dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#account-audit .account-audit-source{font-size:.8125rem;min-width:0}
+#account-audit .account-audit-source summary{cursor:pointer;line-height:24px}
+#account-audit .account-audit-source .account-audit-note{margin-top:6px}

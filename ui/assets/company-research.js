@@ -64,11 +64,11 @@ function renderETFResearch(data,u) {
   if(u?.source_url)evidence.append(researchLink('AUM 순위 출처',u.source_url));
   const rows=researchSortedRows((u?.rows||[]).filter(row=>window.ZEROExploreMath?.searchable?window.ZEROExploreMath.searchable(row,companyResearch.search):(row.name+' '+row.symbol).toLowerCase().includes(companyResearch.search)),data,null,companyResearch.sort,companyResearch.descending,'','');
   rows.forEach(row=>{
-    if(window.MTSCards){list.append(window.MTSCards.create({identity:row.id,name:row.name,symbol:row.symbol,currency:row.currency,subtitle:row.symbol+' · ETF · AUM '+money(row.market_cap,'USD'),onOpen:()=>showCompany(row.id,null,{range:'5Y',interval:'1d'})}));return;}
+    if(window.MTSCards){list.append(researchChartPreview(window.MTSCards.create({identity:row.id,name:row.name,symbol:row.symbol,currency:row.currency,subtitle:row.symbol+' · ETF · AUM '+money(row.market_cap,'USD'),onOpen:()=>showCompany(row.id,null,{range:'5Y',interval:'1d'})}),row));return;}
     const item=node('li','research-rank'),button=node('button','research-company');button.type='button';button.dataset.companyId=row.id;
     const title=node('span','research-company-name');title.append(node('strong','',row.name),node('span','market-label',row.symbol+' · ETF'));
     const values=node('span','research-rank-value etf-aum');values.append(node('strong','','AUM '+money(row.market_cap,'USD')),node('span','market-label','제공자 자산규모 순위 '+row.rank+'위'));
-    button.append(node('span','research-rank-number',format(row.rank)),title,values);button.addEventListener('click',()=>showCompany(row.id,null,{range:'5Y',interval:'1d'}));item.append(button);list.append(item);
+    researchChartPreview(item,row);button.append(node('span','research-rank-number',format(row.rank)),title,values);button.addEventListener('click',()=>showCompany(row.id,null,{range:'5Y',interval:'1d'}));item.append(button);list.append(item);
   });
   window.MTSCards?.observe(list);
   $('#research-empty').hidden=rows.length>0;$('#research-empty').textContent=u?.rows?.length?'검색 결과가 없습니다.':'ETF 50 순위 자료가 없습니다. 주요 ETF 바로가기는 순위와 별도로 이용할 수 있습니다.';
@@ -122,7 +122,7 @@ function renderResearch() {
   if (u?.source_url) $('#research-date').append(researchLink('순위 출처', u.source_url));
   const rows = researchSortedRows((u?.rows || []).filter((row) => window.ZEROExploreMath?.searchable?window.ZEROExploreMath.searchable(row,companyResearch.search):(row.name+' '+row.symbol).toLowerCase().includes(companyResearch.search)),data,companyResearch.desk,companyResearch.sort,companyResearch.descending,companyResearch.annualPeriod,companyResearch.quarterPeriod);
   rows.forEach((row) => {
-    if(window.MTSCards){const value=researchSortValue(row,data,companyResearch.desk,companyResearch.sort,companyResearch.annualPeriod,companyResearch.quarterPeriod);list.append(window.MTSCards.create({identity:row.id,name:row.name,symbol:row.symbol,currency:row.currency,subtitle:row.symbol+' · '+(companyResearch.sort==='market_cap'?'시총 '+researchDisplayMoney(row.market_cap,row.currency):researchSortLabels[companyResearch.sort]+' '+(Number.isFinite(number(value))?format(value,2):'근거 없음')),onOpen:()=>showCompany(row.id)}));return;}
+    if(window.MTSCards){const value=researchSortValue(row,data,companyResearch.desk,companyResearch.sort,companyResearch.annualPeriod,companyResearch.quarterPeriod);list.append(researchChartPreview(window.MTSCards.create({identity:row.id,name:row.name,symbol:row.symbol,currency:row.currency,subtitle:row.symbol+' · '+(companyResearch.sort==='market_cap'?'시총 '+researchDisplayMoney(row.market_cap,row.currency):researchSortLabels[companyResearch.sort]+' '+(Number.isFinite(number(value))?format(value,2):'근거 없음')),onOpen:()=>showCompany(row.id)}),row));return;}
     const item = node('li', 'research-rank');
     const button = node('button', 'research-company'); button.type = 'button'; button.dataset.companyId = row.id;
     const rank = node('span', 'research-rank-number', format(row.rank));
@@ -131,7 +131,7 @@ function renderResearch() {
     if(companyResearch.sort!=='market_cap'){const value=researchSortValue(row,data,companyResearch.desk,companyResearch.sort,companyResearch.annualPeriod,companyResearch.quarterPeriod),text=['revenue','operating_income'].includes(companyResearch.sort)?researchDisplayMoney(value,row.currency):Number.isFinite(number(value))?format(value,2)+(['per','pbr','psr'].includes(companyResearch.sort)?'배':['operating_margin','net_margin_percent','net_profit_growth_percent'].includes(companyResearch.sort)?'%':''):'근거 없음';values.append(node('span','market-label',researchSortLabels[companyResearch.sort]+' '+text));}
     const change = row.rank_change;
     values.append(node('span', 'market-label', change === null || change === undefined ? '비교 기록 없음' : change === 0 ? '순위 동일' : (change > 0 ? '상승 ' : '하락 ') + format(Math.abs(change)) + '위'));
-    button.append(rank, title, values); button.addEventListener('click', () => showCompany(row.id)); item.append(button); list.append(item);
+    researchChartPreview(item,row);button.append(rank, title, values); button.addEventListener('click', () => showCompany(row.id)); item.append(button); list.append(item);
   });
   window.MTSCards?.observe(list);
   $('#research-empty').hidden = rows.length > 0;
@@ -146,6 +146,10 @@ function researchSection(title, texts) {
   if (!texts?.length) section.append(node('p', 'muted-note', '확인된 근거 없음 · 조사 대기'));
   else { const list = node('ul'); texts.forEach((text) => list.append(node('li', '', visibleCopy(text)))); section.append(list); }
   return section;
+}
+function researchChartPreview(item, row) {
+  if(!window.ZEROTechnicalChart)return item;
+  const preview=node('button','research-chart-preview','차트 미리보기');preview.type='button';preview.setAttribute('aria-label',row.name+' 차트 미리보기');preview.addEventListener('click',()=>window.ZEROTechnicalChart.open({identity:row.id,name:row.name,range:'1Y'}));item.append(preview);return item;
 }
 async function showCompany(identity, destination = null, options = {}) {
   if (!destination && window.ZEROExplore) return window.ZEROExplore.openCompany(identity,options);
@@ -164,6 +168,7 @@ async function showCompany(identity, destination = null, options = {}) {
   content.replaceChildren();
   if (!company) { content.append(node('p', '', '이 종목의 사업·재무 설명은 아직 조사되지 않았습니다. 확인되지 않은 내용을 대신 표시하지 않습니다.')); return; }
   if (!destination) $('#company-title').textContent = visibleCopy(company.name);
+  if(window.ZEROTechnicalChart){const preview=node('button','stock-button','차트 미리보기');preview.type='button';preview.addEventListener('click',()=>window.ZEROTechnicalChart.open({identity:company.id,name:company.name,range:'1Y'}));content.append(preview);}
   content.append(node('p', 'company-classification', company.symbol + ' · ' + (company.kind === 'ETF' ? 'ETF · 펀드' : '기업') + ' · ' + (company.industry || '산업 미확인')));
   content.append(node('p', 'company-overview', visibleCopy(detail?.description_excerpt ? '토스 제공 사업 설명 발췌: ' + detail.description_excerpt : company.overview)));
   if (company.kind === 'COMPANY') content.append(node('p', 'muted-note', '공개 제공자 요약 · 원문 공시 및 사업별 매출 비중의 독립 대조 전입니다. 아래 전망은 검증 과제이며 수익 예측이 아닙니다.'));

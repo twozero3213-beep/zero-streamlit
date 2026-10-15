@@ -55,7 +55,7 @@ html .global-navigation small{font-size:10px}
 html[data-zero-view=portfolio] main>.notice,html[data-zero-view=research] main>.notice,html[data-zero-view=workbench] main>.notice{font-size:11px;max-height:48px;overflow:hidden}
 html[data-zero-domain=investment] .office-floor-ticker{display:none}
 @media(max-width:767px){
- .mts-subnav{min-height:36px;gap:4px}.mts-subnav button{min-height:36px;padding:4px 14px;font-size:13px}
+ .mts-subnav{min-height:36px;gap:4px}.mts-subnav button{min-height:36px;padding:4px 10px;font-size:13px}
  html .account-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
  html .account-metrics>div,html .account-metrics .secondary-metric:last-child{padding:10px;border:1px solid #eef0f3}
  html .account-metrics dt{font-size:12px}html .account-metrics dd:not(.metric-note),html .account-metrics .total-metric>dd:first-of-type,html .account-metrics .performance-metric>dd:first-of-type,html .account-metrics .secondary-metric>dd:first-of-type{font-size:20px;white-space:nowrap;margin:4px 0}

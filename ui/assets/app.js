@@ -84,6 +84,7 @@ function render(data) {
     holdings_performance: referenceAvailable ? scope.holdings_performance || {} : {}};
   state.data = {...data, summary, holdings, allocations: referenceAvailable ? scope.allocations : {}, history: []};
   window.ZEROMTSPortfolio?.render(state.reference, data);
+  if(window.ZERO?.currentView?.()==='audit')window.ZEROAccountAudit?.open();
   const fx = summary.fx || {}, currencies = connectedSummary.by_currency || {};
   $('#holding-count').textContent = holdings.length + '개 종목';
   $('#holdings-value').textContent = money(summary.holdings_value_krw);
@@ -901,6 +902,8 @@ const views = {
   plaza: ['실시간 광장', '다른 참가자와 캐릭터를 움직이고 공개 대화를 나누세요.'],
   company: ['내 투자회사 · 전략 직원', '직원을 고용하고 과거 데이터로 전략과 리밸런싱 제안을 확인하세요.'],
   community: ['투자회사 커뮤니티', '페르소나와 전략 운용 경험을 함께 나눠 보세요.'],
+  analysis: ['시장 브리핑', '공개 지수·선물·발표 일정 · 1시간 캐시와 출처를 확인하세요.'],
+  audit: ['회계 감사', '예수금·미결제 현금·비용·실현 손익의 원장 대조 결과를 확인하세요.'],
   portfolio: ['내 자산', '1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.'],
   research: ['주식 탐색', '미국 100 · 코스피 50 · 코스닥 50 기업을 찾아보세요.'],
   workbench: ['종목과 차트', '시세와 차트, 기업 정보를 한 화면에서 확인하세요.'],
@@ -938,7 +941,7 @@ function navigate(view, updateAddress = true) {
     if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
   });
   document.querySelectorAll('[data-domain]').forEach(button=>{const active=button.dataset.domain===domain;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current',button.dataset.view===view?'page':'true');else button.removeAttribute('aria-current');});
-  const subnav=document.querySelector('.mts-subnav');if(subnav)subnav.hidden=!['portfolio','research','workbench'].includes(view);
+  const subnav=document.querySelector('.mts-subnav');if(subnav)subnav.hidden=!['portfolio','research','workbench','analysis','audit'].includes(view);
   $('#page-title').textContent = views[view][0];
   $('#page-subtitle').textContent = views[view][1];
   closeMenu();
@@ -950,6 +953,8 @@ function navigate(view, updateAddress = true) {
   document.querySelector('.mobile-tab.menu-open')?.classList.toggle('active', !Object.hasOwn(domainRoutes,domain));
   if (['study', 'macro', 'news', 'reports'].includes(view)) window.ZERODesk?.open(view);
   if (view === 'research') window.ZEROResearch?.load();
+  if (view === 'analysis') window.ZEROAnalysis?.open();
+  if (view === 'audit') window.ZEROAccountAudit?.open();
   if (view === 'workbench') window.ZEROExplore?.init();
   if (view === 'guide') loadReferences();
   if (view === 'community') window.ZEROSocial?.openCommunity();

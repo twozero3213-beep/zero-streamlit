@@ -191,6 +191,8 @@
   };
   function chooseChatter(logic, context, persona, recent, rng = Math.random) {
     recent=(Array.isArray(recent)?recent:[]).slice(-12);
+    const marketLines=(Array.isArray(context.analysis_lines)?context.analysis_lines:[]).filter(line=>typeof line==='string'&&line.length<=180&&!/[<>]/.test(line)&&!recent.includes(line));
+    if(marketLines.length&&rng()<0.18)return marketLines[Math.min(marketLines.length-1,Math.floor(rng()*marketLines.length))];
     const seeded=seededChatter(logic,context,recent,rng); if(seeded) return seeded;
     const parts = logic.kstParts(context.now || new Date());
     const phase = logic.daypart(parts.hour), extras = DAY_CHAT[phase] || DAY_CHAT.day;

@@ -371,7 +371,7 @@
     const active = S.speaker.map((item) => ({id: item.id, pos: item.pos}));
     const npc = L.pickSpeaker(S.npcs.filter((item) => !item.hidden&&!item.away && (item.kind !== 'staff' || Math.random() < 0.7)), active, narrow() ? 44 : BUBBLE_GAP);
     if (!npc) return;
-    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), mode:S.mode, npc, seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, level: S.level, trends: S.trends || [],safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market};
+    const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), mode:S.mode, npc, seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, level: S.level, trends: S.trends || [],safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market,analysis_lines:window.ZEROAnalysis?.chatter?.()||[]};
     const text = W.chooseChatter(L, context, persona, S.recent);
     if (!speak(npc, text)) return;
     // A neighbour answers a moment later, so it reads as a small conversation, not isolated captions.
@@ -448,7 +448,7 @@
   function heroTick() {
     const say = $('lobby-hero-say'); if (!say) return;
     say.title=chatterNotice();
-    say.textContent = '“' + W.chooseChatter(L, {now: new Date(),mode:S.mode,seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, trends: S.trends || [], level: S.level,safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market}, [], S.recent) + '” · ' + FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'');
+    say.textContent = '“' + W.chooseChatter(L, {now: new Date(),mode:S.mode,seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, trends: S.trends || [], level: S.level,safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market,analysis_lines:window.ZEROAnalysis?.chatter?.()||[]}, [], S.recent) + '” · ' + FICTION_CAPTION+(S.trendFallback?' · 가상 키워드':'');
     if(roleDeck){roleDeck.caption.textContent=roleCaptionText();roleDeck.caption.title=chatterNotice();roleDeck.caption.setAttribute('aria-description',chatterNotice());}
   }
 
@@ -753,7 +753,7 @@
   function loadSceneResources() {
     if (!S.active || !S.player || document.hidden) return;
     if (!S.worldLoaded) { S.worldLoaded = true; loadWeather(); loadHolidays(); }
-    loadChatterSeed(); loadNews(); loadReturns(); loadMarket(); loadTrends();
+    loadChatterSeed(); loadNews(); loadReturns(); loadMarket(); loadTrends(); window.ZEROAnalysis?.load?.();
   }
   function setActive(on) {
     if (on === S.active && (!on || S.timers.length || !S.player)) return; S.active = on; stage.dataset.suspended = String(!on);

@@ -63,6 +63,17 @@ function lightweightChartLink(identity,range,height=240){
   return './lwc?'+new URLSearchParams({identity,range,height:String(height)}).toString();
 }
 function stockSessionDate(time,market){return new Intl.DateTimeFormat('en-CA',{timeZone:market==='KR'?'Asia/Seoul':'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(time*1000));}
+// Mirrors zero.chart_history._complete: source close +10min, not a verified exchange calendar.
+function stockBarCompleted(bar,market,interval,retrievedAt){
+  const observed=Date.parse(retrievedAt);
+  if(!bar||!Number.isInteger(bar.time)||bar.time<=0||!Number.isFinite(observed)||bar.time*1000>observed||!['US','KR'].includes(market)||!['1m','60m','1d'].includes(interval))return false;
+  const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:market==='KR'?'Asia/Seoul':'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  const parts=time=>Object.fromEntries(formatter.formatToParts(new Date(time)).map(part=>[part.type,part.value])),at=parts(bar.time*1000);
+  if(['Sat','Sun'].includes(at.weekday))return false;
+  if(interval!=='1d')return bar.time*1000+(interval==='1m'?60000:3600000)<=observed;
+  const read=parts(observed),date=value=>value.year+value.month+value.day;
+  return date(at)<date(read)||date(at)===date(read)&&Number(read.hour)*60+Number(read.minute)>=(market==='KR'?940:970);
+}
 function stockChartValid(data,identity,range,now=Date.now()){
   if(!data||data.schema_version!==1||data.identity!==identity||data.range!==range||!['1D','1W','1M','3M','1Y','5Y'].includes(range)||!['AVAILABLE','STALE','UNAVAILABLE'].includes(data.status)||!Array.isArray(data.bars)||data.bars.length>2200||data.basis!=='UNADJUSTED_PROVIDER_COMPLETED_OHLCV'||!['1m','60m','1d'].includes(data.interval)||!['US','KR'].includes(data.market)||data.currency!==({US:'USD',KR:'KRW'}[data.market])||!identity.startsWith(data.market+':'))return false;
   const clock=value=>typeof value==='string'&&/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value)&&Number.isFinite(Date.parse(value))&&Date.parse(value)<=now;
@@ -221,9 +232,9 @@ function companyNewsValid(data,identity){
   const dayAt=value=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(value));
   return new Set(data.items.map(item=>item?.url)).size===data.items.length&&data.items.every(item=>exact(item,itemKeys)&&/^news:[a-f0-9]{24}$/.test(item.id)&&typeof item.title==='string'&&item.title.trim()&&Array.from(item.title).length<=500&&companyNewsURL(item.url)&&item.publisher==='Yahoo Finance RSS'&&item.access==='INDEX_ONLY'&&item.association==='PROVIDER_SYMBOL_QUERY'&&item.summary===null&&item.syndication_group===null&&clock(item.retrieved_at)&&Date.parse(item.retrieved_at)<=Date.parse(data.collected_at)&&(item.published_at===null||clock(item.published_at)&&Date.parse(item.published_at)<=Date.parse(item.retrieved_at))&&(item.published_date===null||typeof item.published_date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(item.published_date)&&Number.isFinite(Date.parse(item.published_date))&&new Date(item.published_date).toISOString().slice(0,10)===item.published_date&&(item.published_at?item.published_date===item.published_at.slice(0,10):item.published_date<=dayAt(item.retrieved_at))));
 }
-if(typeof module!=='undefined'&&module.exports)module.exports={lightweightChartLink,aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,parseStockRoute,stockRouteHash,chartLesson,candleColor,companyNewsValid,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion,portfolioRisk,liveBenchmark};
+if(typeof module!=='undefined'&&module.exports)module.exports={lightweightChartLink,aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,parseStockRoute,stockRouteHash,chartLesson,candleColor,companyNewsValid,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,stockBarCompleted,alignStockCharts,stockOpinion,portfolioRisk,liveBenchmark};
 if(typeof window!=='undefined') {
-  window.ZEROExploreMath={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,alignStockCharts,stockOpinion,portfolioRisk,liveBenchmark};
+  window.ZEROExploreMath={aggregateBars,movingAverage,visibleWindow,plotBounds,searchable,relatedNews,stockNumber,sortStockRows,stockFX,stockConvert,stockDrawdown,stockSessionDate,stockChartValid,stockBarCompleted,alignStockCharts,stockOpinion,portfolioRisk,liveBenchmark};
   (()=>{
     const explore={catalog:[],identity:null,tab:'chart',range:'5Y',interval:'1d',kind:'candle',averages:new Set([20]),chart:null,loading:false,count:100,start:0,cursor:null,sequence:0,searchSequence:0,compareSequence:0,compareIdentity:null,compareRange:'5Y',currency:'NATIVE'};
     const favoritesKey='zero-watchlist-v1',knownETF=new Set(['SPY','BIL','UUP','VNQ','GLD','TQQQ','QQQ','TMF','SCHD','JEPQ','JEPI','SPYD','HDV','VYM','NOBL','069500','148020']);
@@ -415,7 +426,8 @@ if(typeof window!=='undefined') {
       const readout=el('p','stock-chart-readout');readout.id='stock-chart-readout';readout.setAttribute('aria-live','polite');
       wrap.append(canvas);const note=el('details','stock-chart-notes');note.append(el('summary','','차트 읽는 법·자료 범위'),el('p','','빨간 캔들은 종가가 시가보다 높은 봉, 파란 캔들은 낮은 봉, 회색은 두 가격이 같은 봉입니다. 가는 선은 고가·저가, 아래 막대는 거래량입니다. 이평은 최근 완료 봉 종가의 평균이며 매매 지시가 아닙니다.'),el('p','','1분·10분·60분은 오늘·1주 범위에서, 60분은 1개월에서, 일봉은 3개월·1년·5년에서 봅니다. 제공자가 준 봉만 표시하고 빈 시간을 가짜 가격으로 채우지 않습니다. 수정주가·배당의 독립 대조 전이며 일부 종목과 기간은 제공자 제한으로 없을 수 있습니다.'),el('p','','마우스·터치로 봉을 고르고 휠로 확대하세요. 키보드 좌우는 봉 선택, +/−는 확대·축소, Shift+좌우는 기간 이동입니다.'));
       const primary=el('div','stock-primary-controls');primary.append(controls,intervals);
-      if(document.querySelector?.('meta[name="zero-lightweight-chart"]')?.content==='./lwc')primary.append(button('Lightweight 차트',openLightweightChart));
+      if(window.ZEROTechnicalChart)primary.append(button('분석 차트 · MA20/60',()=>window.ZEROTechnicalChart.open({identity:explore.identity,name:companyById(explore.identity)?.name,range:explore.range,...(explore.chart?{data:explore.chart}:{})})));
+      else if(document.querySelector?.('meta[name="zero-lightweight-chart"]')?.content==='./lwc')primary.append(button('Lightweight 차트',openLightweightChart));
       const settings=el('details','stock-chart-settings');settings.append(el('summary','','차트 설정'),appearance,zoom);
       const completion=el('p','muted-note');completion.id='stock-completion-assumption';note.append(completion);
       const mdd=el('section','stock-mdd');mdd.id='stock-mdd';mdd.setAttribute('aria-live','polite');pane.append(primary,settings,status,mdd,wrap,readout,lessonPanel(),note);wireCanvas(canvas);
