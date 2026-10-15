@@ -35,7 +35,7 @@ EVENT = re.compile(r'[A-Z][A-Z_]{0,39}')
 PLAIN = {'/api/portfolio': 60, '/api/team': 300, '/api/office': 60, '/api/research': 1800, '/api/desk': 1800,
          '/api/funds': 1800, '/api/tqqq': 1800, '/api/institutions': 1800, '/api/live-quotes': 20}
 MAX_BYTES = 12_000_000
-TRENDS_SECONDS = 600
+TRENDS_SECONDS = 3600
 HEADLINES_SECONDS = 300  # live news-search titles; collected here, not on the Cloudflare site
 
 _cache, _pending, _lock = {}, {}, threading.Lock()
@@ -201,7 +201,7 @@ def _status():
         site = 'OK'
     except Unavailable as error:
         site = str(error)
-    return {**shape, 'site': site, 'bridge_version': '0.6.51', 'translation_diagnostic': zero_discovery.get_diagnostic()}
+    return {**shape, 'site': site, 'bridge_version': '0.6.52', 'translation_diagnostic': zero_discovery.get_diagnostic()}
 
 
 async def status(request):
@@ -224,7 +224,9 @@ class _UI(StaticFiles):
         return response
 
 
-routes = [
+import zero_lwc
+
+routes = [*zero_lwc.routes,
     Route('/zero/status', status),
     Route('/zero/api/{path:path}', api, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
     Route('/zero', to_ui),

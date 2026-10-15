@@ -4,7 +4,7 @@
   else window.ZEROLobbyWorld = make({Graph: window.Graph, astar: window.astar});
 })(function (search) {
   'use strict';
-  const CELL = 4, WIDTH = 160, HEIGHT = 100;
+  const CELL = 2, WIDTH = 160, HEIGHT = 100;
   const FICTION_NOTICE='가상 직원의 연출 대사 · 실제 계좌 확인 결과 아님';
   function validateChatterSeed(rows) {
     const fields=['id','team','persona','market','time','weather','text'];
@@ -51,22 +51,33 @@
   function createWorld(npcs, space, floor) {
     const grid = Array.from({length: WIDTH / CELL}, (_, x) => Array.from({length: HEIGHT / CELL}, (_, y) =>
       x * CELL <= floor.maxX && (x + 1) * CELL >= floor.minX && y * CELL <= floor.maxY && (y + 1) * CELL >= floor.minY ? 1 : 0));
-    const block = (left, top, right, bottom) => grid.forEach((column, x) => column.forEach((_, y) => {
+    // SkyOffice Game.ts (MIT) separates collidable objects from interaction locations; no upstream code/assets copied.
+    const objects=[];
+    const block = (id,left, top, right, bottom) => {objects.push({id,left,top,right,bottom,collides:true});grid.forEach((column, x) => column.forEach((_, y) => {
       const px = (x + .5) * CELL, py = (y + .5) * CELL;
       if (px >= left && px <= right && py >= top && py <= bottom) grid[x][y] = 0;
-    }));
-    block(60, 26, 100, 36); // the meeting table stays in place while people move
+    }));};
+    block('meeting-table',60, 26, 100, 36);
     npcs.filter(npc => npc.kind !== 'manager').forEach(npc => {
-      const p = npc.home || npc.pos; block(p.x - 3, p.y - 3, p.x + 3, p.y);
+      const p = npc.home || npc.pos; block('desk:'+npc.id,p.x - 3, p.y - 3, p.x + 3, p.y - 1);
     });
-    if (space?.props?.includes('coffee')) block(3, 25, 12, 34);
-    if (space?.props?.includes('sofa')) block(145, 53, 158, 59);
-    return {grid, graph: new search.Graph(grid), floor};
+    if (space?.props?.includes('coffee')) block('coffee',3, 25, 12, 34);
+    if (space?.props?.includes('sofa')) block('sofa',145, 53, 158, 59);
+    const locations=[{id:'meeting',activity:'reading',position:{x:80,y:40}},{id:'window',activity:'reading',position:{x:144,y:32}},{id:'review',activity:'reading',position:{x:96,y:62}}];
+    if(space?.props?.includes('coffee'))locations.unshift({id:'coffee',activity:'coffee',position:{x:15,y:32}});
+    return {grid, graph: new search.Graph(grid), floor,layers:{collision:grid,objects},locations};
   }
-  const cell = p => ({x: Math.max(0, Math.min(39, Math.floor(p.x / CELL))), y: Math.max(0, Math.min(24, Math.floor(p.y / CELL)))});
+  const cell = p => ({x: Math.max(0, Math.min(WIDTH/CELL-1, Math.floor(p.x / CELL))), y: Math.max(0, Math.min(HEIGHT/CELL-1, Math.floor(p.y / CELL)))});
   function canStand(world, p) {
+    if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return false;
     const f = world.floor, c = cell(p);
     return p.x >= f.minX && p.x <= f.maxX && p.y >= f.minY && p.y <= f.maxY && world.grid[c.x][c.y] === 1;
+  }
+  function canTraverse(world,from,to) {
+    if(!canStand(world,from)||!canStand(world,to))return false;
+    const steps=Math.max(1,Math.ceil(Math.hypot(to.x-from.x,to.y-from.y)/(CELL/2)));
+    for(let i=1;i<=steps;i++)if(!canStand(world,{x:from.x+(to.x-from.x)*i/steps,y:from.y+(to.y-from.y)*i/steps}))return false;
+    return true;
   }
   function nearestNode(world, p) {
     const at = cell(p), direct = world.graph.grid[at.x][at.y]; if (!direct.isWall()) return direct;
@@ -80,17 +91,49 @@
   }
   const point = (world, n) => ({x: Math.max(world.floor.minX, Math.min(world.floor.maxX, (n.x + .5) * CELL)), y: Math.max(world.floor.minY, Math.min(world.floor.maxY, (n.y + .5) * CELL))});
   function route(world, from, to) {
+    if(!canStand(world,from)||!to||!Number.isFinite(to.x)||!Number.isFinite(to.y))return [];
     const start = nearestNode(world, from), end = nearestNode(world, to);
     if (!start || !end) return [];
     const nodes = search.astar.search(world.graph, start, end);
     if (start !== end && !nodes.length) return [];
     const points = [point(world, start), ...nodes.map(n => point(world, n))];
     if (canStand(world, to)) points.push({x: to.x, y: to.y});
-    return points.filter((p, index) => {
+    const path=points.filter((p, index) => {
       const before = index ? points[index - 1] : from, after = points[index + 1];
       if (Math.hypot(p.x - before.x, p.y - before.y) < .01) return false;
       return !after || (p.x - before.x) * (after.y - p.y) !== (p.y - before.y) * (after.x - p.x);
     });
+    let previous=from;for(const waypoint of path){if(!canTraverse(world,previous,waypoint))return [];previous=waypoint;}
+    return path;
+  }
+  // Park et al., generative_agents Persona.move (Apache-2.0): architectural perceive/plan/execute separation only, no LLM or source copied.
+  function perceiveNpc(world,npc,scene) {
+    const now=scene.now,state=npc.behavior?.state||'WORK',until=npc.behavior?.until||0;
+    const distance=(a,b)=>a&&b?Math.hypot(a.x-b.x,a.y-b.y):Infinity;
+    return {phase:'PERCEIVE',now,allowed:Number.isFinite(now)&&scene.active===true&&!scene.paused&&!scene.hidden&&!scene.reduced&&canStand(world,npc.pos),state,until,due:now>=until,at_home:distance(npc.pos,npc.home)<0.5,moving:!!npc.motion,speaking:scene.speaking===true,player_near:distance(npc.pos,scene.player)<12,stationary:npc.kind==='manager'||npc.kind==='product',room_busy:scene.roaming>=3,hour:scene.hour,
+      locations:world.locations.filter(point=>canStand(world,point.position)&&distance(point.position,scene.player)>=6&&!(scene.reserved||[]).some(position=>distance(point.position,position)<4)).map(point=>({...point,position:{...point.position}}))};
+  }
+  function planNpc(npc,seen,rng=Math.random) {
+    const base={phase:'PLAN',now:seen.now,state:seen.state,until:seen.until,activity:npc.behavior?.activity||(npc.kind==='staff'?'typing':'reading'),target:npc.behavior?.target?{...npc.behavior.target}:undefined};
+    if(!seen.allowed||seen.moving||seen.speaking||seen.player_near)return {...base,intent:'WAIT'};
+    if(seen.stationary)return {...base,intent:'WORK'};
+    if(seen.state==='REST'&&!seen.due)return {...base,intent:'REST'};
+    if(seen.state==='BLOCKED'&&!seen.due)return {...base,intent:'WAIT'};
+    if(!seen.at_home)return {...base,intent:'RETURN',target:{...npc.home},activity:npc.kind==='staff'?'typing':'reading'};
+    if(seen.room_busy||!seen.locations.length)return {...base,intent:'WORK'};
+    const coffee=seen.hour>=6&&seen.hour<11?seen.locations.find(point=>point.id==='coffee'):null;
+    const goal=coffee||seen.locations[Math.min(seen.locations.length-1,Math.max(0,Math.floor(rng()*seen.locations.length)))];
+    return {...base,intent:'WALK',target:{...goal.position},activity:goal.activity};
+  }
+  function executeNpc(world,npc,plan) {
+    const base={phase:'ACT',intent:plan.intent,state:plan.state,until:plan.until,activity:plan.activity,target:plan.target?{...plan.target}:undefined,path:[]};
+    if(['WAIT','REST'].includes(plan.intent))return base;
+    if(plan.intent==='WORK')return {...base,state:'WORK',until:0};
+    if(!['WALK','RETURN'].includes(plan.intent))return {...base,state:'BLOCKED',until:plan.now+3000};
+    if(!canStand(world,plan.target))return {...base,state:'BLOCKED',until:plan.now+3000};
+    const path=route(world,npc.pos,plan.target);
+    if(!path.length)return {...base,state:'BLOCKED',until:plan.now+3000};
+    return {...base,state:plan.intent==='RETURN'?'RETURN':'MOVE',target:{...plan.target},until:0,path};
   }
   function rankUsers(rows) {
     const seen = new Set();
@@ -126,5 +169,5 @@
     const fresh = pool.filter(line => !recent.includes(line)), choices = fresh.length ? fresh : pool;
     return choices[Math.min(choices.length - 1, Math.floor(rng() * choices.length))];
   }
-  return {CELL, FICTION_NOTICE, validateChatterSeed, chatterContext, marketContext, safeTrendData, createWorld, canStand, route, rankUsers, chooseChatter, chatReply};
+  return {CELL, FICTION_NOTICE, validateChatterSeed, chatterContext, marketContext, safeTrendData, createWorld, canStand, canTraverse, route, perceiveNpc,planNpc,executeNpc,rankUsers, chooseChatter, chatReply};
 });

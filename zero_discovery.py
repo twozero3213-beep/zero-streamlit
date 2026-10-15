@@ -1,6 +1,7 @@
 """Fixed public Korea trends and anonymous translation of collected public news only."""
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+import io
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,7 @@ from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, HTTPRedirectHandler, build_opener
 from urllib.error import HTTPError
 import xml.etree.ElementTree as ET
+import feedparser
 from zero_trend_filter import clean_trend_keyword, get_safe_trend_keyword, fallback_keywords
 
 TRENDS_URL = 'https://trends.google.com/trending/rss?geo=KR'
@@ -76,9 +78,29 @@ def parse_rss(body, limit):
     text = body.decode('utf-8')
     if re.search(r'<!DOCTYPE|<!ENTITY', text, re.I):
         raise ValueError('PUBLIC_RSS_INVALID')
-    root = ET.fromstring(text)
-    if root.tag != 'rss' or root.find('channel') is None:
+    if not re.match(r'\s*(?:<\?xml[^>]*>\s*)?(?:<!--[\s\S]*?-->\s*)*<rss(?:\s[^>]*)?>\s*(?:<!--[\s\S]*?-->\s*)*<channel(?:\s|/?>)', text):
         raise ValueError('PUBLIC_RSS_INVALID')
+    # A bounded memory stream prevents feedparser from interpreting input as a URL or file path.
+    parsed = feedparser.parse(io.BytesIO(body))
+    if parsed.get('bozo') or not parsed.get('version', '').startswith('rss'):
+        raise ValueError('PUBLIC_RSS_INVALID')
+    # Keep the headlines collector's Element read interface without a second XML parser.
+    root = ET.Element('rss')
+    channel = ET.SubElement(root, 'channel')
+    traffic_keys = [prefix + '_approx_traffic' for prefix, uri in parsed.get('namespaces', {}).items()
+                    if uri == TRENDS_URL.split('?')[0]]
+    for entry in parsed.get('entries', [])[:200]:
+        item = ET.SubElement(channel, 'item')
+        source = entry.get('source', {})
+        values = {'title': entry.get('title'), 'link': entry.get('link'), 'pubDate': entry.get('published'),
+                  'source': source.get('title') if isinstance(source, dict) else None}
+        for name, value in values.items():
+            if isinstance(value, str):
+                ET.SubElement(item, name).text = value
+        for key in traffic_keys:
+            if isinstance(entry.get(key), str):
+                ET.SubElement(item, '{' + TRENDS_URL.split('?')[0] + '}approx_traffic').text = entry[key]
+                break
     return root
 
 

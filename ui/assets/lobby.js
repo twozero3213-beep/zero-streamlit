@@ -51,6 +51,7 @@
     button.setAttribute('aria-label', npc.name + ' · ' + npc.role + ' · 눌러서 대화');
     const desk = node('span', 'office-desk'); desk.style.left = pct(npc.home.x, L.STAGE.w); desk.style.top = pct(npc.home.y - 2, L.STAGE.h); desk.style.zIndex = String(Math.round((npc.home.y - 3) * 10)); stage.append(desk);
     button.dataset.activity = npc.kind === 'staff' ? 'typing' : 'reading'; button.style.setProperty('--blink-delay', (npc.face.eyes * .7) + 's');
+    npc.behavior={phase:'ACT',state:'WORK',intent:'WORK',until:0,activity:button.dataset.activity,path:[]};button.dataset.npcPhase='ACT';button.dataset.npcState='WORK';
     button.append(figure(npc.kind, npc.face, L.appearanceAt(S.npcs.indexOf(npc))), node('span', 'npc-name', npc.name), node('span', 'npc-bubble'));
     button.addEventListener('click', (event) => { event.stopPropagation(); talkTo(npc); });
     npc.el = button; place(npc); stage.append(button);
@@ -132,14 +133,14 @@
     if (direction) {
       S.target = null;
       const candidate = L.clampToFloor({x: S.player.pos.x + direction.x * speed, y: S.player.pos.y + direction.y * speed});
-      if (W.canStand(S.world, candidate)) next = candidate;
+      if (W.canTraverse(S.world,S.player.pos,candidate)) next = candidate;
       else {
         const slideX = {x: candidate.x, y: S.player.pos.y}, slideY = {x: S.player.pos.x, y: candidate.y};
-        if (W.canStand(S.world, slideX)) next = slideX; else if (W.canStand(S.world, slideY)) next = slideY;
+        if (W.canTraverse(S.world,S.player.pos,slideX)) next = slideX; else if (W.canTraverse(S.world,S.player.pos,slideY)) next = slideY;
       }
     } else if (S.target) {
-      const target = S.target, step = L.moveToward(S.player.pos, target.path[0], speed); next = step;
-      if (step.arrived) { target.path.shift(); if (!target.path.length) { S.target = null; arrived = target.after; } }
+      const target = S.target, step = L.moveToward(S.player.pos, target.path[0], speed);
+      if(W.canTraverse(S.world,S.player.pos,step)){next=step;if (step.arrived) { target.path.shift(); if (!target.path.length) { S.target = null; arrived = target.after; } }}else S.target=null;
     }
     if (next) {
       const dx = next.x - S.player.pos.x, dy = next.y - S.player.pos.y;
@@ -276,38 +277,51 @@
     const motion = M.animate(target, {...values, duration: kind === 'level' ? 600 : 480, ease: 'out(3)', onComplete: () => S.motions.delete(motion)});
     S.motions.add(motion);
   }
-  function walkNpc(npc, destination, done, seat = false) {
+  function setNpcBehavior(npc,behavior) {
+    npc.behavior=behavior;npc.el.dataset.npcPhase=behavior.phase;npc.el.dataset.npcState=behavior.state;
+    if(behavior.intent!=='WAIT'&&!['MOVE','RETURN'].includes(behavior.state))npc.el.dataset.activity=behavior.activity;
+  }
+  function walkNpc(npc, destination, done, preparedPath) {
     if (!M?.animate || !S.npcs.includes(npc)) return false;
-    const path = W.route(S.world, npc.pos, destination); if (!path.length) return false;
-    if (seat) path.push({...npc.home});
+    const world=S.world,epoch=sceneEpoch,current=()=>epoch===sceneEpoch&&world===S.world&&S.npcs.includes(npc);
+    const path = preparedPath||W.route(world, npc.pos, destination); if (!path.length) return false;
     npc.el.dataset.walking = 'true'; npc.el.dataset.activity = 'walking';
     function segment(index) {
-      if (!S.npcs.includes(npc)) return;
+      if (!current()) return;
       const point = path[index];
       if (!point) { npc.motion = null; npc.el.dataset.walking = 'false'; done(); proximity(); return; }
+      if(!W.canTraverse(world,npc.pos,point)){setNpcBehavior(npc,{...npc.behavior,state:'BLOCKED',until:Date.now()+3000,path:[]});npc.motion=null;npc.el.dataset.walking='false';return;}
       const dx = point.x - npc.pos.x, dy = point.y - npc.pos.y; facing(npc, dx, dy);
+      let previous={...npc.pos};
       const motion = M.animate(npc.pos, {
         x: point.x, y: point.y, duration: Math.max(80, Math.hypot(dx, dy) / 18 * 1000), ease: 'linear',
-        onUpdate: () => place(npc),
-        onComplete: () => { S.motions.delete(motion); segment(index + 1); }
+        onUpdate: () => {
+          if(!current()){motion.cancel();S.motions.delete(motion);return;}
+          if(!W.canTraverse(world,previous,npc.pos)){npc.pos.x=previous.x;npc.pos.y=previous.y;motion.cancel();S.motions.delete(motion);npc.motion=null;npc.el.dataset.walking='false';setNpcBehavior(npc,{...npc.behavior,state:'BLOCKED',until:Date.now()+3000,path:[]});place(npc);return;}
+          previous={...npc.pos};place(npc);
+        },
+        onComplete: () => { S.motions.delete(motion);if(current()&&npc.motion===motion)segment(index + 1); }
       });
       npc.motion = motion; S.motions.add(motion);
       if (!S.active || S.paused || document.hidden) motion.pause();
     }
     segment(0); return true;
   }
-  const WAYPOINTS = [{x: 15, y: 32}, {x: 80, y: 40}, {x: 144, y: 30}, {x: 96, y: 62}];
   function roamTick() {
     if (!S.active || S.paused || document.hidden || reduceMotion) return;
-    S.npcs.filter(npc => npc.away && !npc.motion && Date.now() >= npc.returnAt).forEach(npc => {
-      if (!walkNpc(npc, npc.home, () => { npc.away = false; npc.el.dataset.activity = npc.kind === 'staff' ? 'typing' : 'reading'; }, true)) npc.returnAt = Date.now() + 3000;
+    const now=Date.now(),hour=L.kstParts(new Date(now)).hour;
+    S.npcs.forEach(npc=>{
+      const seen=W.perceiveNpc(S.world,npc,{now,hour,active:S.active,paused:S.paused,hidden:document.hidden,reduced:reduceMotion,player:S.player?.pos,speaking:npc.el.classList.contains('speaking')||S.chatNpc===npc&&chat.dialog.open,roaming:S.npcs.filter(other=>other.away).length,reserved:S.npcs.filter(other=>other!==npc&&other.away).map(other=>other.behavior?.target||other.pos)});
+      npc.el.dataset.npcPhase=seen.phase;
+      const plan=W.planNpc(npc,seen);npc.el.dataset.npcPhase=plan.phase;
+      const action=W.executeNpc(S.world,npc,plan);setNpcBehavior(npc,action);
+      if(['MOVE','RETURN'].includes(action.state)&&action.intent!=='WAIT'){
+        npc.away=true;
+        if(!walkNpc(npc,action.target,()=>{const returning=action.intent==='RETURN';npc.away=!returning;setNpcBehavior(npc,{...action,state:returning?'WORK':'REST',until:returning?0:Date.now()+5000,path:[]});},action.path)){
+          npc.away=Math.hypot(npc.pos.x-npc.home.x,npc.pos.y-npc.home.y)>=0.5;setNpcBehavior(npc,{...action,state:'BLOCKED',until:now+3000,path:[]});
+        }
+      }
     });
-    if (S.npcs.filter(npc => npc.away).length >= 3) return;
-    const movers = S.npcs.filter(npc => npc.kind !== 'manager' && !npc.away && !npc.el.classList.contains('speaking'));
-    if (!movers.length) return;
-    const npc = movers[Math.floor(Math.random() * movers.length)], spot = WAYPOINTS[Math.floor(Math.random() * WAYPOINTS.length)];
-    npc.away = true;
-    if (!walkNpc(npc, spot, () => { npc.el.dataset.activity = spot.x < 20 ? 'coffee' : 'reading'; npc.returnAt = Date.now() + 5000; })) npc.away = false;
   }
   function clockTick() {
     const parts = L.kstParts(new Date()), clock = $('lobby-clock'); if (clock) clock.textContent = String(parts.hour).padStart(2, '0') + ':' + String(parts.minute).padStart(2, '0') + ' KST';

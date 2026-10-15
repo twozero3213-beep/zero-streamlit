@@ -66,7 +66,7 @@ class DiscoveryTests(unittest.TestCase):
         many = b'<rss><channel/></rss>'
         self.assertEqual(discovery.collect_trends(NOW, fetch=lambda url: many)['items'], [])
 
-    def test_rss_route_cache_600_seconds_and_refuses_queries_writes(self):
+    def test_rss_route_cache_3600_seconds_and_refuses_queries_writes(self):
         def call(method='GET', query=b''):
             scope = {'type': 'http', 'method': method, 'path': '/zero/api/trends', 'query_string': query, 'headers': [], 'path_params': {'path': 'trends'}}
             return asyncio.run(proxy.api(Request(scope)))
@@ -77,7 +77,7 @@ class DiscoveryTests(unittest.TestCase):
             self.assertTrue(first['fallback'])
             self.assertEqual(json.loads(call().body), first)
             self.assertEqual(call().status_code, 200)
-            self.assertEqual(proxy._cache['trends'][0], 700)
+            self.assertEqual(proxy._cache['trends'][0], 3700)
         collect.assert_called_once()
         self.assertEqual(call(query=b'q=private').status_code, 404)
         self.assertEqual(call('POST').status_code, 403)
@@ -90,6 +90,94 @@ class DiscoveryTests(unittest.TestCase):
         self.assertTrue(body['fallback'])
         self.assertIsNotNone(discovery.clean_trend_keyword(body['safe_keyword']))
         self.assertNotIn('PRIVATE', r.body.decode())
+
+    def test_trends_cache_fresh_3599_expired_3600_and_singleflight(self):
+        value = {'items': [{'keyword':'인공지능 반도체','traffic':None,'published_at':NOW.isoformat()}], 'retrieved_at': NOW.isoformat()}
+        with mock.patch.object(discovery, 'collect_trends', return_value=value) as collect:
+            with mock.patch.object(proxy.time, 'monotonic', return_value=100):
+                first = proxy.get_trends()
+            with mock.patch.object(proxy.time, 'monotonic', return_value=3699):
+                self.assertEqual(proxy.get_trends(), first)
+                self.assertEqual(collect.call_count, 1)
+            with mock.patch.object(proxy.time, 'monotonic', return_value=3700):
+                self.assertEqual(proxy.get_trends(), first)
+                self.assertEqual(collect.call_count, 2)
+        proxy._cache.clear()
+        entered, release, barrier = threading.Event(), threading.Event(), threading.Barrier(8)
+        def collect_once():
+            entered.set()
+            if not release.wait(2):
+                raise AssertionError('synthetic release deadline')
+            return value
+        def call():
+            barrier.wait(2)
+            return proxy.get_trends()
+        with mock.patch.object(discovery, 'collect_trends', side_effect=collect_once) as collect, mock.patch.object(proxy.time, 'monotonic', return_value=100):
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                jobs = [pool.submit(call) for _ in range(8)]
+                try:
+                    self.assertTrue(entered.wait(2))
+                    self.assertTrue(all(not job.done() for job in jobs))
+                finally:
+                    release.set()
+                self.assertTrue(all(job.result(timeout=2) == first for job in jobs))
+            collect.assert_called_once()
+            self.assertEqual(proxy._cache['trends'][0], 3700)
+        self.assertNotIn('trends', proxy._pending)
+
+    def test_feedparser_in_memory_bozo_root_dtd_size_and_namespace_contract(self):
+        for body in [b'https://127.0.0.1/private', b'<rss><item/></rss>', b'<rss><wrapper><channel/></wrapper></rss>', b'<feed xmlns="http://www.w3.org/2005/Atom"/>', b'<rss><channel><item></channel></rss>', b'<!ENTITY x SYSTEM "file:///private"><rss><channel/></rss>', b'<!DOCTYPE rss SYSTEM "https://127.0.0.1/private"><rss><channel/></rss>']:
+            with self.subTest(body=body), mock.patch.object(discovery, 'build_opener') as opener:
+                with self.assertRaises(ValueError):
+                    discovery.parse_rss(body, discovery.RSS_LIMIT)
+                opener.assert_not_called()
+        with mock.patch.object(discovery.feedparser, 'parse') as parse:
+            with self.assertRaisesRegex(ValueError, 'PUBLIC_RSS_TOO_LARGE'):
+                discovery.parse_rss(b'x' * 101, 100)
+            parse.assert_not_called()
+        aliased = RSS.replace(b'xmlns:ht=', b'xmlns:g=').replace(b'ht:approx_traffic', b'g:approx_traffic')
+        with mock.patch.object(discovery, 'build_opener') as opener:
+            value = discovery.collect_trends(NOW, fetch=lambda url: aliased)
+        opener.assert_not_called()
+        self.assertEqual(value['items'][0]['traffic'], '200+')
+        with mock.patch.object(discovery.feedparser, 'parse', wraps=discovery.feedparser.parse) as parse:
+            root = discovery.parse_rss(RSS, discovery.RSS_LIMIT)
+        self.assertTrue(hasattr(parse.call_args.args[0], 'read'), 'parser receives a bounded memory stream, never URL/path')
+        self.assertEqual(root.findall('./channel/item')[0].findtext('title'), 'alpha & beta')
+
+    def test_requirements_preserve_streamlit_and_pin_installed_parser(self):
+        lines = (Path(__file__).resolve().parents[1] / 'requirements.txt').read_text(encoding='utf-8').splitlines()
+        self.assertIn('streamlit==1.65.0', lines)
+        self.assertIn('feedparser==6.0.14', lines)
+        self.assertIn('lightweight-charts==2.1', lines)
+        self.assertIn('pandas==2.3.3', lines)
+        self.assertEqual(discovery.feedparser.__version__, '6.0.14')
+
+    def test_public_fetch_reads_one_bounded_body_without_redirect_or_retry(self):
+        response = mock.MagicMock()
+        response.status = 200
+        response.read.return_value = b'x' * 51
+        response.__enter__.return_value = response
+        opener = mock.Mock()
+        opener.open.return_value = response
+        with mock.patch.object(discovery, 'build_opener', return_value=opener) as build:
+            with self.assertRaisesRegex(ValueError, 'PUBLIC_BODY_TOO_LARGE'):
+                discovery._get(discovery.TRENDS_URL, 50)
+        response.read.assert_called_once_with(51)
+        self.assertIsInstance(build.call_args.args[0], discovery._NoRedirect)
+        opener.open.assert_called_once()
+        request = opener.open.call_args.args[0]
+        self.assertEqual(request.full_url, discovery.TRENDS_URL)
+        self.assertEqual(request.get_header('Accept-encoding'), 'identity')
+        self.assertEqual(opener.open.call_args.kwargs, {'timeout': 4})
+        self.assertIsNone(discovery._NoRedirect().redirect_request(None, None, 302, None, None, 'https://127.0.0.1/private'))
+
+    def test_feedparser_preserves_headline_element_contract(self):
+        body = b'<rss><channel><item><title>BREAKING: Synthetic public news - Reuters</title><link>https://news.google.com/rss/articles/synthetic</link><source url="https://www.reuters.com">Reuters</source><pubDate>Thu, 15 Oct 2026 00:00:00 GMT</pubDate></item></channel></rss>'
+        item = discovery.parse_rss(body, discovery.RSS_LIMIT).findall('./channel/item')[0]
+        self.assertEqual(item.findtext('source'), 'Reuters')
+        self.assertEqual(item.findtext('link'), ROW['url'])
+        self.assertEqual(item.findtext('pubDate'), 'Thu, 15 Oct 2026 00:00:00 GMT')
 
     def test_exact_persistent_cache_anonymous_query_and_charge_before_send(self):
         def fetch(url):

@@ -25,9 +25,15 @@ def build(source, checkout=None):
     source = Path(source).resolve()
     output = OUT.resolve()
     filter_source = None
+    chart_sources = {}
     if checkout:
         filter_source = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/trend_filter.py'],
                                        capture_output=True, check=True, encoding='utf-8').stdout
+    if checkout:
+        for name in ('streamlit_chart.py', 'chart_licenses.txt'):
+            chart_sources[name] = subprocess.run(
+                ['git', '-C', str(checkout), 'show', 'HEAD:zero/' + name],
+                capture_output=True, check=True, encoding='utf-8').stdout
     if not (source / 'assets').is_dir() or not (source / 'index.html').is_file():
         raise ValueError('HOSTED_SOURCE_MISSING')
     if output == source or output in source.parents or source in output.parents or OUT.is_symlink() or OUT.is_junction():
@@ -56,6 +62,8 @@ def build(source, checkout=None):
     if api and not re.fullmatch(r'https?://[A-Za-z0-9.:-]+', api):
         raise SystemExit('ZERO_LOBBY_API_INVALID')
     html = html.replace('<meta name="zero-lobby-api" content="">', f'<meta name="zero-lobby-api" content="{api}">')
+    html = html.replace('<meta name="zero-lightweight-chart" content="">',
+                        '<meta name="zero-lightweight-chart" content="./lwc">')
     for extra in sorted(EXTRAS.glob('*.js')):
         shutil.copy(extra, OUT / 'assets' / extra.name)
         html = html.replace('</body>', f'  <script src="assets/{extra.name}" defer></script>\n</body>', 1)
@@ -66,6 +74,9 @@ def build(source, checkout=None):
         (OUT / 'assets' / 'research-references.json').write_text(refs, encoding='utf-8')
     if filter_source is not None:
         (Path(__file__).parent / 'zero_trend_filter.py').write_text(filter_source, encoding='utf-8')
+    for name, content in chart_sources.items():
+        target = 'zero_streamlit_chart.py' if name.endswith('.py') else name
+        (Path(__file__).parent / target).write_text(content, encoding='utf-8')
     print('built', sum(1 for _ in OUT.rglob('*') if _.is_file()), 'files')
 
 
