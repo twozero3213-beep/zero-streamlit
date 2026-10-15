@@ -299,7 +299,7 @@ function renderBriefingSources() {
   const highlights = (researchDesk.data?.news || []).filter((item) => (institution === 'ALL' || deskReviewedInstitution(item) === institution)
     && (item.title + ' ' + item.category).toLowerCase().includes(search.toLowerCase()));
   if (highlights.length && kind === 'ALL') {
-    const reviewed = node('section', 'desk-reviewed-section'); reviewed.append(node('h3', '', '화면에서 읽는 확인 요약'), node('p', 'muted-note', '원문에서 확인한 짧은 요약입니다. 아래 수집 목록 전체를 검토했다는 뜻은 아닙니다.'));
+    const reviewed = node('details', 'desk-reviewed-section'); reviewed.append(node('summary', '', '화면에서 읽는 확인 요약'), node('p', 'muted-note', '원문에서 확인한 짧은 요약입니다. 아래 수집 목록 전체를 검토했다는 뜻은 아닙니다.'));
     highlights.filter((item) => deskReviewedInstitution(item) !== 'OTHER').forEach((item) => { const detail = node('details', 'desk-reviewed-item'), head = node('summary'); head.append(node('strong', '', item.title), node('span', 'muted-note', '발표 ' + deskText(item.release_date))); detail.append(head, deskNewsBody(item)); reviewed.append(detail); }); container.append(reviewed);
   }
   const sourceStrip = node('details', 'desk-source-overview'), sourceGrid = node('div', 'desk-source-strip');
@@ -307,7 +307,7 @@ function renderBriefingSources() {
   library.sources.filter((source) => institution === 'ALL' || deskInstitution(source) === institution).forEach((source) => {
     const group = node('div', 'desk-source-card'); group.append(deskLink(deskText(source.label, '공개 출처'), source.url), node('span', 'muted-note', source.error_code || source.status === 'FAILED' ? '목록 조회 실패 · 기존 자료 확인 필요' : (source.records || []).filter((r) => r.access === 'INDEX_ONLY').length + '개 목록 · 본문 검토 전')); sourceGrid.append(group);
   }); sourceStrip.append(sourceGrid); container.append(sourceStrip);
-  const list = node('div', 'desk-report-rows'); rows.forEach((record) => {
+  const list = node('div', 'desk-report-rows'); list.id = 'report-records-list'; rows.forEach((record) => {
     const button = node('button', 'desk-library-row'), main = node('span', 'desk-library-main'), metadata = node('span', 'desk-library-date'); button.type = 'button';
     main.append(node('strong', '', deskText(record.title, '제목 미확인')), node('span', 'desk-library-meta', deskText(record.source.label) + ' · ' + ({MACRO_RESEARCH:'경제 연구', POLICY_RELEASE:'정책 발표', EDUCATION:'투자 공부'}[deskReportKind(record.kind)] || '공개 자료')));
     metadata.append(node('span', '', record.published_date || '발표일 미확인'), node('span', 'desk-library-state', '본문 검토 전'));
