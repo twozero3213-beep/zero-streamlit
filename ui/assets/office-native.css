@@ -1,0 +1,4 @@
+.office-native-canvas{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;z-index:1;image-rendering:auto !important;pointer-events:none;display:block}
+html #lobby-view .lobby-stage.office-native-ready{width:min(100%,calc(var(--zero-canvas,360px)*1.6)) !important;height:auto !important;aspect-ratio:16/10 !important;min-width:0 !important;min-height:0 !important;max-height:var(--zero-canvas,360px);margin-inline:auto;box-sizing:border-box !important;border:0 !important;padding:0 !important;overflow:hidden}
+
+.office-native-credits{max-width:min(640px,90vw);max-height:80vh;overflow:auto;padding:24px;border:1px solid #c2ced2;border-radius:12px;background:#fff;color:#283d4c;font:inherit;overflow-wrap:anywhere}.office-native-credits a{display:inline-block;margin:8px 16px 8px 0}.office-native-credits::backdrop{background:rgb(12 30 42 / .45)}

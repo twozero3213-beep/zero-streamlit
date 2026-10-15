@@ -6,10 +6,10 @@
   if (!view) return;
   const L = window.ZEROLobbyLogic, W = window.ZEROLobbyWorld, M = window.anime;
   const FICTION_NOTICE=W.FICTION_NOTICE;
-  const FICTION_CAPTION='가상 대사 · 실제 계좌 확인 아님';
+  const FICTION_CAPTION='가상 대사 · 실제 계좌 확인 아님 · 모니터 선은 장식';
   const $ = (id) => document.getElementById(id);
   const node = (tag, className = '', text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
-  const stage = $('lobby-stage'), reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  const stage = $('lobby-stage'),motionMedia=window.matchMedia?.('(prefers-reduced-motion: reduce)');let reduceMotion=!!motionMedia?.matches;
   const pct = (value, total) => (value / total * 100).toFixed(2) + '%';
   const store = { get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }, set(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* private mode */ } } };
 
@@ -93,7 +93,8 @@
     });
   }
   function attachSprites(){
-    if(S.renderer||!S.world?.layout||!window.ZEROOfficeSprites?.attach)return;
+    if(S.renderer||!S.world?.layout)return;
+    const renderers=[window.ZEROOfficeNative,window.ZEROOfficeSprites].filter(api=>typeof api?.attach==='function');if(!renderers.length)return;
     const world=S.world;
     const sync=()=>{
       if(S.world!==world)return;
@@ -105,8 +106,8 @@
       [...S.npcs,S.player].filter(Boolean).forEach(syncNpcLabel);
       [...S.npcs,S.player].filter(Boolean).forEach(entity=>{if(entity.pet?.el){entity.pet.el.hidden=ready;if(ready&&entity.pet.raf){cancelAnimationFrame(entity.pet.raf);entity.pet.raf=0;}}});
     };
-    try{S.renderer=window.ZEROOfficeSprites.attach(stage,{getActors:spriteActors,getLayout:()=>S.layout,onObject:object=>{if(S.world===world)interactObject(object);}});S.renderer.setActive(S.active&&!S.paused);}
-    catch(_){stage.dataset.spriteRendering='fallback';return;}
+    for(const renderer of renderers){try{S.renderer=renderer.attach(stage,{getActors:spriteActors,getLayout:()=>S.layout,onObject:object=>{if(S.world===world)interactObject(object);}});S.renderer.setActive(S.active&&!S.paused);break;}catch(_){S.renderer?.destroy();S.renderer=null;}}
+    if(!S.renderer){stage.dataset.spriteRendering='fallback';return;}
     if(typeof MutationObserver==='function'){S.rendererObserver=new MutationObserver(sync);S.rendererObserver.observe(stage,{childList:true,subtree:true,attributes:true,attributeFilter:['data-sprites']});}sync();
   }
   function interactObject(object){
@@ -133,6 +134,7 @@
   document.addEventListener('zero-session-changed',()=>{S.ownerNick=null;S.ownerLayout=null;S.layoutRevision=null;S.ownerLayoutConfirmed=false;});
 
   function buildStage() {
+    stopSpeech();
     stopSprites();
     if(fullBoardDialog?.open)fullBoardDialog.close();
     if(boardHome&&board?.parentElement!==boardHome)boardHome.insertBefore(board,boardNext?.parentElement===boardHome?boardNext:null);
@@ -314,6 +316,20 @@
 
   // ---- chatter and roaming --------------------------------------------------------------------
   function chatterNotice() {return FICTION_NOTICE+(S.mode==='zero'?' · 공식 연출 성향이며 실제 전략 설정 아님':'')+(S.trendFallback?' · 키워드 출처: 가상 대화 소재 · 실제 검색 순위 아님':'')+(W.marketContext(S.market)!=='unknown'?' · 시세 전일 변동 구간 · 예측·매매 판단 아님':'');}
+  const speechActors=new Set();
+  function cancelSpeech(entity,dismiss=false){
+    const speech=entity.speechState;if(speech){clearTimeout(speech.timer);clearTimeout(speech.expiry);speech.cancelled=true;speech.visual.textContent=speech.text;entity.speechState=null;}
+    speechActors.delete(entity);
+    if(dismiss&&entity.el){entity.el.classList.remove('speaking');entity.el.dataset.activity=entity.homeActivity||(entity.kind==='staff'?'typing':'reading');S.speaker=S.speaker.filter(item=>item.id!==entity.id);syncNpcLabel(entity);}
+  }
+  function stopSpeech(){[...speechActors].forEach(entity=>cancelSpeech(entity,true));}
+  function typeSpeech(entity,text,ms){
+    const bubble=entity.bubbleEl||entity.el.querySelector('.npc-bubble'),full=node('span','npc-speech-full',text),visual=node('span','npc-speech-visual');full.id=(bubble.id||'lobby-speech-'+entity.id)+'-full';entity.el.setAttribute?.('aria-describedby',full.id);visual.setAttribute('aria-hidden','true');bubble.setAttribute('aria-live','off');bubble.replaceChildren(full,visual);entity.speechFull=full;
+    const speech=entity.speechState={text,visual,timer:null,expiry:null,cancelled:false},letters=Array.from(text);speechActors.add(entity);let index=0;
+    const tick=()=>{if(speech.cancelled||entity.speechState!==speech)return;if(!S.active||S.paused||document.hidden||reduceMotion||entity.hidden||!S.npcs.includes(entity)){cancelSpeech(entity);return;}index=Math.min(letters.length,index+2);visual.textContent=letters.slice(0,index).join('');if(index<letters.length)speech.timer=setTimeout(tick,35);};
+    if(reduceMotion)visual.textContent=text;else tick();
+    speech.expiry=setTimeout(()=>{if(entity.speechState===speech)cancelSpeech(entity,true);},ms);
+  }
   function fitSpeech(bubble,entity) {
     const bounds=stage.getBoundingClientRect();
     if(![bounds.left,bounds.top,bounds.right,bounds.bottom,bounds.width,bounds.height].every(Number.isFinite)||bounds.width<=16||bounds.height<=16)return false;
@@ -321,7 +337,7 @@
     const box=bubble.getBoundingClientRect(),actor=entity.el.getBoundingClientRect();
     if(box.width>bounds.width-16||box.height>bounds.height-16)return false;
     const blocked=[actor,...(S.hotspots||[]).map(hit=>hit.getBoundingClientRect())].filter(rect=>rect.right>rect.left&&rect.bottom>rect.top);
-    if(stage.dataset?.spriteRendering==='ready')S.npcs.filter(npc=>npc!==entity&&!npc.hidden).forEach(npc=>{const x=bounds.left+npc.pos.x/160*bounds.width,y=bounds.top+(npc.pos.y-9)/100*bounds.height;blocked.push({left:x-bounds.width*3/160,right:x+bounds.width*3/160,top:y,bottom:y+bounds.height*4/100});});
+    // Floating speech must still fit in a crowded room; preserve the speaker and interaction targets.
     const candidates=[];for(let top=bounds.top+8;top+box.height<=bounds.bottom-8;top+=8)for(let left=bounds.left+8;left+box.width<=bounds.right-8;left+=8){if(blocked.every(rect=>left+box.width<=rect.left-6||left>=rect.right+6||top+box.height<=rect.top-6||top>=rect.bottom+6))candidates.push({left,top});}
     candidates.sort((a,b)=>Math.hypot(a.left-box.left,a.top-box.top)-Math.hypot(b.left-box.left,b.top-box.top));if(!candidates.length)return false;
     const {left,top}=candidates[0];
@@ -339,11 +355,11 @@
       return other && box.left < other.right + 14 && box.right > other.left - 14 && box.top < other.bottom + 14 && box.bottom > other.top - 14;
     });
     if (overlaps) { entity.el.classList.remove('speaking'); return; }
-    const record = {id: entity.id, pos: entity.pos}; S.speaker.push(record);
+    cancelSpeech(entity);const record = {id: entity.id, pos: entity.pos}; S.speaker.push(record);
     entity.lastSmallTalk=text;entity.el.setAttribute?.('aria-describedby',bubble.id);syncNpcLabel(entity);
     S.recent.push(text); S.recent = S.recent.slice(-12);
     entity.el.dataset.activity = 'chatting'; gesture(entity, 'talk');
-    setTimeout(() => { entity.el.classList.remove('speaking');entity.el.dataset.activity=entity.homeActivity||(entity.kind==='staff'?'typing':'reading');S.speaker=S.speaker.filter(item=>item!==record);syncNpcLabel(entity); }, ms);
+    typeSpeech(entity,text,ms);
     return true;
   }
   const MAX_BUBBLES = 4, BUBBLE_GAP = 26;
@@ -742,6 +758,7 @@
     S.motions.forEach(motion => { if (on && !S.paused && !document.hidden) motion.resume(); else motion.pause(); });
     S.renderer?.setActive(on&&!S.paused);
     if (!on) {
+      stopSpeech();
       invalidateRoster();S.motions.forEach(motion=>motion.cancel());S.motions.clear();
       S.npcs.forEach(npc=>{npc.motion=null;npc.el.dataset.walking='false';npc.away=Math.hypot(npc.pos.x-npc.home.x,npc.pos.y-npc.home.y)>=.5;setNpcBehavior(npc,{...npc.behavior,intent:npc.away?'REST':'WORK',state:npc.away?'REST':'WORK',activity:npc.away?'idle':npc.homeActivity||(npc.kind==='staff'?'typing':'reading'),until:0,path:[]});});
       S.worldLoaded = false; S.keys.clear();S.target=null; if (S.rafId) cancelAnimationFrame(S.rafId); S.rafId = 0; return;
@@ -799,15 +816,18 @@
   document.addEventListener('zero-lobby-open', () => window.ZEROLobby.open());
   if (document.documentElement.dataset.zeroView === 'lobby') window.ZEROLobby.open();
   document.addEventListener('visibilitychange', () => {
+    if(document.hidden)stopSpeech();
     S.motions.forEach(motion => { if (document.hidden || !S.active || S.paused) motion.pause(); else motion.resume(); });
     if (!document.hidden) ensureLoop();
   });
+  motionMedia?.addEventListener?.('change',()=>{reduceMotion=motionMedia.matches;if(reduceMotion)stopSpeech();});
   new ResizeObserver(entries => {
     const size = entries[0].contentRect; if (!size.width || !size.height) return;
     S.viewport = {w: size.width, h: size.height}; S.npcs.forEach(npc => { if (npc.el) place(npc); }); if (S.player) place(S.player);
   }).observe(stage);
   $('lobby-pause').addEventListener('click', () => {
     S.paused = !S.paused; stage.dataset.paused = String(S.paused); $('lobby-pause').textContent = S.paused ? '연출 재개' : '연출 멈춤'; $('lobby-pause').setAttribute('aria-pressed', String(S.paused));
+    if(S.paused)stopSpeech();
     S.motions.forEach(motion => { if (S.paused) motion.pause(); else if (S.active && !document.hidden) motion.resume(); });
     S.renderer?.setActive(S.active&&!S.paused);
     if (!S.paused) { roamTick(); chatterTick(); }

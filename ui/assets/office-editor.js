@@ -85,11 +85,13 @@
   const actions=make('footer','office-editor-actions'),retry=make('button','secondary-button','다시 불러오기'),save=make('button','primary-button','저장');retry.type=save.type='button';actions.append(retry,save);modal.append(header,toolbar,palette,paletteNav,region,note,actions);document.body.append(modal);
   const previewPainter=createPreviewPainter({
     makeCanvas:()=>document.createElement('canvas'),
-    render:async(frame,layout)=>{
-      if(!window.ZEROOfficeSprites?.drawLayout)throw Error('PREVIEW_UNAVAILABLE');
-      // Invalid drafts still need visible furniture so the owner can repair missing paths/fixtures.
-      const value=clone(layout);if(!window.ZEROOfficeLayout?.validate(value))delete value.version;
-      await window.ZEROOfficeSprites.drawLayout(frame,value);
+    render:(frame,layout)=>{
+      const renderer=typeof window.ZEROOfficeNative?.drawLayout==='function'?window.ZEROOfficeNative:window.ZEROOfficeSprites;
+      if(typeof renderer?.drawLayout!=='function')throw Error('PREVIEW_UNAVAILABLE');
+      const value=clone(layout);
+      // The legacy sprite renderer needs an unversioned display copy of invalid drafts.
+      if(renderer===window.ZEROOfficeSprites&&!window.ZEROOfficeLayout?.validate(value))delete value.version;
+      return renderer.drawLayout(frame,value);
     },
     commit:frame=>{const context=preview.getContext('2d');if(!frame){context.clearRect(0,0,preview.width,preview.height);return;}preview.width=frame.width;preview.height=frame.height;context.imageSmoothingEnabled=false;context.drawImage(frame,0,0);},
     fail:()=>{if(modal.open&&!controller.snapshot().error)note.textContent='가구 미리보기를 불러오지 못했어요. 배치 선택은 계속 사용할 수 있어요.';}
