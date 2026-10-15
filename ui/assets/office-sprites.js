@@ -103,7 +103,7 @@ function petStep(record,target,blocked,dt){
   return record.pos;
 }
 async function loadManifest(){
-  if(!manifestPromise)manifestPromise=(async()=>{const response=await global.fetch(assetURL('assets/sprites/manifest.json'),{credentials:'same-origin',cache:'force-cache',redirect:'error'});if(!response.ok)throw Error('SPRITES_UNAVAILABLE');const text=await response.text();if(text.length>1_000_000)throw Error('SPRITES_MANIFEST_INVALID');return validateManifest(JSON.parse(text));})().catch(error=>{manifestPromise=null;throw error;});return manifestPromise;
+  if(!manifestPromise)manifestPromise=(async()=>{const response=await global.fetch(assetURL('/'+'assets/sprites/manifest.json'),{credentials:'same-origin',cache:'force-cache',redirect:'error'});if(!response.ok)throw Error('SPRITES_UNAVAILABLE');const text=await response.text();if(text.length>1_000_000)throw Error('SPRITES_MANIFEST_INVALID');return validateManifest(JSON.parse(text));})().catch(error=>{manifestPromise=null;throw error;});return manifestPromise;
 }
 async function loadAssets(){
   if(!assetsPromise)assetsPromise=(async()=>{
