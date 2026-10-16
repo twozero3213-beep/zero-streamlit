@@ -956,7 +956,7 @@
       S.player.el.setAttribute('aria-label', S.playerName + ' · ' + label + (confirmed ? ' · 서버 검증 회사 경험치' : ' · 이 기기의 학습 기록'));
     }
   }
-  function setPlayerName(name) { S.playerName = name && name !== '나' ? name : 'ZERO'; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
+  function setPlayerName(name) { const previous=S.playerName; S.playerName = name && name !== '나' ? name : 'ZERO'; if(S.mode==='own'&&S.sceneOwner===previous)S.sceneOwner=S.playerName; if (name) store.set('zero-lobby-name', name); S.player?.el.querySelector('.npc-name')?.replaceChildren(document.createTextNode(S.playerName)); $('lobby-name-chip').textContent = S.playerName; }
   function setUserBoard(rows, meta = {}) { S.userBoard = rows; S.boardMeta = meta; paintRanking(); if (S.active && S.player) loadReturns(); }
 
 

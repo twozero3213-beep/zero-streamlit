@@ -140,7 +140,33 @@
       ? (U.me.membership.method === 'phone' ? '휴대폰 인증 회원' : '이메일 인증 회원') + ' · 연락처는 공개되지 않습니다. 전광판 수익률은 별도로 검증합니다.'
       : '방문자 계정 · 전광판과 수익률 랭킹에 표시되지 않습니다. 기존 사무실은 인증 후에도 유지할 수 있습니다.');
     const verify = node('button', 'primary-button', '이메일·휴대폰으로 인증하기'); verify.type = 'button'; verify.addEventListener('click', viewSignup);
-    body.replaceChildren(membership, node('p', 'muted-note', '직원 이름·업무·전략 배분은 대표님만 조회합니다. 팀 이름은 공개를 선택한 경우에만 표시됩니다. 회원 인증은 증권계좌 연결이나 매매 권한을 추가하지 않습니다.'), ...(!isMember ? [verify] : []), team, company, portfolio, see, layout, wardrobe, ...(!isMember ? [renew] : []), out);
+    const rename = node('button','secondary-button','닉네임 변경'); rename.type='button'; rename.addEventListener('click',viewNickname);
+    body.replaceChildren(membership, ...(isMember ? [rename] : []), node('p', 'muted-note', '직원 이름·업무·전략 배분은 대표님만 조회합니다. 팀 이름은 공개를 선택한 경우에만 표시됩니다. 회원 인증은 증권계좌 연결이나 매매 권한을 추가하지 않습니다.'), ...(!isMember ? [verify] : []), team, company, portfolio, see, layout, wardrobe, ...(!isMember ? [renew] : []), out);
+  }
+
+  function viewNickname() {
+    const view=++profileEpoch,token=U.token,generation=U.generation;
+    $('profile-title').textContent='닉네임 변경'; $('profile-sub').textContent='사무실·광장·커뮤니티에 표시되는 이름을 바꿉니다.';
+    const nick=input('text',{maxLength:12,autocomplete:'nickname',value:U.me.nick}),form=node('form','member-form member-onboarding'),note=status(),save=node('button','primary-button','저장'),back=node('button','secondary-button','돌아가기');
+    save.type='submit';back.type='button';back.addEventListener('click',viewHome);
+    nick.addEventListener('input',()=>{if(!save.disabled)note.textContent='';});
+    const current=()=>dialog.open&&profileEpoch===view&&U.token===token&&U.generation===generation;
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();if(save.disabled||!current())return;
+      const value=nick.value.trim(),problem=nickProblem(value);
+      if(problem){note.textContent=problem;return;}
+      if(value===U.me.nick){note.textContent='현재 사용 중인 닉네임이에요.';return;}
+      save.disabled=true;nick.disabled=true;note.textContent='닉네임을 저장하고 있어요.';
+      try {
+        const result=await api('/me/nick',{method:'PUT',token,body:{nick:value}});
+        if(!current())return;
+        U.me={...U.me,nick:result.nick};window.ZEROLobby.setPlayerName(result.nick);render();viewHome();loadBoard();
+        const done=status();done.textContent='닉네임을 변경했어요.';body.prepend(done);
+      } catch(error){if(current())note.textContent=say(error);}
+      finally{if(current()){save.disabled=false;nick.disabled=false;}}
+    });
+    form.append(field('새 닉네임',nick),node('p','muted-note','2~12자의 한글·영문·숫자·밑줄을 사용할 수 있어요. 다른 회원의 닉네임과 운영용 이름은 사용할 수 없어요.'),note,save,back);
+    body.replaceChildren(form);nick.focus?.();
   }
 
   const select = (options, value, blank) => {
