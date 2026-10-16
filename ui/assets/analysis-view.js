@@ -24,7 +24,7 @@ function validate(data,now=Date.now()){
 }
 function chatter(data,now=Date.now()){
  if(!data||!data.fetched_at||now-Date.parse(data.fetched_at)>3600000)return [];
- return data.indices.filter(row=>row.state==='AVAILABLE'&&Number.isFinite(row.change_percent)).slice(0,3).map(row=>row.name+' '+(row.kind==='FUTURES'?'선물 시세':'현물 지수')+'는 비교 가격보다 '+Math.abs(Math.trunc(row.change_percent*100)/100).toFixed(2)+'% '+(row.change_percent>0?'높게':row.change_percent<0?'낮게':'같게')+' 관측됐어요. 지연 자료부터 차분히 확인해요.');
+ return data.indices.filter(row=>row.state==='AVAILABLE'&&Number.isFinite(row.change_percent)).slice(0,3).map(row=>row.name+(row.kind==='FUTURES'?'은':' 현물 지수는')+' 공급자 비교 기준값보다 '+Math.abs(Math.trunc(row.change_percent*100)/100).toFixed(2)+'% '+(row.change_percent>0?'높게':row.change_percent<0?'낮게':'같게')+' 관측됐어요. 지연 자료부터 차분히 확인해요.');
 }
 if(typeof module!=='undefined'&&module.exports)module.exports={validate,chatter,SPECS};
 if(!root.document)return;
@@ -44,7 +44,18 @@ function paint(){const host=doc.getElementById('analysis-content'),status=doc.ge
  if(saved.earnings.state==='UNAVAILABLE')calendar.append(make('p','muted-note','검증된 예정 일정이 아직 연결되지 않았습니다.'));
  else if(!saved.earnings.events.length)calendar.append(make('p','muted-note','제공자 범위에 예정 일정이 없습니다.'));
  else for(const e of saved.earnings.events.slice(0,3))calendar.append(make('p','analysis-event',e.date+' · '+e.symbol+' '+e.company+' · '+({BEFORE_MARKET:'장 시작 전',AFTER_MARKET:'장 마감 후',UNKNOWN:'시간 미확인'}[e.time])));
- const trends=make('section','analysis-card');trends.append(make('h3','','시장 흐름 요약'));const lines=chatter(saved);for(const line of lines.slice(0,2))trends.append(make('p','analysis-trend',line));if(!lines.length)trends.append(make('p','muted-note','새로운 가격 근거를 확인한 뒤 요약합니다.'));
+ const trends=make('section','analysis-card');trends.append(make('h3','','시장 흐름 요약'),make('p','analysis-trend','선물 등락은 각 선물의 비교 기준값에서 얼마나 움직였는지 보여 줍니다. 현물이 같은 폭으로 움직인다는 뜻은 아닙니다.'));
+ const lines=chatter(saved),futures=lines.length?saved.indices.filter(row=>row.kind==='FUTURES'&&row.state==='AVAILABLE'&&Number.isFinite(row.change_percent)).slice(0,2):[];
+ for(const row of futures)trends.append(make('p','analysis-trend',row.name+' '+(row.change_percent>0?'+':'')+digits(row.change_percent)+'% · 100 기준 → '+(100+row.change_percent).toLocaleString('ko-KR',{maximumFractionDigits:6})));
+ if(!futures.length)trends.append(make('p','muted-note','새로운 가격 근거를 확인한 뒤 요약합니다.'));
+ for(const [direction,condition]of [['상승','선물 약세가 줄고 해당 현물도 함께 오를 때'],['횡보','선물 방향이 엇갈리고 현물이 좁은 범위에서 등락할 때'],['하락','선물 약세가 이어지고 해당 현물도 함께 내릴 때']])trends.append(make('p','analysis-trend',direction+': '+condition));
+ trends.append(make('p','muted-note','확률: 계산할 수 없음 · 시점 동기화·과거 조건부 표본·예측기간 부족'));
+ const basis=make('details');basis.append(make('summary','','계산 기준·확률 근거'),make('p','muted-note','수치의 기준: 공급자 비교 기준값(previous_close) 대비 (현재값 ÷ 비교 기준값 − 1) × 100입니다. 공급자의 이전 종가 필드를 쓰지만 기준 거래일·정산가 여부는 입력에 없어 확정할 수 없습니다.'));
+ basis.append(make('p','muted-note','Nasdaq 100 선물과 Nasdaq 종합 현물은 대상 지수가 달라 직접 가격차(갭)를 계산할 수 없습니다. 비교하려면 같은 기초지수·관측 시점·통화를 맞춰야 합니다.'));
+ basis.append(make('p','muted-note','확률 추정에는 같은 선물 조건에서 일정 기간 뒤의 현물 수익률을 모은 과거 조건부 표본과 예측기간 정의가 필요합니다. 현재 입력은 시세 저장본으로 해당 자료가 없습니다. 횡보 범위·지속시간 기준도 없습니다.'));
+ basis.append(make('p','muted-note','거시지표의 과거 분포는 해당 지표의 일간·월간·분기 등 관측주기와 실제 표본 수로 읽습니다. 과거 관측빈도·분위수는 미래 확률이 아닙니다. 이 입력에는 거시 표본이나 선물 조건별 이후 현물 수익률을 연결한 자료가 없습니다.'));
+ basis.append(make('p','muted-note','금리·배당·만기까지의 기간이 선물 이론가격에 영향을 주며 실제 가격은 단기 수급으로 달라질 수 있습니다.'));
+ const theory=make('a','','CME Group · 선물과 현물의 이론가격 설명');theory.href='https://www.cmegroup.com/trading/equity-index/fairvalue.html';theory.target='_blank';theory.rel='noopener noreferrer';basis.append(theory);trends.append(basis);
  const source=make('button','secondary-button analysis-source','출처·관측 시각 전체 보기');source.type='button';source.addEventListener('click',detail);host.append(quotes,calendar,trends,source);
 }
 function endpoint(){const base=doc.querySelector('meta[name="zero-lobby-api"]')?.content;return base==='https://zero-lobby.zero-cloudflare.workers.dev'?`${base}/api/analysis-feed`:'api/analysis-feed';}

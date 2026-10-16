@@ -582,7 +582,7 @@
   }
   document.addEventListener('zero-ready',paint);
   document.addEventListener('zero-profile-updated',paint);
-  document.addEventListener('zero-session-changed',()=>{sessionEpoch++;guestGeneration++;closeLounge();if(guest?.open)guest.close();guest?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());if(compose?.open)compose.close();compose?.querySelector('form')?.reset();if(closet?.open)closet.close();closet?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());paint();});
+  document.addEventListener('zero-session-changed',()=>{sessionEpoch++;guestGeneration++;closeLounge();if(guest?.open)guest.close();guest?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());if(compose?.open)compose.close();compose?.querySelector('form')?.reset();if(closet?.open)closet.close();closet?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());paint();if(window.ZERO?.currentView?.()==='community')openCommunity(true);});
   window.ZEROSocial={openCommunity:()=>openCommunity(!loaded),openLounge,closeLounge,openGuestbook,openWardrobe,paintAppearance,updatePet,removePet};
   if(window.ZERO?.currentView?.()==='community')openCommunity(true);
   if(window.ZERO?.currentView?.()==='plaza')openLounge();

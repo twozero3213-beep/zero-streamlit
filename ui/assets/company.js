@@ -16,11 +16,19 @@
   const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
   const button=(text,run)=>{const n=el('button','secondary-button',text);n.type='button';n.addEventListener('click',run);return n;};
   let fields=0,epoch=0,marketEpoch=0,staff=[];
+  function companyContent(){
+    return $('company-view')?.querySelector('#company-content')||null;
+  }
+  function showState(target,state,text,...actions){
+    target.dataset.companyState=state;target.setAttribute('aria-busy',String(state==='loading'));
+    const panel=el('section','panel company-state'),message=el('p','',text);message.setAttribute('role',state==='error'?'alert':'status');panel.append(message,...actions);target.replaceChildren(panel);
+  }
+  function showLogin(target){staff=[];showState(target,'login','로그인하면 회사와 전략 직원을 관리할 수 있어요.',button('로그인·체험하기',()=>U()?.openProfile()));}
   function field(label,type,value,min,max){const input=el(type==='select'?'select':'input');input.id='company-field-'+(++fields);if(type!=='select')input.type=type;input.value=value??'';if(min!==undefined)input.min=min;if(max!==undefined)input.max=max;const wrap=el('label','company-field');wrap.htmlFor=input.id;wrap.append(el('span','',label),input);return {input,wrap};}
   const pct=value=>typeof value==='number'&&Number.isFinite(value)?(Math.trunc(value*100)/100).toFixed(2)+'%':'집계 전';
-  const reason=code=>({POINT_IN_TIME_FUNDAMENTALS_REQUIRED:'가치투자에는 당시 공개된 재무 자료가 필요합니다.',DIVIDEND_HISTORY_REQUIRED:'고배당 전략에는 검증된 배당 이력이 필요합니다.',INSUFFICIENT_HISTORY:'공통 가격 이력이 부족합니다.',INSUFFICIENT_COMMON_HISTORY:'관찰 준비 구간을 제외한 공통 가격 이력이 부족합니다.',FUNDAMENTAL_HISTORY_REQUIRED:'가치투자에 필요한 당시 재무 자료가 없습니다.',UNSUPPORTED_SPLIT:'주식 분할이 확인되어 미조정 가격으로 계산하지 않습니다.',SPLIT_METADATA_REQUIRED:'주식 분할 여부를 확인할 근거가 필요합니다.',STRATEGY_UNAVAILABLE:'전략 엔진 연결을 확인하지 못했습니다.',UNAUTHORIZED:'닉네임으로 로그인한 뒤 사용해 주세요.',STAFF_INVALID:'직원 설정과 가중치를 확인해 주세요.'}[code]||'자료를 확인하지 못했습니다. 설정과 연결 상태를 확인해 주세요.');
+  const reason=code=>({POINT_IN_TIME_FUNDAMENTALS_REQUIRED:'가치투자에는 당시 공개된 재무 자료가 필요합니다.',DIVIDEND_HISTORY_REQUIRED:'고배당 전략에는 검증된 배당 이력이 필요합니다.',INSUFFICIENT_HISTORY:'공통 가격 이력이 부족합니다.',INSUFFICIENT_COMMON_HISTORY:'관찰 준비 구간을 제외한 공통 가격 이력이 부족합니다.',FUNDAMENTAL_HISTORY_REQUIRED:'가치투자에 필요한 당시 재무 자료가 없습니다.',UNSUPPORTED_SPLIT:'주식 분할이 확인되어 미조정 가격으로 계산하지 않습니다.',SPLIT_METADATA_REQUIRED:'주식 분할 여부를 확인할 근거가 필요합니다.',STRATEGY_UNAVAILABLE:'전략 엔진 연결을 확인하지 못했습니다.',UNAUTHORIZED:'로그인한 뒤 사용해 주세요.',STAFF_INVALID:'직원 설정과 가중치를 확인해 주세요.'}[code]||'자료를 확인하지 못했습니다. 설정과 연결 상태를 확인해 주세요.');
   async function request(path,options={}){if(!U()?.session())throw {code:'UNAUTHORIZED'};return U().request(path,options);}
-  function clearPrivate(){epoch++;staff=[];$('company-content')?.replaceChildren();}
+  function clearPrivate(){epoch++;staff=[];const target=companyContent();if(target)showLogin(target);}
   document.addEventListener('zero-session-changed',()=>{clearPrivate();if(document.documentElement.dataset.zeroView==='company')open();});
   function drawStaff(list){
     list.replaceChildren();staff.forEach((row,index)=>{
@@ -39,9 +47,10 @@
     return {company:company.name||'대표님의 회사',teams:[...groups].map(([name,members])=>({name,role:'비공개 전략 연구',leader:members[0],members:members.slice(1)}))};
   }
   async function open(){
-    const target=$('company-content');if(!target)return;const generation=++epoch;target.replaceChildren(el('p','', '회사를 불러오는 중…'));
-    if(!U()?.session()){target.replaceChildren(el('p','', '닉네임으로 로그인하면 회사와 전략 직원을 관리할 수 있어요.'),button('닉네임으로 시작',()=>U()?.openProfile()));return;}
+    const target=companyContent();if(!target)return;const generation=++epoch;showState(target,'loading','회사를 불러오는 중…');
     try{
+      if(!U()){showState(target,'error','로그인 연결을 불러오지 못했어요. 다시 불러와 주세요.',button('다시 불러오기',open));return;}
+      if(!U().session()){showLogin(target);return;}
       const [companyData,staffData]=await Promise.all([request('/me/company'),request('/me/staff')]);if(generation!==epoch)return;
       const company=companyData.company||companyData;staff=Array.isArray(staffData.staff)?structuredClone(staffData.staff):[];
       const name=field('투자회사 이름','text',company.name||''),note=el('p','muted-note'),list=el('div','company-staff-list');name.input.maxLength=20;
@@ -58,8 +67,8 @@
           result.append(el('p','muted-note','시점 이후 자료를 과거 판단에 쓰지 않는 연구 계산입니다. 배당·환율·세금 제외 가정은 결과에서 확인하세요. 신호는 가상 실험의 검토 제안입니다. '+REVIEW_NOTICE+' 계좌 주문·리밸런싱을 실행하지 않습니다.'));
         }catch(e){if(generation===epoch){result.replaceChildren(el('p','',reason(e.code)));run.textContent='백테스트 다시 시도';}}finally{if(generation===epoch)run.disabled=false;}});
       research.append(el('h2','','백테스트·리밸런싱 신호'),el('p','muted-note',REVIEW_NOTICE),range.wrap,fees.wrap,slip.wrap,run,button('오늘의 운용 검토 완료',async()=>{if(!runId){result.append(el('p','','먼저 서버에 저장된 전략 검증 결과를 확인해 주세요.'));return;}try{await request('/me/daily-review',{method:'POST',body:{run_id:runId}});if(generation!==epoch)return;await U().refresh();result.append(el('p','','서버에서 일일 검토 기록을 확인했어요. 같은 기록은 중복 보상하지 않아요. '+REVIEW_NOTICE));}catch(e){result.append(el('p','',reason(e.code)));}}),result);
-      target.replaceChildren(settings,hires,research);drawStaff(list);
-    }catch(e){if(generation===epoch)target.replaceChildren(el('p','',reason(e.code)),button('다시 불러오기',open));}
+      drawStaff(list);target.replaceChildren(settings,hires,research);target.dataset.companyState='ready';target.setAttribute('aria-busy','false');
+    }catch(e){if(generation===epoch){if(e?.code==='UNAUTHORIZED')showLogin(target);else showState(target,'error',reason(e?.code),button('다시 불러오기',open));}}
   }
   async function openMarketCard(company,target){
     const generation=++marketEpoch,identity=company.id,card=el('section','market-card panel'),status=el('p','muted-note','시장 정보를 불러오는 중…');card.append(el('h2','','시세·호가·주요일정'),status);target.append(card);
