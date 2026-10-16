@@ -413,6 +413,7 @@ html[data-zero-view='team'] #notice { display:none; }
 .office-map .office-actor:not(.is-chatting) .office-actor-bubble{left:var(--office-bubble-left,-40px);top:var(--office-bubble-top,-36px);bottom:auto}
 .office-map.office-overview .office-actor.is-speaking .office-actor-status{display:none}
 .office-map.office-overview .office-owner .office-actor-bubble{width:160px;left:10px;top:-36px;bottom:auto}
+#office-map .office-actor-bubble{width:var(--office-speech-width,260px);font-size:var(--office-speech-font,13px);padding:calc(5px / var(--office-scene-scale,1)) calc(7px / var(--office-scene-scale,1))}
 .office-map.office-overview .office-room-summary span{display:none}
 .office-map.office-overview .office-room-summary strong{font-size:var(--office-room-title-font,20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .office-map.office-overview .office-room-title{visibility:hidden}

@@ -452,7 +452,7 @@ if(typeof window!=='undefined') {
       const facts=document.getElementById('stock-lesson-facts'),brief=document.getElementById('stock-lesson-brief'),source=document.getElementById('stock-lesson-source');facts.replaceChildren();document.getElementById('stock-lesson-feedback').textContent='';
       teacher.querySelectorAll('.stock-lesson-choices button').forEach(b=>{b.disabled=lesson.state!=='AVAILABLE';});
       if(lesson.state!=='AVAILABLE'){resetLesson('확인된 완료 봉이 없어 숫자 설명과 연습을 기다리고 있어요.');teacher.dataset.lessonKey=key;source.textContent='가격이 없을 때 예시 가격으로 차트를 채우지 않아요.';return;}
-      const bar=lesson.bar,unit=chart.currency==='KRW'?'원':'달러',price=value=>fm(value,4)+' '+unit,color=lesson.direction==='UP'?'빨간 봉':lesson.direction==='DOWN'?'파란 봉':'시작과 끝이 같은 회색 봉';
+      const bar=lesson.bar,unit=chart.currency==='KRW'?'원':'달러',price=value=>fm(value,20)+' '+unit,color=lesson.direction==='UP'?'빨간 봉':lesson.direction==='DOWN'?'파란 봉':'시작과 끝이 같은 회색 봉';
       teacher.dataset.direction=lesson.direction;teacher.dataset.answer='시작 '+price(bar.open)+' → 끝 '+price(bar.close)+'인 '+color+'이에요.';
       brief.textContent=lesson.intervalLabel+'봉: 시작 '+price(bar.open)+' → 끝 '+price(bar.close)+'인 '+color+'이에요.';
       const average20=lesson.averages.find(a=>a.period===20);document.getElementById('stock-lesson-average').textContent=average20.value===null?'20봉 평균은 '+average20.samples+'/20개라 아직 부족해요.':'20봉 종가 평균은 '+price(average20.value)+'예요. 끝 가격은 '+{UP:'평균보다 높아요',DOWN:'평균보다 낮아요',FLAT:'평균과 같아요'}[average20.priceRelation]+'. '+(average20.slope===null?'직전 평균의 표본이 부족해 기울기는 아직 비교하지 않아요.':'평균은 '+{UP:'직전 봉의 평균보다 올랐어요',DOWN:'직전 봉의 평균보다 내렸어요',FLAT:'직전 봉의 평균과 같아요'}[average20.slope]+'.');
@@ -463,7 +463,7 @@ if(typeof window!=='undefined') {
       add('평균선의 움직임은 이렇게 봐요','새 종가가 더해지고 가장 오래된 종가가 빠지면서 평균이 움직여요. 과거 가격을 모은 선이라 실제 가격 변화를 늦게 따라가며, 짧은 봉에서는 작은 흔들림도 눈에 잘 띄어요. 평균 위·아래와 평균의 오르내림은 지금 기록을 읽은 관찰이에요.');
       const volume=lesson.volume;add('거래량은 오간 수량이에요',volume.current===null?'선택한 봉의 거래량을 제공자가 주지 않아 크기를 비교할 수 없어요.':'선택한 봉은 '+fm(volume.current,0)+'주가 거래된 기록이에요. 같은 주식의 반복 거래도 포함하며 사람 수나 거래 금액은 아니에요. '+(volume.average===null?'직전 20봉의 거래량은 '+volume.samples+'/20개만 확인돼 평균 비교를 보류해요.':volume.relative===null?'직전 20봉 평균은 '+fm(volume.average)+'주지만 0인 평균과 배수로 비교하지 않아요.':'직전 20봉 평균 '+fm(volume.average)+'주와 비교하면 '+fm(volume.relative)+'배예요.')+' 거래량만으로 누가 왜 거래했는지는 알 수 없어요.');
       add('관찰한 것과 모르는 것을 나눠요','가격·평균·거래량에서 지금 확인한 숫자를 먼저 말해보세요. 그다음 1일·1개월·1년 범위를 바꿔 작은 움직임과 긴 흐름을 비교해 보세요. 다음 가격이나 매수·매도 시점은 이 기록만으로 정할 수 없어요. 기업정보·재무 탭에서 실적과 가치평가를, 관련 뉴스에서 배경을 함께 확인하세요.');
-      source.textContent=(chart.status==='STALE'?'이전 저장가격으로 보는 연습이에요. ':'')+'선택한 봉까지 '+lesson.count+'개 완료 봉 · 자료 확인 '+dateLabel(Date.parse(chart.retrieved_at)/1000,'KR',true)+' · 표시 숫자는 반올림돼요. 수정주가·배당의 독립 대조 전이며 실제 가격 이동 순서는 한 봉에 모두 담기지 않아요.';
+      source.textContent=(chart.status==='STALE'?'이전 저장가격으로 보는 연습이에요. ':'')+'선택한 봉까지 '+lesson.count+'개 완료 봉 · 자료 확인 '+dateLabel(Date.parse(chart.retrieved_at)/1000,'KR',true)+' · 소수점 둘째 자리까지 절삭해 보여 주며, 줄인 값은 눌러 전체 값을 확인할 수 있어요. 수정주가·배당의 독립 대조 전이며 실제 가격 이동 순서는 한 봉에 모두 담기지 않아요.';
     }
     async function loadChart(){
       const identity=explore.identity,range=explore.range,sequence=++explore.sequence,status=document.getElementById('stock-chart-status');
@@ -518,9 +518,9 @@ if(typeof window!=='undefined') {
       if(explore.kind==='line')line(bars.map(b=>b.close),'#3182f6');
       averageLines.forEach(average=>line(average.values,average.color));
       context.fillStyle='#6b7684';context.fillText('거래량',left,278);context.fillText(dateLabel(bars[0].time,explore.chart?.market),left,344);const endLabel=dateLabel(bars.at(-1).time,explore.chart?.market);context.fillText(endLabel,Math.max(left,width-right-context.measureText(endLabel).width),344);
-      const selected=Math.max(0,Math.min(bars.length-1,explore.cursor===null?bars.length-1:explore.cursor)),bar=bars[selected];
+      const selected=Math.max(0,Math.min(bars.length-1,explore.cursor===null?bars.length-1:explore.cursor)),bar=bars[selected],unit=explore.chart.currency==='KRW'?'원':'달러',price=value=>fm(value,20)+' '+unit;
       if(explore.cursor!==null){context.strokeStyle='#8b95a1';context.setLineDash([3,3]);context.beginPath();context.moveTo(x(selected),top);context.lineTo(x(selected),volumeBottom);context.moveTo(left,y(bar.close));context.lineTo(width-right,y(bar.close));context.stroke();context.setLineDash([]);}
-      if(readout)readout.textContent=dateLabel(bar.time,explore.chart?.market,true)+' · 시 '+fm(bar.open)+' · 고 '+fm(bar.high)+' · 저 '+fm(bar.low)+' · 종 '+fm(bar.close)+' · 거래량 '+(bar.volume===null?'미확인':fm(bar.volume,0));
+      if(readout)readout.textContent=dateLabel(bar.time,explore.chart?.market,true)+' · 시가 '+price(bar.open)+' · 고가 '+price(bar.high)+' · 저가 '+price(bar.low)+' · 종가 '+price(bar.close)+' · 거래량 '+(bar.volume===null?'미확인':fm(bar.volume,0)+'주');
       teachChart(range.start+selected);
       canvas.dataset.visibleCount=String(bars.length);canvas.dataset.plotWidth=String(plotWidth);document.querySelectorAll('[data-stock-kind]').forEach(b=>{b.classList.toggle('active',b.dataset.stockKind===explore.kind);b.setAttribute('aria-pressed',String(b.dataset.stockKind===explore.kind));});
     }

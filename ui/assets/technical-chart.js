@@ -33,10 +33,12 @@ function loadVendor(){
  return vendorPromise;
 }
 function mount(container,options={}){
- let alive=true,sequence=0,controller=null,chart=null,frame=null,deadline=null,model=null,ro=null,life=null,networkDeadline=null,frameGeneration=0,refreshTimer=null,refreshGeneration=0,savedTimeRange=null;
+ let alive=true,sequence=0,controller=null,chart=null,frame=null,deadline=null,model=null,ro=null,life=null,networkDeadline=null,frameGeneration=0,refreshTimer=null,refreshGeneration=0,savedTimeRange=null,selectedTime=null,refreshFailed=false;
  const shell=node('section','technical-chart'),plot=node('div','technical-chart-plot'),status=node('p','technical-chart-status','공개 완료 가격을 확인하는 중입니다.'),controls=node('div','technical-chart-controls'),evidence=node('details','technical-chart-evidence');
  status.setAttribute('role','status');plot.setAttribute('aria-label','공개 지연·완료봉 캔들, MA20·MA60, 거래량');
  const retry=node('button','','다시 불러오기'),fallback=node('button','','기본 차트로 보기');retry.type=fallback.type='button';fallback.hidden=true;controls.append(retry,fallback);shell.append(plot,status,controls,evidence);container.append(shell);
+ const summary=node('summary'),readout=node('p'),cursor=node('input','technical-chart-cursor');
+ cursor.type='range';cursor.min='0';cursor.step='1';cursor.setAttribute('aria-label','날짜별 가격 선택');cursor.addEventListener('input',()=>selection(Number(cursor.value)));evidence.open=true;
  const height=()=>root.innerWidth<768?200:240;
  function rememberRange(){
   if(!chart)return;
@@ -47,7 +49,20 @@ function mount(container,options={}){
   try{chart.timeScale().setVisibleRange({from:savedTimeRange.from,to:savedTimeRange.to});}catch(_){savedTimeRange=null;chart.timeScale().fitContent();}
  }
  function release(){rememberRange();++frameGeneration;if(deadline!==null){root.clearTimeout(deadline);deadline=null;}chart?.remove();chart=null;if(frame){frame.remove();frame=null;}plot.replaceChildren();}
- function note(){status.textContent=(model.status==='STALE'||model.error_code==='DISPLAY_SNAPSHOT_OLDER'?'이전 저장 자료 · ':'')+'공개 지연·완료봉 · 60초 재확인·캐시된 완료봉일 수 있음 · 정규장 종료+10분 가정·휴장/조기폐장 독립 검증 전 · '+model.range+' / '+model.interval+' · MA20·MA60은 완료 봉 수 기준 · 거래량 '+(model.bars.some(b=>b.volume===null)?'일부 미확인':'주')+' · 관측 '+new Date(model.bars.at(-1).time*1000).toISOString()+' · 조회 '+model.retrieved_at;const link=node('a','','가격 출처');link.href=model.source_url;link.target='_blank';link.rel='noopener noreferrer';status.append(' ',link);const last=model.bars.at(-1);evidence.replaceChildren(node('summary','','최근 완료봉 OHLC·평균값'),node('p','','시가 '+last.open+' · 고가 '+last.high+' · 저가 '+last.low+' · 종가 '+last.close+' '+model.currency+' · 거래량 '+(last.volume===null?'미확인':last.volume)+' · '+[20,60].map(period=>{const points=average(model.bars,period);return 'MA'+period+' '+(points.length?points.at(-1).value:'표본 부족 ('+model.bars.length+'/'+period+')');}).join(' · ')));}
+ function selection(index){
+  if(!model||!Number.isInteger(index)||index<0||index>=model.bars.length)return;
+  const bar=model.bars[index];selectedTime=bar.time;
+  const date=new Intl.DateTimeFormat('ko-KR',{timeZone:model.market==='US'?'America/New_York':'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(bar.time*1000));
+  summary.textContent='선택봉 · '+date+' ('+(model.market==='US'?'뉴욕':'서울')+')';
+  readout.textContent=['시가 '+bar.open,'고가 '+bar.high,'저가 '+bar.low,'종가 '+bar.close].map(text=>text+' '+model.currency).join(' · ')+' · 거래량 '+(bar.volume===null?'미확인':bar.volume+'주')+' · '+[20,60].map(period=>{const points=average(model.bars.slice(0,index+1),period);return 'MA'+period+' '+(points.length?points.at(-1).value+' '+model.currency:'표본 부족 ('+(index+1)+'/'+period+')');}).join(' · ');
+  cursor.value=String(index);cursor.setAttribute('aria-valuetext',summary.textContent+' · 종가 '+bar.close+' '+model.currency);
+ }
+ function note(){
+  status.textContent=(refreshFailed?'조회 실패 · 이전 자료 유지 · ':'')+(model.status==='STALE'||model.error_code==='DISPLAY_SNAPSHOT_OLDER'?'이전 저장 자료 · ':'')+'공개 지연·완료봉 · 60초 재확인·캐시된 완료봉일 수 있음 · 정규장 종료+10분 가정·휴장/조기폐장 독립 검증 전 · '+model.range+' / '+model.interval+' · MA20·MA60은 완료 봉 수 기준 · 거래량 '+(model.bars.some(b=>b.volume===null)?'일부 미확인':'주')+' · 관측 '+new Date(model.bars.at(-1).time*1000).toISOString()+' · 조회 '+model.retrieved_at;
+  const link=node('a','','가격 출처');link.href=model.source_url;link.target='_blank';link.rel='noopener noreferrer';status.append(' ',link);
+  cursor.max=String(model.bars.length-1);evidence.replaceChildren(summary,cursor,readout);
+  const index=model.bars.findIndex(bar=>bar.time===selectedTime);selection(index<0?model.bars.length-1:index);
+ }
  function canvas(){
   release();fallback.hidden=true;plot.dataset.engine='canvas';const el=node('canvas');el.tabIndex=0;el.setAttribute('role','img');el.setAttribute('aria-label','검증된 완료봉 캔들·MA20 보라·MA60 초록·거래량. 상세 OHLC는 차트 아래 설명에서 확인');plot.append(el);
   const width=Math.max(180,Math.min(1600,plot.clientWidth||container.clientWidth||320)),h=height(),dpr=Math.min(root.devicePixelRatio||1,2);el.width=Math.round(width*dpr);el.height=Math.round(h*dpr);el.style.width='100%';el.style.height=h+'px';const ctx=el.getContext('2d');if(!ctx){status.textContent='차트 그리기를 지원하지 않습니다. 가격 원문을 확인해 주세요.';return;}ctx.scale(dpr,dpr);
@@ -56,6 +71,8 @@ function mount(container,options={}){
   const maxVolume=Math.max(1,...bars.map(b=>b.volume||0));bars.forEach((b,i)=>{ctx.strokeStyle=ctx.fillStyle=b.close>b.open?'#c93b49':b.close<b.open?'#1b64da':'#697586';ctx.beginPath();ctx.moveTo(x(i),y(b.high));ctx.lineTo(x(i),y(b.low));ctx.stroke();ctx.fillRect(x(i)-Math.max(1,step*.6)/2,Math.min(y(b.open),y(b.close)),Math.max(1,step*.6),Math.max(1,Math.abs(y(b.close)-y(b.open))));if(b.volume!==null){ctx.globalAlpha=.3;ctx.fillRect(x(i)-step*.3,h-20-b.volume/maxVolume*(h*.2),Math.max(1,step*.6),b.volume/maxVolume*(h*.2));ctx.globalAlpha=1;}});
   for(const line of lines){ctx.strokeStyle=line.color;ctx.beginPath();let started=false;bars.forEach((b,i)=>{const value=line.values.get(b.time);if(value===undefined)return;started?ctx.lineTo(x(i),y(value)):ctx.moveTo(x(i),y(value));started=true;});ctx.stroke();}
   ctx.fillStyle='#626d7b';ctx.font='11px sans-serif';ctx.fillText('MA20 · MA60 · 거래량 · 최근 '+bars.length+'봉',6,h-4);el.dataset.sampleStart=String(start);
+  el.addEventListener('pointerdown',event=>{const box=el.getBoundingClientRect();if(box.width>0)selection(start+Math.max(0,Math.min(bars.length-1,Math.floor(((event.clientX-box.left)/box.width*width-6)/step))));});
+  el.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const index=model.bars.findIndex(bar=>bar.time===selectedTime);selection(event.key==='Home'?start:event.key==='End'?model.bars.length-1:Math.max(start,Math.min(model.bars.length-1,index+(event.key==='ArrowLeft'?-1:1))));});
  }
  function visible(){const view=document.documentElement.dataset.zeroView;return !document.hidden&&shell.isConnected&&!shell.closest('[hidden],dialog:not([open])')&&(!view||['workbench','research','portfolio'].includes(view));}
  function render(forceCanvas=false){
@@ -63,6 +80,8 @@ function mount(container,options={}){
   const lib=root.LightweightCharts;
   if(!forceCanvas&&lib?.version?.()==='4.1.3'){
    try{chart=lib.createChart(plot,{width:Math.max(180,plot.clientWidth||320),height:height(),layout:{background:{color:'#ffffff'},textColor:'#333d4b'},rightPriceScale:{scaleMargins:{top:.08,bottom:.28}},timeScale:{timeVisible:model.interval!=='1d'}});
+    const observed=model,onSelect=event=>{if(alive&&model===observed&&visible()&&typeof event.time==='number')selection(model.bars.findIndex(bar=>bar.time===event.time));};
+    chart.subscribeCrosshairMove(onSelect);chart.subscribeClick(onSelect);
     chart.addCandlestickSeries({upColor:'#c93b49',downColor:'#1b64da',borderUpColor:'#c93b49',borderDownColor:'#1b64da',wickUpColor:'#c93b49',wickDownColor:'#1b64da'}).setData(model.bars.map(({time,open,high,low,close})=>({time,open,high,low,close})));
     for(const [period,color] of [[20,'#8b5cf6'],[60,'#009681']])chart.addLineSeries({color,lineWidth:1,priceLineVisible:false,lastValueVisible:false,title:'MA'+period}).setData(average(model.bars,period));
     const volume=chart.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'volume'});volume.priceScale().applyOptions({scaleMargins:{top:.78,bottom:0}});volume.setData(model.bars.filter(b=>b.volume!==null).map(b=>({time:b.time,value:b.volume,color:b.close>=b.open?'#c93b4960':'#1b64da60'})));chart.timeScale().fitContent();restoreRange();plot.dataset.engine='lightweight';fallback.hidden=true;const credit=node('a','technical-chart-credit','TradingView Lightweight Charts™');credit.href='https://www.tradingview.com/';credit.target='_blank';credit.rel='noopener noreferrer';plot.append(credit);return;
@@ -76,13 +95,13 @@ function mount(container,options={}){
  function clearRefresh(){++refreshGeneration;root.clearTimeout(refreshTimer);refreshTimer=null;}
  function armRefresh(){clearRefresh();const generation=refreshGeneration;if(alive&&model&&visible())refreshTimer=root.setTimeout(()=>{if(generation!==refreshGeneration)return;refreshTimer=null;if(alive&&model&&visible())load();},60000);}
  async function load(){
-  if(!alive||retry.disabled||!visible())return;clearRefresh();controller?.abort();controller=new AbortController();const run=++sequence;retry.disabled=true;status.textContent='공개 완료 가격을 확인하는 중입니다.';release();model=null;evidence.replaceChildren();
+  if(!alive||retry.disabled||!visible())return;clearRefresh();controller?.abort();controller=new AbortController();const run=++sequence;retry.disabled=true;status.textContent=model?'가격 재확인 중 · 이전 완료 자료를 표시하고 있어요.':'공개 완료 가격을 확인하는 중입니다.';
   const requestController=controller;networkDeadline=root.setTimeout(()=>requestController.abort(),4000);
-  try{if(!identityOK(options.identity)||!ranges.includes(options.range))throw Error('INVALID');const response=await root.fetch('api/chart?'+new URLSearchParams({identity:options.identity,range:options.range}),{method:'GET',credentials:'same-origin',cache:'no-store',redirect:'error',signal:controller.signal});if(!response.ok)throw Error('UNAVAILABLE');const text=await response.text();if(text.length>2000000)throw Error('SIZE');const data=validate(JSON.parse(text),options.identity,options.range);if(!data)throw Error('INVALID');if(!alive||run!==sequence)return;model=data;render();}
-  catch(_){if(alive&&run===sequence)status.textContent='완료 가격을 확인하지 못했습니다. 가상 가격을 표시하지 않습니다. 다시 불러올 수 있습니다.';}
+  try{if(!identityOK(options.identity)||!ranges.includes(options.range))throw Error('INVALID');const response=await root.fetch('api/chart?'+new URLSearchParams({identity:options.identity,range:options.range}),{method:'GET',credentials:'same-origin',cache:'no-store',redirect:'error',signal:controller.signal});if(!response.ok)throw Error('UNAVAILABLE');const text=await response.text();if(text.length>2000000)throw Error('SIZE');const data=validate(JSON.parse(text),options.identity,options.range);if(!data)throw Error('INVALID');if(!alive||run!==sequence)return;model=data;refreshFailed=false;render();}
+  catch(_){if(alive&&run===sequence){if(model){refreshFailed=true;note();}else status.textContent='완료 가격을 확인하지 못했습니다. 가상 가격을 표시하지 않습니다. 다시 불러올 수 있습니다.';}}
   finally{if(run===sequence){root.clearTimeout(networkDeadline);networkDeadline=null;if(alive){retry.disabled=false;armRefresh();}}}
  }
- function update(data){clearRefresh();root.clearTimeout(networkDeadline);networkDeadline=null;++sequence;controller?.abort();retry.disabled=false;model=validate(data,options.identity,options.range);if(model)render();else{release();evidence.replaceChildren();status.textContent='검증된 완료 가격이 없습니다. 다시 불러올 수 있습니다.';}armRefresh();}
+ function update(data){clearRefresh();root.clearTimeout(networkDeadline);networkDeadline=null;++sequence;controller?.abort();retry.disabled=false;model=validate(data,options.identity,options.range);refreshFailed=false;if(model)render();else{release();evidence.replaceChildren();status.textContent='검증된 완료 가격이 없습니다. 다시 불러올 수 있습니다.';}armRefresh();}
  function destroy(){if(!alive)return;alive=false;clearRefresh();++sequence;controller?.abort();root.clearTimeout(networkDeadline);networkDeadline=null;release();ro?.disconnect();life?.disconnect();document.removeEventListener('visibilitychange',visibility);document.removeEventListener('zero-view-changed',visibility);root.removeEventListener('message',message);shell.remove();}
  function visibility(){if(!shell.isConnected){destroy();return;}if(!visible()){clearRefresh();++sequence;controller?.abort();root.clearTimeout(networkDeadline);networkDeadline=null;retry.disabled=false;release();return;}if(model)render();armRefresh();}
  function message(event){if(frame&&event.source===frame.contentWindow&&event.data?.type==='zero-technical-ready'){root.clearTimeout(deadline);deadline=null;}}

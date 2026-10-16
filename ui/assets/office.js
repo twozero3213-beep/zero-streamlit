@@ -331,34 +331,45 @@
     };
     ownerEncounter={record:nearby,remaining:7000,lines:[[encouragement[nearby.actor.department]||'오늘도 무리하지 말고 차근차근 해요.','고마워요, ZERO. 막히는 부분은 팀과 함께 이야기해 볼게요.'],['잠깐 물 한잔 챙겨요. 다음에 또 이야기해요.','좋아요. ZERO도 쉬어 가면서 다녀요!']]};
     encounterCooldown.set(nearby.actor.id,socialClock);
-    const mapBox=$('office-map').getBoundingClientRect(),scale=world.getBoundingClientRect().width/WORLD_WIDTH;
-    for(const record of [ownerScene,nearby]){const center=position(record).x,button=record.button.getBoundingClientRect();record.button.style.setProperty('--office-chat-left',(Math.max(mapBox.left+4,Math.min(center-130*scale,mapBox.right-260*scale-4))-button.left)/scale+'px');}
     for(const record of [ownerScene,nearby]){for(const animation of record.animations)animation.pause();record.figure.classList.add('is-chatting');record.button.classList.add('is-chatting');}
     updateSceneVisibility(true);
-    const reply=nearby.bubble.getBoundingClientRect(),below=nearby.button.getBoundingClientRect().top+170*scale;
-    if(below+reply.height>mapBox.bottom-24)nearby.button.style.setProperty('--office-reply-top',(ownerScene.bubble.getBoundingClientRect().top-reply.height-8-nearby.button.getBoundingClientRect().top)/scale+'px');
-    else nearby.button.style.setProperty('--office-reply-top','170px');
+    fitChatter();
   }
   function fitChatter(){
     if(!world||meetingRecordsOnly||!sceneVisible())return;
     const map=$('office-map').getBoundingClientRect(),scale=world.getBoundingClientRect().width/WORLD_WIDTH,placements=[];
-    const occupied=[ownerScene,ownerEncounter?.record].filter(record=>record&&!record.bubble.hidden).map(record=>record.bubble.getBoundingClientRect());
-    for(const record of sceneActors.values()){
-      if(!record.button.classList.contains('show-bubble')||record.button.classList.contains('is-muted')||record.button.classList.contains('is-chatting'))continue;
+    const occupied=[],speakers=[ownerScene,ownerEncounter?.record,...sceneActors.values()];let crowded=false;
+    for(const record of new Set(speakers)){
+      if(!record||record.button.classList.contains('is-muted')||(record===ownerScene?record.bubble.hidden:!record.button.classList.contains('show-bubble')&&!record.button.classList.contains('is-speaking')))continue;
       const actor=record.button.getBoundingClientRect(),bubble=record.bubble.getBoundingClientRect();
       const preferredX=Math.max(map.left+4,Math.min(actor.left+90*scale-bubble.width/2,map.right-bubble.width-4));
-      const preferredY=Math.max(map.top+4,Math.min(actor.top+18*scale-bubble.height,map.bottom-bubble.height-24));
-      const xs=[preferredX,...occupied.flatMap(item=>[item.left-bubble.width-4,item.left+item.width+4])].filter(x=>x>=map.left+4&&x+bubble.width<=map.right-4).sort((a,b)=>Math.abs(a-preferredX)-Math.abs(b-preferredX));
-      const ys=[preferredY,...occupied.flatMap(item=>[item.top-bubble.height-4,item.top+item.height+4])].filter(y=>y>=map.top+4&&y+bubble.height<=map.bottom-24).sort((a,b)=>Math.abs(a-preferredY)-Math.abs(b-preferredY));
+      const preferredY=Math.max(map.top+4,Math.min(record===ownerEncounter?.record?actor.top+170*scale:actor.top+18*scale-bubble.height,map.bottom-bubble.height-24));
+      const xs=[preferredX,map.left+4,map.right-bubble.width-4,...occupied.flatMap(item=>[item.left-bubble.width-4,item.left+item.width+4])].filter(x=>x>=map.left+4&&x+bubble.width<=map.right-4).sort((a,b)=>Math.abs(a-preferredX)-Math.abs(b-preferredX));
+      const ys=[preferredY,map.top+4,map.bottom-bubble.height-24,...occupied.flatMap(item=>[item.top-bubble.height-4,item.top+item.height+4])].filter(y=>y>=map.top+4&&y+bubble.height<=map.bottom-24).sort((a,b)=>Math.abs(a-preferredY)-Math.abs(b-preferredY));
       let position;
       for(const left of xs){
         const top=ys.find(y=>!occupied.some(item=>left<item.left+item.width+4&&left+bubble.width+4>item.left&&y<item.top+item.height+4&&y+bubble.height+4>item.top));
         if(top!==undefined){position={left,top};break;}
       }
+      if(!position)crowded=true;
       const {left,top}=position||{left:preferredX,top:preferredY};
-      occupied.push({left,top,width:bubble.width,height:bubble.height});placements.push({record,left,top,actor});
+      occupied.push({left,top,width:bubble.width,height:bubble.height});placements.push({record,left,top,actor,width:bubble.width,height:bubble.height});
     }
-    for(const {record,left,top,actor}of placements){record.button.style.setProperty('--office-bubble-left',(left-actor.left)/scale+'px');record.button.style.setProperty('--office-bubble-top',(top-actor.top)/scale+'px');}
+    if(crowded&&placements.length){
+      // Dense mobile speech packs into balanced columns instead of covering another sentence.
+      const width=Math.max(...placements.map(item=>item.width)),count=Math.max(1,Math.floor((map.width-4)/(width+4)));
+      const columns=Array.from({length:count},()=>({height:0,items:[]}));
+      for(const item of [...placements].sort((a,b)=>b.height-a.height)){
+        const column=columns.reduce((a,b)=>a.height<=b.height?a:b);column.items.push(item);column.height+=item.height+4;
+      }
+      if(columns.every(column=>column.height-4<=map.height-28))columns.forEach((column,index)=>{
+        let top=map.top+4;
+        for(const item of column.items.sort((a,b)=>a.actor.top-b.actor.top)){
+          item.left=map.left+4+index*(width+4);item.top=top;top+=item.height+4;
+        }
+      });
+    }
+    for(const {record,left,top,actor}of placements){record.bubble.style.left=(left-actor.left)/scale+'px';record.bubble.style.top=(top-actor.top)/scale+'px';record.bubble.style.bottom='auto';}
   }
   function actorBubble(actor,preserve=false){
     const job=latestJob(actor),available=queue&&['EMPTY','AVAILABLE'].includes(queue.state);
@@ -461,6 +472,7 @@
     const viewportWidth=Math.max(1,(map.clientWidth||1200)-8),viewportHeight=Math.max(1,(map.clientHeight||720)-24);
     const base=Math.min(viewportWidth/(area.width+(overview?0:70)),viewportHeight/(area.height+(overview?0:80))),scale=Math.min(1.65,base)*zoom;
     world.style.transform='scale('+scale+')';world.style.setProperty('--office-scene-scale',scale);world.style.setProperty('--office-label-font',Math.min(26,Math.max(13,(overview?10:14)/scale))+'px');world.style.setProperty('--office-meta-font',Math.min(22,Math.max(11,(overview?10:12)/scale))+'px');
+    world.style.setProperty('--office-speech-font',((map.clientWidth<600?12:13)/scale)+'px');world.style.setProperty('--office-speech-width',(Math.min(map.clientWidth<600?148:200,viewportWidth-8)/scale)+'px');
     world.style.setProperty('--office-room-title-font',Math.min(38,Math.max(20,11/scale))+'px');world.style.setProperty('--office-summary-font',Math.min(48,14/scale)+'px');world.style.setProperty('--office-phone-font',(11/scale)+'px');world.style.setProperty('--office-summary-meta-font',Math.min(42,12/scale)+'px');
     fit.style.width=(WORLD_WIDTH*scale)+'px';fit.style.height=(WORLD_HEIGHT*scale)+'px';map.scrollTo?.({left:overview?0:Math.max(0,(area.x+area.width/2)*scale-viewportWidth/2),top:overview?0:Math.max(0,(area.y+area.height/2)*scale-viewportHeight/2),behavior:'auto'});
     if($('office-zoom-out'))$('office-zoom-out').disabled=zoom<=.8;if($('office-zoom-in'))$('office-zoom-in').disabled=zoom>=2.5;
@@ -497,7 +509,7 @@
       record.button.classList.toggle('show-bubble',bubbles.has(record.actor.id));
       record.button.classList.toggle('show-label',selectedDepartment!=='ALL'&&inRoom);
     }
-    updateOwnerSpeech();
+    updateOwnerSpeech();fitChatter();
     for(const [id,room]of rooms){const count=room.querySelector?.('.office-room-headcount');if(!count)continue;const members=actors.filter(actor=>actor.department===id),available=queue&&['EMPTY','AVAILABLE'].includes(queue.state),pending=available?queue.jobs.filter(job=>members.some(actor=>actor.id===job.actor_id)&&job.status==='QUEUED').length:null;count.textContent='팀 '+members.length+'명 · 방 '+members.filter(actor=>!isLeader(actor)).length+'명 · '+(pending===null?'진행 미확인':pending?'대기 '+pending+'건':'새 요청 없음')+' · 정원 미정';}
   }
   function sceneVisible(){
