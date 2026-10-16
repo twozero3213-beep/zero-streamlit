@@ -6,6 +6,7 @@ The public-only privacy label is clarified, extras/*.js are added (live headline
 /zero/ and Community Cloud's /~/+/ prefix. The build keeps data-zero-hosted, so the refresh button
 reprices with public quotes (account refresh and office requests stay on the owner's PC).
 """
+import ast
 import os
 import re
 import shutil
@@ -81,6 +82,34 @@ def build(source, checkout=None):
     for name, content in chart_sources.items():
         target = 'zero_streamlit_chart.py' if name.endswith('.py') else name
         (Path(__file__).parent / target).write_text(content, encoding='utf-8')
+    if checkout:
+        public = {}
+        for name in ('macro_sources.py', 'market_gauges.py', 'briefing_sources.py', 'research_desk.py', 'company_research.py', 'data/briefing_sources.json'):
+            public[name] = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/' + name],
+                                          capture_output=True, check=True, encoding='utf-8').stdout
+        # Ship only the pure statistics used by public collectors, excluding owner file/ledger APIs.
+        statistics = ['from datetime import date', 'from decimal import Decimal, localcontext', 'import re',
+                      "INVALID = 'RESEARCH_DESK_INVALID'",
+                      'ERRORS = (OSError, ValueError, TypeError, KeyError, UnicodeError, ArithmeticError, RecursionError)']
+        for name, selected in (('company_research.py', {'_object', '_day'}),
+                               ('research_desk.py', {'_list', '_normal', '_decimal', '_period', '_history', '_cutoff', 'descriptive_statistics'})):
+            for item in ast.parse(public[name]).body:
+                if isinstance(item, ast.FunctionDef) and item.name in selected:
+                    statistics.append(ast.get_source_segment(public[name], item))
+        root = Path(__file__).parent
+        (root / 'zero_statistics.py').write_text('\n\n'.join(statistics) + '\n', encoding='utf-8')
+        for name, target in (('macro_sources.py', 'zero_macro.py'), ('market_gauges.py', 'zero_gauges.py'), ('briefing_sources.py', 'zero_reports.py')):
+            code = public[name].split('\ndef main(', 1)[0]
+            code = code.replace('from zero.research_desk import descriptive_statistics', 'from zero_statistics import descriptive_statistics')
+            if name == 'macro_sources.py':
+                code = code.replace('    at = now or datetime.now(timezone.utc)', '    from zero_research import read_bls\n    at = now or datetime.now(timezone.utc)')
+                code = code.replace('client.read(BLS_URL, payload=', 'read_bls(client, payload=')
+            code = code.replace('from zero.company_sources import NoRedirect', 'from zero_discovery import _NoRedirect as NoRedirect')
+            code = code.replace('from zero.manager_journal import _url\n', '').replace('canonical = _url(url)', 'canonical = public_url(url)')
+            code = code.replace("files('zero').joinpath('data/briefing_sources.json')", "Path(__file__).with_name('briefing_sources.json')")
+            code = code.replace('from importlib.resources import files\n', '').replace('import argparse\n', '')
+            (root / target).write_text(code.rstrip() + '\n', encoding='utf-8')
+        (root / 'briefing_sources.json').write_text(public['data/briefing_sources.json'], encoding='utf-8')
     print('built', sum(1 for _ in OUT.rglob('*') if _.is_file()), 'files')
 
 

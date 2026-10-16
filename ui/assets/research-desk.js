@@ -1,6 +1,6 @@
 'use strict';
 // Public desk data has no order or allocation authority.
-const researchDesk = {data: null, annual: null, promise: null, failed: false, candle: null};
+const researchDesk = {data: null, annual: null, promise: null, failed: false, candle: null, loadedAt: 0};
 const desk$ = (id) => document.getElementById(id);
 const deskNum = (value) => value === null || value === undefined || value === '' ? NaN : Number(value);
 const deskText = (value, fallback = '근거 없음') => typeof value === 'string' && value.trim() ? value : fallback;
@@ -29,6 +29,12 @@ function deskNotes(container, items) {
   const detail = node('details', 'desk-details'); detail.append(node('summary', '', '자료의 범위와 한계'));
   const list = node('ul'); items.forEach((item) => list.append(node('li', '', deskText(item)))); detail.append(list); container.append(detail);
 }
+function deskRefreshNote() {
+  const check = researchDesk.data?.refresh;
+  if (!check) return '';
+  if (check.state === 'UPDATING') return ' · 공식 공개 자료 확인 중 · 기존 자료를 먼저 표시합니다.';
+  return ' · 자동 확인 ' + (check.checked_at ? stamp(check.checked_at) + ' KST' : '미완료') + (check.failed?.length ? ' · 일부 출처 실패, 기존 값·시각 유지' : ' · 15분 주기') + ' · 발표 전 수치는 바뀌지 않습니다.';
+}
 function updateDeskDataStatus() {
   const data = researchDesk.data;
   const today = new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date());
@@ -38,13 +44,13 @@ function updateDeskDataStatus() {
   const old = recorded && recorded !== today ? ' 기록 날짜가 오늘과 다릅니다. 현재 시점의 실시간 자료로 해석하지 마세요.' : '';
   ['study-data-status', 'macro-data-status', 'news-data-status'].forEach((id) => {
     const element = desk$(id); if (!element) return;
-    element.textContent = (researchDesk.failed ? '최근 불러오기 실패 · ' : '') + base + old;
+    element.textContent = (researchDesk.failed ? '최근 불러오기 실패 · ' : '') + base + old + deskRefreshNote();
     element.classList.toggle('desk-stale', Boolean(old || researchDesk.failed));
   });
 }
 async function loadDesk(force = false) {
   if (researchDesk.promise) return researchDesk.promise;
-  if (researchDesk.data && !force) { renderDesk(); return researchDesk.data; }
+  if (researchDesk.data && !force && Date.now() - researchDesk.loadedAt < 60000) return researchDesk.data;
   document.querySelectorAll('[data-desk-reload]').forEach((button) => { button.disabled = true; });
   ['study-data-status','macro-data-status','news-data-status'].forEach((id) => { if (desk$(id)) desk$(id).textContent = '공개 자료를 불러오는 중입니다.'; });
   researchDesk.promise = (async () => {
@@ -54,9 +60,11 @@ async function loadDesk(force = false) {
     if (data.scope !== 'PUBLIC_RESEARCH_DESK' || data.authority !== 'PUBLIC_EDUCATION_AND_RESEARCH'
       || data.orders_authorized !== false || data.allocation_changes_authorized !== false
       || !['companies','macro','news','charts'].every((key) => Array.isArray(data[key]))) throw Error('DESK_INVALID');
-    researchDesk.data = data; researchDesk.failed = false;
+    const changed = JSON.stringify(data) !== JSON.stringify(researchDesk.data);
+    researchDesk.data = data; researchDesk.failed = false; researchDesk.loadedAt = Date.now();
     try { researchDesk.annual = await window.ZEROResearch?.load(force); } catch (_) { researchDesk.annual = null; }
-    renderDesk(); return data;
+    if (changed || force) renderDesk(); else updateDeskDataStatus();
+    return data;
   })().catch(() => { researchDesk.failed = true; renderDesk(); return null; })
     .finally(() => { researchDesk.promise = null; document.querySelectorAll('[data-desk-reload]').forEach((button) => { button.disabled = false; }); });
   return researchDesk.promise;
@@ -293,7 +301,7 @@ function renderBriefingSources() {
   const institution = deskControl('report-institution', 'ALL'), kind = deskControl('report-kind', 'ALL'), search = deskControl('report-search');
   const rows = deskReportRows(library, search, institution, kind, deskControl('report-sort', 'NEWEST'));
   const failed = library.sources.filter((source) => source.status === 'FAILED' || source.error_code).length;
-  status.textContent = '목록 확인 ' + stamp(library.as_of) + ' KST · 출처 ' + library.sources.length + '곳' + (failed ? ' · 조회 실패 ' + failed + '곳' : '') + ' · 목록 항목은 본문 검토 전입니다.';
+  status.textContent = '목록 확인 ' + stamp(library.as_of) + ' KST · 출처 ' + library.sources.length + '곳' + (failed ? ' · 조회 실패 ' + failed + '곳' : '') + ' · 목록 항목은 본문 검토 전입니다.' + deskRefreshNote();
   if (desk$('report-count')) desk$('report-count').textContent = rows.length + '개 자료 · 제목을 눌러 발표일·출처·확인 범위 보기';
   if (desk$('report-empty')) desk$('report-empty').hidden = rows.length > 0;
   const highlights = (researchDesk.data?.news || []).filter((item) => (institution === 'ALL' || deskReviewedInstitution(item) === institution)
@@ -392,4 +400,10 @@ desk$('study-example')?.addEventListener('submit',(event)=>event.preventDefault(
 if(desk$('study-price'))deskCalculateExample();
 renderNvdaFilingExample();
 if(typeof ResizeObserver!=='undefined'&&desk$('study-price-chart')){let previousWidth=0;new ResizeObserver(()=>{const width=Math.round(desk$('study-price-chart').clientWidth);if(width&&width!==previousWidth){previousWidth=width;if(researchDesk.data||desk$('study-learning').checked)renderStudyChart();}}).observe(desk$('study-price-chart'));}
+function pollDesk() {
+  if (document.hidden || !['macro','news','reports'].includes(document.documentElement?.dataset.zeroView)) return;
+  loadDesk();
+}
+if (typeof setInterval !== 'undefined') setInterval(pollDesk, 15000);
+document.addEventListener?.('visibilitychange', pollDesk);
 window.ZERODesk={macro:()=>researchDesk.data?.macro||[],load:loadDesk,render:renderDesk,renderReports:renderBriefingSources,openReport:openDeskReport,open:async()=>{await loadDesk();}};

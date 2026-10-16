@@ -17,16 +17,17 @@
     return /[가-힣]/u.test(text) ? 'ko' : /[A-Za-z]/u.test(text) ? 'en' : null;
   };
   const kst = (iso) => new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date(iso));
-  let loading = false;
+  let loading = false, shown = false, lastChecked = '';
+  const unavailable = () => { panel.hidden = false; note.textContent = '새 뉴스 확인에 실패했습니다. 자료 다시 불러오기로 재시도할 수 있습니다.' + (lastChecked ? ' 마지막 성공 확인 ' + lastChecked + ' KST · 이전 목록을 표시합니다.' : ' 아직 확인된 제목이 없습니다.'); };
   async function load() {
     if (loading || document.hidden || document.documentElement?.dataset.zeroView !== 'news') return; loading = true;
     try {
       const response = await fetch('api/headlines', {cache: 'no-store', signal: AbortSignal.timeout(30000)}), data = response.ok ? await response.json() : null;
-      if (data?.schema_version !== 1 || !Array.isArray(data.items) || !data.items.length) { panel.hidden = true; return; }
+      if (data?.schema_version !== 1 || !Array.isArray(data.items) || !data.items.length) { unavailable(); return; }
       const items = data.items.filter((item) => item && /^https:\/\//.test(item.url)
         && (language(item.title) === 'ko' || (language(item.title) === 'en'
           && item.translation_status === 'TRANSLATED' && language(item.title_ko) === 'ko')));
-      if (!items.length) { panel.hidden = true; return; }
+      if (!items.length) { unavailable(); return; }
       list.replaceChildren(...items.map((item) => {
         const translated = language(item.title) === 'en' ? ' (' + item.title_ko.trim() + ')' : '';
         const row = make('li'), link = make('a', '', item.title + translated);
@@ -36,10 +37,12 @@
       }));
       note.textContent = '뉴스 검색 결과의 제목만 자동으로 모은 목록입니다(최근 36시간 · ' + kst(data.checked_at) + ' KST 확인). 본문을 읽거나 사실을 검증한 것이 아니며, 아래 기사 요약과는 별개입니다. 한국어·영어 제목만 표시하며, 영어 제목의 괄호 안 한글은 기계 번역입니다. 번역이 없는 영어와 다른 언어의 제목은 제외합니다.'
         + (data.failed?.length ? ' 수집하지 못한 곳: ' + data.failed.join(', ') + '.' : '');
-      panel.hidden = false;
-    } catch (_) { panel.hidden = true; } finally { loading = false; }
+      lastChecked = kst(data.checked_at); panel.hidden = false;
+      if (!shown) { shown = true; queueMicrotask(() => { const select = view.querySelector('.viewport-controls select'); if (select) { select.value = '0'; select.dispatchEvent(new Event('change', {bubbles:true})); } }); }
+    } catch (_) { unavailable(); } finally { loading = false; }
   }
   document.addEventListener('zero-view-changed', load);
-  load(); setInterval(load, 300000);
+  load(); setInterval(load, 60000);
+  document.addEventListener('visibilitychange', load);
   document.querySelectorAll('[data-desk-reload]').forEach((button) => button.addEventListener('click', load));
 })();

@@ -25,6 +25,7 @@ from starlette.staticfiles import StaticFiles
 
 import zero_headlines
 import zero_discovery
+import zero_research
 
 DEFAULT_SITE = 'https://zero-portfolio.zero-cloudflare.workers.dev'
 UI = Path(__file__).parent / 'ui'
@@ -36,7 +37,7 @@ PLAIN = {'/api/portfolio': 60, '/api/team': 300, '/api/office': 60, '/api/resear
          '/api/funds': 1800, '/api/tqqq': 1800, '/api/institutions': 1800, '/api/live-quotes': 20}
 MAX_BYTES = 12_000_000
 TRENDS_SECONDS = 3600
-HEADLINES_SECONDS = 300  # live news-search titles; collected here, not on the Cloudflare site
+HEADLINES_SECONDS = 60  # live news-search titles; collected here, not on the Cloudflare site
 
 _cache, _pending, _lock = {}, {}, threading.Lock()
 _upstream_slots = threading.BoundedSemaphore(4)
@@ -143,7 +144,10 @@ def _cached(key, seconds, load):
 
 def get_public(path, query):
     upstream, seconds = _upstream(path, query)
-    return _cached(upstream, seconds, lambda: json.dumps(fetch(upstream), ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
+    body = _cached(upstream, seconds, lambda: json.dumps(fetch(upstream), ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
+    if path == '/api/desk':
+        return json.dumps(zero_research.overlay(json.loads(body)), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    return body
 
 
 def get_headlines():

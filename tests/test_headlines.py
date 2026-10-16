@@ -170,6 +170,7 @@ class Element {
   setAttribute() {}
   before(panel) { this.panel = panel; }
   closest() { return this.group || null; }
+  querySelector() { return null; }
 }
 async function render(items, wrapped=true) {
   const anchor = new Element('div'), group = new Element('div');
@@ -179,7 +180,7 @@ async function render(items, wrapped=true) {
     getElementById:id => id === 'news-list' ? anchor : new Element('div'),
     createElement:tag => new Element(tag), addEventListener(){}, querySelectorAll:()=>[]};
   vm.runInNewContext(fs.readFileSync(process.argv[1], 'utf8'), {
-    document, Intl, Date, AbortSignal, setInterval(){},
+    document, Intl, Date, AbortSignal, queueMicrotask, Event, setInterval(){},
     fetch:async()=>({ok:true,json:async()=>({schema_version:1,items,checked_at:'2026-10-15T00:00:00Z'})})
   });
   await new Promise(resolve=>setImmediate(resolve));
@@ -207,8 +208,12 @@ async function render(items, wrapped=true) {
   assert.equal(panel.hidden,false);
   assert.equal(panel.children[2].id,'live-headlines-list','live rows participate in the existing responsive pager');
   assert.equal((await render([{...base,title:'한국 경제 뉴스'}],false)).hidden,false,'plain layouts retain the original insertion fallback');
-  assert.equal((await render(bad)).hidden,true);
-  assert.equal((await render([])).hidden,true);
+  for (const items of [bad,[]]) {
+    const empty=await render(items);
+    assert.equal(empty.hidden,false,'a failed or empty update stays visible with retry feedback');
+    assert.equal(empty.children[2].children.length,0,'blocked languages never enter the news list');
+    assert.ok(empty.children[1].textContent.includes('재시도'));
+  }
 })().catch(error=>{console.error(error);process.exitCode=1;});
 """
         result = subprocess.run(['node', '-e', program, str(ROOT / 'extras' / 'headlines.js')],
