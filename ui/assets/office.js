@@ -641,12 +641,26 @@
     dialog.scrollTop=0;
   }
 
+  function sceneLoading(state) {
+    const cover=$('office-loading');if(!cover)return;
+    const busy=state==='loading';
+    $('office-map').setAttribute('aria-busy',String(busy));cover.hidden=state==='ready';
+    $('office-loading-ring').hidden=!busy;
+    $('office-loading-label').textContent=busy?'로딩 중…':'사무실을 불러오지 못했어요';
+    $('office-loading-note').textContent=busy?'ZERO 팀 사무실과 직원들을 준비하고 있어요.':'연결 상태를 확인하고 다시 시도해 주세요.';
+    $('office-loading-retry').hidden=busy;
+  }
+
   async function load() {
     const epoch=++requestEpoch;
+    if(!actors.length)sceneLoading('loading');
     const results=await Promise.allSettled([
       actors.length ? Promise.resolve(null) : fetch('api/team',{cache:'no-store'}).then(response=>{if(!response.ok)throw Error('ROSTER');return response.json();}),
       fetch('api/office',{cache:'no-store'}).then(response=>{if(!response.ok)throw Error('QUEUE');return response.json();})
     ]);
+    if (epoch!==requestEpoch) return;
+    // Let the loading cover paint before constructing the first SVG scene, including cached responses.
+    if(!actors.length&&typeof requestAnimationFrame==='function')await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     if (epoch!==requestEpoch) return;
     try {
       if (!actors.length) { if(results[0].status!=='fulfilled')throw Error('ROSTER'); actors=parseActors(results[0].value); renderActors(); }
@@ -655,6 +669,8 @@
     } catch (_) {
       queue=null; renderQueue();
       if (!actors.length) { $('office-empty').hidden=false; $('office-empty').textContent='직무 명부를 확인하지 못했습니다. 확인된 역할만 사무실에 표시합니다.'; }
+    } finally {
+      if(epoch===requestEpoch)sceneLoading($('office-map').querySelector('.office-scene-world')?'ready':'error');
     }
   }
 
@@ -870,9 +886,10 @@
   $('office-lobby-request').addEventListener('click',()=>{const actor=actors.find(item=>item.id==='ZERO_FINAL_MANAGER');if(actor)openActor(actor);});
   const switchOfficeView=board=>{$('office-board').hidden=!board;$('office-scene-surface').hidden=board;$('office-meeting').hidden=board;$('office-view-board').setAttribute('aria-pressed',String(board));$('office-view-scene').setAttribute('aria-pressed',String(!board));if(!board)fitScene();syncMotion();};
   $('office-view-board').addEventListener('click',()=>switchOfficeView(true));$('office-view-scene').addEventListener('click',()=>switchOfficeView(false));
-  document.addEventListener?.('zero-view-changed',event=>{if(event.detail?.view==='team'){finishMeeting();switchOfficeView(false);}syncMotion();});
+  document.addEventListener?.('zero-view-changed',event=>{if(event.detail?.view==='team'){finishMeeting();switchOfficeView(false);loadPromise=load();loadPromise.catch(()=>{});}syncMotion();});
   $('office-request-close').addEventListener('click',()=>$('office-request-dialog').close());
   $('office-reload').addEventListener('click',()=>{if(!submitting)load();});
+  $('office-loading-retry')?.addEventListener('click',()=>{if(!submitting)load();});
   $('office-request-dialog').addEventListener('close',()=>{if(!submitting)$('office-instruction').value='';});
   window.ZEROOffice={load,requestResearch};
   const visible=()=>!document.hidden && !$('team-view')?.hidden;
