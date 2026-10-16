@@ -6,10 +6,13 @@
   const make = (tag, cls = '', text) => { const e = document.createElement(tag); e.className = cls; if (text !== undefined) e.textContent = text; return e; };
   const button = (text, action, cls = 'secondary-button') => { const b = make('button', cls, text); b.type = 'button'; b.addEventListener('click', action); return b; };
   const stamp = value => { const d = new Date(value); return Number.isFinite(d.getTime()) ? d.toLocaleString('ko-KR', {timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'}) + ' KST' : '시각 미확인'; };
-  const errors = {UNAUTHORIZED: '닉네임으로 로그인한 뒤 이용해 주세요.', RATE_LIMIT: '잠시 쉬었다가 다시 시도해 주세요.', CHAT_TOO_FAST: '대화는 2초 간격으로 보낼 수 있어요.', POST_LIMIT: '글은 3초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', COMMENT_LIMIT: '댓글은 2초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', CONTENT_INVALID: '글자 수와 입력 내용을 확인해 주세요.', APPEARANCE_LOCKED: '아직 잠긴 꾸미기예요.', STORAGE_UNAVAILABLE: '서버에 연결하지 못했어요.', QUOTES_UNAVAILABLE: '시세를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'};
+  const errors = {MEMBERSHIP_REQUIRED: '이메일·휴대폰으로 인증한 회원만 글과 댓글을 남길 수 있어요.', QUERY_INVALID: '검색어는 80자 이내로 입력해 주세요.', ENTRY_INVALID: '제목과 본문을 확인해 주세요.', UNAUTHORIZED: '닉네임으로 로그인한 뒤 이용해 주세요.', RATE_LIMIT: '잠시 쉬었다가 다시 시도해 주세요.', CHAT_TOO_FAST: '대화는 2초 간격으로 보낼 수 있어요.', POST_LIMIT: '글은 3초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', COMMENT_LIMIT: '댓글은 2초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', CONTENT_INVALID: '글자 수와 입력 내용을 확인해 주세요.', APPEARANCE_LOCKED: '아직 잠긴 꾸미기예요.', STORAGE_UNAVAILABLE: '서버에 연결하지 못했어요.', QUOTES_UNAVAILABLE: '시세를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'};
   const message = error => errors[error?.code || error?.error] || '지금은 처리하지 못했어요. 잠시 후 다시 시도해 주세요.';
   const request = (path, options) => U()?.request(path, options) || Promise.reject({code: 'STORAGE_UNAVAILABLE'});
-  let sessionEpoch = 0, loaded = false, cursor = null, previous = [], posting = false;
+  let sessionEpoch = 0, loaded = false, cursor = null, previous = [], posting = false, communitySeq = 0, category = '', query = '';
+  const categories = {question: '질문', strategy: '전략', journal: '운영 일지'};
+  const communityPageSize = () => window.matchMedia('(max-width:767px)').matches || window.matchMedia('(max-height:899px)').matches ? 2 : window.matchMedia('(max-height:1049px)').matches ? 3 : 4;
+  let communitySize = 0;
   const requireNick = note => { if (U()?.session()?.nick) return true; note.textContent = '닉네임으로 로그인한 뒤 이용할 수 있어요.'; U()?.openProfile(); return false; };
   function dialog(title, cls = '') {
     const d = make('dialog', 'social-dialog ' + cls), head = make('header', 'chat-head'), h = make('h2', '', title), close = button('닫기', () => d.close());
@@ -21,12 +24,12 @@
   async function block(nick, note) { if (!requireNick(note)) return; try { await request('/me/blocks', {method: 'POST', body: {nick}}); await U().refresh(); note.textContent = '이 이용자의 글과 대화를 숨겼어요.'; openCommunity(false); } catch (error) { note.textContent = message(error); } }
   const blocked = nick => (U()?.session()?.blocks || []).includes(nick);
 
-  const DISCLAIMER = '투자 권유가 아니라 개인의 운용 기록 공유입니다.';
   async function openComments(row, article, countButton) {
     let panel = article.querySelector('.community-comments');
     if (panel) { panel.hidden = !panel.hidden; return; }
     panel = make('section', 'community-comments'); panel.setAttribute('aria-label', '댓글');
-    const list = make('div'), note = make('p', 'social-status'), form = make('form', 'social-form'), content = field('댓글', 'textarea', 500), send = make('button', 'primary-button', '댓글 남기기');
+    const list = make('div'), note = make('p', 'social-status'), form = make('form', 'social-form community-reply'), content = field('댓글', 'textarea', 500), send = make('button', 'primary-button', '등록');
+    content.input.rows = 2; content.input.placeholder = '의견을 나눠 보세요.';
     send.type = 'submit'; content.input.required = true; form.append(content.l, send); panel.append(list, note, form); article.append(panel);
     const epoch = sessionEpoch, id = encodeURIComponent(row.id);
     const refresh = async () => {
@@ -48,17 +51,29 @@
     });
     await refresh();
   }
-  async function openCommunity(reset = false) {
-    if (!$('community-list')) return; if (reset) { cursor = null; previous = []; }
-    const note = $('community-status'), epoch = sessionEpoch; note.textContent = '글을 불러오는 중…';
+  async function openCommunity(reset = false, next = cursor, history = previous) {
+    if (!$('community-list')) return;
+    const size = communityPageSize();
+    if (reset || size !== communitySize) { next = null; history = []; }
+    const note = $('community-status'), epoch = sessionEpoch, sequence = ++communitySeq;
+    const params = new URLSearchParams({limit: String(size)});
+    if (next !== null) params.set('cursor', next);
+    if (category) params.set('category', category);
+    if (query) params.set('q', query);
+    note.textContent = '글을 불러오는 중…';
+    $('community-list').setAttribute('aria-busy', 'true');
+    $('community-prev').disabled = $('community-next').disabled = true;
     try {
-      const data = await request('/community' + (cursor === null ? '' : '?cursor=' + encodeURIComponent(cursor)));
-      if (epoch !== sessionEpoch) return;
+      const data = await request('/community?' + params);
+      if (epoch !== sessionEpoch || sequence !== communitySeq) return;
+      cursor = next; previous = history; communitySize = size;
       const rows = safeRows(data).filter(row => !blocked(row.nick));
       $('community-list').replaceChildren(...rows.map(row => {
-        const article = make('article', 'community-post'), title = make('h3', '', row.title), meta = make('p', 'muted-note'), body = make('p', 'social-text', row.body), status = make('p', 'muted-note');
-        meta.append(button(row.nick, () => U()?.visit(row.nick), 'social-nick'), document.createTextNode(' · ' + stamp(row.created_at)));
-        const detail = make('details'); detail.append(make('summary', '', '내용 읽기'), body);
+        const article = make('article', 'community-post'), title = make('h3', '', row.title), meta = make('p', 'community-meta'), body = make('p', 'social-text', row.body), status = make('p', 'social-status');
+        status.setAttribute('role', 'status');
+        meta.append(make('span', 'community-category', categories[row.category] || '이야기'), button(row.nick, () => U()?.visit(row.nick), 'social-nick'), make('time', '', stamp(row.created_at)));
+        const detail = make('details', 'community-content'), summary = make('summary'), preview = make('p', 'community-preview', row.body);
+        summary.append(title, preview, make('span', 'community-read', '글 읽기')); detail.append(summary, body);
         if (row.persona) detail.append(make('p', 'social-text', '공유한 페르소나: ' + row.persona));
         if (row.method) detail.append(make('p', 'social-text', '공유한 방법: ' + row.method));
         if (row.certificate) {
@@ -83,27 +98,49 @@
           finally { reaction.disabled = false; }
         }); reaction.setAttribute('aria-pressed', String(liked));
         const comments = button('댓글 ' + (Number.isSafeInteger(row.comment_count) && row.comment_count >= 0 ? row.comment_count : 0), () => openComments(row, article, comments));
-        const actions = make('div', 'social-actions'); actions.append(reaction, comments, button('신고', () => report('post', row.id, status)), button('이용자 숨김', () => block(row.nick, status)));
-        if (row.nick === U()?.session()?.nick) actions.append(button('내 글 삭제', async () => { if (!confirm('이 글을 삭제할까요?')) return; try { await request('/me/posts/' + row.id, {method: 'DELETE'}); openCommunity(false); } catch (error) { status.textContent = message(error); } }));
-        article.append(title, meta, detail, actions, status, make('footer', 'muted-note community-disclaimer', DISCLAIMER)); return article;
+        const actions = make('div', 'social-actions'), more = make('details', 'community-more'), menu = make('div');
+        more.append(make('summary', '', '더 보기'), menu);
+        menu.append(button('신고', () => report('post', row.id, status)), button('이용자 숨김', () => block(row.nick, status)));
+        actions.append(reaction, comments, more);
+        if (row.nick === U()?.session()?.nick) menu.append(button('내 글 삭제', async () => { if (!confirm('이 글을 삭제할까요?')) return; try { await request('/me/posts/' + row.id, {method: 'DELETE'}); openCommunity(false); } catch (error) { status.textContent = message(error); } }));
+        article.append(meta, detail, actions, status); return article;
       }));
-      note.textContent = rows.length ? '이용자가 직접 공유한 글이며 수익·전략이 검증됐다는 뜻은 아니에요.' : '아직 표시할 글이 없어요. 첫 운영 경험을 나눠 보세요.';
+      note.textContent = rows.length ? '최신순 · 이 페이지 ' + rows.length + '개' : (query || category ? '조건에 맞는 글이 없어요. 검색어나 분류를 바꿔 보세요.' : '아직 글이 없어요. 궁금한 점이나 투자 경험을 첫 글로 나눠 보세요.');
+      $('community-list').classList.toggle('community-empty', !rows.length);
+      $('community-list').scrollTop = 0;
+      if ($('community-page')) $('community-page').textContent = (previous.length + 1) + '페이지';
       $('community-prev').disabled = !previous.length; $('community-next').disabled = data.next_cursor == null;
-      $('community-next').onclick = () => { previous.push(cursor); cursor = data.next_cursor; openCommunity(false); }; loaded = true;
-    } catch (error) { if (epoch === sessionEpoch) note.replaceChildren(make('span', '', message(error)), button('게시판 다시 불러오기', () => openCommunity(false))); }
+      $('community-prev').onclick = () => openCommunity(false, previous.at(-1) ?? null, previous.slice(0, -1));
+      $('community-next').onclick = () => openCommunity(false, data.next_cursor, [...previous, cursor]); loaded = true;
+    } catch (error) {
+      if (epoch === sessionEpoch && sequence === communitySeq) {
+        $('community-list').replaceChildren();
+        note.replaceChildren(make('span', '', message(error)), button('게시판 다시 불러오기', () => openCommunity(false, next, history)));
+      }
+    } finally { if (epoch === sessionEpoch && sequence === communitySeq) $('community-list').setAttribute('aria-busy', 'false'); }
   }
-  $('community-prev')?.addEventListener('click', () => { cursor = previous.pop() ?? null; openCommunity(false); });
   $('community-reload')?.addEventListener('click', () => openCommunity(true));
+  $('community-categories')?.querySelectorAll('button').forEach(tab => tab.addEventListener('click', () => {
+    category = tab.dataset.category;
+    $('community-categories').querySelectorAll('button').forEach(item => item.setAttribute('aria-pressed', String(item === tab)));
+    openCommunity(true);
+  }));
+  $('community-search')?.addEventListener('submit', event => { event.preventDefault(); query = $('community-query').value.trim(); openCommunity(true); });
+  $('community-query')?.addEventListener('input', () => { if (query && !$('community-query').value) { query = ''; openCommunity(true); } });
+  ['(max-width:767px)', '(max-height:899px)', '(max-height:1049px)'].forEach(size => window.matchMedia(size).addEventListener?.('change', () => { if (window.ZERO?.currentView?.() === 'community') openCommunity(true); }));
   let compose;
   function writePost() {
     if (!requireNick($('community-status'))) return;
     if (!compose) {
-      compose = dialog('투자회사 운영 경험 공유'); const form = make('form', 'social-form');
-      const title = field('제목', 'text', 80), content = field('경험과 근거', 'textarea', 2000), persona = field('공개할 페르소나 유형(선택)', 'text', 80), method = field('공개할 운용 방법(선택)', 'text', 80);
+      compose = dialog('글쓰기', 'community-compose'); const form = make('form', 'social-form');
+      const title = field('제목', 'text', 80), content = field('내용', 'textarea', 2000), persona = field('공개할 페르소나 유형(선택)', 'text', 80), method = field('공개할 운용 방법(선택)', 'text', 80);
       title.input.required = content.input.required = true;
-      const category = make('select'); [['strategy','전략 공유'],['question','질문'],['journal','운영 일지']].forEach(([value,label]) => { const o=make('option','',label);o.value=value;category.append(o); });
+      const category = make('select'); [['question','질문'],['strategy','전략'],['journal','운영 일지']].forEach(([value,label]) => { const o=make('option','',label);o.value=value;category.append(o); });
       const note = make('p', 'social-status'), send = make('button', 'primary-button', '공개 게시'); send.type = 'submit';
-      form.append(make('p','muted-note','직접 입력한 글은 공개됩니다. 계좌번호·연락처·복구 코드는 적지 마세요. 팀의 비공개 역할은 자동으로 공개하지 않습니다.'), category, title.l, content.l, persona.l, method.l, note, send);
+      const categoryField = make('label', 'social-field', '분류'), optional = make('details', 'community-optional');
+      categoryField.append(category); optional.append(make('summary', '', '성향·운용 방법 추가 (선택)'), persona.l, method.l);
+      title.input.placeholder = '어떤 이야기를 나누고 싶나요?'; content.input.placeholder = '궁금한 점이나 직접 경험한 내용을 적어 주세요.'; content.input.rows = 6;
+      form.append(categoryField, title.l, content.l, optional, make('p','muted-note','공개되는 글이에요. 계좌번호·연락처·인증정보는 적지 마세요. 비공개 팀 정보는 자동 첨부되지 않습니다.'), note, send);
       form.addEventListener('submit', async e => { e.preventDefault(); if (posting) return; posting=true;send.disabled=true; const epoch=sessionEpoch;
         try { await request('/me/posts', {method:'POST',body:{title:title.input.value,body:content.input.value,persona:persona.input.value,method:method.input.value,category:category.value}}); if(epoch!==sessionEpoch)return;form.reset();compose.close();openCommunity(true); }
         catch(error){if(epoch===sessionEpoch)note.textContent=message(error);}finally{posting=false;send.disabled=false;}

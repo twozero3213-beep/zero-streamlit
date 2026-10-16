@@ -221,10 +221,16 @@
 <dialog id="academy" class="academy" aria-labelledby="academy-title"><div class="academy-head"><div><h2 id="academy-title">주식 입문 학교</h2><p id="academy-rank"></p></div><button id="academy-close" class="secondary-button" type="button">닫기</button></div>
     <div class="academy-xpbar" aria-hidden="true"><div id="academy-bar"></div></div><div id="academy-body" class="academy-body"></div></dialog>
   <section id="company-view" class="view" hidden><h2>대표님의 투자회사</h2><p class="muted-note">직원을 조합해 전략을 검증하고, 제안을 확인하세요. 실제 계좌 주문 권한과 가상 회사 연구는 별개입니다.</p><div id="company-content"></div></section><section id="community-view" class="view" hidden>
-    <section class="panel"><h2>투자회사 커뮤니티</h2><p class="muted-note">직접 경험한 페르소나 운용과 전략을 공유해요. 다른 이용자의 비공개 팀 구성은 공개하지 않습니다.</p>
-      <div class="community-toolbar"><button id="community-write" type="button" class="primary-button">경험 공유하기</button><button id="community-reload" type="button" class="secondary-button">새로고침</button><button type="button" class="secondary-button" data-view="lobby">내 사무실로</button></div>
-      <p id="community-status" class="social-status" role="status"></p><div id="community-list"></div>
-      <div class="social-actions"><button id="community-prev" type="button" class="secondary-button" disabled>이전</button><button id="community-next" type="button" class="secondary-button" disabled>다음</button></div>
+    <section class="community-feed" aria-label="커뮤니티 글">
+      <div class="community-toolbar">
+        <form id="community-search" role="search"><input id="community-query" type="search" maxlength="80" aria-label="커뮤니티 글 검색" placeholder="제목, 내용, 닉네임 검색"><button type="submit" class="secondary-button">검색</button></form>
+        <button id="community-write" type="button" class="primary-button">글쓰기</button>
+      </div>
+      <div class="community-filterbar"><div id="community-categories" role="group" aria-label="글 분류"><button type="button" data-category="" aria-pressed="true">전체</button><button type="button" data-category="question" aria-pressed="false">질문</button><button type="button" data-category="strategy" aria-pressed="false">전략</button><button type="button" data-category="journal" aria-pressed="false">운영 일지</button></div><button id="community-reload" type="button" class="secondary-button">새로고침</button></div>
+      <p id="community-status" class="social-status" role="status" aria-live="polite"></p>
+      <div id="community-list" aria-label="최신 글 목록" tabindex="0"></div>
+      <nav class="community-pager" aria-label="커뮤니티 페이지"><button id="community-prev" type="button" class="secondary-button" disabled>이전</button><span id="community-page" aria-live="polite">1페이지</span><button id="community-next" type="button" class="secondary-button" disabled>다음</button></nav>
+      <p class="community-disclaimer muted-note">개인의 경험을 나누는 공간이에요. 게시글은 검증된 투자 성과나 투자 권유가 아닙니다.</p>
     </section>
   </section>
   <section id="team-view" class="view" hidden>

@@ -7,7 +7,7 @@
   const make=(tag,cls,text)=>{const element=document.createElement(tag);if(cls)element.className=cls;if(text)element.textContent=text;return element;};
   const controllers=[];
   for(const view of document.querySelectorAll('main > .view')){
-    if(['lobby-view','plaza-view'].includes(view.id))continue;
+    if(['lobby-view','plaza-view','community-view'].includes(view.id))continue;
     const body=make('div','viewport-pages-body'),nav=make('nav','viewport-controls'),previous=make('button','secondary-button','이전'),select=make('select'),next=make('button','secondary-button','다음'),status=make('span','viewport-page-count');
     nav.setAttribute('aria-label','본문 섹션 페이지');select.setAttribute('aria-label','볼 내용 선택');status.setAttribute('aria-live','polite');
     previous.type=next.type='button';
