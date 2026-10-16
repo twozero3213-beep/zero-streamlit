@@ -52,7 +52,8 @@ class BridgeTests(unittest.TestCase):
             self.assertEqual((output / 'assets/vendor-example-LICENSE.txt').read_bytes(), license_text)
             self.assertIn('"api/quotes"', (output / 'assets/app.js').read_text(encoding='utf-8'))
             self.assertIn('공개 참고 화면',(output/'index.html').read_text(encoding='utf-8'))
-            self.assertNotIn('http-equiv="Content-Security-Policy"', (output/'index.html').read_text(encoding='utf-8'), 'the bridge HTTP policy owns the configured Auth connection')
+            self.assertIn('connect-src \'self\' https://txhozsfszjryasemyecx.supabase.co', (output/'index.html').read_text(encoding='utf-8'), 'Streamlit may strip HTTP CSP, so the document must retain the same Auth boundary')
+            self.assertNotIn('supabase.co', (source/'index.html').read_text(encoding='utf-8'))
             self.assertIn('본인 전용',(source/'index.html').read_text(encoding='utf-8'),'public wording must not change the owner-private source')
 
     def setUp(self):

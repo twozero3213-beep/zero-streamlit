@@ -55,8 +55,10 @@ def build(source, checkout=None):
     text = manifest.read_text(encoding='utf-8').replace('"/assets/', '"')
     manifest.write_text(re.sub(r'"(id|start_url|scope)":"/"', r'"\1":"../"', text), encoding='utf-8')
     html = relative((source / 'index.html').read_text(encoding='utf-8')).replace('본인 전용', '공개 참고 화면').replace('대표님 전용', '공개 참고 화면')
-    # The HTTP policy owns Auth connections; a second static policy would block them.
-    html = re.sub(r'\s*<meta http-equiv="Content-Security-Policy"[^>]*>', '', html)
+    # Streamlit can strip response headers; keep the document policy aligned with Auth.
+    auth_origin = os.environ.get('ZERO_AUTH_SUPABASE_ORIGIN', 'https://txhozsfszjryasemyecx.supabase.co').strip().rstrip('/')
+    auth_origin = ' ' + auth_origin if re.fullmatch(r'https://[a-z0-9]{20}\.supabase\.co', auth_origin) else ''
+    html = re.sub(r'(<meta http-equiv="Content-Security-Policy" content="[^"]*connect-src [^";]*)([;"])', lambda match: match[1] + auth_origin + match[2], html)
     if 'data-zero-hosted="true"' not in html:
         raise SystemExit('HOSTED_FLAG_MISSING: build from the hosted (Cloudflare/Sites) public folder')
     # The office's account API (public Cloudflare Worker). Empty keeps the single-visitor office.
