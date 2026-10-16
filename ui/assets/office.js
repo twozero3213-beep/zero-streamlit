@@ -339,6 +339,27 @@
     if(below+reply.height>mapBox.bottom-24)nearby.button.style.setProperty('--office-reply-top',(ownerScene.bubble.getBoundingClientRect().top-reply.height-8-nearby.button.getBoundingClientRect().top)/scale+'px');
     else nearby.button.style.setProperty('--office-reply-top','170px');
   }
+  function fitChatter(){
+    if(!world||meetingRecordsOnly||!sceneVisible())return;
+    const map=$('office-map').getBoundingClientRect(),scale=world.getBoundingClientRect().width/WORLD_WIDTH,placements=[];
+    const occupied=[ownerScene,ownerEncounter?.record].filter(record=>record&&!record.bubble.hidden).map(record=>record.bubble.getBoundingClientRect());
+    for(const record of sceneActors.values()){
+      if(!record.button.classList.contains('show-bubble')||record.button.classList.contains('is-muted')||record.button.classList.contains('is-chatting'))continue;
+      const actor=record.button.getBoundingClientRect(),bubble=record.bubble.getBoundingClientRect();
+      const preferredX=Math.max(map.left+4,Math.min(actor.left+90*scale-bubble.width/2,map.right-bubble.width-4));
+      const preferredY=Math.max(map.top+4,Math.min(actor.top+18*scale-bubble.height,map.bottom-bubble.height-24));
+      const xs=[preferredX,...occupied.flatMap(item=>[item.left-bubble.width-4,item.left+item.width+4])].filter(x=>x>=map.left+4&&x+bubble.width<=map.right-4).sort((a,b)=>Math.abs(a-preferredX)-Math.abs(b-preferredX));
+      const ys=[preferredY,...occupied.flatMap(item=>[item.top-bubble.height-4,item.top+item.height+4])].filter(y=>y>=map.top+4&&y+bubble.height<=map.bottom-24).sort((a,b)=>Math.abs(a-preferredY)-Math.abs(b-preferredY));
+      let position;
+      for(const left of xs){
+        const top=ys.find(y=>!occupied.some(item=>left<item.left+item.width+4&&left+bubble.width+4>item.left&&y<item.top+item.height+4&&y+bubble.height+4>item.top));
+        if(top!==undefined){position={left,top};break;}
+      }
+      const {left,top}=position||{left:preferredX,top:preferredY};
+      occupied.push({left,top,width:bubble.width,height:bubble.height});placements.push({record,left,top,actor});
+    }
+    for(const {record,left,top,actor}of placements){record.button.style.setProperty('--office-bubble-left',(left-actor.left)/scale+'px');record.button.style.setProperty('--office-bubble-top',(top-actor.top)/scale+'px');}
+  }
   function actorBubble(actor,preserve=false){
     const job=latestJob(actor),available=queue&&['EMPTY','AVAILABLE'].includes(queue.state);
     const logic=window.ZEROLobbyLogic,world=window.ZEROLobbyWorld,publicScene=window.ZEROLobby?.state;
@@ -346,7 +367,7 @@
       if(preserve&&teamChatCache.has(actor.id))return teamChatCache.get(actor.id);
       const line=world.chooseChatter(logic,{now:new Date(),weather:publicScene?.weather,trends:publicScene?.trends||[],trendFallback:publicScene?.trendFallback!==false,level:1},[],teamChatRecent);
       teamChatRecent.push(line);if(teamChatRecent.length>12)teamChatRecent.shift();
-      const chat={text:excerpt(line,26),status:available?'요청 대기':'진행 미확인',detail:'가상 직원의 일상 대사 · 실제 업무 처리나 계좌 확인 결과가 아닙니다. '+line};teamChatCache.set(actor.id,chat);return chat;
+      const chat={text:line,status:available?'요청 대기':'진행 미확인',detail:'가상 직원의 일상 대사 · 실제 업무 처리나 계좌 확인 결과가 아닙니다. '+line};teamChatCache.set(actor.id,chat);return chat;
     }
     return {text:job&&available?types[job.job_type]:excerpt(actor.principles[0]||'직무 원칙',24),status:available?job?statusNames[job.status]:'요청 대기':'진행 미확인',detail:job?.result_summary||actor.principles[0]||''};
   }
@@ -405,7 +426,7 @@
       button.addEventListener('click',()=>openActor(actor));hotspots.append(button);actorButtons.set(actor.id,button);sceneActors.set(actor.id,{actor,button,figure:person.outer,travel:person.travel,point,duty,bubble,animations:[]});
     });
     svg.append(furniture,people);drawChairperson(svg);renderOwner(svg,hotspots);world.append(svg,hotspots);fit.append(world);map.append(fit);
-    const hint=node('p','office-scene-hint','이동·잡담은 가상 연출 · ZERO 의장과 직원 선택 · 업무는 별도 요청');map.append(hint);
+    const hint=node('p','office-scene-hint','이동·대화는 가상 연출 · ZERO 의장과 직원 선택 · 업무는 별도 요청');map.append(hint);
     // The toolbar's native department selector is the single room navigator.
     let central=$('office-central-roster');if(!central){central=node('nav','office-central-roster');central.id='office-central-roster';central.setAttribute('aria-label','중앙 팀장 선택');$('office-records')?.append(central);}central.replaceChildren();
     for(const actor of actors.filter(isLeader)){const button=node('button','',actor.name+' · '+departmentNames[actor.department]);button.type='button';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','office-request-dialog');button.addEventListener('click',()=>openActor(actor));central.append(button);}
@@ -855,7 +876,7 @@
   $('office-request-dialog').addEventListener('close',()=>{if(!submitting)$('office-instruction').value='';});
   window.ZEROOffice={load,requestResearch};
   const visible=()=>!document.hidden && !$('team-view')?.hidden;
-  setInterval(()=>updateEncounters(150),150);
+  setInterval(()=>{updateEncounters(150);fitChatter();},150);
   setInterval(()=>{if(visible() && !submitting){loadPromise=load();loadPromise.catch(()=>{});}},30000);
   document.addEventListener?.('visibilitychange',()=>{syncMotion();if(visible() && !submitting)load();});
   if(visible()){loadPromise=load(); loadPromise.catch(()=>{});}

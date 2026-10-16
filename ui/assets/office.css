@@ -355,10 +355,9 @@ html[data-zero-view='team'] #notice { display:none; }
 .office-board-face *{animation:none!important;transition:none!important}
 .office-board-identity,.office-board-actor>.office-board-type,.office-board-actor>.office-board-status,.office-board-actor>.office-board-elapsed{grid-column:2;margin:0}
 .office-board-identity{font-weight:650;color:#246786}
-/* Overview: every staff member keeps a short two-line duty bubble so rooms stay readable. */
+/* Full sentences wrap naturally; speech bubbles never clamp their text. */
 .office-overview .office-actor:not(.is-speaking) .office-actor-status{display:none}
 .office-overview .office-actor:not(.is-speaking) .office-actor-bubble{min-height:0;top:-30px}
-.office-overview .office-actor:not(.is-speaking) .office-actor-duty{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 /* Phone meeting view: the scaled scene shows each seat's short team name at a readable size;
    full names stay in the central roster below the map and in the request dialog. */
 @media(max-width:600px){
@@ -410,9 +409,10 @@ html[data-zero-view='team'] #notice { display:none; }
 .office-map .office-central-title{font-size:var(--office-room-title-font,24px)}
 .office-map .office-actor .office-actor-label{top:82px}
 .office-map .office-owner .office-actor-label{top:82px}
-.office-map.office-overview .office-actor-bubble{width:160px;left:10px;top:-36px;font-size:var(--office-meta-font,13px)}
+.office-map.office-overview .office-actor-bubble{width:260px;left:-40px;top:auto;bottom:148px;font-size:var(--office-meta-font,13px)}
+.office-map .office-actor:not(.is-chatting) .office-actor-bubble{left:var(--office-bubble-left,-40px);top:var(--office-bubble-top,-36px);bottom:auto}
 .office-map.office-overview .office-actor.is-speaking .office-actor-status{display:none}
-.office-map.office-overview .office-owner .office-actor-bubble{width:160px;left:10px;top:-36px}
+.office-map.office-overview .office-owner .office-actor-bubble{width:160px;left:10px;top:-36px;bottom:auto}
 .office-map.office-overview .office-room-summary span{display:none}
 .office-map.office-overview .office-room-summary strong{font-size:var(--office-room-title-font,20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .office-map.office-overview .office-room-title{visibility:hidden}
