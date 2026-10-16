@@ -4,7 +4,7 @@
 .mts-subnav button.active{background:#e8f1ff;color:#1b64da}
 .mts-subnav #refresh{margin-left:auto;color:#1b64da;background:#e8f1ff;padding:4px 8px;min-width:36px}
 .mts-subnav #refresh svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
-html[data-zero-view=portfolio] .page-header,html[data-zero-view=research] .page-header,html[data-zero-view=workbench] .page-header{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;margin:0}
+html:is([data-zero-view=portfolio],[data-zero-view=comparison],[data-zero-view=research],[data-zero-view=workbench],[data-zero-view=analysis],[data-zero-view=audit]) .page-header{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;margin:0}
 @media(max-width:767px){.mts-subnav{max-width:100%;overflow-x:auto}.mts-subnav button{flex-shrink:0}.mts-subnav #refresh span{display:none}}
 html #portfolio-view .portfolio-summary{padding:20px 24px}
 html .account-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:16px 0}
@@ -52,7 +52,7 @@ html .holdings-panel .market-filter button,html .holdings-panel .search-label{mi
 html .holdings-panel .panel-heading h2{font-size:16px}
 html .global-navigation .top-nav-item{font-size:13px;white-space:nowrap;padding:6px 9px}
 html .global-navigation small{font-size:10px}
-html[data-zero-view=portfolio] main>.notice,html[data-zero-view=research] main>.notice,html[data-zero-view=workbench] main>.notice{font-size:11px;max-height:48px;overflow:hidden}
+html:is([data-zero-view=portfolio],[data-zero-view=comparison],[data-zero-view=research],[data-zero-view=workbench],[data-zero-view=analysis],[data-zero-view=audit]) main>.notice{font-size:11px;max-height:48px;overflow:hidden}
 html[data-zero-domain=investment] .office-floor-ticker{display:none}
 @media(max-width:767px){
  .mts-subnav{min-height:36px;gap:4px}.mts-subnav button{min-height:36px;padding:4px 10px;font-size:13px}
@@ -146,7 +146,10 @@ html .global-header button:focus-visible, html .mts-subnav button:focus-visible 
   html .global-header .global-search-wrap input { font-size: 16px; }
   html .global-header .member-entry { min-height: 44px; padding: 6px 10px; line-height: 20px; }
   html .global-header .icon-button { min-height: 44px; min-width: 44px; }
-  html .mts-subnav { min-height: 44px; flex-wrap: wrap; gap: 2px; overflow: visible; }
+  html .mts-subnav { min-height: 44px; flex-wrap: wrap; gap: 2px; overflow: visible; touch-action: manipulation; }
+  html .mts-subnav [data-view] { flex: 1 0 44px; padding-inline: 0; white-space: nowrap; }
+  html .mts-subnav #refresh { margin-left: 0; }
+  html .mts-subnav .desktop-mode-toggle { display: none; }
   html .mts-subnav button, html .mts-subnav #refresh { min-height: 44px; min-width: 44px; padding: 6px 9px; }
 }
 @media (max-width: 560px) {

@@ -49,7 +49,7 @@
     return { url: config.supabase_url, key: config.publishable_key };
   }
   async function request(config, endpoint, payload, code) {
-    var controller = new root.AbortController(), reader, response, timer;
+    var controller = new root.AbortController(), reader, response, timer, failureCode = code;
     var expired = new Promise(function (_, reject) {
       timer = root.setTimeout(function () { reject(fail(code)); controller.abort(); }, TIMEOUT_MS);
     });
@@ -61,7 +61,10 @@
           body: JSON.stringify(payload), signal: controller.signal,
           redirect: 'error', cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer'
         });
-        if (response.redirected || response.status !== 200 || Number(response.headers.get('content-length')) > MAX_BODY) throw fail(code);
+        // Only status-derived codes leave this boundary; provider bodies may contain private contacts.
+        if (!response.redirected && response.status === 429) failureCode = 'AUTH_RATE_LIMITED';
+        else if (!response.redirected && endpoint === 'otp' && response.status >= 500) failureCode = 'AUTH_DELIVERY_UNAVAILABLE';
+        if (response.redirected || response.status !== 200 || Number(response.headers.get('content-length')) > MAX_BODY) throw fail(failureCode);
         reader = response.body.getReader();
         var decoder = new root.TextDecoder('utf-8', { fatal: true }), size = 0, body = '';
         while (true) {
@@ -80,7 +83,7 @@
             !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(accessToken)) throw fail(code);
         return { access_token: accessToken };
       }())]);
-    } catch (_) { throw fail(code); }
+    } catch (_) { throw fail(failureCode); }
     finally {
       root.clearTimeout(timer);
       controller.abort();
