@@ -16,6 +16,8 @@ ZERO 포트폴리오 화면(로컬 `127.0.0.1:8765`와 같은 화면)을 Streaml
 - `build_ui.py` — `ui/`를 다시 만들고 `extras/*.js`를 `index.html`에 붙인다.
   닉네임 계정 서버 주소는 환경변수 `ZERO_LOBBY_API`로 주입한다(현재 `https://zero-lobby.zero-cloudflare.workers.dev`, zero-bot의 `scripts/build_lobby_worker.py`로 만든 Worker). 비우면 가입 버튼은 "준비 중"이다. 빌드 때 이 값을 빼먹으면 가입이 꺼지니 주의.
 
+이메일 가입·로그인은 별도 공개 인증 서버의 `AUTH_EMAIL_ENABLED`와 Supabase SMTP·숫자 인증번호 메일 템플릿을 함께 설정해야 합니다. Streamlit의 HTTP 보안정책은 ZERO의 기존 공개 Supabase 프로젝트 한 곳을 기본 허용하며, `ZERO_AUTH_SUPABASE_ORIGIN`으로 지정된 HTTPS 프로젝트 주소로만 교체할 수 있습니다. 화면에 중복 CSP 메타 태그를 다시 추가하면 인증 요청이 차단됩니다.
+
 ## 배포 (Streamlit Community Cloud)
 New app → 저장소 `twozero3213-beep/zero-streamlit`, 브랜치 `main`, 파일 `streamlit_app.py`, Python 3.13.
 Settings → Secrets (값은 소유자의 `zero-cloudflare.env`에서, 저장소에는 넣지 않는다):

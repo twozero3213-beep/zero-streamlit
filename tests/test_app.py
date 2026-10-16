@@ -44,7 +44,7 @@ class BridgeTests(unittest.TestCase):
             (assets / 'vendor-example-LICENSE.txt').write_bytes(license_text)
             (assets / 'app.js').write_text('const endpoint = "/api/quotes";', encoding='utf-8')
             (assets / 'manifest.webmanifest').write_text('{"id":"/","start_url":"/","scope":"/"}', encoding='utf-8')
-            (source / 'index.html').write_text('<html data-zero-hosted="true"><body><span>본인 전용</span></body></html>', encoding='utf-8')
+            (source / 'index.html').write_text('<html data-zero-hosted="true"><head><meta http-equiv="Content-Security-Policy" content="connect-src \'self\'"></head><body><span>본인 전용</span></body></html>', encoding='utf-8')
             output = Path(tmp) / 'ui'
             with mock.patch.object(build_ui, 'OUT', output), mock.patch.object(build_ui, 'EXTRAS', Path(tmp) / 'empty'), mock.patch.dict('os.environ', {'ZERO_LOBBY_API': ''}):
                 build_ui.build(source)
@@ -52,6 +52,7 @@ class BridgeTests(unittest.TestCase):
             self.assertEqual((output / 'assets/vendor-example-LICENSE.txt').read_bytes(), license_text)
             self.assertIn('"api/quotes"', (output / 'assets/app.js').read_text(encoding='utf-8'))
             self.assertIn('공개 참고 화면',(output/'index.html').read_text(encoding='utf-8'))
+            self.assertNotIn('http-equiv="Content-Security-Policy"', (output/'index.html').read_text(encoding='utf-8'), 'the bridge HTTP policy owns the configured Auth connection')
             self.assertIn('본인 전용',(source/'index.html').read_text(encoding='utf-8'),'public wording must not change the owner-private source')
 
     def setUp(self):
@@ -101,6 +102,15 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(response.headers['x-content-type-options'],'nosniff')
         self.assertIn("script-src 'self'",response.headers['content-security-policy'])
         self.assertIn("object-src 'none'",response.headers['content-security-policy'])
+
+    def test_ui_pins_zero_auth_when_optional_setting_is_absent(self):
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as tmp, mock.patch.dict('os.environ', {}, clear=True):
+            Path(tmp, 'index.html').write_text('<html>synthetic</html>', encoding='utf-8')
+            response=asyncio.run(zero_proxy._UI(directory=tmp,html=True).get_response('index.html', {'type':'http','method':'GET','headers':[]}))
+        connect=next(rule.strip().split()[1:] for rule in response.headers['content-security-policy'].split(';') if rule.strip().startswith('connect-src '))
+        self.assertEqual([value for value in connect if 'supabase' in value], ['https://txhozsfszjryasemyecx.supabase.co'])
+        self.assertNotIn('*', connect)
 
     def test_auth_connect_allows_only_one_configured_official_project(self):
         from tempfile import TemporaryDirectory

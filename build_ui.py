@@ -55,6 +55,8 @@ def build(source, checkout=None):
     text = manifest.read_text(encoding='utf-8').replace('"/assets/', '"')
     manifest.write_text(re.sub(r'"(id|start_url|scope)":"/"', r'"\1":"../"', text), encoding='utf-8')
     html = relative((source / 'index.html').read_text(encoding='utf-8')).replace('본인 전용', '공개 참고 화면').replace('대표님 전용', '공개 참고 화면')
+    # The HTTP policy owns Auth connections; a second static policy would block them.
+    html = re.sub(r'\s*<meta http-equiv="Content-Security-Policy"[^>]*>', '', html)
     if 'data-zero-hosted="true"' not in html:
         raise SystemExit('HOSTED_FLAG_MISSING: build from the hosted (Cloudflare/Sites) public folder')
     # The office's account API (public Cloudflare Worker). Empty keeps the single-visitor office.

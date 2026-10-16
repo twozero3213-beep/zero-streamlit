@@ -220,7 +220,7 @@ class _UI(StaticFiles):
         response.headers['Cache-Control'] = 'no-cache'
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['X-Content-Type-Options'] = 'nosniff'
-        auth_origin = os.environ.get('ZERO_AUTH_SUPABASE_ORIGIN', '').strip().rstrip('/')
+        auth_origin = os.environ.get('ZERO_AUTH_SUPABASE_ORIGIN', 'https://txhozsfszjryasemyecx.supabase.co').strip().rstrip('/')
         auth_origin = ' ' + auth_origin if re.fullmatch(r'https://[a-z0-9]{20}\.supabase\.co', auth_origin) else ''
         response.headers['Content-Security-Policy'] = f"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self'; connect-src 'self' https://zero-lobby.zero-cloudflare.workers.dev wss://zero-lobby.zero-cloudflare.workers.dev https://api.open-meteo.com https://date.nager.at{auth_origin}; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
         return response
