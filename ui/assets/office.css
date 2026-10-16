@@ -377,7 +377,7 @@ html[data-zero-view='team'] #notice { display:none; }
 .office-owner .office-actor-bubble{visibility:visible;border-color:#c6a957;background:#fffae9}
 .office-owner .office-actor-bubble::after{background:#fffae9}
 .office-owner .office-actor-bubble[hidden]{display:none}
-.office-actor.is-chatting{z-index:13}
+.office-actor.show-bubble,.office-actor.is-chatting{z-index:13}
 .office-figure.is-chatting .office-typing-hands{animation:none}
 .office-map .office-actor.is-chatting .office-actor-bubble,.office-map.office-overview .office-owner.is-chatting .office-actor-bubble,.office-map .office-owner.is-chatting .office-actor-bubble{width:260px;top:auto;bottom:148px;left:var(--office-chat-left,-40px)}
 .office-map .office-actor.is-chatting .office-actor-bubble{bottom:auto;top:var(--office-reply-top,170px)}
