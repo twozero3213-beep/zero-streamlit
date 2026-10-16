@@ -46,7 +46,7 @@ function paint(){const host=doc.getElementById('analysis-content'),status=doc.ge
  else for(const e of saved.earnings.events.slice(0,3))calendar.append(make('p','analysis-event',e.date+' · '+e.symbol+' '+e.company+' · '+({BEFORE_MARKET:'장 시작 전',AFTER_MARKET:'장 마감 후',UNKNOWN:'시간 미확인'}[e.time])));
  const trends=make('section','analysis-card');trends.append(make('h3','','시장 흐름 요약'),make('p','analysis-trend','선물 등락은 각 선물의 비교 기준값에서 얼마나 움직였는지 보여 줍니다. 현물이 같은 폭으로 움직인다는 뜻은 아닙니다.'));
  const lines=chatter(saved),futures=lines.length?saved.indices.filter(row=>row.kind==='FUTURES'&&row.state==='AVAILABLE'&&Number.isFinite(row.change_percent)).slice(0,2):[];
- for(const row of futures)trends.append(make('p','analysis-trend',row.name+' '+(row.change_percent>0?'+':'')+digits(row.change_percent)+'% · 100 기준 → '+(100+row.change_percent).toLocaleString('ko-KR',{maximumFractionDigits:6})));
+ for(const row of futures){const shown=digits(row.change_percent);trends.append(make('p','analysis-trend',row.name+' '+(row.change_percent>0?'+':'')+shown+'% · 100 기준 → '+(100+Number(shown.replaceAll(',',''))).toFixed(2)+' (표시 등락률 적용)'));}
  if(!futures.length)trends.append(make('p','muted-note','새로운 가격 근거를 확인한 뒤 요약합니다.'));
  for(const [direction,condition]of [['상승','선물 약세가 줄고 해당 현물도 함께 오를 때'],['횡보','선물 방향이 엇갈리고 현물이 좁은 범위에서 등락할 때'],['하락','선물 약세가 이어지고 해당 현물도 함께 내릴 때']])trends.append(make('p','analysis-trend',direction+': '+condition));
  trends.append(make('p','muted-note','확률: 계산할 수 없음 · 시점 동기화·과거 조건부 표본·예측기간 부족'));
