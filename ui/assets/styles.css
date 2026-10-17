@@ -911,3 +911,12 @@ html .rail .nav-item:focus-visible, html .more-menu .nav-item:focus-visible { ou
 .icon-button.icon-close::before,.icon-button.icon-close::after{content:"";position:absolute;width:18px;height:2px;border-radius:1px;background:currentColor;transform:rotate(45deg)}
 .icon-button.icon-close::after{transform:rotate(-45deg)}
 .icon-button.icon-close:hover{background:#f2f4f6}.icon-button.icon-close:focus-visible{outline:2px solid var(--primary,#1762e8);outline-offset:2px}
+.study-hub-title{margin:0 0 12px;font-size:20px}
+.study-hub-list{display:grid;gap:12px}
+.study-card{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;border:1px solid var(--line,#eef0f3);border-radius:16px;background:var(--surface,#fff)}
+.study-card h3{margin:0 0 6px;font-size:17px}.study-card p{margin:0;color:var(--muted,#6b7684);line-height:1.55;overflow-wrap:anywhere}
+.study-card-text{min-width:0}.study-card .primary-button{flex:none;min-height:44px;padding:0 20px}
+.study-back{margin:0 0 12px;min-height:40px}
+@media(max-width:640px){.study-card{flex-direction:column;align-items:stretch;padding:16px}.study-card .primary-button{width:100%}}
+/* 계좌 대조는 실계좌 연결이 없어 메뉴에서만 숨긴다. #audit 주소와 기능 코드는 그대로 둔다. */
+[data-view="audit"]{display:none!important}

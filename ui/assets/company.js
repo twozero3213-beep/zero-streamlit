@@ -3,6 +3,10 @@
   'use strict';
   const REVIEW_NOTICE='사용자 확인은 검토 기록이며 주문 승인·체결이 아닙니다. 다른 계좌를 자동 추종하지 않으며 가상 실험만 제공합니다.';
   const PERSONAS={VALUE:'가치투자형',TREND:'추세추종형',DIVIDEND:'고배당형',VOLATILITY:'변동성 제어형'};
+  // Hiring presets: default team, one-line role and a look painted by ZEROOfficeNative.
+  const ROLES={VALUE:{team:'가치팀',short:'가치',desc:'싸게 거래되는 우량 기업을 찾아요.',look:{outfit:'suit',hair:'1',accessory:'glasses'}},TREND:{team:'추세팀',short:'추세',desc:'오르는 흐름을 따라가요.',look:{outfit:'hoodie',hair:'2',accessory:'cap',shoes:'red'}},DIVIDEND:{team:'배당팀',short:'배당',desc:'배당을 꾸준히 주는 종목을 봐요.',look:{outfit:'cardigan',hair:'3',shoes:'white'}},VOLATILITY:{team:'위험관리팀',short:'위험관리',desc:'흔들림이 크면 비중을 줄여요.',look:{outfit:'vest',hair:'0',accessory:'headphones',shoes:'blue'}}};
+  // Integer split so the sum is exactly 100 for staffProblem.
+  function evenWeights(rows){const base=Math.floor(100/rows.length),rest=100-base*rows.length;rows.forEach((row,index)=>{row.weight=base+(index<rest?1:0);});return rows;}
   function staffProblem(rows){
     if(!Array.isArray(rows)||!rows.length||rows.length>20)return '직원을 1~20명 배치해 주세요.';
     if(rows.some(row=>typeof row.name!=='string'||!row.name.trim()||row.name.length>12||typeof row.team!=='string'||!row.team.trim()||row.team.length>12||!Object.hasOwn(PERSONAS,row.persona)||!Number.isFinite(row.weight)||row.weight<0||row.weight>100))return '직원 이름·팀·성향·가중치를 확인해 주세요.';
@@ -10,11 +14,16 @@
     return null;
   }
   function marketCardValid(data,identity){return data?.schema_version===1&&data.identity===identity&&data.quote&&['AVAILABLE','STALE','UNAVAILABLE'].includes(data.quote.status)&&data.orderbook&&Array.isArray(data.orderbook.bids)&&Array.isArray(data.orderbook.asks)&&data.calendar&&Array.isArray(data.calendar.events);}
-  if(typeof module!=='undefined'&&module.exports)module.exports={staffProblem,marketCardValid};
+  if(typeof module!=='undefined'&&module.exports)module.exports={staffProblem,marketCardValid,evenWeights};
   if(typeof document==='undefined')return;
   const $=id=>document.getElementById(id),U=()=>window.ZEROLobbyUsers;
   const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
   const button=(text,run)=>{const n=el('button','secondary-button',text);n.type='button';n.addEventListener('click',run);return n;};
+  const avatars=new Set();let avatarFrame=null;
+  function paintAvatars(time){avatarFrame=null;for(const item of avatars){if(!item.canvas.isConnected){avatars.delete(item);continue;}window.ZEROOfficeNative?.drawPerson?.(item.canvas,item.actor(),time/1000);}
+    if(avatars.size&&!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches&&window.requestAnimationFrame)avatarFrame=window.requestAnimationFrame(paintAvatars);}
+  function avatar(actor,label){const canvas=el('canvas','company-avatar');canvas.setAttribute('role','img');canvas.setAttribute('aria-label',label);if(!canvas.getContext)return canvas;avatars.add({canvas,actor});if(avatarFrame===null&&window.requestAnimationFrame)avatarFrame=window.requestAnimationFrame(paintAvatars);else window.ZEROOfficeNative?.drawPerson?.(canvas,actor(),0);return canvas;}
+  const lookOf=(persona,name)=>({id:name||persona,activity:'walking',appearance:ROLES[persona]?.look});
   let fields=0,epoch=0,marketEpoch=0,staff=[],paperPending=new Map(),paperActive=false,paperSelection=null;
   function portfolioContent(){return $('portfolio-view')?.querySelector('#member-portfolio')||null;}
   function companyContent(){
@@ -46,16 +55,19 @@
   }
   function openPortfolio(){return mountPaper(portfolioContent());}
 
-  function drawStaff(list){
+  function drawStaff(list,onChange=()=>{}){
     list.replaceChildren();staff.forEach((row,index)=>{
       const card=el('fieldset','company-staff');card.append(el('legend','',row.name||'직원 '+(index+1)));
       const name=field('직원 이름','text',row.name),team=field('팀 이름','text',row.team),persona=field('전략 성향','select','');name.input.maxLength=12;team.input.maxLength=12;
       Object.entries(PERSONAS).forEach(([value,label])=>{const opt=el('option','',label);opt.value=value;persona.input.append(opt);});persona.input.value=row.persona;
       const weight=field('전략 가중치(%)','number',row.weight,0,100),lookback=field('관찰 거래일','number',row.params.lookback,20,200),vol=field('목표 연 변동성','number',row.params.vol_target,0.05,0.4),rebalance=field('재배분 주기(거래일)','number',row.params.rebalance_days,1,60);vol.input.step='0.01';
-      [name,team,persona,weight,lookback,vol,rebalance].forEach(f=>card.append(f.wrap));
+      const head=el('div','company-staff-head'),info=el('div','company-staff-info'),advanced=el('details','company-staff-advanced');
+      head.append(avatar(()=>lookOf(row.persona,row.name),(row.name||'직원')+' 캐릭터'),info);[name,team,persona,weight].forEach(f=>info.append(f.wrap));
+      advanced.append(el('summary','','고급 설정 · 관찰 기간, 변동성, 재배분 주기'));[lookback,vol,rebalance].forEach(f=>advanced.append(f.wrap));
+      card.append(head,advanced);
       name.input.addEventListener('input',()=>row.name=name.input.value);team.input.addEventListener('input',()=>row.team=team.input.value);persona.input.addEventListener('change',()=>row.persona=persona.input.value);
       weight.input.addEventListener('input',()=>row.weight=Number(weight.input.value));lookback.input.addEventListener('input',()=>row.params.lookback=Number(lookback.input.value));vol.input.addEventListener('input',()=>row.params.vol_target=Number(vol.input.value));rebalance.input.addEventListener('input',()=>row.params.rebalance_days=Number(rebalance.input.value));
-      card.append(button('직원 고용 해제',()=>{staff.splice(index,1);drawStaff(list);}));list.append(card);
+      card.append(button('직원 고용 해제',()=>{staff.splice(index,1);if(staff.length)evenWeights(staff);drawStaff(list,onChange);onChange();}));list.append(card);
     });
   }
   function staffOffice(company,rows){
@@ -182,9 +194,15 @@
       const [companyData,staffData]=await Promise.all([request('/me/company'),request('/me/staff')]);if(generation!==epoch)return;
       const company=companyData.company||companyData;staff=Array.isArray(staffData.staff)?structuredClone(staffData.staff):[];
       const name=field('투자회사 이름','text',company.name||''),note=el('p','muted-note'),list=el('div','company-staff-list');name.input.maxLength=20;
-      const settings=el('section','panel');settings.append(el('h2','','내 투자회사'),name.wrap,button('회사 이름 저장',async()=>{try{await request('/me/company',{method:'PUT',body:{name:name.input.value,space:company.space}});if(generation!==epoch)return;note.textContent='회사 이름을 저장했어요.';await U().refresh();}catch(e){note.textContent=reason(e.code);}}),button('인테리어·팀 구성',()=>U()?.editOffice()),note);
-      const hires=el('section','panel');hires.append(el('h2','','페르소나 직원 고용·배치'),el('p','muted-note','가치·고배당 전략은 당시의 재무·배당 근거가 있어야 실행됩니다. 자료가 없으면 임의 가격 전략으로 대체하지 않습니다.'),list);
-      hires.append(button('직원 고용',()=>{if(staff.length>=20){note.textContent='최대 20명이에요.';return;}staff.push({name:'연구원 '+(staff.length+1),team:'전략팀',persona:'TREND',weight:staff.length?0:100,params:{lookback:60,vol_target:0.15,rebalance_days:20}});drawStaff(list);}),button('전략 가중치 저장',async()=>{const error=staffProblem(staff);if(error){note.textContent=error;return;}try{const saved=await request('/me/staff',{method:'PUT',body:{staff}});if(generation!==epoch)return;if(Array.isArray(saved.staff)){staff=structuredClone(saved.staff);drawStaff(list);}note.textContent='전략 배치를 저장했어요.';await U().refresh();}catch(e){note.textContent=reason(e.code);}}),button('직원을 내 사무실에 배치',()=>{const error=staffProblem(staff);if(error){note.textContent=error;return;}window.ZERO?.navigate('lobby');window.ZEROLobby?.showOwn({nick:U().session().nick,team:staffOffice(company,staff),space:company.space});}));
+      const steps=el('ol','company-steps'),hires=el('section','panel company-hires');steps.setAttribute('aria-label','투자회사 시작 순서');
+      const drawSteps=()=>{const rows=[['회사 이름',!!(company.name||'').trim(),()=>name.input.focus()],['직원 고용',staff.length>0,()=>hires.scrollIntoView?.({behavior:'smooth',block:'start'})],['사무실 꾸미기',false,()=>U()?.editOffice()]];
+        steps.replaceChildren(...rows.map(([label,done,go],index)=>{const item=el('li',done?'company-step done':'company-step'),action=el('button','company-step-button');action.type='button';action.append(el('b','',done?'완료':String(index+1)),el('span','',label));action.addEventListener('click',go);item.append(action);return item;}));};
+      const settings=el('section','panel');settings.append(el('h2','','내 투자회사'),name.wrap,button('회사 이름 저장',async()=>{try{await request('/me/company',{method:'PUT',body:{name:name.input.value,space:company.space}});if(generation!==epoch)return;company.name=name.input.value;drawSteps();note.textContent='회사 이름을 저장했어요.';await U().refresh();}catch(e){note.textContent=reason(e.code);}}),button('인테리어·팀 구성',()=>U()?.editOffice()),note);
+      const hireNote=el('p','muted-note company-hire-note'),redraw=()=>{drawStaff(list,drawSteps);drawSteps();};hireNote.setAttribute('role','status');
+      const hire=persona=>{if(staff.length>=20){hireNote.textContent='직원은 최대 20명이에요.';return;}const role=ROLES[persona],same=staff.filter(row=>row.persona===persona).length+1;staff.push({name:role.short+' 연구원 '+same,team:role.team,persona,weight:0,params:{lookback:60,vol_target:0.15,rebalance_days:20}});evenWeights(staff);redraw();hireNote.textContent=role.short+' 연구원을 고용했어요. 전략 가중치는 '+staff.length+'명이 똑같이 나눴어요. 저장해야 반영돼요.';};
+      const roster=el('div','company-roles');for(const [persona,role] of Object.entries(ROLES)){const card=el('button','company-role');card.type='button';card.append(avatar(()=>lookOf(persona),PERSONAS[persona]+' 캐릭터'),el('strong','',PERSONAS[persona]),el('small','',role.desc));card.addEventListener('click',()=>hire(persona));roster.append(card);}
+      hires.append(el('h2','','페르소나 직원 고용·배치'),el('p','muted-note','원하는 성향을 누르면 바로 고용돼요. 이름·팀은 아래에서 바꿀 수 있어요. 가치·고배당 전략은 당시의 재무·배당 근거가 있어야 실행됩니다. 자료가 없으면 임의 가격 전략으로 대체하지 않습니다.'),roster,hireNote,list);
+      hires.append(button('직원 고용',()=>hire('TREND')),button('가중치 똑같이 나누기',()=>{if(!staff.length)return;evenWeights(staff);redraw();hireNote.textContent='전략 가중치를 '+staff.length+'명이 똑같이 나눴어요.';}),button('전략 가중치 저장',async()=>{const error=staffProblem(staff);if(error){note.textContent=error;return;}try{const saved=await request('/me/staff',{method:'PUT',body:{staff}});if(generation!==epoch)return;if(Array.isArray(saved.staff)){staff=structuredClone(saved.staff);redraw();}note.textContent='전략 배치를 저장했어요.';await U().refresh();}catch(e){note.textContent=reason(e.code);}}),button('직원을 내 사무실에 배치',()=>{const error=staffProblem(staff);if(error){note.textContent=error;return;}window.ZERO?.navigate('lobby');window.ZEROLobby?.showOwn({nick:U().session().nick,team:staffOffice(company,staff),space:company.space});}));
       const research=el('section','panel'),range=field('검증 기간','select',''),fees=field('수수료 가정(bps)','number',10,0,100),slip=field('슬리피지 가정(bps)','number',5,0,100),result=el('div','company-result');
       [['5Y','최근 5년 자료 · 준비 구간 제외']].forEach(([value,text])=>{const option=el('option','',text);option.value=value;range.input.append(option);});range.input.value='5Y';
       let runId=null;const run=button('직원 조합 백테스트',async()=>{const error=staffProblem(staff);if(error){result.textContent=error;return;}run.disabled=true;run.textContent='직원 조합 백테스트';runId=null;result.replaceChildren(el('p','','공개 가격으로 전략을 검증하고 있어요…'));
@@ -195,7 +213,7 @@
           result.append(el('p','muted-note','시점 이후 자료를 과거 판단에 쓰지 않는 연구 계산입니다. 배당·환율·세금 제외 가정은 결과에서 확인하세요. 신호는 가상 실험의 검토 제안입니다. '+REVIEW_NOTICE+' 계좌 주문·리밸런싱을 실행하지 않습니다.'));
         }catch(e){if(generation===epoch){result.replaceChildren(el('p','',reason(e.code)));run.textContent='백테스트 다시 시도';}}finally{if(generation===epoch)run.disabled=false;}});
       research.append(el('h2','','백테스트·리밸런싱 신호'),el('p','muted-note',REVIEW_NOTICE),el('p','muted-note','과거 전략은 저장된 연습 비중과 비교하며, 없으면 현금 100%를 기준으로 사용해요. 내 모의계좌의 현재 보유와는 별도예요.'),range.wrap,fees.wrap,slip.wrap,run,button('오늘의 운용 검토 완료',async()=>{if(!runId){result.append(el('p','','먼저 서버에 저장된 전략 검증 결과를 확인해 주세요.'));return;}try{await request('/me/daily-review',{method:'POST',body:{run_id:runId}});if(generation!==epoch)return;await U().refresh();result.append(el('p','','서버에서 일일 검토 기록을 확인했어요. 같은 기록은 중복 보상하지 않아요. '+REVIEW_NOTICE));}catch(e){result.append(el('p','',reason(e.code)));}}),result);
-      const paper=el('section','panel company-paper');drawStaff(list);target.replaceChildren(settings,paper,hires,research);target.dataset.companyState='ready';target.setAttribute('aria-busy','false');await drawPaper(paper,generation);
+      const paper=el('section','panel company-paper');redraw();target.replaceChildren(steps,settings,hires,paper,research);target.dataset.companyState='ready';target.setAttribute('aria-busy','false');await drawPaper(paper,generation);
     }catch(e){if(generation===epoch){if(e?.code==='UNAUTHORIZED')showLogin(target);else showState(target,'error',reason(e?.code),button('다시 불러오기',open));}}
   }
   async function openMarketCard(company,target){

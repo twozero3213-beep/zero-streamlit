@@ -960,6 +960,10 @@
   stage.addEventListener('focusout',()=>S.keys.clear());
   window.addEventListener('keyup', (event) => S.keys.delete(event.key));
   window.addEventListener('blur', () => S.keys.clear());
+  // Sliding a finger across the pad steers in 8 directions using the same key set.
+  const lobbyPad=document.querySelector('.lobby-pad'),PAD_KEYS={left:'ArrowLeft',up:'ArrowUp',down:'ArrowDown',right:'ArrowRight'};
+  lobbyPad?.addEventListener('pointermove',(event)=>{if(!event.buttons&&event.pointerType!=='touch')return;const box=lobbyPad.getBoundingClientRect(),dx=event.clientX-box.left-box.width/2,dy=event.clientY-box.top-box.height/2;if(Math.hypot(dx,dy)<12)return;const want=new Set();if(Math.abs(dx)>Math.abs(dy)*0.41)want.add(dx<0?'ArrowLeft':'ArrowRight');if(Math.abs(dy)>Math.abs(dx)*0.41)want.add(dy<0?'ArrowUp':'ArrowDown');Object.values(PAD_KEYS).forEach(key=>want.has(key)?S.keys.add(key):S.keys.delete(key));lobbyPad.querySelectorAll('[data-pad]').forEach(b=>b.classList.toggle('pad-on',want.has(PAD_KEYS[b.dataset.pad])));ensureLoop();});
+  ['pointerup','pointercancel'].forEach(name=>lobbyPad?.addEventListener(name,()=>{Object.values(PAD_KEYS).forEach(key=>S.keys.delete(key));lobbyPad.querySelectorAll('[data-pad]').forEach(b=>b.classList.remove('pad-on'));}));
   document.querySelectorAll('[data-pad]').forEach((button) => {
     const key = {up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight'}[button.dataset.pad];
     const down = (event) => { event.preventDefault(); S.keys.add(key); ensureLoop(); }, up = () => S.keys.delete(key);

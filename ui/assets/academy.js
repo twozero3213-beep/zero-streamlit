@@ -154,3 +154,31 @@
   paintBadges();
   window.ZEROAcademy = {open, state: () => ({progress, view, session})};
 })();
+/* Study hub: every lesson gets the same card as 주식 입문 학교 (title, one line, 배우기). */
+(() => {
+  'use strict';
+  const view = document.getElementById('study-view'); if (!view) return;
+  const school = view.querySelector('section[aria-label="주식 입문 학교"]'); if (!school) return;
+  const LINES = {
+    'study-title': '종목과 주기를 바꾸고, 봉을 움직여 실제 가격의 구조를 확인해요.',
+    'study-basics-title': '캔들 한 개의 네 가격, 이동평균, VIX를 읽는 순서를 배워요.',
+    'study-formulas-title': 'EPS·PER·PBR·ROE 같은 기업 숫자를 주가와 연결해 계산해요.',
+    'study-nvda-title': '실제 NVIDIA 공시 숫자로 지표를 직접 계산해 봐요.'
+  };
+  const make = (tag, cls, text) => { const element = document.createElement(tag); if (cls) element.className = cls; if (text) element.textContent = text; return element; };
+  const hub = make('section', 'panel desk-panel study-hub'); hub.setAttribute('aria-label', '학습 목록');
+  hub.append(make('h2', 'study-hub-title', '학습 목록'));
+  const list = make('div', 'study-hub-list'); hub.append(list);
+  const card = (title, line, action) => { const row = make('article', 'study-card'), text = make('div', 'study-card-text'), go = make('button', 'primary-button', '배우기'); go.type = 'button'; text.append(make('h3', '', title), make('p', '', line)); row.append(text, go); go.addEventListener('click', action); return row; };
+  const schoolLine = school.querySelector('.panel-heading p')?.cloneNode(true);
+  const schoolCard = card('주식 입문 학교', '', () => window.ZEROAcademy?.open()); if (schoolLine) schoolCard.querySelector('p').replaceWith(schoolLine);
+  list.append(schoolCard);
+  // Opening a lesson selects its page in the existing pager, so prev/next and the dropdown keep working.
+  const openLesson = (section) => { const select = view.querySelector('.viewport-controls select'); const index = [...select?.options || []].findIndex(option => option.textContent === section.querySelector('h2')?.textContent); if (index < 0) { section.scrollIntoView?.({block: 'start'}); return; } select.value = String(index); select.dispatchEvent(new Event('change')); };
+  for (const [id, line] of Object.entries(LINES)) {
+    const heading = document.getElementById(id), section = heading?.closest('section'); if (!section) continue;
+    list.append(card(heading.textContent, line, () => openLesson(section)));
+    const back = make('button', 'secondary-button study-back', '학습 목록으로'); back.type = 'button'; back.addEventListener('click', () => openLesson(hub)); section.prepend(back);
+  }
+  school.hidden = true; view.prepend(hub);
+})();

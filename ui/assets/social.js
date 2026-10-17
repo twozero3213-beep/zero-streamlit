@@ -402,7 +402,7 @@
         retries = 0; plaza.moveAck = data.move_ack === true; plaza.pending = null; plaza.rtt = 160; plaza.retryAt = 0; if ($('lounge-retry')) $('lounge-retry').hidden = true; plaza.nick = data.nick; plaza.seq = 0; plaza.sentAt = -Infinity; plaza.people.forEach(removePet); plaza.people.clear(); $('lounge-people').replaceChildren();
         roomPeople(data.participants); plaza.ready = plaza.people.has(data.nick);
         const own = plaza.people.get(data.nick); if (own) plaza.seq = Math.max(0, own.seq);
-        $('lounge-loading').hidden = true; $('lounge-status').textContent = plaza.ready ? '연결됨 · 바닥·방향키·이동 버튼으로 걸어 보세요 · 대화는 최대 24시간 보관' : '대화 연결됨 · 서버의 캐릭터 위치를 기다리고 있어요';
+        $('lounge-loading').hidden = true; $('lounge-status').textContent = plaza.ready ? '연결됨 · 바닥을 누르거나 왼쪽 패드로 걸어요' : '대화 연결됨 · 서버의 캐릭터 위치를 기다리고 있어요';
         $('lounge-send').disabled = false; $('lounge-log').replaceChildren(); (data.messages || []).forEach(row => appendChat(row));
         if ($('lounge-input').parentElement.hidden) $('plaza-stage').focus({preventScroll: true}); startPlazaMove();
         clearInterval(heartbeat); heartbeat = setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send('ping'); }, 30000);
@@ -473,6 +473,9 @@
         for (const end of ['pointerup', 'pointercancel', 'lostpointercapture', 'pointerleave']) control.addEventListener(end, () => plaza.keys.delete(key));
         control.addEventListener('contextmenu', event => event.preventDefault()); control.addEventListener('selectstart', event => event.preventDefault()); pad.append(control);
       }
+// Sliding a finger across the pad steers in 8 directions using the same key set.
+      const steer = event => { if (!event.buttons && event.pointerType !== 'touch') return; const box = pad.getBoundingClientRect(), dx = event.clientX - box.left - box.width / 2, dy = event.clientY - box.top - box.height / 2; if (Math.hypot(dx, dy) < 12) return; const want = new Set(); if (Math.abs(dx) > Math.abs(dy) * 0.41) want.add(dx < 0 ? 'ArrowLeft' : 'ArrowRight'); if (Math.abs(dy) > Math.abs(dx) * 0.41) want.add(dy < 0 ? 'ArrowUp' : 'ArrowDown'); for (const key of ['ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight']) want.has(key) ? plaza.keys.add(key) : plaza.keys.delete(key); pad.querySelectorAll('button').forEach((b, i) => b.classList.toggle('pad-on', want.has(['ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight'][i]))); plaza.target = null; startPlazaMove(); };
+      pad.addEventListener('pointermove', steer); for (const end of ['pointerup', 'pointercancel']) pad.addEventListener(end, () => { for (const key of ['ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight']) plaza.keys.delete(key); pad.querySelectorAll('button').forEach(b => b.classList.remove('pad-on')); });
       const log = make('div', 'lounge-log'); log.id = 'lounge-log'; log.setAttribute('role', 'log'); log.setAttribute('aria-live', 'polite');
       const form = make('form', 'lounge-chat-form'), input = make('input'); form.hidden = true; input.id = 'lounge-input'; input.maxLength = 300; input.placeholder = '공개 대화 입력 · Enter 전송 · Esc 취소'; input.setAttribute('aria-label', '광장 메시지'); input.required = true; input.autocomplete = 'off';
       const send = make('button', 'primary-button', '보내기'); send.id = 'lounge-send'; send.type = 'submit'; form.append(input, send);
@@ -499,7 +502,7 @@
         plaza.chat = {text, sent: false}; input.value = ''; input.readOnly = true; send.disabled = true; setPlazaChat(false); sendPlazaChat();
       });
       history.append(make('p', 'muted-note', '공개 대화 · 최대 24시간 보관 · 연락처·계좌번호는 올리지 마세요.'), log);
-      const chatToggle = button('대화 Enter', () => setPlazaChat(true), 'plaza-chat-toggle');
+      const chatToggle = button('대화하기', () => setPlazaChat(true), 'plaza-chat-toggle'); chatToggle.title = 'Enter 키로도 열 수 있어요';
       head.append(count); lounge.append(scene, head, loading, status, pad, chatToggle, form);
       ($('plaza-view') || document.body).append(lounge);
       new ResizeObserver(() => { const w = scene.clientWidth, h = scene.clientHeight; if (w && h) { const edge = Math.min(40, 34 / w * 100); plaza.bounds = {minX: edge, maxX: 100 - edge, minY: Math.min(70, 72 / h * 100), maxY: 100 - 8 / h * 100}; } plaza.people.forEach(paintPerson); paintBubbles(); }).observe(scene);

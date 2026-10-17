@@ -36,7 +36,7 @@ html[data-zero-view='plaza'] body main > .page-header,html[data-zero-view='plaza
 .lounge-message .social-text { grid-column:1; }.lounge-message button:last-child { grid-column:2; grid-row:2/4; font-size:11px; min-height:28px; padding:2px 5px; }
 .lounge-dialog > .social-status { position:absolute; left:16px; right:16px; bottom:62px; z-index:125; margin:0; pointer-events:none; font-size:11px; min-height:0; color:#243d3e; text-shadow:0 1px #fff; }
 .lounge-dialog .plaza-pad { position:absolute; left:14px; bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 10px); z-index:130; }
-.plaza-chat-toggle { position:absolute; right:14px; bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 10px); z-index:130; min-height:28px; padding:4px 10px; font-size:11px; font-weight:600; background:rgba(15, 23, 42, 0.45); color:rgba(255, 255, 255, 0.95); border:1px solid rgba(255, 255, 255, 0.25); border-radius:999px; backdrop-filter:blur(6px); box-shadow:0 2px 6px rgba(0,0,0,0.15); cursor:pointer; }
+.plaza-chat-toggle { position:absolute; right:max(12px, env(safe-area-inset-right, 0px)); bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 12px); z-index:130; min-height:48px; min-width:96px; padding:0 18px; border-radius:24px; font-size:15px; font-weight:650; background:rgba(15, 23, 42, 0.62); color:#fff; border:1px solid rgba(255, 255, 255, 0.28); box-shadow:0 6px 24px rgba(2, 6, 23, 0.28); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
 .plaza-chat-toggle:hover { background:rgba(15, 23, 42, 0.65); border-color:rgba(56, 189, 248, 0.6); color:#fff; }
 #plaza-open { min-height:36px; padding:6px 16px; font-size:12px; font-weight:600; border-radius:999px; background:rgba(27, 100, 218, 0.85); backdrop-filter:blur(4px); border:1px solid rgba(255, 255, 255, 0.2); box-shadow:0 2px 8px rgba(27, 100, 218, 0.3); color:#fff; }
 .lounge-dialog .lounge-chat-form { position:absolute; left:12px; right:12px; bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 8px); z-index:145; padding:6px; border-radius:12px; background:rgba(15, 23, 42, 0.85); backdrop-filter:blur(10px); border:1px solid rgba(255, 255, 255, 0.2); margin:0; box-shadow:0 4px 16px rgba(0,0,0,0.3); }
@@ -235,3 +235,8 @@ html #community-list .community-post { border:0; border-radius:0; margin:0; padd
 @keyframes lounge-idle { 50% { transform: translateY(-2px); } }
 @media(prefers-reduced-motion:reduce) { .lounge-person-figure { animation: none; } }
 @media(max-width:600px) { .social-dialog { padding: 14px; } .lounge-people { padding: 15px; gap: 12px; } .social-dialog h2 { font-size: 20px; } }
+.lounge-dialog .plaza-chat-toggle.secondary-button,.lounge-dialog .plaza-chat-toggle { min-height:48px; min-width:96px; padding:0 18px; font-size:15px; }
+
+/* Status line sits above the thumb controls as a readable pill; no light text-shadow on the dark plaza. */
+.lounge-dialog > .social-status { left:50%; right:auto; transform:translateX(-50%); width:max-content; max-width:calc(100% - 32px); bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 156px); padding:6px 12px; border-radius:14px; background:rgba(15, 23, 42, 0.72); color:#f1f5f9; text-shadow:none; font-size:12px; line-height:1.45; text-align:center; overflow-wrap:anywhere; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+.lounge-dialog > .social-status:empty { display:none; }

@@ -8,3 +8,17 @@ html main>#company-view:not([hidden]){overflow:auto}
 
 #member-portfolio{min-width:0}#member-portfolio .company-state{display:flex;flex-direction:column;align-items:flex-start;gap:12px}#member-portfolio .company-state p{margin:0}#member-portfolio button{min-height:44px;margin:8px 8px 8px 0}#member-portfolio .company-paper-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 20px}#member-portfolio .paper-total{grid-column:1/-1;font-size:clamp(20px,4vw,30px)}#member-portfolio .company-paper-summary p{margin:0;line-height:1.45;overflow-wrap:anywhere}#member-portfolio .company-paper-summary .paper-initial{grid-column:1/-1;font-size:13px;color:var(--muted,#6b7684)}.zero-reference-portfolio>summary{cursor:pointer;min-height:44px;align-content:center;font-weight:650}.zero-reference-portfolio>.portfolio-summary{margin-top:16px}.zero-reference-portfolio>.panel{margin-bottom:16px}
 @media(max-width:640px){#member-portfolio .company-paper-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}#member-portfolio button{max-width:100%}}
+.company-steps{list-style:none;margin:0 0 20px;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#company-content .company-step-button{margin:0;width:100%;min-height:56px;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line,#e5e8eb);border-radius:12px;background:var(--surface,#fff);color:var(--ink,#333d4b);font:inherit;text-align:left;cursor:pointer}
+.company-step-button b{flex:none;min-width:28px;height:28px;padding:0 6px;border-radius:14px;display:grid;place-items:center;background:#e8f3ff;color:#1b64da;font-size:12px}
+.company-step.done .company-step-button b{background:#e5f6ec;color:#11804a}
+.company-step-button span{min-width:0;overflow-wrap:anywhere;line-height:1.35;font-weight:600}
+.company-roles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+#company-content .company-role{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:1px solid var(--line,#e5e8eb);border-radius:14px;background:var(--surface,#fff);color:var(--ink,#333d4b);font:inherit;cursor:pointer;text-align:center;min-width:0}
+.company-role:hover,.company-role:focus-visible{border-color:#3182f6;box-shadow:0 0 0 3px #3182f622}
+.company-role strong{font-size:14px}.company-role small{font-size:12px;line-height:1.4;color:var(--muted,#6b7684);overflow-wrap:anywhere}
+.company-avatar{width:48px;height:64px;image-rendering:auto;flex:none}
+.company-staff-head{display:flex;gap:12px;align-items:flex-start}.company-staff-info{flex:1;min-width:0}.company-staff-info .company-field{margin:8px 0}
+.company-staff-advanced{margin-top:4px;border-top:1px solid var(--line,#eef0f3);padding-top:8px}.company-staff-advanced summary{cursor:pointer;min-height:44px;align-content:center;color:var(--muted,#6b7684)}
+.company-hire-note:empty{display:none}
+@media(max-width:640px){.company-roles{grid-template-columns:repeat(2,minmax(0,1fr))}.company-steps{gap:6px}#company-content .company-step-button{flex-direction:column;align-items:flex-start;gap:4px;padding:8px;font-size:13px}}

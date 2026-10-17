@@ -202,6 +202,8 @@ function openCredits(){
   for(const [label,url] of [['그래픽 원본 코드',source.href],['CC0 라이선스 URI',credits[0].license_url]]){const link=root.document.createElement('a');link.textContent=label;link.href=url;link.target='_blank';link.rel='noopener noreferrer';dialog.append(link);}
   const close=root.document.createElement('button');close.type='button';close.title='닫기';close.setAttribute('aria-label','창 닫기');close.className='icon-button icon-close';close.textContent='닫기';close.addEventListener('click',()=>dialog.close());dialog.append(close);dialog.addEventListener('close',()=>dialog.remove(),{once:true});root.document.body.append(dialog);dialog.showModal();close.focus();return dialog;
 }
-const api={attach,drawLayout,registerAssets,openCredits,credits};root.ZEROOfficeNative=api;
+// Single-character preview for hiring cards; same painter as the office so looks match.
+function drawPerson(canvas,actor,time=0){const ctx=canvas?.getContext?.('2d');if(!ctx)return false;if(canvas.width!==96){canvas.width=96;canvas.height=128;}ctx.setTransform(8,0,0,8,0,0);ctx.clearRect(0,0,12,16);person(ctx,{id:'preview',facing:'down',activity:'idle',...actor,pos:{x:6,y:15}},time,true);return true;}
+const api={attach,drawLayout,drawPerson,registerAssets,openCredits,credits};root.ZEROOfficeNative=api;
 if(typeof module!=='undefined'&&module.exports)module.exports={...api,assetRecord,appearanceOf,facingOf,layoutOf,blockedCells,safePath,lagPoint,petStep,person,furniture,paint};
 })(typeof window!=='undefined'?window:globalThis);

@@ -74,55 +74,71 @@ html #lobby-view .lobby-pad{grid-template-columns:repeat(3,28px);grid-template-r
 }
 
 /* 방향키 초소형 고투명 미니멀 디자인 (하단 탭바 침범 및 맵 가림 완벽 방지) */
+/* Thumb joystick: bottom-left, 44px hit areas, clear of the chat button on the right. */
 html #lobby-view .lobby-pad,
 .plaza-pad {
   position: absolute !important;
   z-index: 900 !important;
-  right: 10px !important;
-  bottom: calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 8px) !important;
-  left: auto !important;
+  left: max(12px, env(safe-area-inset-left, 0px)) !important;
+  right: auto !important;
+  bottom: calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 12px) !important;
   margin: 0 !important;
-  padding: 2px !important;
+  padding: 0 !important;
+  width: 132px !important;
+  height: 132px !important;
   display: grid !important;
-  grid-template-columns: repeat(3, 22px) !important;
-  grid-template-rows: repeat(2, 22px) !important;
-  gap: 2px !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+  grid-template-columns: repeat(3, 44px) !important;
+  grid-template-rows: repeat(3, 44px) !important;
+  gap: 0 !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.18) 0 20px, rgba(15,23,42,0.38) 21px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 6px 24px rgba(2, 6, 23, 0.28) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  touch-action: none !important;
   pointer-events: auto !important;
 }
+html #lobby-view .lobby-pad [data-pad="up"], .plaza-pad button:nth-child(2) { grid-area: 1 / 2 !important; }
+html #lobby-view .lobby-pad [data-pad="left"], .plaza-pad button:nth-child(1) { grid-area: 2 / 1 !important; }
+html #lobby-view .lobby-pad [data-pad="right"], .plaza-pad button:nth-child(4) { grid-area: 2 / 3 !important; }
+html #lobby-view .lobby-pad [data-pad="down"], .plaza-pad button:nth-child(3) { grid-area: 3 / 2 !important; }
 html #lobby-view .lobby-pad button,
 .plaza-pad button {
   display: grid !important;
   place-items: center !important;
-  min-width: 22px !important;
-  min-height: 22px !important;
-  width: 22px !important;
-  height: 22px !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  margin: 0 !important;
   padding: 0 !important;
-  border: 1px solid rgba(255, 255, 255, 0.28) !important;
-  border-radius: 999px !important;
-  background: rgba(16, 45, 60, 0.22) !important;
-  color: rgba(255, 255, 255, 0.88) !important;
+  border: none !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.9) !important;
   box-shadow: none !important;
-  backdrop-filter: blur(2px) !important;
-  font-size: 11px !important;
+  font-size: 16px !important;
   touch-action: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 html #lobby-view .lobby-pad button:active,
-.plaza-pad button:active {
+html #lobby-view .lobby-pad button.pad-on,
+.plaza-pad button:active,
+.plaza-pad button.pad-on {
   background: rgba(56, 189, 248, 0.35) !important;
-  border-color: rgba(103, 232, 249, 0.7) !important;
   color: #fff !important;
 }
 html #lobby-view .lobby-pad svg {
-  width: 11px !important;
-  height: 11px !important;
-  stroke-width: 2.2 !important;
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2.4 !important;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)) !important;
+}
+/* Mouse and keyboard users already have arrow keys and tap-to-walk. */
+@media (hover: hover) and (pointer: fine) {
+  html #lobby-view .lobby-pad, .plaza-pad { display: none !important; }
 }
 
 /* 3시 방향 실시간 광장 차원의 문 (Dimensional Portal) 신비로운 와프 게이트 연출 */
@@ -214,3 +230,8 @@ html #lobby-view .lobby-pad svg {
 }
 
 
+/* The joystick owns the bottom-left corner; the office menu moves to the right thumb. */
+@media (pointer: coarse) {
+  html #lobby-view .lobby-tools:not([open]) { left: auto !important; right: max(12px, env(safe-area-inset-right, 0px)) !important; bottom: calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 12px) !important; }
+  html #lobby-view .lobby-tools:not([open]) > summary { min-height: 48px !important; padding: 0 18px !important; font-size: 15px !important; line-height: 48px !important; }
+}
