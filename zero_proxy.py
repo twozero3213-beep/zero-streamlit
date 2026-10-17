@@ -159,7 +159,7 @@ def get_public(path, query):
     upstream, seconds = _upstream(path, query)
     body = _cached(upstream, seconds, lambda: json.dumps(fetch(upstream), ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
     if path == '/api/desk':
-        return json.dumps(zero_research.overlay(json.loads(body)), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        return json.dumps(zero_research.overlay(json.loads(body), copy=False), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     return body
 
 

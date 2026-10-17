@@ -17,7 +17,7 @@ class PublicResearchTests(unittest.TestCase):
         with mock.patch.object(zero_proxy, 'fetch', return_value=base), mock.patch.object(zero_research, 'overlay', return_value={**base, 'refresh': {'state': 'UPDATING'}}) as refresh:
             response = json.loads(zero_proxy.get_public('/api/desk', {}))
         self.assertEqual(response['refresh']['state'], 'UPDATING')
-        refresh.assert_called_once_with(base)
+        refresh.assert_called_once_with(base, copy=False)  # freshly parsed JSON is private, so no second deep copy
 
     def test_new_values_preserve_other_sections_and_original_record_time(self):
         old = {'id':'US_CPI', 'latest_value':'2', 'history':[{'period':'2026-08','value':'2'}], 'retrieved_at':'2026-10-01T00:00:00+00:00'}
@@ -51,7 +51,17 @@ class PublicResearchTests(unittest.TestCase):
             zero_research._refresh({})
         self.assertFalse(zero_research._running)
         self.assertEqual(zero_research._snapshot['macro'],[{'id':'retained'}])
+        self.assertEqual(zero_research._snapshot['state'],'PARTIAL')
+        self.assertEqual(zero_research._snapshot['failed'],['MACRO_CHECK_FAILED'])
+        self.assertEqual(zero_research._snapshot['library'],{'sources':[]},'a macro failure no longer discards fresh report indexes')
+
+    def test_all_collectors_failing_is_unavailable_and_keeps_previous_library(self):
+        zero_research._snapshot={'macro':[{'id':'retained'}],'library':{'sources':['kept']}}
+        with mock.patch.object(zero_research.zero_macro,'collect_macro',side_effect=OSError), mock.patch.object(zero_research.zero_gauges,'collect_gauges',side_effect=ValueError), mock.patch.object(zero_research.zero_reports,'collect_briefing_sources',side_effect=OSError):
+            zero_research._refresh({})
         self.assertEqual(zero_research._snapshot['state'],'UNAVAILABLE')
+        self.assertEqual(zero_research._snapshot['library'],{'sources':['kept']})
+        self.assertEqual(zero_research._snapshot['macro'],[{'id':'retained'}])
 
     def test_bls_rechecks_recent_data_hourly_without_redownloading_past_decade(self):
         from datetime import datetime, timezone
