@@ -115,6 +115,23 @@ function registeredFor(actor,category){const key=ASSET_CATEGORIES[category],id=a
 function visualAsset(category,id){if(typeof id!=='string')return null;const entry=registered.get(category+':'+id);return entry?.image&&entry.record.category===category?entry:null;}
 function previewFloor(ctx,entry){if(!entry)return;for(let y=0;y<10;y++)for(let x=0;x<16;x++)ctx.drawImage(entry.image,0,0,entry.record.width,entry.record.height,x*10,y*10,10,10);}
 function overlay(ctx,entry,x,y,w,h){if(!entry)return false;const {record,image}=entry,scale=Math.min(w/record.width,h/record.height),dw=record.width*scale,dh=record.height*scale;ctx.drawImage(image,0,0,record.width,record.height,x+(w-dw)/2,y+h-dh,dw,dh);return true;}
+// Expressive face: seeded blinking plus moods (talking, happy, thinking, surprised); default is a soft smile.
+function face(ctx,profile,seed,mood,time,animated,skin){
+  const eyeY=-8.1+(seed%3)*.06,eyes=profile?[profile*.9]:[-.72,.72],blink=animated&&(time+(seed%11)*.41)%4.3<.12,ink='#263241';
+  for(const x of eyes){
+    if(blink||mood==='happy')line(ctx,blink?[[x-.24,eyeY],[x+.24,eyeY]]:[[x-.26,eyeY+.08],[x,eyeY-.16],[x+.26,eyeY+.08]],ink,.16);
+    else{const big=mood==='surprised'?1.3:1,look=mood==='thinking'?-.12:0;ellipse(ctx,x,eyeY+look,.2*big,.26*big,ink);ellipse(ctx,x+.07,eyeY+look-.09,.07,.07,'#ffffffd9');}
+    const lift=mood==='surprised'?-.25:mood==='thinking'&&x>0?-.15:0;line(ctx,[[x-.3,eyeY-.55+lift],[x+.28,eyeY-.62+lift+(seed%2)*.08]],'#5a463e',.14);
+  }
+  if(mood!=='surprised'&&mood!=='thinking')for(const x of profile?[profile*1.25]:[-1.15,1.15])ellipse(ctx,x,-7.45,.36,.2,'#f08a7a38');
+  const mx=profile*.6;
+  if(mood==='talking'){const open=animated?.12+Math.abs(Math.sin(time*13+seed))*.3:.2;ellipse(ctx,mx,-7.02,.42,open,'#7a3f3a');}
+  else if(mood==='surprised')ellipse(ctx,mx,-6.98,.22,.28,'#7a3f3a');
+  else if(mood==='thinking')line(ctx,[[mx-.15,-7.02],[mx+.35,-7.08]],'#8e5f51',.13);
+  else if(mood==='happy'){ctx.beginPath();ctx.moveTo(mx-.48,-7.18);ctx.quadraticCurveTo(mx,-6.55,mx+.48,-7.18);ctx.closePath();ctx.fillStyle='#7a3f3a';ctx.fill();}
+  else line(ctx,[[mx-.4,-7.1],[mx,-6.88],[mx+.4,-7.1]],'#8e5f51',.13);
+  ellipse(ctx,profile?profile*1.4:0,-7.6,.18,.14,'#c08a6e');
+}
 function person(ctx,actor,time,animated){
   const a=appearanceOf(actor.appearance),seed=hash(actor.id),facing=facingOf(actor.facing),walking=actor.activity==='walking',typing=actor.activity==='typing',phase=animated?time:0,stride=walking?Math.sin(phase*10+seed)*.8:0,breathe=animated?Math.sin(phase*2.1+seed)*.09:0;
   const customClothes=registeredFor(actor,'clothes'),customHair=registeredFor(actor,'hair'),customShoes=registeredFor(actor,'shoes');
@@ -122,19 +139,18 @@ function person(ctx,actor,time,animated){
   const body=registeredFor(actor,'body');if(body){ctx.save();ctx.translate(actor.pos.x,actor.pos.y);overlay(ctx,body,-5,-11,10,12,facing);for(const category of ['shoes','clothes','hair','accessories'])overlay(ctx,registeredFor(actor,category),-5,-11,10,12,facing);ctx.restore();return;}
   ctx.save();ctx.translate(actor.pos.x,actor.pos.y);ellipse(ctx,0,.1,2.5,.7,'#1d33451c');if(facing==='left'||facing==='right')ctx.scale(.82,1);
   for(const side of [-1,1]){const offset=side*stride;rr(ctx,side<0?-1.5:.25,-2.3+offset,1.25,2.3,.35,'#3f4c5b');if(!customShoes)ellipse(ctx,side*.94,.05+offset,.8,.35,shoe);}
-  ctx.translate(0,breathe);rr(ctx,-2,-6.4,4,4.5,1,customClothes?skin:outfit);rr(ctx,-1.5,-6.1,3,.45,.1,'#ffffff22');
+  ctx.translate(0,breathe);rr(ctx,-2,-6.4,4,4.5,1,customClothes?skin:outfit);rr(ctx,-1.5,-6.1,3,.45,.1,'#ffffff22');rr(ctx,-2,-3.3,4,1.4,.9,'#0000001a');
   if(facing!=='up'&&['suit','vest','jacket','cardigan'].includes(a.outfit)){ctx.beginPath();ctx.moveTo(-1.1,-6.4);ctx.lineTo(0,-3.9);ctx.lineTo(1.1,-6.4);ctx.closePath();ctx.fillStyle='#e9e9df';ctx.fill();line(ctx,[[-1.3,-6.2],[-.4,-4.5],[-1,-3.9]],'#ffffff55',.16);if(a.outfit==='suit'){line(ctx,[[0,-6],[0,-4.5]],'#9b6d6e',.4);ellipse(ctx,.7,-2.7,.12,.12,'#c7c7bc');}}
   if(a.outfit==='hoodie'){line(ctx,[[-1.1,-5.9],[-1.3,-4.7]],'#dbe4e4',.12);line(ctx,[[1.1,-5.9],[1.3,-4.7]],'#dbe4e4',.12);rr(ctx,-1,-3.2,2,.7,.3,null,'#557787');}
   if(a.outfit==='knit')for(let y=-5.4;y<-2.2;y+=.65)line(ctx,[[-1.6,y],[1.6,y]],'#89776255',.1);
   if(a.outfit==='polo')line(ctx,[[-.7,-6.2],[0,-5.4],[.7,-6.2]],'#d1dcd5',.2);
   const armTap=typing&&animated?Math.sin(phase*12)*.25:0;
   for(const side of [-1,1]){line(ctx,[[side*1.7,-5.7],[side*(typing?2.1:2.3),typing?-4+armTap:-3.4+side*stride*.4]],outfit,.85);ellipse(ctx,side*(typing?2.1:2.3),typing?-4+armTap:-3.2+side*stride*.4,.4,.48,skin);}
-  rr(ctx,-.55,-7,1.1,1.1,.3,skin);ellipse(ctx,0,-8.1,2,2.1,skin);ellipse(ctx,-1.9,-8,.35,.55,skin);ellipse(ctx,1.9,-8,.35,.55,skin);
+  if(walking)ctx.translate(0,-Math.abs(Math.sin(phase*10+seed))*.22);
+  rr(ctx,-.55,-7,1.1,1.1,.3,skin);ellipse(ctx,-1.9,-8,.35,.55,skin);ellipse(ctx,1.9,-8,.35,.55,skin);ellipse(ctx,0,-8.1,2.08,2.18,'#00000024');ellipse(ctx,0,-8.1,2,2.1,skin);ellipse(ctx,-.7,-8.9,.8,.55,'#ffffff1f');
   const profile=facing==='left'?-1:facing==='right'?1:0;
-  if(facing!=='up'){
-    const eyeX=profile?profile*.9:-.7,eyeY=-8.1+(seed%3)*.08;ellipse(ctx,eyeX,eyeY,.17,.22,'#293746');if(!profile)ellipse(ctx,.7,eyeY,.17,.22,'#293746');line(ctx,[[eyeX-.35,eyeY-.55],[eyeX+.25,eyeY-.65+(seed%2)*.2]],'#634c43',.15);if(!profile)line(ctx,[[.4,eyeY-.55],[1,eyeY-.6]],'#634c43',.15);
-    line(ctx,[[profile*.6-.4,-7.05],[profile*.6,-6.9+(seed%3)*.07],[profile*.6+.4,-7.08]],'#8e5f51',.12);ellipse(ctx,profile?profile*1.4:0,-7.6,.2,.16,'#b37f63');
-  }
+  if(facing!=='up')face(ctx,profile,seed,actor.mood,phase,animated,skin);
+  if(actor.mood==='thinking'&&animated)for(let i=0;i<3;i++)ellipse(ctx,1.6+i*.75,-11.2-i*.55+Math.sin(phase*3+i)*.12,.18+i*.07,.18+i*.07,'#ffffffd0');
   if(!customHair&&a.hair==='0'){ctx.beginPath();ctx.moveTo(-1.9,-8.6);ctx.bezierCurveTo(-2.4,-11.3,1.8,-11.2,2,-8.6);ctx.lineTo(.7,-9.5);ctx.lineTo(-1.4,-9);ctx.closePath();ctx.fillStyle=hair;ctx.fill();}
   else if(!customHair&&a.hair==='1'){ellipse(ctx,0,-9.6,2.2,1.1,hair);line(ctx,[[-1.6,-9.6],[.9,-10.1]],'#ffffff22',.22);rr(ctx,-2,-9.8,.55,2.4,.25,hair);}
   else if(!customHair&&a.hair==='2'){ellipse(ctx,0,-9.6,2.1,1,hair);for(let x=-1.5;x<=1.5;x+=.65)rr(ctx,x,-9.6,.65,1.15,.25,hair);}

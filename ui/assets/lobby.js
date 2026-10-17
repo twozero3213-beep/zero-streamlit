@@ -109,7 +109,7 @@
       const fallback=L.appearanceForId(entity.id),outfit=entity.figEl?.dataset.outfit||fallback.outfit,activity=entity.el.dataset.walking==='true'?'walking':entity.el.dataset.activity;
       const bound=entity===S.player?window.ZEROLobbyUsers?.session()?.appearance:entity.id==='host'?S.visit?.appearance:null;
       const appearance={outfit,hair:Number(entity.figEl?.dataset.hair)||0,shoes:entity.el.dataset.shoes||'dark',accessory:entity.el.dataset.accessory||'none',pet:entity.pet?.kind||'none',...bound};
-      return {id:entity.id,pos:entity.pos,rootel:entity.el,outfit:appearance.outfit,facing:entity.el.dataset.facing||'down',activity:['walking','typing','coffee'].includes(activity)?activity:'idle',appearance};
+      return {id:entity.id,pos:entity.pos,rootel:entity.el,outfit:appearance.outfit,facing:entity.el.dataset.facing||'down',activity:['walking','typing','coffee'].includes(activity)?activity:'idle',mood:entity.el.classList.contains('speaking')?'talking':activity==='reading'?'thinking':['chatting','coffee'].includes(activity)?'happy':'',appearance};
     });
   }
   function attachSprites(){
