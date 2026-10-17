@@ -350,9 +350,11 @@
     request: (path, options = {}) => api(path, {...options, token: U.token}),
     openProfile: () => button.click(),
     editOffice:()=>{if(!U.me)return;viewTeam();if(!dialog.open)dialog.showModal?.();},
-    openLoungeSocket: () => {
+    // office: owner nickname for that office's live room; omitted for the public plaza.
+    openLoungeSocket: (office) => {
       if (!U.me || !U.token) throw {code: 'UNAUTHORIZED'};
-      const token = U.token, socket = new WebSocket(`${BASE.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:')}/api/lobby/lounge/socket`);
+      const origin = BASE.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
+      const token = U.token, socket = new WebSocket(office ? `${origin}/api/lobby/office-room/${encodeURIComponent(office)}/socket` : `${origin}/api/lobby/lounge/socket`);
       socket.addEventListener('open', () => { if (U.token !== token) socket.close(); else socket.send(JSON.stringify({type: 'auth', token, move_ack: true})); }); return socket;
     }};
   if (U.visitor && !U.token) window.ZEROLobby.setPlayerName(U.visitor);

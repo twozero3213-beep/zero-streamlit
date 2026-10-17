@@ -6,7 +6,7 @@
   const make = (tag, cls = '', text) => { const e = document.createElement(tag); e.className = cls; if (text !== undefined) e.textContent = text; return e; };
   const button = (text, action, cls = 'secondary-button') => { const b = make('button', cls, text); b.type = 'button'; b.addEventListener('click', action); return b; };
   const stamp = value => { const d = new Date(value); return Number.isFinite(d.getTime()) ? d.toLocaleString('ko-KR', {timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'}) + ' KST' : '시각 미확인'; };
-  const errors = {MEMBERSHIP_REQUIRED: '이메일·휴대폰으로 인증한 회원만 글과 댓글을 남길 수 있어요.', QUERY_INVALID: '검색어는 80자 이내로 입력해 주세요.', ENTRY_INVALID: '제목과 본문을 확인해 주세요.', UNAUTHORIZED: '닉네임으로 로그인한 뒤 이용해 주세요.', RATE_LIMIT: '잠시 쉬었다가 다시 시도해 주세요.', CHAT_TOO_FAST: '대화는 2초 간격으로 보낼 수 있어요.', POST_LIMIT: '글은 3초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', COMMENT_LIMIT: '댓글은 2초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', CONTENT_INVALID: '글자 수와 입력 내용을 확인해 주세요.', APPEARANCE_LOCKED: '아직 잠긴 꾸미기예요.', STORAGE_UNAVAILABLE: '서버에 연결하지 못했어요.', QUOTES_UNAVAILABLE: '시세를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'};
+  const errors = {MEMBERSHIP_REQUIRED: '이메일·휴대폰으로 인증한 회원만 글과 댓글을 남길 수 있어요.', QUERY_INVALID: '검색어는 80자 이내로 입력해 주세요.', ENTRY_INVALID: '제목과 본문을 확인해 주세요.', UNAUTHORIZED: '닉네임으로 로그인한 뒤 이용해 주세요.', RATE_LIMIT: '잠시 쉬었다가 다시 시도해 주세요.', TEXT_BLOCKED: '욕설·비속어가 들어간 대화는 보낼 수 없어요.', CHAT_TOO_FAST: '대화는 2초 간격으로 보낼 수 있어요.', POST_LIMIT: '글은 3초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', COMMENT_LIMIT: '댓글은 2초 간격으로 보낼 수 있어요. 일일 작성 한도도 확인해 주세요.', CONTENT_INVALID: '글자 수와 입력 내용을 확인해 주세요.', APPEARANCE_LOCKED: '아직 잠긴 꾸미기예요.', STORAGE_UNAVAILABLE: '서버에 연결하지 못했어요.', QUOTES_UNAVAILABLE: '시세를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'};
   const message = error => errors[error?.code || error?.error] || '지금은 처리하지 못했어요. 잠시 후 다시 시도해 주세요.';
   const request = (path, options) => U()?.request(path, options) || Promise.reject({code: 'STORAGE_UNAVAILABLE'});
   let sessionEpoch = 0, loaded = false, cursor = null, previous = [], posting = false, communitySeq = 0, category = '', query = '';
@@ -257,8 +257,10 @@
         el.append(fig, make('span', 'lounge-person-name', row.nick)); el.title = row.nick === plaza.nick ? '내 캐릭터 · 바닥을 눌러 이동' : '눌러서 사무실 방문';
         el.dataset.own = String(row.nick === plaza.nick); $('lounge-people').append(el);
         person = {el, pos: {x: row.x, y: row.y}, confirmed: {x: row.x, y: row.y}, direction: row.direction, seq: -1}; plaza.people.set(row.nick, person);
-        if (row.nick === plaza.nick) paintAppearance(person, U()?.session()?.appearance);
       }
+      // Level and outfit come from the server roster, so everyone sees the same character.
+      person.el.querySelector('.lounge-person-name').textContent = row.nick + (Number.isSafeInteger(row.level) ? ' Lv.' + row.level : '');
+      paintAppearance(person, row.appearance || (row.nick === plaza.nick ? U()?.session()?.appearance : null));
       if (row.nick !== plaza.nick || !plaza.ready) person.pos = {x: row.x, y: row.y};
       person.direction = row.direction; if (Number.isSafeInteger(row.seq)) person.seq = row.seq;
       paintPerson(person);
@@ -400,6 +402,8 @@
       let data; try { data = JSON.parse(event.data); } catch { return; }
       if (data.type === 'ready') {
         retries = 0; plaza.moveAck = data.move_ack === true; plaza.pending = null; plaza.rtt = 160; plaza.retryAt = 0; if ($('lounge-retry')) $('lounge-retry').hidden = true; plaza.nick = data.nick; plaza.seq = 0; plaza.sentAt = -Infinity; plaza.people.forEach(removePet); plaza.people.clear(); $('lounge-people').replaceChildren();
+        // Servers that resolve levels also accept the profile refresh frame; older ones would close on it.
+        plaza.profiles = (data.participants || []).some(row => Number.isSafeInteger(row?.level));
         roomPeople(data.participants); plaza.ready = plaza.people.has(data.nick);
         const own = plaza.people.get(data.nick); if (own) plaza.seq = Math.max(0, own.seq);
         $('lounge-loading').hidden = true; $('lounge-status').textContent = plaza.ready ? '연결됨 · 바닥을 누르거나 왼쪽 패드로 걸어요' : '대화 연결됨 · 서버의 캐릭터 위치를 기다리고 있어요';
@@ -587,6 +591,13 @@
   }
   document.addEventListener('zero-ready',paint);
   document.addEventListener('zero-profile-updated',paint);
+  // After a wardrobe save or level-up, ask the room to re-read this character from the server.
+  let profileKey = null;
+  document.addEventListener('zero-profile-updated', () => {
+    const session = U()?.session(), key = JSON.stringify([session?.appearance || null, session?.progress?.level || null]);
+    if (key === profileKey) return; const first = profileKey === null; profileKey = key;
+    if (!first && plaza.ready && plaza.profiles && socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: 'profile'}));
+  });
   document.addEventListener('zero-session-changed',()=>{sessionEpoch++;guestGeneration++;closeLounge();if(guest?.open)guest.close();guest?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());if(compose?.open)compose.close();compose?.querySelector('form')?.reset();if(closet?.open)closet.close();closet?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());paint();if(window.ZERO?.currentView?.()==='community')openCommunity(true);if(window.ZERO?.currentView?.()==='plaza'&&U()?.session()?.nick)openLounge();});
   window.ZEROSocial={openCommunity:()=>openCommunity(!loaded),openLounge,closeLounge,openGuestbook,openWardrobe,paintAppearance,updatePet,removePet};
   if(window.ZERO?.currentView?.()==='community')openCommunity(true);
