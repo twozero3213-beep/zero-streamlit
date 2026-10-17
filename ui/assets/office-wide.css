@@ -74,28 +74,28 @@ html #lobby-view .lobby-pad{grid-template-columns:repeat(3,28px);grid-template-r
 }
 
 /* 방향키 초소형 고투명 미니멀 디자인 (하단 탭바 침범 및 맵 가림 완벽 방지) */
-/* Thumb joystick: bottom-left, 44px hit areas, clear of the chat button on the right. */
+/* Thumb joystick: compact 96px corner pad; each 32px arrow extends to a 44px hit area via ::before. */
 html #lobby-view .lobby-pad,
 .plaza-pad {
   position: absolute !important;
   z-index: 900 !important;
-  left: max(12px, env(safe-area-inset-left, 0px)) !important;
+  left: max(8px, env(safe-area-inset-left, 0px)) !important;
   right: auto !important;
-  bottom: calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 12px) !important;
+  bottom: calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 8px) !important;
   margin: 0 !important;
   padding: 0 !important;
-  width: 132px !important;
-  height: 132px !important;
+  width: 96px !important;
+  height: 96px !important;
   display: grid !important;
-  grid-template-columns: repeat(3, 44px) !important;
-  grid-template-rows: repeat(3, 44px) !important;
+  grid-template-columns: repeat(3, 32px) !important;
+  grid-template-rows: repeat(3, 32px) !important;
   gap: 0 !important;
   border-radius: 50% !important;
-  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.18) 0 20px, rgba(15,23,42,0.38) 21px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  box-shadow: 0 6px 24px rgba(2, 6, 23, 0.28) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  background: rgba(15, 23, 42, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   touch-action: none !important;
   pointer-events: auto !important;
 }
@@ -107,10 +107,11 @@ html #lobby-view .lobby-pad button,
 .plaza-pad button {
   display: grid !important;
   place-items: center !important;
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
+  position: relative !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
@@ -118,11 +119,13 @@ html #lobby-view .lobby-pad button,
   background: transparent !important;
   color: rgba(255, 255, 255, 0.9) !important;
   box-shadow: none !important;
-  font-size: 16px !important;
+  font-size: 14px !important;
   touch-action: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
+html #lobby-view .lobby-pad button::before,
+.plaza-pad button::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
 html #lobby-view .lobby-pad button:active,
 html #lobby-view .lobby-pad button.pad-on,
 .plaza-pad button:active,
@@ -131,9 +134,9 @@ html #lobby-view .lobby-pad button.pad-on,
   color: #fff !important;
 }
 html #lobby-view .lobby-pad svg {
-  width: 18px !important;
-  height: 18px !important;
-  stroke-width: 2.4 !important;
+  width: 14px !important;
+  height: 14px !important;
+  stroke-width: 2.2 !important;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)) !important;
 }
 /* Mouse and keyboard users already have arrow keys and tap-to-walk. */

@@ -238,5 +238,5 @@ html #community-list .community-post { border:0; border-radius:0; margin:0; padd
 .lounge-dialog .plaza-chat-toggle.secondary-button,.lounge-dialog .plaza-chat-toggle { min-height:48px; min-width:96px; padding:0 18px; font-size:15px; }
 
 /* Status line sits above the thumb controls as a readable pill; no light text-shadow on the dark plaza. */
-.lounge-dialog > .social-status { left:50%; right:auto; transform:translateX(-50%); width:max-content; max-width:calc(100% - 32px); bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 156px); padding:6px 12px; border-radius:14px; background:rgba(15, 23, 42, 0.72); color:#f1f5f9; text-shadow:none; font-size:12px; line-height:1.45; text-align:center; overflow-wrap:anywhere; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+.lounge-dialog > .social-status { left:50%; right:auto; transform:translateX(-50%); width:max-content; max-width:calc(100% - 32px); bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 116px); padding:6px 12px; border-radius:14px; background:rgba(15, 23, 42, 0.72); color:#f1f5f9; text-shadow:none; font-size:12px; line-height:1.45; text-align:center; overflow-wrap:anywhere; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
 .lounge-dialog > .social-status:empty { display:none; }
