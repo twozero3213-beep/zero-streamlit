@@ -21,3 +21,9 @@ Source: https://github.com/pixel-agents-hq/pixel-agents/tree/d1e007a9fdf3003c252
 Fork: https://github.com/twozero3213-beep/pixel-agents
 Local: sprites/office/*.png; full MIT notice: sprites/office/LICENSE.txt.
 File source paths and SHA256: sprites/office/source.json. Original ZERO machine/gate drawings are composed alongside these sprites.
+
+Lucide icons — ISC License, Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.
+Source: https://github.com/lucide-icons/lucide
+Local: sidebar menu outlines in app.js (NAV_ICONS), redrawn as inline SVG paths adapted from Lucide shapes.
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
