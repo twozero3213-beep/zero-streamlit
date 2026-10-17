@@ -673,11 +673,12 @@ main { margin-left: 194px; padding: 30px 34px 24px; max-width: 1574px; }
   .global-header { margin-left: 0; padding: 12px 24px; }
   .mobile-brand { display: flex; flex: none; padding: 0; }
   main { margin-left: 0; padding: 24px; padding-bottom: 100px; }
-  .mobile-tabbar { position: fixed; inset: auto 0 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); background: #fff; border-top: 1px solid var(--line); z-index: 13; padding: 7px 12px calc(7px + env(safe-area-inset-bottom)); }
-  .mobile-tab { display: grid; justify-items: center; align-content: center; gap: 4px; border: 0; background: none; color: #626d7b; font-size: 11px; min-height: 50px; padding: 4px; }
-  .mobile-tab svg { width: 21px; height: 21px; }
+  .mobile-tabbar { position: fixed; inset: auto 0 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); background: #fffffffa; backdrop-filter: blur(8px); border-top: 1px solid var(--line); z-index: 99999 !important; pointer-events: auto !important; padding: 7px 12px calc(7px + env(safe-area-inset-bottom, 0px)); }
+  .mobile-tab { display: grid; justify-items: center; align-content: center; gap: 4px; border: 0; background: none; color: #626d7b; font-size: 11px; min-height: 50px; padding: 4px; pointer-events: auto !important; cursor: pointer; }
+  .mobile-tab svg { width: 21px; height: 21px; pointer-events: none; }
+  .mobile-tab span, .mobile-tab small { pointer-events: none; }
   .mobile-tab.active { color: #1b64da; font-weight: 650; }
-  .more-menu { margin: auto auto 80px; }
+  .more-menu { margin: auto auto 80px; z-index: 100000 !important; }
   .skip-link { left: 12px; }
 }
 @media (max-width: 560px) {

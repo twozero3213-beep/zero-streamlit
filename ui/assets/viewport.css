@@ -36,8 +36,8 @@ html .team-grid,html .office-directory-members { grid-template-columns:repeat(4,
  html main,html[data-zero-view] main { margin-left:0; padding:6px 10px; gap:6px; }
  html .rail {display:none;}
  html main > footer {display:none;}
- html .mobile-tabbar {display:grid; height:var(--zero-footer); padding:0 6px; padding-bottom:env(safe-area-inset-bottom,0px);}
- html .mobile-tab {min-height:0; padding:2px; font-size:10px; gap:1px;}
+ html .mobile-tabbar {display:grid; height:var(--zero-footer); padding:0 6px; padding-bottom:env(safe-area-inset-bottom,0px); z-index:99999!important; pointer-events:auto!important;}
+ html .mobile-tab {min-height:0; padding:2px; font-size:10px; gap:1px; pointer-events:auto!important; cursor:pointer;}
  html .mobile-tab svg {width:18px;height:18px;}
  html .global-search-wrap label {min-height:38px;}
  html .page-header h1 {font-size:18px;}

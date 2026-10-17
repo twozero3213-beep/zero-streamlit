@@ -24,6 +24,53 @@ function deskFields(container, rows, className = 'desk-metrics') {
   rows.forEach(([label, value]) => { const group = node('div'); group.append(node('dt', '', label), node('dd', '', value)); list.append(group); });
   container.append(list);
 }
+
+// 한국어와 영어, 숫자 외 외래 문자 정제
+function cleanDeskText(text, fallback = '근거 없음') {
+  if (typeof text !== 'string' || !text.trim()) return fallback;
+  let cleaned = text.replace(/[^\uAC00-\uD7A3\u3131-\u3163\u1100-\u11FFA-Za-z0-9\s.,!?'"~:;\(\)\[\]\/\-–—+%·\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}]/gu, '');
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  return cleaned || fallback;
+}
+
+// 5개 단위 직관적 페이징 UI 생성
+const DESK_PAGE_SIZE = 5;
+let macroCurrentPage = 1, newsCurrentPage = 1;
+
+function renderDeskPagination(container, totalItems, pageSize, currentPage, onPageChange) {
+  const totalPages = Math.ceil(totalItems / pageSize);
+  if (totalPages <= 1) return;
+  const nav = node('nav', 'desk-pagination');
+  nav.setAttribute('aria-label', '페이지 이동');
+
+  const prev = node('button', '', '‹ 이전');
+  prev.type = 'button';
+  prev.disabled = currentPage <= 1;
+  prev.addEventListener('click', () => onPageChange(currentPage - 1));
+  nav.append(prev);
+
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, startPage + 4);
+
+  for (let p = startPage; p <= endPage; p++) {
+    const btn = node('button', p === currentPage ? 'active' : '', String(p));
+    btn.type = 'button';
+    if (p === currentPage) btn.setAttribute('aria-current', 'page');
+    const target = p;
+    btn.addEventListener('click', () => onPageChange(target));
+    nav.append(btn);
+  }
+
+  const next = node('button', '', '다음 ›');
+  next.type = 'button';
+  next.disabled = currentPage >= totalPages;
+  next.addEventListener('click', () => onPageChange(currentPage + 1));
+  nav.append(next);
+
+  const info = node('span', 'page-indicator', currentPage + ' / ' + totalPages + ' (' + totalItems + '건)');
+  nav.append(info);
+  container.append(nav);
+}
 function deskNotes(container, items) {
   if (!Array.isArray(items) || !items.length) return;
   const detail = node('details', 'desk-details'); detail.append(node('summary', '', '자료의 범위와 한계'));
@@ -217,15 +264,22 @@ function renderMacro() {
   const value = (number) => Number.isFinite(deskNum(number)) ? format(number, 3) : '근거 없음';
   const rows = deskFilterMacro(researchDesk.data?.macro || [], deskControl('macro-search'), deskControl('macro-country', 'ALL'), deskControl('macro-category', 'ALL'));
   if (desk$('macro-empty')) desk$('macro-empty').hidden = rows.length > 0;
-  if (desk$('macro-count')) desk$('macro-count').textContent = rows.length + '개 지표 · 눌러서 관측 이력과 경제적 의미 보기';
-  rows.forEach((item) => {
+  if (desk$('macro-count')) desk$('macro-count').textContent = rows.length + '개 지표 · 5개씩 표시 · 눌러서 관측 이력과 경제적 의미 보기';
+  
+  const totalPages = Math.ceil(rows.length / DESK_PAGE_SIZE);
+  if (macroCurrentPage > totalPages && totalPages > 0) macroCurrentPage = 1;
+  const start = (macroCurrentPage - 1) * DESK_PAGE_SIZE;
+  const pageRows = rows.slice(start, start + DESK_PAGE_SIZE);
+
+  pageRows.forEach((item) => {
     const card = node('details', 'desk-indicator'), summary = node('summary', 'desk-indicator-summary'); card.dataset.id = item.id;
     const heading = node('span', 'desk-indicator-heading'), values = node('span', 'desk-indicator-values');
-    heading.append(node('strong', '', item.name), node('span', 'muted-note', ({US:'미국', KR:'한국', GLOBAL:'세계'}[item.country] || item.country) + ' · 관측 ' + deskText(item.latest_period, '날짜 미확인')));
+    const cleanName = cleanDeskText(item.name);
+    heading.append(node('strong', '', cleanName), node('span', 'muted-note', ({US:'미국', KR:'한국', GLOBAL:'세계'}[item.country] || item.country) + ' · 관측 ' + deskText(item.latest_period, '날짜 미확인')));
     values.append(node('strong', '', value(item.latest_value) + ' ' + deskText(item.unit, '단위 미확인')), node('span', 'muted-note', '직전 ' + value(item.previous_value) + ' ' + deskText(item.unit, '')));
     summary.append(heading, values); card.append(summary);
     const body = node('div', 'desk-indicator-body');
-    body.append(node('p', 'muted-note', ({MONTHLY:'월간', QUARTERLY:'분기', DAILY:'일간'}[item.frequency] || '주기 미확인') + ' · ' + ({SA:'계절조정', NSA:'계절조정 안 함', NOT_APPLICABLE:'계절조정 해당 없음', UNVERIFIED:'계절조정 미검증'}[item.seasonal_adjustment] || '계절조정 미확인') + ' · ' + deskText(item.basis)), node('p', '', deskText(item.explanation)), deskHistorySVG(item.history, item.name));
+    body.append(node('p', 'muted-note', ({MONTHLY:'월간', QUARTERLY:'분기', DAILY:'일간'}[item.frequency] || '주기 미확인') + ' · ' + ({SA:'계절조정', NSA:'계절조정 안 함', NOT_APPLICABLE:'계절조정 해당 없음', UNVERIFIED:'계절조정 미검증'}[item.seasonal_adjustment] || '계절조정 미확인') + ' · ' + deskText(item.basis)), node('p', '', cleanDeskText(item.explanation)), deskHistorySVG(item.history, cleanName));
     const statistics = item.statistics || {};
     if (statistics.available) {
       const distribution = node('details', 'desk-details desk-statistics'); distribution.append(node('summary', '', '과거 평균·중앙값·범위'));
@@ -239,6 +293,12 @@ function renderMacro() {
     if (item.next_release_kst) body.append(node('p', 'muted-note', '다음 발표 예정 ' + stamp(item.next_release_kst) + ' KST · 일정 변경 가능'));
     const links = node('p', 'desk-source'); if (item.source_url) links.append(deskLink('통계 원문', item.source_url)); if (item.release_url) links.append(deskLink('발표 일정·원문', item.release_url)); body.append(links);
     body.append(node('p', 'muted-note', '관측 대상 기간과 발표일·조회일은 다릅니다. 발표 후 수정될 수 있으며 최신 수정값은 당시 알 수 있었던 값과 다를 수 있습니다.')); deskNotes(body, item.limitations); card.append(body); container.append(card);
+  });
+
+  renderDeskPagination(container, rows.length, DESK_PAGE_SIZE, macroCurrentPage, (p) => {
+    macroCurrentPage = p;
+    renderMacro();
+    container.scrollIntoView?.({behavior: 'smooth', block: 'nearest'});
   });
 }
 function deskInstitution(source) {
@@ -315,9 +375,11 @@ function renderBriefingSources() {
   library.sources.filter((source) => institution === 'ALL' || deskInstitution(source) === institution).forEach((source) => {
     const group = node('div', 'desk-source-card'); group.append(deskLink(deskText(source.label, '공개 출처'), source.url), node('span', 'muted-note', source.error_code || source.status === 'FAILED' ? '목록 조회 실패 · 기존 자료 확인 필요' : (source.records || []).filter((r) => r.access === 'INDEX_ONLY').length + '개 목록 · 본문 검토 전')); sourceGrid.append(group);
   }); sourceStrip.append(sourceGrid); container.append(sourceStrip);
+  // The report list already has its own pager (2 per page on mobile, 4 on desktop); a second outer slice hid reports.
   const list = node('div', 'desk-report-rows'); list.id = 'report-records-list'; rows.forEach((record) => {
     const button = node('button', 'desk-library-row'), main = node('span', 'desk-library-main'), metadata = node('span', 'desk-library-date'); button.type = 'button';
-    main.append(node('strong', '', deskText(record.title, '제목 미확인')), node('span', 'desk-library-meta', deskText(record.source.label) + ' · ' + ({MACRO_RESEARCH:'경제 연구', POLICY_RELEASE:'정책 발표', EDUCATION:'투자 공부'}[deskReportKind(record.kind)] || '공개 자료')));
+    const cleanTitle = cleanDeskText(record.title, '제목 미확인');
+    main.append(node('strong', '', cleanTitle), node('span', 'desk-library-meta', deskText(record.source.label) + ' · ' + ({MACRO_RESEARCH:'경제 연구', POLICY_RELEASE:'정책 발표', EDUCATION:'투자 공부'}[deskReportKind(record.kind)] || '공개 자료')));
     metadata.append(node('span', '', record.published_date || '발표일 미확인'), node('span', 'desk-library-state', '본문 검토 전'));
     button.append(main, metadata); button.addEventListener('click', () => openDeskReport(record.id)); list.append(button);
   }); container.append(list);
@@ -341,12 +403,27 @@ function renderNews() {
   }
   const search = deskControl('news-search').trim().toLowerCase(), selected = deskControl('news-category', 'ALL');
   const rows = all.filter((item) => (selected === 'ALL' || item.category === selected) && (item.title + ' ' + item.category + ' ' + (item.core_sentences || []).join(' ')).toLowerCase().includes(search)).slice().sort((a, b) => String(b.release_date || '').localeCompare(String(a.release_date || '')));
-  if (desk$('news-empty')) desk$('news-empty').hidden = rows.length > 0; if (desk$('news-count')) desk$('news-count').textContent = rows.length + '건 · 눌러서 다섯 문장·경제 용어·시나리오 보기';
+  if (desk$('news-empty')) desk$('news-empty').hidden = rows.length > 0;
+  if (desk$('news-count')) desk$('news-count').textContent = rows.length + '건 · 5개씩 표시 · 눌러서 다섯 문장·경제 용어·시나리오 보기';
   const outline = desk$('news-outline'); if (outline) outline.hidden = true;
-  rows.forEach((item, index) => {
-    const card = node('details', 'desk-news'); card.id = 'news-item-' + index; const summary = node('summary', 'desk-news-summary');
-    summary.append(node('span', 'desk-news-meta', item.category + ' · 발표 ' + deskText(item.release_date)), node('strong', '', item.title), node('span', 'desk-news-preview', item.core_sentences?.[0] || '확인 요약 없음')); card.append(summary);
+
+  const totalPages = Math.ceil(rows.length / DESK_PAGE_SIZE);
+  if (newsCurrentPage > totalPages && totalPages > 0) newsCurrentPage = 1;
+  const start = (newsCurrentPage - 1) * DESK_PAGE_SIZE;
+  const pageRows = rows.slice(start, start + DESK_PAGE_SIZE);
+
+  pageRows.forEach((item, index) => {
+    const card = node('details', 'desk-news'); card.id = 'news-item-' + (start + index); const summary = node('summary', 'desk-news-summary');
+    const cleanTitle = cleanDeskText(item.title);
+    const cleanPreview = cleanDeskText(item.core_sentences?.[0], '확인 요약 없음');
+    summary.append(node('span', 'desk-news-meta', item.category + ' · 발표 ' + deskText(item.release_date)), node('strong', '', cleanTitle), node('span', 'desk-news-preview', cleanPreview)); card.append(summary);
     const body = deskNewsBody(item); body.prepend(node('p', 'muted-note', '사건 ' + deskText(item.event_date) + ' · 발표 ' + deskText(item.release_date) + ' · 자료 확인 ' + stamp(item.retrieved_at) + ' KST')); card.append(body); container.append(card);
+  });
+
+  renderDeskPagination(container, rows.length, DESK_PAGE_SIZE, newsCurrentPage, (p) => {
+    newsCurrentPage = p;
+    renderNews();
+    container.scrollIntoView?.({behavior: 'smooth', block: 'nearest'});
   });
 }
 function deskNvdaFilingMetrics(charts, now = Date.now()) {
@@ -392,8 +469,8 @@ compactMacroFilters();
 ['study-company','study-interval','study-learning','study-ma-5','study-ma-20','study-ma-60'].forEach((id)=>desk$(id)?.addEventListener('change',()=>{renderStudyChart();if(id==='study-company')renderStudyCompany();}));
 desk$('study-candle-index')?.addEventListener('input',(event)=>{const current=researchDesk.candle;if(current)deskReadCandle(current.bars,Number(event.target.value),current.currency,current.learning);});
 ['study-price','study-eps','study-bps','study-profit','study-equity'].forEach((id)=>desk$(id)?.addEventListener('input',deskCalculateExample));
-['macro-search','macro-country','macro-category'].forEach((id)=>desk$(id)?.addEventListener(id==='macro-search'?'input':'change',renderMacro));
-['news-search','news-category'].forEach((id)=>desk$(id)?.addEventListener(id==='news-search'?'input':'change',renderNews));
+['macro-search','macro-country','macro-category'].forEach((id)=>desk$(id)?.addEventListener(id==='macro-search'?'input':'change',()=>{macroCurrentPage=1;renderMacro();}));
+['news-search','news-category'].forEach((id)=>desk$(id)?.addEventListener(id==='news-search'?'input':'change',()=>{newsCurrentPage=1;renderNews();}));
 ['report-search','report-institution','report-kind','report-sort'].forEach((id)=>desk$(id)?.addEventListener(id==='report-search'?'input':'change',renderBriefingSources));
 document.querySelectorAll('[data-desk-reload]').forEach((button)=>button.addEventListener('click',()=>loadDesk(true)));
 desk$('study-example')?.addEventListener('submit',(event)=>event.preventDefault());

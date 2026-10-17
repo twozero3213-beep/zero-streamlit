@@ -143,14 +143,28 @@
       const history=el('details','company-paper-records'),historyRows=el('div');history.append(el('summary','','모의거래 내역'),historyRows);panel.append(history);
       async function historyPage(before=null){try{const result=await request('/me/paper/trades'+(before?'?before='+before:''));if(!current())return;if(!Array.isArray(result.items))throw {code:'PAPER_RESPONSE_INVALID'};if(!before&&!result.items.length)historyRows.append(el('p','muted-note','저장된 모의거래가 없습니다.'));result.items.forEach(row=>historyRows.append(el('p','',paperTime(row.created_at)+' · '+row.identity+' · '+({BUY:'모의 매수',SELL:'모의 매도',LIQUIDATE_LEGACY:'기존 지분 정리'}[row.action]||'모의거래')+' · '+(row.unit==='SHARE'?row.quantity+'주 · ':'')+paperMoney(row.cash_delta_krw))));if(result.next_before){const more=button('이전 모의거래 더 보기',async()=>{if(more.disabled)return;more.disabled=true;more.remove();await historyPage(result.next_before);});historyRows.append(more);}}catch(e){if(current())historyRows.append(el('p','muted-note',paperReason(e.code)),button('거래 내역 다시 불러오기',()=>{historyRows.replaceChildren();return historyPage();}));}}
       const discussions=el('div','company-paper-discussions');discussions.append(el('h3','','직원 일일 보유·시장 점검'));panel.append(discussions);
-      const reports=el('div');function reportRows(items){
-        reports.replaceChildren();if(!items.length)reports.append(el('p','muted-note','아직 저장된 일일 점검이 없습니다. 오늘의 보유와 시장 관찰을 기록해 주세요.'));
-        items.forEach(report=>{
+      const reports=el('div');
+      let reportRowsPage = 1;
+      function reportRows(items){
+        reports.replaceChildren();if(!items.length){reports.append(el('p','muted-note','아직 저장된 일일 점검이 없습니다. 오늘의 보유와 시장 관찰을 기록해 주세요.'));return;}
+        const pageSize = 5;
+        const totalPages = Math.ceil(items.length / pageSize);
+        if (reportRowsPage > totalPages && totalPages > 0) reportRowsPage = 1;
+        const pageItems = items.slice((reportRowsPage - 1) * pageSize, reportRowsPage * pageSize);
+        pageItems.forEach(report=>{
           const details=el('details');details.append(el('summary','',report.day+' KST · '+(report.revision!==account.revision?'이전 보유 기준 · ':'현재 보유 기준 · ')+(report.state==='PARTIAL'?'시세 일부 확인 필요':'규칙 기반 관찰')),el('p','muted-note',report.notice));
           for(const text of [report.market_observation,report.hold,report.change])if(text)details.append(el('p','',text));
           (report.holdings||[]).forEach(p=>{details.append(el('p','',p.identity+' · '+(p.unit==='SHARE'?p.quantity+'주':'기존 가상 지분')+' · '+paperMoney(p.value_krw)),el('p','muted-note','현재 비중 '+pct(p.current_weight_percent)+' · '+(p.unit==='SHARE'?'취득 대비 모의 평가 변화 ':'기존 기준가 대비 가격 변화 ')+pct(p.holding_return_percent)));paperObservation(details,p.quote);if(p.market?.state==='AVAILABLE')details.append(el('p','muted-note',p.market.start_date+'~'+p.market.end_date+' · 완료 일봉 '+p.market.bars+'개 · 기간 가격 변화 '+pct(p.market.return_percent)+' · '+(p.review_focus==='CHANGE_REVIEW'?'변경 필요성 점검':'유지 근거 점검')+' · '+p.market.notice));});
           (report.staff||[]).forEach(person=>details.append(el('p','',person.name+' · '+(PERSONAS[person.persona]||person.persona)),el('p','',person.observation),el('p','',person.hold),el('p','',person.change)));reports.append(details);
         });
+        if (totalPages > 1) {
+          const nav = el('nav', 'desk-pagination');
+          const prev = el('button', '', '‹ 이전'); prev.disabled = reportRowsPage <= 1; prev.onclick = () => { reportRowsPage--; reportRows(items); };
+          const next = el('button', '', '다음 ›'); next.disabled = reportRowsPage >= totalPages; next.onclick = () => { reportRowsPage++; reportRows(items); };
+          const info = el('span', 'page-indicator', reportRowsPage + ' / ' + totalPages + ' (' + items.length + '건)');
+          nav.append(prev, info, next);
+          reports.append(nav);
+        }
       }
       const dailyStatus=el('p','muted-note');dailyStatus.setAttribute('role','status');
       const recordDaily=async()=>{if(!current()||daily.disabled||busy||unknown)return;daily.disabled=true;try{const report=await request('/me/paper/discussions',{method:'POST',body:{}});if(!current())return;reportRows([report.discussion]);dailyStatus.textContent='오늘의 실제 보유·공개 시세 관찰을 저장했습니다. 규칙 기반 기록이며 AI 대화 완료가 아닙니다.';const all=await request('/me/paper/discussions');if(current()){const items=all.items||[];if(!items.some(row=>row.day===report.discussion.day&&row.revision===report.discussion.revision))items.unshift(report.discussion);reportRows(items);}}catch(e){if(current())dailyStatus.textContent=paperReason(e.code);}finally{if(current())daily.disabled=busy||unknown;}};

@@ -94,11 +94,19 @@
         if (!U.me) { U.visitor = nick; store.set(VISITOR_KEY, nick); window.ZEROLobby.setPlayerName(nick); }
         render(); dialog.close();
       },
-      complete: (method, accessToken, nick, remember) => api('/auth/complete', {method: 'POST', token: U.token,
-        body: {method, access_token: accessToken, remember, ...(nick === undefined ? {} : {nick})}}),
+      complete: (method, accessToken, nick, remember) => {
+        const ua = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : '';
+        const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+        const effectiveRemember = (method === 'email' && isMobile) ? true : remember;
+        return api('/auth/complete', {method: 'POST', token: U.token,
+          body: {method, access_token: accessToken, remember: effectiveRemember, ...(nick === undefined ? {} : {nick})}});
+      },
       async onMember(result, remember) {
         if (typeof result.token !== 'string' || !result.token) throw {code: 'UNAUTHORIZED'};
-        memberSession.set(result, remember); U.token = result.token; U.member = true; U.remember = !!remember; U.visitor = null; U.me = null;
+        const ua = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : '';
+        const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+        const effectiveRemember = (result.membership?.method === 'email' && isMobile) ? true : !!remember;
+        memberSession.set(result, effectiveRemember); U.token = result.token; U.member = true; U.remember = effectiveRemember; U.visitor = null; U.me = null;
         store.del(KEY); store.del(VISITOR_KEY); render();
         const memberToken = U.token, memberView = profileEpoch; await refreshMe(); if (profileEpoch !== memberView || !dialog.open) return; if (U.token === memberToken) { if (U.me) viewHome(); else viewPending(); } else if (!U.token) viewSignup();
       },

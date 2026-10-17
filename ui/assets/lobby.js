@@ -13,6 +13,15 @@
   const pct = (value, total) => (value / total * 100).toFixed(2) + '%';
   const store = { get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }, set(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* private mode */ } } };
 
+  // 한국어 및 영어, 숫자, 기본 기호 외 외래 문자 정제 필터
+  function sanitizeKoreanEnglish(text) {
+    if (typeof text !== 'string') return '';
+    let cleaned = text.replace(/[^\uAC00-\uD7A3\u3131-\u3163\u1100-\u11FFA-Za-z0-9\s.,!?'"~:;\(\)\[\]\/\-–—+%·\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}]/gu, '');
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    if (!/[가-힣A-Za-z]/.test(cleaned)) return '';
+    return cleaned;
+  }
+
   const S = {active: false, docked:false,dockRequested:false,dockStarted:false,dockHandoff:false, mode: 'zero', npcs: [], player: null, keys: new Set(), target: null, walked: 0, speaker: [], weather: null, holidays: L.KR_HOLIDAYS,
     chatNpc: null, team: null, rafId: 0, last: 0, timers: [], visit: null, playerName: (['나','대표님'].includes(store.get('zero-lobby-name')) ? null : store.get('zero-lobby-name')) || 'ZERO', tutorial: null,
     motions: new Set(), recent: [], world: null, viewport: null, paused: false, level: 1, schoolLevel: 1, characterAuthenticated: false, schoolRank: '입문 전', boardMeta: null, chatterSeed:null, seedPending:null, seedAttemptAt:null, safe_keyword:null, trendFallback:true,market:null,
@@ -177,7 +186,7 @@
     const EMOJI = {plant: '🪴', coffee: '☕', sofa: '🛋️', books: '📚', fish: '🐠', poster: '🖼️', clock: '🕰️'};
     if(!S.world.layout){space.props.forEach((name) => { if (EMOJI[name]) { const prop = node('div', 'prop ' + name, EMOJI[name]); prop.dataset.prop = name; stage.append(prop);S.visuals.push(prop); } });
       if (space.props.includes('plant')){const plant=node('div','prop plant right','🪴');stage.append(plant);S.visuals.push(plant);}
-      const portal = node('button', 'floor-portal', '광장'); portal.type = 'button'; portal.setAttribute('aria-label', '문까지 걸어가 공용 광장 입장');portal.addEventListener('click', event => { event.stopPropagation(); if (!S.portalBusy) walkTo({x: 144, y: 32}, enterPlaza); });stage.append(portal);
+      const portal = node('button', 'floor-portal', '광장'); portal.type = 'button'; portal.setAttribute('aria-label', '차원의 문까지 걸어가 공용 광장 입장');portal.addEventListener('click', event => { event.stopPropagation(); if (!S.portalBusy) walkTo({x: 154, y: 50}, enterPlaza); });stage.append(portal);
     }else{
       stage.dataset.officeTheme=S.layout.theme;
       S.layout.objects.forEach(object=>{
@@ -275,8 +284,12 @@
     entity.el.dataset.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
   }
   function checkPortal() {
-    const goal=S.portalGoal||(S.world?.layout?null:{x:144,y:32});if(!goal)return;
-    const distance = Math.hypot(S.player.pos.x - goal.x, S.player.pos.y - goal.y);
+    const goal=S.portalGoal||(S.world?.layout?null:{x:154,y:50});if(!goal)return;
+    let distance = Math.hypot(S.player.pos.x - goal.x, S.player.pos.y - goal.y);
+    if (!S.portalGoal && !S.world?.layout && distance > 6) {
+      const legacyDist = Math.hypot(S.player.pos.x - 144, S.player.pos.y - 32);
+      if (legacyDist < distance) distance = legacyDist;
+    }
     if (distance > 9) S.portalLatch = false;
     if (distance <= 6 && !S.portalLatch) enterPlaza();
   }
@@ -490,26 +503,60 @@
     });
     if (overlaps) { entity.el.classList.remove('speaking'); return; }
     cancelSpeech(entity);const record = {id: entity.id, pos: entity.pos}; S.speaker.push(record);
-    entity.lastSmallTalk=text;entity.el.setAttribute?.('aria-describedby',bubble.id);syncNpcLabel(entity);
+    entity.lastSmallTalk = text; entity.el.setAttribute?.('aria-describedby', bubble.id); syncNpcLabel(entity);
     S.recent.push(text); S.recent = S.recent.slice(-12);
     entity.el.dataset.activity = 'chatting'; gesture(entity, 'talk');
-    typeSpeech(entity,text,ms);
+    typeSpeech(entity, text, ms);
     return true;
   }
-  const MAX_BUBBLES = 4, BUBBLE_GAP = 26;
-  // On a phone-sized stage fewer, more distant bubbles keep the small scene readable.
+
+  const MAX_BUBBLES = 3, BUBBLE_GAP = 26;
   const narrow = () => stage.clientWidth < 560;
+
+  // 15명 캐릭터를 5명씩 5초 주기로 대화 로테이션
+  let chatterGroupIndex = 0;
+  let lastGroupRotateTime = Date.now();
+  const DIALOG_ROTATION_INTERVAL = 5000; // 5초 간격
+
   function chatterTick() {
-    if (!S.active || S.paused || document.hidden || S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES) || !S.npcs.length) return;
+    if (!S.active || S.paused || document.hidden || !S.npcs.length) return;
+    const now = Date.now();
+    // 5초 경과 시 다음 5인 조로 교체하고 이전 말풍선 정리
+    if (now - lastGroupRotateTime >= DIALOG_ROTATION_INTERVAL) {
+      lastGroupRotateTime = now;
+      stopSpeech();
+      chatterGroupIndex = (chatterGroupIndex + 1) % Math.max(1, Math.ceil(S.npcs.length / 5));
+    }
+
+    if (S.speaker.length >= (narrow() ? 2 : MAX_BUBBLES)) return;
+
+    // 현재 5인 조(0~4, 5~9, 10~14)에 속한 캐릭터만 발화 후보로 선별
+    const groupNpcs = S.npcs.filter((item, idx) => {
+      if (item.hidden || item.away) return false;
+      const group = Math.floor(idx / 5);
+      return group === chatterGroupIndex;
+    });
+
+    if (!groupNpcs.length) return;
     const active = S.speaker.map((item) => ({id: item.id, pos: item.pos}));
-    const npc = L.pickSpeaker(S.npcs.filter((item) => !item.hidden&&!item.away && (item.kind !== 'staff' || Math.random() < 0.7)), active, narrow() ? 44 : BUBBLE_GAP);
+    const npc = L.pickSpeaker(groupNpcs.filter(item => item.kind !== 'staff' || Math.random() < 0.75), active, narrow() ? 44 : BUBBLE_GAP);
     if (!npc) return;
+
     const persona = S.visit ? [] : (npc.personaLines || L.personaFor(npc.department)), context = {now: new Date(), mode:S.mode, npc, seed:S.chatterSeed, weather: S.weather, holidays: S.holidays, level: S.level, trends: S.trends || [],safe_keyword:S.safe_keyword,trendFallback:S.trendFallback,market_quote:S.market,analysis_lines:window.ZEROAnalysis?.chatter?.()||[]};
-    const text = W.chooseChatter(L, context, persona, S.recent);
-    if (!speak(npc, text)) return;
-    // A neighbour answers a moment later, so it reads as a small conversation, not isolated captions.
-    const buddy = L.nearest(S.npcs.filter((item) => !item.hidden&&item !== npc && !item.away && !item.el.classList.contains('speaking')), npc.pos, 24);
-    if (buddy && Math.random() < 0.7) setTimeout(() => { if (S.active && !S.paused && !buddy.away) speak(buddy, W.chatReply(text, S.recent)); }, 2800);
+    const rawText = W.chooseChatter(L, context, persona, S.recent);
+    const text = sanitizeKoreanEnglish(rawText);
+    if (!text || !speak(npc, text, 4800)) return;
+
+    // 조 내의 동료가 화답하되 동일 5인 조 안에서만 응답
+    const buddy = L.nearest(groupNpcs.filter((item) => item !== npc && !item.el.classList.contains('speaking')), npc.pos, 28);
+    if (buddy && Math.random() < 0.6) {
+      setTimeout(() => {
+        if (S.active && !S.paused && !buddy.away) {
+          const reply = sanitizeKoreanEnglish(W.chatReply(text, S.recent));
+          if (reply) speak(buddy, reply, 4500);
+        }
+      }, 2400);
+    }
   }
   function greet() {
     const host = S.npcs.find((item) => item.kind === 'manager'); if (!host || S.visit) return;
@@ -651,9 +698,9 @@
   const linkTick = (item) => (copy) => {
     const link = node('a', 'lobby-tick'); link.href = item.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; if (copy) link.setAttribute('aria-hidden', 'true'), link.tabIndex = -1;
     const label = item.kind === 'BREAKING' ? '[속보] ' : item.kind === 'EXCLUSIVE' ? '[단독] ' : '';
-      const translated = !/[가-힣]/u.test(item.title) && typeof item.title_ko === 'string' && item.title_ko.trim() ? ' (' + item.title_ko + ')' : '';
-      link.append(node('b', '', label + (item.publisher || '뉴스')), document.createTextNode(' ' + item.title + translated));
-      link.title = translated ? '원제 · 괄호 안은 기계 번역입니다. 기사 원문을 확인하세요.' : '한국어 기사 제목 · 기사 원문을 확인하세요.'; link.addEventListener('click', () => advanceTutorial('board')); return link;
+    const translated = !/[가-힣]/u.test(item.title) && typeof item.title_ko === 'string' && item.title_ko.trim() ? ' (' + item.title_ko + ')' : '';
+    link.append(node('b', '', label + (item.publisher || '뉴스')), document.createTextNode(' ' + item.title + translated));
+    link.title = translated ? '원제 · 괄호 안은 기계 번역입니다. 기사 원문을 확인하세요.' : '한국어 기사 제목 · 기사 원문을 확인하세요.'; link.addEventListener('click', () => advanceTutorial('board')); return link;
   };
   async function loadNews() {
     if (!S.active || !S.player || document.hidden) return;
@@ -663,7 +710,7 @@
     if (!S.active || epoch !== sceneEpoch) return;
     if (!items.length) {
       try { const response = await fetch('api/desk', {cache: 'no-store', signal: AbortSignal.timeout(15000)}); const desk = response.ok ? await response.json() : null;
-        items = (desk?.news || []).map((row) => ({title: row.title, publisher: row.sources?.[0]?.label || '공식 자료', url: row.sources?.[0]?.url || ''})).filter(headlineAllowed); } catch (_) { items = []; }
+        items = (desk?.news || []).map((row) => ({title: sanitizeKoreanEnglish(row.title) || row.title, publisher: row.sources?.[0]?.label || '공식 자료', url: row.sources?.[0]?.url || ''})).filter(headlineAllowed); } catch (_) { items = []; }
     }
     if (!S.active || epoch !== sceneEpoch) return;
     track('lobby-news', items.slice(0, 30).map(linkTick), '뉴스를 확인하지 못했어요 · 다음 갱신 때 다시 확인해요');

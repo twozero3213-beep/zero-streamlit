@@ -242,6 +242,13 @@
 
   const officeOwner={id:'OFFICE_OWNER',name:'ZERO',department:'CHAIRPERSON',kind:'의장'};
   let ownerScene=null,ownerEncounter=null,chatTurn=0,socialClock=0;
+  function sanitizeKoreanEnglish(text) {
+    if (typeof text !== 'string') return '';
+    let cleaned = text.replace(/[^\uAC00-\uD7A3\u3131-\u3163\u1100-\u11FFA-Za-z0-9\s.,!?'"~:;\(\)\[\]\/\-–—+%·\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}]/gu, '');
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    if (!/[가-힣A-Za-z]/.test(cleaned)) return '';
+    return cleaned;
+  }
   const teamChatRecent=[],teamChatCache=new Map(),encounterCooldown=new Map();
   // Social visits stay outside the canonical roster, meeting reports and job assignees.
   function ownerTour(){
@@ -376,7 +383,8 @@
     const logic=window.ZEROLobbyLogic,world=window.ZEROLobbyWorld,publicScene=window.ZEROLobby?.state;
     if(!meetingRecordsOnly&&!job&&logic&&world?.chooseChatter){
       if(preserve&&teamChatCache.has(actor.id))return teamChatCache.get(actor.id);
-      const line=world.chooseChatter(logic,{now:new Date(),weather:publicScene?.weather,trends:publicScene?.trends||[],trendFallback:publicScene?.trendFallback!==false,level:1},[],teamChatRecent);
+      const rawLine=world.chooseChatter(logic,{now:new Date(),weather:publicScene?.weather,trends:publicScene?.trends||[],trendFallback:publicScene?.trendFallback!==false,level:1},[],teamChatRecent);
+      const line=(typeof sanitizeKoreanEnglish==='function'?sanitizeKoreanEnglish(rawLine):rawLine)||rawLine;
       teamChatRecent.push(line);if(teamChatRecent.length>12)teamChatRecent.shift();
       const chat={text:line,status:available?'요청 대기':'진행 미확인',detail:'가상 직원의 일상 대사 · 실제 업무 처리나 계좌 확인 결과가 아닙니다. '+line};teamChatCache.set(actor.id,chat);return chat;
     }
@@ -500,9 +508,13 @@
     if(ownerEncounter&&(meetingRecordsOnly||latestJob(ownerEncounter.record.actor)))releaseEncounter();
     const report=meetingReports()[meetingIndex],eligible=actors.filter(actor=>selectedDepartment==='ALL'||selectedDepartment==='MEETING'&&isLeader(actor)||actor.department===selectedDepartment),bubbles=new Set();
     if(meetingRecordsOnly&&report&&eligible.includes(report.actor))bubbles.add(report.actor.id);
-    const maxBubbles=Math.ceil(eligible.length/3);
+    const maxBubbles=Math.min(5,eligible.length);
     if(ownerEncounter&&eligible.includes(ownerEncounter.record.actor))bubbles.add(ownerEncounter.record.actor.id);
-    for(let index=chatTurn%3;index<eligible.length&&bubbles.size<maxBubbles;index+=3)bubbles.add(eligible[index].id);
+    const startIndex=(chatTurn*5)%Math.max(1,eligible.length);
+    for(let i=0;i<eligible.length&&bubbles.size<maxBubbles;i++){
+      const candidate=eligible[(startIndex+i)%eligible.length];
+      if(candidate)bubbles.add(candidate.id);
+    }
     for(const record of sceneActors.values()){
       const inRoom=selectedDepartment==='MEETING'?isLeader(record.actor):record.actor.department===selectedDepartment;
       {const chat=actorBubble(record.actor,preserve||!motionAllowed());record.duty.textContent=ownerEncounter?.record===record?ownerEncounter.lines[ownerEncounter.remaining>3500?0:1][1]:chat.text;record.bubble.title=ownerEncounter?.record===record?'ZERO와 나누는 가상 일상 대화':chat.detail;}
@@ -544,8 +556,9 @@
   function scheduleMeeting(task,delay){
     clearTimeout(meetingTimer);meetingTask=task;meetingRemaining=delay;meetingDue=Date.now()+delay;if(motionAllowed())meetingTimer=setTimeout(()=>{meetingTimer=null;meetingTask=null;task();},delay);
   }
+  // One 5-second clock moves the overview to the next five speakers in every meeting phase.
+  function rotateChatter(){chatTurn=(chatTurn+1)%Math.max(1,actors.length);updateSceneVisibility();}
   function showMeetingReport(index,advance=true){
-    if(advance&&motionAllowed())chatTurn=(chatTurn+1)%Math.max(1,actors.length);
     if(meetingPhase!=='REPORT'){renderMeetingPhase();updateSceneVisibility();return;}
     const reports=meetingReports();if(!reports.length)return;meetingIndex=index%reports.length;const report=reports[meetingIndex];
     if($('office-meeting'))$('office-meeting').hidden=$('office-board')?!$('office-board').hidden:false;
@@ -906,6 +919,7 @@
   window.ZEROOffice={load,requestResearch};
   const visible=()=>!document.hidden && !$('team-view')?.hidden;
   setInterval(()=>{updateEncounters(150);fitChatter();},150);
+  setInterval(()=>{if(visible() && motionAllowed())rotateChatter();},5000);
   setInterval(()=>{if(visible() && !submitting){loadPromise=load();loadPromise.catch(()=>{});}},30000);
   document.addEventListener?.('visibilitychange',()=>{syncMotion();if(visible() && !submitting)load();});
   if(visible()){loadPromise=load(); loadPromise.catch(()=>{});}
