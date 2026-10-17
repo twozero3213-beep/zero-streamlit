@@ -20,9 +20,15 @@
   const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
   const button=(text,run)=>{const n=el('button','secondary-button',text);n.type='button';n.addEventListener('click',run);return n;};
   const avatars=new Set();let avatarFrame=null;
-  function paintAvatars(time){avatarFrame=null;for(const item of avatars){if(!item.canvas.isConnected){avatars.delete(item);continue;}window.ZEROOfficeNative?.drawPerson?.(item.canvas,item.actor(),time/1000);}
-    if(avatars.size&&!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches&&window.requestAnimationFrame)avatarFrame=window.requestAnimationFrame(paintAvatars);}
-  function avatar(actor,label){const canvas=el('canvas','company-avatar');canvas.setAttribute('role','img');canvas.setAttribute('aria-label',label);if(!canvas.getContext)return canvas;avatars.add({canvas,actor});if(avatarFrame===null&&window.requestAnimationFrame)avatarFrame=window.requestAnimationFrame(paintAvatars);else window.ZEROOfficeNative?.drawPerson?.(canvas,actor(),0);return canvas;}
+  // Avatars animate at ~15fps only while visible; the loop stops when the view is hidden and wakes on view/tab changes.
+  let lastPaint=-Infinity;
+  const shown=canvas=>canvas.isConnected&&!document.hidden&&(canvas.getClientRects?.().length??1)>0;
+  function paintAvatars(time){avatarFrame=null;let live=false;const draw=time-lastPaint>=66;if(draw)lastPaint=time;
+    for(const item of avatars){if(!item.canvas.isConnected){avatars.delete(item);continue;}if(!shown(item.canvas))continue;live=true;if(draw)window.ZEROOfficeNative?.drawPerson?.(item.canvas,item.actor(),time/1000);}
+    if(live&&!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)avatarFrame=window.requestAnimationFrame(paintAvatars);}
+  function wakeAvatars(){if(avatarFrame===null&&avatars.size&&window.requestAnimationFrame)avatarFrame=window.requestAnimationFrame(paintAvatars);}
+  document.addEventListener?.('visibilitychange',wakeAvatars);document.addEventListener?.('zero-view-changed',wakeAvatars);
+  function avatar(actor,label){const canvas=el('canvas','company-avatar');canvas.setAttribute('role','img');canvas.setAttribute('aria-label',label);if(!canvas.getContext)return canvas;avatars.add({canvas,actor});window.ZEROOfficeNative?.drawPerson?.(canvas,actor(),0);wakeAvatars();return canvas;}
   const lookOf=(persona,name)=>({id:name||persona,activity:'walking',appearance:ROLES[persona]?.look});
   let fields=0,epoch=0,marketEpoch=0,staff=[],paperPending=new Map(),paperActive=false,paperSelection=null;
   function portfolioContent(){return $('portfolio-view')?.querySelector('#member-portfolio')||null;}
