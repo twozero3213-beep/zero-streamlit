@@ -34,9 +34,9 @@ function loadVendor(){
 }
 function mount(container,options={}){
  let alive=true,sequence=0,controller=null,chart=null,frame=null,deadline=null,model=null,ro=null,life=null,networkDeadline=null,frameGeneration=0,refreshTimer=null,refreshGeneration=0,savedTimeRange=null,selectedTime=null,refreshFailed=false;
- const shell=node('section','technical-chart'),plot=node('div','technical-chart-plot'),status=node('p','technical-chart-status','공개 완료 가격을 확인하는 중입니다.'),controls=node('div','technical-chart-controls'),evidence=node('details','technical-chart-evidence');
+ const shell=node('section','technical-chart'),plot=node('div','technical-chart-plot'),status=node('p','technical-chart-status','공개 완료 가격을 확인하는 중입니다.'),controls=node('div','technical-chart-controls'),evidence=node('details','technical-chart-evidence'),basis=node('details','technical-chart-basis');
  status.setAttribute('role','status');plot.setAttribute('aria-label','공개 지연·완료봉 캔들, MA20·MA60, 거래량');
- const retry=node('button','','다시 불러오기'),fallback=node('button','','기본 차트로 보기');retry.type=fallback.type='button';fallback.hidden=true;controls.append(retry,fallback);shell.append(plot,status,controls,evidence);container.append(shell);
+ const retry=node('button','','다시 불러오기'),fallback=node('button','','기본 차트로 보기');retry.type=fallback.type='button';fallback.hidden=true;controls.append(retry,fallback);shell.append(plot,status,controls,evidence,basis);container.append(shell);
  const summary=node('summary'),readout=node('p'),cursor=node('input','technical-chart-cursor');
  cursor.type='range';cursor.min='0';cursor.step='1';cursor.setAttribute('aria-label','날짜별 가격 선택');cursor.addEventListener('input',()=>selection(Number(cursor.value)));evidence.open=true;
  const height=()=>root.innerWidth<768?200:240;
@@ -54,15 +54,19 @@ function mount(container,options={}){
   const bar=model.bars[index];selectedTime=bar.time;
   const date=new Intl.DateTimeFormat('ko-KR',{timeZone:model.market==='US'?'America/New_York':'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(bar.time*1000));
   summary.textContent='선택봉 · '+date+' ('+(model.market==='US'?'뉴욕':'서울')+')';
-  readout.textContent=['시가 '+bar.open,'고가 '+bar.high,'저가 '+bar.low,'종가 '+bar.close].map(text=>text+' '+model.currency).join(' · ')+' · 거래량 '+(bar.volume===null?'미확인':bar.volume+'주')+' · '+[20,60].map(period=>{const points=average(model.bars.slice(0,index+1),period);return 'MA'+period+' '+(points.length?points.at(-1).value+' '+model.currency:'표본 부족 ('+(index+1)+'/'+period+')');}).join(' · ');
+  readout.textContent=['시가 '+bar.open,'고가 '+bar.high,'저가 '+bar.low,'종가 '+bar.close].map(text=>text+' '+model.currency).join(' · ')+' · 거래량 '+(bar.volume===null?'미확인':bar.volume.toLocaleString('ko-KR')+'주')+' · '+[20,60].map(period=>{const points=average(model.bars.slice(0,index+1),period);return 'MA'+period+' '+(points.length?Math.round(points.at(-1).value*100)/100+' '+model.currency:'표본 부족 ('+(index+1)+'/'+period+')');}).join(' · ');
   cursor.value=String(index);cursor.setAttribute('aria-valuetext',summary.textContent+' · 종가 '+bar.close+' '+model.currency);
  }
  function note(){
-  status.textContent=(refreshFailed?'조회 실패 · 이전 자료 유지 · ':'')+(model.status==='STALE'||model.error_code==='DISPLAY_SNAPSHOT_OLDER'?'이전 저장 자료 · ':'')+'공개 지연·완료봉 · 60초 재확인·캐시된 완료봉일 수 있음 · 정규장 종료+10분 가정·휴장/조기폐장 독립 검증 전 · '+model.range+' / '+model.interval+' · MA20·MA60은 완료 봉 수 기준 · 거래량 '+(model.bars.some(b=>b.volume===null)?'일부 미확인':'주')+' · 관측 '+new Date(model.bars.at(-1).time*1000).toISOString()+' · 조회 '+model.retrieved_at;
+  // One short line under the chart; the full basis stays one tap away.
+  const last=new Date(model.bars.at(-1).time*1000),zone=model.market==='US'?'America/New_York':'Asia/Seoul';
+  status.textContent=(refreshFailed?'조회 실패 · 이전 자료 유지 · ':'')+(model.status==='STALE'||model.error_code==='DISPLAY_SNAPSHOT_OLDER'?'이전 저장 자료 · ':'')+'지연·캐시된 완료봉 · '+model.range+'/'+model.interval+' · 기준 '+new Intl.DateTimeFormat('ko-KR',{timeZone:zone,month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(last)+' ('+(model.market==='US'?'뉴욕':'서울')+')';
+  basis.replaceChildren(node('summary','','자료 기준 자세히'),node('p','','공개 지연·완료봉 · 60초 재확인·캐시된 완료봉일 수 있음 · 정규장 종료+10분 가정·휴장/조기폐장 독립 검증 전 · '+model.range+' / '+model.interval+' · MA20·MA60은 완료 봉 수 기준 · 거래량 '+(model.bars.some(b=>b.volume===null)?'일부 미확인':'주')+' · 관측 '+new Date(model.bars.at(-1).time*1000).toISOString()+' · 조회 '+model.retrieved_at));
   const link=node('a','','가격 출처');link.href=model.source_url;link.target='_blank';link.rel='noopener noreferrer';status.append(' ',link);
   cursor.max=String(model.bars.length-1);evidence.replaceChildren(summary,cursor,readout);
   const index=model.bars.findIndex(bar=>bar.time===selectedTime);selection(index<0?model.bars.length-1:index);
  }
+ function legend(){const box=node('div','technical-chart-legend');box.setAttribute('aria-hidden','true');for(const [label,color] of [['MA20','#8b5cf6'],['MA60','#009681']]){const item=node('span','',label);item.style?.setProperty?.('--line',color);box.append(item);}return box;}
  function canvas(){
   release();fallback.hidden=true;plot.dataset.engine='canvas';const el=node('canvas');el.tabIndex=0;el.setAttribute('role','img');el.setAttribute('aria-label','검증된 완료봉 캔들·MA20 보라·MA60 초록·거래량. 상세 OHLC는 차트 아래 설명에서 확인');plot.append(el);
   const width=Math.max(180,Math.min(1600,plot.clientWidth||container.clientWidth||320)),h=height(),dpr=Math.min(root.devicePixelRatio||1,2);el.width=Math.round(width*dpr);el.height=Math.round(h*dpr);el.style.width='100%';el.style.height=h+'px';const ctx=el.getContext('2d');if(!ctx){status.textContent='차트 그리기를 지원하지 않습니다. 가격 원문을 확인해 주세요.';return;}ctx.scale(dpr,dpr);
@@ -79,12 +83,12 @@ function mount(container,options={}){
   if(!alive||!model||!visible())return;release();note();
   const lib=root.LightweightCharts;
   if(!forceCanvas&&lib?.version?.()==='4.1.3'){
-   try{chart=lib.createChart(plot,{width:Math.max(180,plot.clientWidth||320),height:height(),layout:{background:{color:'#ffffff'},textColor:'#333d4b'},rightPriceScale:{scaleMargins:{top:.08,bottom:.28}},timeScale:{timeVisible:model.interval!=='1d'}});
+   try{chart=lib.createChart(plot,{width:Math.max(180,plot.clientWidth||320),height:height(),layout:{background:{color:'#ffffff'},textColor:'#333d4b'},rightPriceScale:{scaleMargins:{top:.14,bottom:.28}},timeScale:{timeVisible:model.interval!=='1d'}});
     const observed=model,onSelect=event=>{if(alive&&model===observed&&visible()&&typeof event.time==='number')selection(model.bars.findIndex(bar=>bar.time===event.time));};
     chart.subscribeCrosshairMove(onSelect);chart.subscribeClick(onSelect);
     chart.addCandlestickSeries({upColor:'#c93b49',downColor:'#1b64da',borderUpColor:'#c93b49',borderDownColor:'#1b64da',wickUpColor:'#c93b49',wickDownColor:'#1b64da'}).setData(model.bars.map(({time,open,high,low,close})=>({time,open,high,low,close})));
-    for(const [period,color] of [[20,'#8b5cf6'],[60,'#009681']])chart.addLineSeries({color,lineWidth:1,priceLineVisible:false,lastValueVisible:false,title:'MA'+period}).setData(average(model.bars,period));
-    const volume=chart.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'volume'});volume.priceScale().applyOptions({scaleMargins:{top:.78,bottom:0}});volume.setData(model.bars.filter(b=>b.volume!==null).map(b=>({time:b.time,value:b.volume,color:b.close>=b.open?'#c93b4960':'#1b64da60'})));chart.timeScale().fitContent();restoreRange();plot.dataset.engine='lightweight';fallback.hidden=true;const credit=node('a','technical-chart-credit','TradingView Lightweight Charts™');credit.href='https://www.tradingview.com/';credit.target='_blank';credit.rel='noopener noreferrer';plot.append(credit);return;
+    for(const [period,color] of [[20,'#8b5cf6'],[60,'#009681']])chart.addLineSeries({color,lineWidth:1,priceLineVisible:false,lastValueVisible:false,title:''}).setData(average(model.bars,period));
+    const volume=chart.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'volume'});volume.priceScale().applyOptions({scaleMargins:{top:.78,bottom:0}});volume.setData(model.bars.filter(b=>b.volume!==null).map(b=>({time:b.time,value:b.volume,color:b.close>=b.open?'#c93b4960':'#1b64da60'})));chart.timeScale().fitContent();restoreRange();plot.dataset.engine='lightweight';fallback.hidden=true;plot.append(legend());const credit=node('a','technical-chart-credit','TradingView Lightweight Charts™');credit.href='https://www.tradingview.com/';credit.target='_blank';credit.rel='noopener noreferrer';plot.append(credit);return;
    }catch(_){release();}
   }
   if(!forceCanvas&&model.status==='AVAILABLE'&&!model.error_code&&document.querySelector('meta[name="zero-lightweight-chart"]')?.content==='./lwc'){
