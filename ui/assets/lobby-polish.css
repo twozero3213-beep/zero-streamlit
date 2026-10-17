@@ -47,7 +47,7 @@
 /* time of day and weather */
 .lobby-stage[data-daypart='morning'] { filter: sepia(.12) brightness(1.02); }
 .lobby-stage[data-daypart='evening'] { filter: sepia(.28) saturate(1.1) brightness(.96); }
-.lobby-stage[data-daypart='night'] { filter: brightness(.78) saturate(.9) hue-rotate(-8deg); }
+.lobby-stage[data-daypart='night'] { filter: brightness(.9) saturate(.95) hue-rotate(-6deg); }
 .lobby-stage[data-daypart='morning'] .lobby-window { background: #ffeab8; }
 .lobby-stage[data-daypart='evening'] .lobby-window { background: #ffb98a; }
 .lobby-stage[data-daypart='night'] .lobby-window { background: #1f2a4a; color: #dfe6ff; }

@@ -2,6 +2,9 @@
 const $ = (selector) => document.querySelector(selector);
 const state = {data: null, market: 'ALL', currency: 'KRW', chart: 'bars', search: '', descending: true, sortMetric:'value',selected: null, fingerprint: null, benchmarkFingerprint: null, reference: null, demo: false, savedData: null, includeCash: false};
 const hostedView = document.documentElement?.dataset?.zeroHosted === 'true';
+// Streamlit Community Cloud runs this UI in a full-screen iframe and overlays its own badges on the parent page's
+// bottom-right corner; the framed flag lets CSS keep the tab bar clear of that area.
+try { if (window.self !== window.top && document.documentElement) document.documentElement.dataset.zeroFramed = 'true'; } catch { if (document.documentElement) document.documentElement.dataset.zeroFramed = 'true'; }
 const colors = {US: '#dce9fb', KR: '#f9e4df', RESERVE: '#d8efeb'};
 const number = (value) => value === null || value === undefined || value === '' ? NaN : Number(value);
 // Locale setup is expensive; reuse it across holding cells and cached status polls.

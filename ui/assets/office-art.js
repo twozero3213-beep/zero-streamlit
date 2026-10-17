@@ -3,7 +3,7 @@
 'use strict';
 const colors=Object.freeze({ink:'#394451',blue:'#517ca4',sage:'#719c87',sand:'#c8ab7c',rose:'#bc8495'});
 const themes=Object.freeze(Object.fromEntries([
- ['wallstreet','월스트리트','#e9edf0','#b99775','#304657',0],['boutique','부티크','#e4cdb3','#a37d58','#65766e',1],['startup','스타트업','#e7eaf3','#b9bfdb','#536180',3],['nordic','노르딕','#f1eee5','#d1ba94','#a2afb1',2],['japandi','재팬디','#e2dac8','#ab9876','#807e68',4],['library','라이브러리','#bca48d','#86634e','#4f5a56',5],['botanical','보태니컬','#d9e4d7','#b69f73','#50735c',2],['industrial','인더스트리얼','#d2d5d5','#a98c75','#505b64',6],['coastal','코스탈','#e3eeec','#c9b695','#7ca4b3',7],['night','나이트 라운지','#373d56','#817393','#252b42',8]
+ ['wallstreet','월스트리트','#e7dfd2','#b99775','#304657',0],['boutique','부티크','#e4cdb3','#a37d58','#65766e',1],['startup','스타트업','#e7eaf3','#b9bfdb','#536180',3],['nordic','노르딕','#f1eee5','#d1ba94','#a2afb1',2],['japandi','재팬디','#e2dac8','#ab9876','#807e68',4],['library','라이브러리','#bca48d','#86634e','#4f5a56',5],['botanical','보태니컬','#d9e4d7','#b69f73','#50735c',2],['industrial','인더스트리얼','#d2d5d5','#a98c75','#505b64',6],['coastal','코스탈','#e3eeec','#c9b695','#7ca4b3',7],['night','나이트 라운지','#373d56','#817393','#252b42',8]
 ].map(([key,label,floor,wood,wall,tile])=>[key,Object.freeze({label,floor,wood,wall,tile})])));
 const sources={desk:['desk_front'],standingdesk:['small_table_front'],meeting:['table_front','coffee_table'],sofa:['sofa_front','cushioned_bench','sofa_back','wooden_bench','sofa_front'],chair:['cushioned_chair_front','wooden_chair_front','cushioned_chair_side','wooden_chair_side','cushioned_chair_back'],bookshelf:['bookshelf','double_bookshelf'],plant:['plant','plant_2','cactus','large_plant','hanging_plant'],whiteboard:['whiteboard'],guestbook:['small_table_front']};
 const images=new Map(),assetBase=root.document?new URL('sprites/office/',root.document.currentScript?.src||new URL('assets/office-art.js',root.document.baseURI)).href:'';let revision=0;
@@ -38,7 +38,21 @@ function draw(ctx,object,w,h,theme='wallstreet'){
  }
  ctx.restore();return true;
 }
-function floor(ctx,theme,w=160,h=100){const t=themes[theme]||themes.wallstreet;rect(ctx,0,0,w,h,t.floor);const tile=image('floor_'+t.tile);if(tile?.complete&&tile.naturalWidth){ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha=.14;for(let y=0;y<h;y+=10)for(let x=0;x<w;x+=10)ctx.drawImage(tile,x,y,10,10);ctx.restore();}rect(ctx,0,0,w,3,t.wall);rect(ctx,0,3,w,1,'#ffffff80');rect(ctx,0,h-1,w,1,'#25354130');}
+// Modern room: wall band with daylight windows, staggered planks, soft window light and edge falloff.
+// Gradients are optional so canvas stubs and old engines still get a flat, complete floor.
+function mix(a,b,t){const p=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16)),A=p(a),B=p(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('');}
+function shade(ctx,make,x,y,w,h,stops){if(!ctx.createLinearGradient)return;const g=make();for(const [at,color] of stops)g.addColorStop(at,color);ctx.fillStyle=g;ctx.fillRect(x,y,w,h);}
+function floor(ctx,theme,w=160,h=100){
+ const t=themes[theme]||themes.wallstreet,dark=parseInt(t.floor.slice(1,3),16)<128,plank=[t.floor,mix(t.floor,t.wood,.07),mix(t.floor,'#ffffff',.1),mix(t.floor,t.wood,.035)],seam=mix(t.floor,t.wall,.2),wallH=8;
+ rect(ctx,0,0,w,h,t.floor);
+ for(let y=wallH,row=0;y<h;y+=3.2,row++){const offset=(row*7)%22;for(let x=-offset,i=0;x<w;x+=22,i++){rect(ctx,x,y,21.85,3.05,plank[(row*3+i)%4]);rect(ctx,x+21.85,y,.15,3.2,seam+'55');}rect(ctx,0,y+3.05,w,.15,seam+'55');}
+ rect(ctx,0,0,w,wallH,t.wall);shade(ctx,()=>ctx.createLinearGradient(0,0,0,wallH),0,0,w,wallH,[[0,'#ffffff1f'],[1,'#00000026']]);
+ for(let x=14;x<w-20;x+=34){rect(ctx,x,1.2,22,5,mix(t.wall,'#000000',.25));shade(ctx,()=>ctx.createLinearGradient(0,1.4,0,6),x+.5,1.6,21,4.2,dark?[[0,'#26335a'],[1,'#4a4f7c']]:[[0,'#cfe6f5'],[1,'#f3efe4']]);if(!ctx.createLinearGradient)rect(ctx,x+.5,1.6,21,4.2,dark?'#2f3a63':'#dcebf3');for(const [dx,bh] of [[2,2.2],[5,3.1],[9,1.8],[12,2.8],[16,2.4],[19,1.6]])rect(ctx,x+dx,5.8-bh,2.4,bh,dark?'#f5d27a55':'#9fb3c444');rect(ctx,x+10.8,1.6,.4,4.2,'#ffffffb0');}
+ rect(ctx,0,wallH-1,w,1,mix(t.wood,'#000000',.2));rect(ctx,0,wallH,w,.4,'#ffffff55');
+ if(ctx.createRadialGradient)for(let x=25;x<w-20;x+=34){const g=ctx.createRadialGradient(x,wallH,1,x,wallH+14,30);g.addColorStop(0,dark?'#ffd9a022':'#ffffff3a');g.addColorStop(1,'#ffffff00');ctx.fillStyle=g;ctx.fillRect(x-32,wallH,64,44);}
+ shade(ctx,()=>ctx.createLinearGradient(0,wallH,0,h),0,wallH,w,h-wallH,[[0,'#00000000'],[.8,'#00000000'],[1,'#0000001c']]);
+ rect(ctx,0,h-1,w,1,'#25354130');
+}
 function preview(kind,variant=0,color='ink',rotation=0){
  const canvas=root.document.createElement('canvas');canvas.width=192;canvas.height=144;canvas.className='office-art-preview';canvas.setAttribute('aria-hidden','true');
  const render=()=>{const ctx=canvas.getContext('2d');if(!ctx)return;ctx.clearRect(0,0,192,144);ctx.save();ctx.translate(96,72);ctx.rotate(([0,90,180,270].includes(rotation)?rotation:0)*Math.PI/180);ctx.translate(-56,-56);draw(ctx,{kind,variant,color},112,112);ctx.restore();};render();for(const img of images.values())if(!img.complete)img.addEventListener('load',render,{once:true});return canvas;

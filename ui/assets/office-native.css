@@ -12,3 +12,6 @@ html #lobby-view .lobby-stage.office-native-ready{width:min(100%,calc(var(--zero
 .office-object-hit[data-kind="portal"]:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}
 
 .office-object-hit[data-kind="portal"]::after{content:"🌀 실시간 광장 →";position:absolute;right:2px;bottom:calc(100% + 2px);padding:2px 7px;border:1px solid #67e8f988;border-radius:999px;background:#1e1b4bd9;color:#e0f2fe;box-shadow:0 0 10px #38bdf84d;text-shadow:0 1px 2px #090d16;font-size:10px;font-weight:600;line-height:1.35;white-space:nowrap;pointer-events:none}
+
+/* The canvas floor draws its own planks and light; the legacy DOM grid overlay would read as an old tile game. */
+html #lobby-view .lobby-stage.office-native-ready::after{background-image:none}

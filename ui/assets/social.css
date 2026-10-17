@@ -165,6 +165,8 @@ html #community-list .community-post { border:0; border-radius:0; margin:0; padd
 .plaza-door::after { content: ''; position: absolute; right: 10%; bottom: 14%; width: 4px; height: 4px; border-radius: 50%; background: #38bdf8; box-shadow: 0 0 6px #38bdf8; }
 .plaza-door-lobby { left: 3%; }.plaza-door-community { right: 3%; }
 .plaza-door-analysis { left: 4%; top: auto; bottom: 5%; width: 18%; height: 23%; background: rgba(15, 23, 42, 0.75); border-color: rgba(56, 189, 248, 0.3); }
+/* Phones keep the bottom-left corner for the movement pad, so the market door moves up the left wall. */
+@media (max-width: 767px) { .plaza-door-analysis { left: 3%; top: 40%; bottom: auto; width: 15%; height: 20%; } }
 .plaza-door:hover { transform: translateY(-2px); border-color: #38bdf8; box-shadow: 0 6px 16px rgba(56, 189, 248, 0.3); }
 .plaza-door:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
 
@@ -238,5 +240,5 @@ html #community-list .community-post { border:0; border-radius:0; margin:0; padd
 .lounge-dialog .plaza-chat-toggle.secondary-button,.lounge-dialog .plaza-chat-toggle { min-height:48px; min-width:96px; padding:0 18px; font-size:15px; }
 
 /* Status line sits above the thumb controls as a readable pill; no light text-shadow on the dark plaza. */
-.lounge-dialog > .social-status { left:50%; right:auto; transform:translateX(-50%); width:max-content; max-width:calc(100% - 32px); bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 116px); padding:6px 12px; border-radius:14px; background:rgba(15, 23, 42, 0.72); color:#f1f5f9; text-shadow:none; font-size:12px; line-height:1.45; text-align:center; overflow-wrap:anywhere; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+.lounge-dialog > .social-status { left:50%; right:auto; transform:translateX(-50%); width:max-content; max-width:calc(100% - 32px); bottom:calc(var(--zero-footer, 52px) + env(safe-area-inset-bottom, 0px) + 92px); padding:6px 12px; border-radius:14px; background:rgba(15, 23, 42, 0.72); color:#f1f5f9; text-shadow:none; font-size:12px; line-height:1.45; text-align:center; overflow-wrap:anywhere; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
 .lounge-dialog > .social-status:empty { display:none; }
