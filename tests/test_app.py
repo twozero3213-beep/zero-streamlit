@@ -237,6 +237,30 @@ class BuildTests(unittest.TestCase):
                     build_ui.build(Path(tmp) / 'missing')
                 self.assertEqual(marker.read_text(encoding='utf-8'), 'keep')
 
+    def test_failed_build_preflight_preserves_existing_ui(self):
+        import tempfile
+        import build_ui
+        import subprocess
+        for scenario in ('invalid-api', 'missing-manifest', 'late-git-error'):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as tmp:
+                source, output = Path(tmp) / 'source', Path(tmp) / 'ui'
+                (source / 'assets').mkdir(parents=True)
+                (source / 'index.html').write_text('<html data-zero-hosted="true"></html>', encoding='utf8')
+                if scenario != 'missing-manifest':
+                    (source / 'assets/manifest.webmanifest').write_text('{}', encoding='utf8')
+                output.mkdir()
+                marker = output / 'keeper.txt'
+                marker.write_bytes(b'KEEP_CURRENT_UI')
+                def committed(args, **kwargs):
+                    if args[-1] == 'HEAD:zero/data/research_connections.json':
+                        raise subprocess.CalledProcessError(1, ['git'])
+                    return mock.Mock(stdout='{}')
+                with mock.patch.object(build_ui, 'OUT', output), mock.patch.object(build_ui, 'EXTRAS', Path(tmp) / 'extras'), mock.patch.dict('os.environ', {'ZERO_LOBBY_API': 'invalid' if scenario == 'invalid-api' else ''}), mock.patch.object(build_ui.subprocess, 'run', side_effect=committed):
+                    with self.assertRaises((SystemExit, OSError, subprocess.CalledProcessError)):
+                        build_ui.build(source, checkout=Path(tmp) / 'checkout' if scenario == 'late-git-error' else None)
+                self.assertTrue(marker.exists(), 'failed input validation must preserve existing UI')
+                self.assertEqual(marker.read_bytes(), b'KEEP_CURRENT_UI')
+
     def test_ui_is_the_hosted_original_with_relative_paths(self):
         html = (ROOT / 'ui' / 'index.html').read_text(encoding='utf-8')
         self.assertIn('data-zero-hosted="true"', html)

@@ -410,7 +410,7 @@ if(typeof window!=='undefined') {
       const dialog=el('dialog'),heading=el('h3','','Lightweight 차트'),frame=el('iframe');
       dialog.setAttribute('aria-label','Lightweight 차트');dialog.style.width='min(900px, 90vw)';dialog.style.height='340px';
       frame.title='완료된 공개 OHLCV Lightweight 차트';frame.height='240';frame.style.width='100%';frame.style.border='0';frame.setAttribute('sandbox','allow-scripts');frame.referrerPolicy='no-referrer';frame.src=src;
-      const close=button('닫기',()=>dialog.close()),retry=button('다시 불러오기',()=>{frame.src=src;});
+      const close=button('닫기',()=>dialog.close()),retry=button('다시 불러오기',()=>{frame.src=src;});close.className='icon-button icon-close';close.title='닫기';close.setAttribute('aria-label','차트 창 닫기');
       dialog.append(heading,frame,el('p','muted-note','불러오기 실패 시 다시 시도하거나 창을 닫고 기본 차트를 이용하세요. 완료 봉 · 배당 제외 · 주문 권한 없음.'),retry,close);
       dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();close.focus();
     }

@@ -268,7 +268,7 @@ class DiscoveryTests(unittest.TestCase):
         items = ''.join('<item><title>Headline %d uniqueword%d - Reuters</title><link>https://news.google.com/rss/articles/%d</link><source>Reuters</source><pubDate>Thu, 15 Oct 2026 00:00:00 GMT</pubDate></item>' % (i,i,i) for i in range(12))
         translate = mock.Mock(return_value=None)
         with mock.patch.object(headlines, 'similar', return_value=False):
-            value = headlines.collect(NOW, fetch=lambda url: ('<rss><channel>'+items+'</channel></rss>').encode(), translate=translate)
+            value = headlines.collect(NOW, fetch=lambda url: ('<rss><channel>'+items+'</channel></rss>').encode(), translate=translate, cached=lambda row: (False, None))
         self.assertEqual(translate.call_count, 2)
         self.assertEqual(value['items'], [])
 
@@ -456,7 +456,7 @@ class DiscoveryTests(unittest.TestCase):
     def test_collection_preserves_original_and_translates_only_retained_public_english(self):
         body = ('<rss><channel><item><title>BREAKING: Senate vote - Reuters</title><link>https://news.google.com/rss/articles/x</link><source>Reuters</source><pubDate>Thu, 15 Oct 2026 00:00:00 GMT</pubDate></item></channel></rss>').encode()
         translate = mock.Mock(return_value='속보: 상원 표결')
-        value = headlines.collect(NOW, fetch=lambda url: body, translate=translate)
+        value = headlines.collect(NOW, fetch=lambda url: body, translate=translate, cached=lambda row: (False, None))
         self.assertEqual(len(value['items']), 1)
         row = value['items'][0]
         self.assertEqual((row['title'],row['title_ko'],row['kind']), ('BREAKING: Senate vote','속보: 상원 표결','BREAKING'))

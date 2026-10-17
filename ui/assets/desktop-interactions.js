@@ -31,7 +31,7 @@ function openGuide(){
  dismiss();returnFocus=doc.activeElement;guide=element('dialog');guide.className='desktop-shortcuts-dialog';guide.setAttribute('aria-labelledby','desktop-shortcuts-title');
  const title=element('h2','키보드 단축키');title.id='desktop-shortcuts-title';guide.append(title);
  const list=element('dl');for(const [key,label] of [['?','단축키 안내'],['Alt + 1','실전 투자 · 내 자산'],['Alt + 2','내 사무실'],['Alt + 3','실시간 광장'],['Alt + 4','커뮤니티'],['/','기존 전체 종목 검색'],['Escape','열린 안내·대화상자 닫기'],['방향키','사무실 이동 · 해당 영역에 포커스가 있을 때']])list.append(element('dt',key),element('dd',label));guide.append(list,element('p','입력 중이거나 다른 대화상자가 열려 있으면 화면 이동 단축키는 동작하지 않습니다. 브라우저·운영체제 단축키가 우선할 수 있습니다.'));
- const close=element('button','닫기');close.type='button';close.addEventListener('click',closeGuide);guide.append(close);
+ const close=element('button','닫기');close.type='button';close.title='닫기';close.setAttribute('aria-label','창 닫기');close.className='icon-button icon-close';close.addEventListener('click',closeGuide);guide.append(close);
  const owned=guide;owned.addEventListener('close',()=>{owned.remove();if(guide===owned)guide=null;if(returnFocus?.isConnected)returnFocus.focus();});doc.body.append(owned);owned.showModal();close.focus();
 }
 function keydown(event){

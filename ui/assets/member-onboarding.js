@@ -7,7 +7,7 @@ const message=e=>errors[e?.code]||'지금은 인증을 완료하지 못했습니
 function mount(target,options){
  mounted.get(target)?.destroy();const doc=root.document,client=options.client||root.ZEROMemberAuth;
  const box=doc.createElement('div');box.className='member-onboarding';target.replaceChildren(box);
- let alive=true,epoch=0,timer=null,config=null,contact=null,accessToken=null,method=null;
+ let alive=true,epoch=0,timer=null,config=null,contact=null,accessToken=null,method=null,remember=true;
  const node=(tag,cls,text)=>{const e=doc.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
  const active=turn=>alive&&epoch===turn&&options.active()!==false;
  const stop=()=>{root.clearInterval(timer);timer=null;};
@@ -37,9 +37,11 @@ function mount(target,options){
   const turn=screen(name+'로 계속',enabled?'인증번호로 간편하게 가입하고 로그인하세요.':'인증 서비스 연결을 준비하고 있습니다.');
   if(!enabled||!client){box.append(node('p','member-privacy',name+' 인증 연결 후 사용할 수 있습니다. 방문자 체험은 지금 이용할 수 있습니다.'),back());return;}
   const f=field(next==='email'?'이메일 주소':'휴대폰 번호',next==='email'?'email':'tel',{autocomplete:next==='email'?'email':'tel',placeholder:next==='email'?'name@example.com':'010-1234-5678',maxLength:254}),form=node('form','member-form'),go=button('인증번호 받기','primary-button'),note=status();go.type='submit';let busy=false;
+  const keep=field('이 기기에서 로그인 유지','checkbox',{checked:remember});keep.wrap.className='member-remember';
   form.addEventListener('submit',async event=>{event.preventDefault();if(busy)return;let normalized;try{normalized=client.normalizeContact(next,f.input.value);}catch(error){note.textContent=message(error);return;}busy=true;go.disabled=true;note.textContent='인증번호를 요청하고 있습니다.';
-   try{await client.sendCode(config,next,normalized);if(!active(turn))return;contact=normalized;f.input.value='';code();}catch(error){if(active(turn))note.textContent=message(error);}finally{busy=false;if(active(turn))go.disabled=false;}});
-  form.append(f.wrap,node('p','member-privacy','연락처는 인증 제공업체에서 처리하며 ZERO 전광판에는 공개되지 않습니다.'),note,go);box.append(form,back());f.input.focus?.();
+   remember=keep.input.checked;keep.input.disabled=true;
+   try{await client.sendCode(config,next,normalized);if(!active(turn))return;contact=normalized;f.input.value='';code();}catch(error){if(active(turn))note.textContent=message(error);}finally{busy=false;if(active(turn)){go.disabled=false;keep.input.disabled=false;}}});
+  form.append(f.wrap,keep.wrap,node('p','member-privacy','로그인 유지는 최대 30일이며 이후 다시 인증합니다. 공용 기기에서는 해제하세요. 연락처는 인증 제공업체에서 처리하며 ZERO 전광판에는 공개되지 않습니다.'),note,go);box.append(form,back());f.input.focus?.();
  }
  function code(){
   const turn=screen('인증번호를 입력해 주세요',method==='email'?'입력한 이메일로 인증번호를 보냈습니다.':'입력한 휴대폰으로 인증번호를 보냈습니다.'),form=node('form','member-form'),f=field('인증번호','text',{inputMode:'numeric',autocomplete:'one-time-code',maxLength:10,placeholder:'인증번호'}),go=button('인증하고 계속','primary-button'),resend=button('인증번호 다시 받기'),note=status();go.type='submit';let busy=false,until=Date.now()+60000;
@@ -50,7 +52,7 @@ function mount(target,options){
   form.append(f.wrap,note,go);box.append(form,resend,back());f.input.focus?.();
  }
  async function complete(nick,turn){
-  try{const result=await options.complete(method,accessToken,nick);if(!active(turn))return;accessToken=null;contact=null;stop();await options.onMember(result);}
+  try{const result=await options.complete(method,accessToken,nick,remember);if(!active(turn))return;accessToken=null;contact=null;stop();await options.onMember(result,remember);}
   catch(error){if(!active(turn))return;if(['NICK_REQUIRED','AUTH_NICK_REQUIRED'].includes(error?.code)){nickname();return;}throw error;}
  }
  function nickname(){

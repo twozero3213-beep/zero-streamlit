@@ -1,0 +1,296 @@
+{
+  "upstream": "https://github.com/pixel-agents-hq/pixel-agents",
+  "fork": "https://github.com/twozero3213-beep/pixel-agents",
+  "revision": "d1e007a9fdf3003c252d2973abe1999ae59aec33",
+  "license": "MIT",
+  "assets": [
+    {
+      "file": "bin.png",
+      "source": "webview-ui/public/assets/furniture/BIN/BIN.png",
+      "bytes": 252,
+      "sha256": "738129d621fabc15b100f7129b854d1fe36201dbe92c0800bb1e80cb06793284"
+    },
+    {
+      "file": "bookshelf.png",
+      "source": "webview-ui/public/assets/furniture/BOOKSHELF/BOOKSHELF.png",
+      "bytes": 388,
+      "sha256": "bd05119962080fd4cff6697fec0c3730c5a9c3def01b31ca0fa929971144322e"
+    },
+    {
+      "file": "cactus.png",
+      "source": "webview-ui/public/assets/furniture/CACTUS/CACTUS.png",
+      "bytes": 558,
+      "sha256": "830dbba8ac4912858e22eed1e89d4290202113363a934389e54fffb794ad893b"
+    },
+    {
+      "file": "clock.png",
+      "source": "webview-ui/public/assets/furniture/CLOCK/CLOCK.png",
+      "bytes": 304,
+      "sha256": "f1ff567d71508dfdba37f2ff94ffde734940b56b3999e29b213ab6774e67b20f"
+    },
+    {
+      "file": "coffee.png",
+      "source": "webview-ui/public/assets/furniture/COFFEE/COFFEE.png",
+      "bytes": 223,
+      "sha256": "6bed27c8de5a4ce98b3646d233803b3192cc5980c8f4caf779eb1344a87f8e0d"
+    },
+    {
+      "file": "coffee_table.png",
+      "source": "webview-ui/public/assets/furniture/COFFEE_TABLE/COFFEE_TABLE.png",
+      "bytes": 274,
+      "sha256": "0b0fd17c95b29e3b86da00031452166a1400a534c8adff1dc98bb4e5ce72aad3"
+    },
+    {
+      "file": "cushioned_bench.png",
+      "source": "webview-ui/public/assets/furniture/CUSHIONED_BENCH/CUSHIONED_BENCH.png",
+      "bytes": 250,
+      "sha256": "b66ba12ce7921b3ab34515c319bc72775c49351d75ad146c6b29adf46459eaa0"
+    },
+    {
+      "file": "cushioned_chair_back.png",
+      "source": "webview-ui/public/assets/furniture/CUSHIONED_CHAIR/CUSHIONED_CHAIR_BACK.png",
+      "bytes": 205,
+      "sha256": "7eba17a7c86115caba0246599988e3169dc766af7814e51c7afa566e0fe40846"
+    },
+    {
+      "file": "cushioned_chair_front.png",
+      "source": "webview-ui/public/assets/furniture/CUSHIONED_CHAIR/CUSHIONED_CHAIR_FRONT.png",
+      "bytes": 247,
+      "sha256": "30a021a8356125a743be8352da9756ec6d0832e232aca1ae2dd76a5e038a2208"
+    },
+    {
+      "file": "cushioned_chair_side.png",
+      "source": "webview-ui/public/assets/furniture/CUSHIONED_CHAIR/CUSHIONED_CHAIR_SIDE.png",
+      "bytes": 255,
+      "sha256": "ac2d90e87ce198271f50fd3e9161c4c9b8ea4befd3befdb0c5c9720256febb70"
+    },
+    {
+      "file": "desk_front.png",
+      "source": "webview-ui/public/assets/furniture/DESK/DESK_FRONT.png",
+      "bytes": 310,
+      "sha256": "4df9ed2b04efb98dbd901d400d65fa5a1729e4508787ad70eb93e747017220ca"
+    },
+    {
+      "file": "desk_side.png",
+      "source": "webview-ui/public/assets/furniture/DESK/DESK_SIDE.png",
+      "bytes": 278,
+      "sha256": "b5421b3b3fc30b4a295c67c67d4a138877a1d179b532ffe25973200277107ff9"
+    },
+    {
+      "file": "double_bookshelf.png",
+      "source": "webview-ui/public/assets/furniture/DOUBLE_BOOKSHELF/DOUBLE_BOOKSHELF.png",
+      "bytes": 627,
+      "sha256": "b27bd0cc4c73dab38eebbf6b8ed68257acb8264d23a8e87c2cf5026138842cda"
+    },
+    {
+      "file": "hanging_plant.png",
+      "source": "webview-ui/public/assets/furniture/HANGING_PLANT/HANGING_PLANT.png",
+      "bytes": 693,
+      "sha256": "a6e9c025d0a84e960d3c84d55f18d01585eb8e079cd84f9970de08d636877de2"
+    },
+    {
+      "file": "large_painting.png",
+      "source": "webview-ui/public/assets/furniture/LARGE_PAINTING/LARGE_PAINTING.png",
+      "bytes": 1056,
+      "sha256": "f6355392631f0004ccd49c3d9ddf4df8ef60c59ec8b23d0b3fb1d0dce6c01c2b"
+    },
+    {
+      "file": "large_plant.png",
+      "source": "webview-ui/public/assets/furniture/LARGE_PLANT/LARGE_PLANT.png",
+      "bytes": 1285,
+      "sha256": "196a4f1748160cdbf69400e370b1d7d1254b49902b8c091bcabd7676934f3149"
+    },
+    {
+      "file": "pc_back.png",
+      "source": "webview-ui/public/assets/furniture/PC/PC_BACK.png",
+      "bytes": 349,
+      "sha256": "48f3d9aa7f571cc0ce1e5d702977987432bca292995ff67e36d47361d4b6f9a0"
+    },
+    {
+      "file": "pc_front_off.png",
+      "source": "webview-ui/public/assets/furniture/PC/PC_FRONT_OFF.png",
+      "bytes": 427,
+      "sha256": "a5d6f40f500f14f440cf981950630f5433521faa7578ae0f83684b9ededdc2bf"
+    },
+    {
+      "file": "pc_front_on_1.png",
+      "source": "webview-ui/public/assets/furniture/PC/PC_FRONT_ON_1.png",
+      "bytes": 479,
+      "sha256": "d00d95a9c4718f770dee1a93240be8b7dc6d2e8abab4071179dd79c2d73a9337"
+    },
+    {
+      "file": "pc_front_on_2.png",
+      "source": "webview-ui/public/assets/furniture/PC/PC_FRONT_ON_2.png",
+      "bytes": 476,
+      "sha256": "dc083d31848be3661b4ea571ee8d8d7e5dcd34cdbcef48d4dd6c444166eb7a69"
+    },
+    {
+      "file": "pc_front_on_3.png",
+      "source": "webview-ui/public/assets/furniture/PC/PC_FRONT_ON_3.png",
+      "bytes": 485,
+      "sha256": "773c5e0cfee45ad12669c082ff26c0041f12a6369e4622db3eab35685aeabc0f"
+    },
+    {
+      "file": "pc_side.png",
+      "source": "webview-ui/public/assets/furniture/PC/PC_SIDE.png",
+      "bytes": 451,
+      "sha256": "c327f64a39cc84d3a2c4e97b7165e5a07e355003d0f1a9bca27fc8f8deef9603"
+    },
+    {
+      "file": "plant.png",
+      "source": "webview-ui/public/assets/furniture/PLANT/PLANT.png",
+      "bytes": 703,
+      "sha256": "b9f845e7930e685161a21ac0f1743c2906cb7cbb0bd6b79ef1e4fb5aafff98c6"
+    },
+    {
+      "file": "plant_2.png",
+      "source": "webview-ui/public/assets/furniture/PLANT_2/PLANT_2.png",
+      "bytes": 543,
+      "sha256": "b0d2e82fefd1f7ebada9656260571aa3e810db55975495e72a62d9ce8a878b42"
+    },
+    {
+      "file": "pot.png",
+      "source": "webview-ui/public/assets/furniture/POT/POT.png",
+      "bytes": 288,
+      "sha256": "cc2889e6fe22350bbeba94d55157f5bb2a38fe40f3a85ef96429f1af88506585"
+    },
+    {
+      "file": "small_painting.png",
+      "source": "webview-ui/public/assets/furniture/SMALL_PAINTING/SMALL_PAINTING.png",
+      "bytes": 473,
+      "sha256": "15f370af43455d303b5ccb21429e298f7a603c3b6db10d6ed9270aa62caa71a3"
+    },
+    {
+      "file": "small_painting_2.png",
+      "source": "webview-ui/public/assets/furniture/SMALL_PAINTING_2/SMALL_PAINTING_2.png",
+      "bytes": 473,
+      "sha256": "148d161726fb08dc7887e75e91f0332bf69d1aadfc649dce6fbc4b2678f5d0f0"
+    },
+    {
+      "file": "small_table_front.png",
+      "source": "webview-ui/public/assets/furniture/SMALL_TABLE/SMALL_TABLE_FRONT.png",
+      "bytes": 240,
+      "sha256": "dc224670ea2c5752830143337fd8b3a080f93980287706d4efd614aaabd4882f"
+    },
+    {
+      "file": "small_table_side.png",
+      "source": "webview-ui/public/assets/furniture/SMALL_TABLE/SMALL_TABLE_SIDE.png",
+      "bytes": 225,
+      "sha256": "5568526f6393ad643606b0095eceee5b7674b5588d7105144adc3fb99f0a3f42"
+    },
+    {
+      "file": "sofa_back.png",
+      "source": "webview-ui/public/assets/furniture/SOFA/SOFA_BACK.png",
+      "bytes": 192,
+      "sha256": "62a40318fce1d3166f1ea3811ca2081b39ad3161974c6bcd2edb0bdaf9b06d08"
+    },
+    {
+      "file": "sofa_front.png",
+      "source": "webview-ui/public/assets/furniture/SOFA/SOFA_FRONT.png",
+      "bytes": 210,
+      "sha256": "7e4c7e98e46d32daa2776651f6f413f68a84252b357b01d722fce6bb2a0ca52f"
+    },
+    {
+      "file": "sofa_side.png",
+      "source": "webview-ui/public/assets/furniture/SOFA/SOFA_SIDE.png",
+      "bytes": 255,
+      "sha256": "b583fa6261dbbc4c4020c0a887023d3f707a70b7e5524535d541b453b22f9e94"
+    },
+    {
+      "file": "table_front.png",
+      "source": "webview-ui/public/assets/furniture/TABLE_FRONT/TABLE_FRONT.png",
+      "bytes": 400,
+      "sha256": "fef9638fd372f081f4c80cc52f9bcb4be8db9db194fa46f88968ec08e5463b4a"
+    },
+    {
+      "file": "whiteboard.png",
+      "source": "webview-ui/public/assets/furniture/WHITEBOARD/WHITEBOARD.png",
+      "bytes": 336,
+      "sha256": "42fb63a8d8041f602c6cd0e7491be3ea95c3f4699b6a5ba6e47851ba8a473059"
+    },
+    {
+      "file": "wooden_bench.png",
+      "source": "webview-ui/public/assets/furniture/WOODEN_BENCH/WOODEN_BENCH.png",
+      "bytes": 208,
+      "sha256": "b2a889a7e67dd1bd59ce1035daffeda8c0b34e696f07658ee0bc8ae514e1af49"
+    },
+    {
+      "file": "wooden_chair_back.png",
+      "source": "webview-ui/public/assets/furniture/WOODEN_CHAIR/WOODEN_CHAIR_BACK.png",
+      "bytes": 290,
+      "sha256": "244fd28f4650e469d836f4287613e834805d3a00b7e14f68ae8415dd30411d5c"
+    },
+    {
+      "file": "wooden_chair_front.png",
+      "source": "webview-ui/public/assets/furniture/WOODEN_CHAIR/WOODEN_CHAIR_FRONT.png",
+      "bytes": 295,
+      "sha256": "fb4c4bf7def68c98e4eedffe1d9ee0cbeaa054fc5bc4aa6785f37cc83b1cd44d"
+    },
+    {
+      "file": "wooden_chair_side.png",
+      "source": "webview-ui/public/assets/furniture/WOODEN_CHAIR/WOODEN_CHAIR_SIDE.png",
+      "bytes": 261,
+      "sha256": "b57e3fd470a60e9f9800e9cdfe629b2a187cc0f936ed81314522a17fc7bb2198"
+    },
+    {
+      "file": "floor_0.png",
+      "source": "webview-ui/public/assets/floors/floor_0.png",
+      "bytes": 1719,
+      "sha256": "7ac83e6dafab1d73c2ee346880929718920123a7057b0cd9ee34dec6543eacc2"
+    },
+    {
+      "file": "floor_1.png",
+      "source": "webview-ui/public/assets/floors/floor_1.png",
+      "bytes": 3590,
+      "sha256": "6199f7135d3f5e233e0f33a925a20e348fcc17e396347799ac7573241c1416b8"
+    },
+    {
+      "file": "floor_2.png",
+      "source": "webview-ui/public/assets/floors/floor_2.png",
+      "bytes": 3590,
+      "sha256": "ac112a1f1b2bc0068649e7cfd8be47f9c794f343388fb2e4437f140eb2ed0dee"
+    },
+    {
+      "file": "floor_3.png",
+      "source": "webview-ui/public/assets/floors/floor_3.png",
+      "bytes": 3594,
+      "sha256": "8befc77b71238aa01d19cc73d5fe747831e0e85b1a986838c02df2f76cdf2690"
+    },
+    {
+      "file": "floor_4.png",
+      "source": "webview-ui/public/assets/floors/floor_4.png",
+      "bytes": 3594,
+      "sha256": "fdf610ffa4583c688ed72cc3b8c8b9496c4843b341c201ead62ba769804a9cbb"
+    },
+    {
+      "file": "floor_5.png",
+      "source": "webview-ui/public/assets/floors/floor_5.png",
+      "bytes": 3597,
+      "sha256": "b935a21804f12c18e0b0cc4db2ba873e4e39c2c6cf80c59cc9dfa01c00e497bb"
+    },
+    {
+      "file": "floor_6.png",
+      "source": "webview-ui/public/assets/floors/floor_6.png",
+      "bytes": 3597,
+      "sha256": "dc7dc8722e3a03b28385400b76079c168a5d93d50e7b06f6a40ebd1dd8f178b4"
+    },
+    {
+      "file": "floor_7.png",
+      "source": "webview-ui/public/assets/floors/floor_7.png",
+      "bytes": 3596,
+      "sha256": "aa44b7de3ced5e0bb2ef3fbd8bd27e9993a83bf8b901c37da2a97c162d7e6dad"
+    },
+    {
+      "file": "floor_8.png",
+      "source": "webview-ui/public/assets/floors/floor_8.png",
+      "bytes": 3592,
+      "sha256": "653e4534e66844d72ea78fef499c5052ed337f7c10ada4d818d21255ad27bdfe"
+    },
+    {
+      "file": "LICENSE.txt",
+      "source": "LICENSE",
+      "bytes": 1071,
+      "sha256": "20729e3cb9d06d64cdf78d43070ead3eae96e67a5b35b1aa35b5520906cb8ab5"
+    }
+  ]
+}

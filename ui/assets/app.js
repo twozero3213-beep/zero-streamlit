@@ -52,7 +52,7 @@ function notice(text) {
   more.addEventListener('click',()=>{
     let dialog=$('#notice-detail-dialog');
     if(!dialog){dialog=document.createElement('dialog');dialog.id='notice-detail-dialog';dialog.className='notice-detail-dialog';dialog.setAttribute('aria-label','안내 전체 내용');document.body.append(dialog);}
-    const full=document.createElement('p'),close=document.createElement('button');full.textContent=value;close.type='button';close.className='secondary-button';close.textContent='닫기';close.addEventListener('click',()=>{dialog.close();more.focus?.({preventScroll:true});});dialog.replaceChildren(full,close);dialog.showModal();
+    const full=document.createElement('p'),close=document.createElement('button');full.textContent=value;close.type='button';close.title='닫기';close.setAttribute('aria-label','창 닫기');close.className='icon-button icon-close';close.textContent='닫기';close.addEventListener('click',()=>{dialog.close();more.focus?.({preventScroll:true});});dialog.replaceChildren(full,close);dialog.showModal();
   });host.append(more);
 }
 function render(data) {
@@ -76,7 +76,7 @@ function render(data) {
   // The risk panel may use only the reference this screen itself validated.
   state.reference = referenceAvailable ? scope : null;
   const empty = !referenceAvailable && !context.collected_at;
-  $('#portfolio-view').classList.toggle('account-empty', empty);
+  ($('#zero-reference-portfolio')||$('#portfolio-view')).classList.toggle('account-empty', empty);
   $('#portfolio-empty').hidden = !empty; $('#demo-exit').hidden = !state.demo;
   $('#empty-query').disabled = false;
   if (empty) notice('');
@@ -519,6 +519,7 @@ async function loadPortfolio() {
   render(hostedView && state.live ? livePortfolio(data, state.live) : data);
 }
 async function refresh() {
+  if(window.ZERO?.currentView?.()==='portfolio')return window.ZEROCompany?.openPortfolio?.();
   if(state.demo){notice('시연을 종료한 뒤 계좌 또는 시세를 조회해 주세요.');return;}
   const button = $('#refresh'); button.disabled = true; button.querySelector('span').textContent = hostedView ? '시세 확인 중' : '계좌 조회 중';
   try {
@@ -922,8 +923,8 @@ const views = {
   community: ['커뮤니티', '궁금한 투자 이야기, 편하게 나눠요.'],
   analysis: ['시장 브리핑', '공개 지수·선물·발표 일정 · 1시간 캐시와 출처를 확인하세요.'],
   audit: ['회계 감사', '예수금·미결제 현금·비용·실현 손익의 원장 대조 결과를 확인하세요.'],
-  portfolio: ['내 자산', '1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.'],
-  comparison: ['ZERO · TQQQ · S&P 500 비교', '첫 매수 기록과 각 종료일·환율 기준을 확인하세요. 기간이 다르면 같은 기간 성과로 비교하지 않습니다.'],
+  portfolio: ['내 자산', '나만의 모의현금 1억원으로 주식을 매수·매도해 보세요.'],
+  comparison: ['ZERO 참고 운용 · 수익률 비교', '첫 매수 기록과 각 종료일·환율 기준을 확인하세요. 기간이 다르면 같은 기간 성과로 비교하지 않습니다.'],
   research: ['주식 탐색', '미국 100 · 코스피 50 · 코스닥 50 기업을 찾아보세요.'],
   workbench: ['종목과 차트', '시세와 차트, 기업 정보를 한 화면에서 확인하세요.'],
   macro: ['경제 지표', '공식 발표값과 과거 흐름을 함께 읽어 보세요.'],
@@ -961,9 +962,9 @@ function navigate(view, updateAddress = true) {
   routeStarted=true;
   document.documentElement.dataset.zeroView = view;
   const domain=domainFor(view);document.documentElement.dataset.zeroDomain=domain;
-  document.dispatchEvent?.(new CustomEvent('zero-view-changed', {detail:{view}}));
   if ($('#mobile-view')) $('#mobile-view').value = view;
   $('#refresh').hidden = !['portfolio', 'comparison'].includes(view);
+  const refreshLabel=$('#refresh').querySelector?.('span');if(refreshLabel)refreshLabel.textContent=view==='portfolio'?'내 자산 새로고침':hostedView?'시세 새로고침':'계좌 새로고침';
   document.querySelectorAll('.view').forEach((section) => { section.hidden = section.id !== view + '-view'; });
   document.querySelectorAll('[data-view]').forEach((button) => {
     const active = button.dataset.view === view;
@@ -981,12 +982,14 @@ function navigate(view, updateAddress = true) {
   $('#page-title').tabIndex = -1;
   $('#page-title').focus?.({preventScroll: true});
   document.querySelector('.mobile-tab.menu-open')?.classList.toggle('active', !Object.hasOwn(domainRoutes,domain));
+  document.dispatchEvent?.(new CustomEvent('zero-view-changed', {detail:{view}}));
   if (['study', 'macro', 'news', 'reports'].includes(view)) window.ZERODesk?.open(view);
   if (view === 'research') window.ZEROResearch?.load();
   if (view === 'analysis') window.ZEROAnalysis?.open();
   if (view === 'audit') window.ZEROAccountAudit?.open();
   if (view === 'workbench') { window.ZEROExplore?.init(); if (updateAddress) openDefaultStock(); }
-  if (view === 'comparison') renderComparison();
+  if (view === 'portfolio') window.ZEROCompany?.openPortfolio?.();
+  if (view === 'comparison') {renderComparison();(hostedView?loadLiveQuotes().catch(()=>false):Promise.resolve()).then(()=>loadPortfolio()).catch(()=>notice('ZERO 참고 자료를 불러오지 못했습니다.'));}
   if (view === 'guide') loadReferences();
   if (view === 'community') window.ZEROSocial?.openCommunity();
   if (view === 'company') window.ZEROCompany?.open();
@@ -995,7 +998,7 @@ function navigate(view, updateAddress = true) {
   if (view === 'lobby') { window.ZEROLobby?.open(); window.ZEROLobbyUsers?.board?.(); }
   if(view==='plaza'){const opened=window.ZEROSocial?.openLounge();if($('#plaza-status'))$('#plaza-status').textContent=opened===false?'닉네임으로 로그인한 뒤 광장에 참여하세요.':'실시간 광장 · 대화는 참가자에게 공개됩니다.';}
   if (view === 'team') loadTeam($('#team-event').value === 'ONBOARDING' ? undefined : $('#team-event').value, true);
-  if (view === 'portfolio' && state.data) { renderAllocation(state.data.holdings, state.data.summary.holdings_value_krw); renderHistory(state.data.history || []); }
+  if (view === 'comparison' && state.data) { renderAllocation(state.data.holdings, state.data.summary.holdings_value_krw); renderHistory(state.data.history || []); }
   return true;
 }
 window.ZERO = {...window.ZERO, navigate, currentView: () => currentView, currentDomain:()=>domainFor(currentView),domainFor,getPortfolio: () => state.data};
@@ -1072,17 +1075,15 @@ $('#comparison-run').addEventListener('click',runPeriodComparison);
 }));
 let layoutWidth = 0;
 new ResizeObserver(() => {
-  const width = Math.round($('#portfolio-view').clientWidth);
+  const width = Math.round(($('#zero-reference-portfolio')||$('#portfolio-view')).clientWidth);
   if (width && width !== layoutWidth && state.data) {
     layoutWidth = width; renderAllocation(state.data.holdings, state.data.summary.holdings_value_krw); renderHistory(state.data.history || []);
   }
-}).observe($('#portfolio-view'));
-loadPortfolio().catch(() => { if(state.demo||state.data)return; render({schema_version:1,context:{},holdings:[],summary:{},system_status:{state:'EMPTY'},errors:[]}); notice('저장 자료 연결 실패 · 다시 조회하거나 시연 화면을 볼 수 있습니다.'); }).finally(() => { document.documentElement.dataset.zeroReady='true'; document.dispatchEvent?.(new CustomEvent('zero-ready')); });
-// Opening or reloading the hosted page also shows current public quotes.
-if (hostedView) loadLiveQuotes().then((live) => live && loadPortfolio()).catch(() => {});
+}).observe($('#zero-reference-portfolio')||$('#portfolio-view'));
+document.documentElement.dataset.zeroReady='true'; document.dispatchEvent?.(new CustomEvent('zero-ready'));
 // Poll cached display state only; background observation never requests broker refresh.
 async function pollDisplay() {
-  if (document.hidden || state.demo || displayPolling || $('#refresh').disabled) return;
+  if (document.hidden || state.demo || displayPolling || $('#refresh').disabled || window.ZERO?.currentView?.()!=='comparison') return;
   displayPolling = true;
   try {
     let quotesFailed = false;

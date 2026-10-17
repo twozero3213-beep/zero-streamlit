@@ -2,3 +2,13 @@
 html #lobby-view .lobby-stage.office-native-ready{width:min(100%,calc(var(--zero-canvas,360px)*1.6)) !important;height:auto !important;aspect-ratio:16/10 !important;min-width:0 !important;min-height:0 !important;max-height:var(--zero-canvas,360px);margin-inline:auto;box-sizing:border-box !important;border:0 !important;padding:0 !important;overflow:hidden}
 
 .office-native-credits{max-width:min(640px,90vw);max-height:80vh;overflow:auto;padding:24px;border:1px solid #c2ced2;border-radius:12px;background:#fff;color:#283d4c;font:inherit;overflow-wrap:anywhere}.office-native-credits a{display:inline-block;margin:8px 16px 8px 0}.office-native-credits::backdrop{background:rgb(12 30 42 / .45)}
+
+.office-art-preview,.office-art-theme{display:block;width:100%;height:auto;image-rendering:pixelated}
+/* 3시 방향 실시간 광장 포털을 차원의 문(소용돌이 에너지 게이트) 느낌으로 연출 */
+@keyframes zero-portal-pulse{0%,100%{transform:scale(.94);opacity:.84}50%{transform:scale(1.06);opacity:1}}
+.office-object-hit[data-kind="portal"]{border:0!important;background:transparent!important;border-radius:999px!important;box-shadow:none!important;min-width:44px;min-height:44px}
+.office-object-hit[data-kind="portal"] .office-object-icon{display:block;width:30px;height:38px;border-radius:50%;border:2px solid #67e8f9cc;background:radial-gradient(ellipse at center,#e0f2fed9 0%,#22d3ee99 36%,#6366f188 68%,#1e1b4b00 100%);box-shadow:0 0 12px #22d3ee99,0 0 22px #6366f166,inset 0 0 8px #e0f2fe;animation:zero-portal-pulse 2.4s ease-in-out infinite;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.office-object-hit[data-kind="portal"] .office-object-icon{animation:none}}
+.office-object-hit[data-kind="portal"]:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}
+
+.office-object-hit[data-kind="portal"]::after{content:"🌀 실시간 광장 →";position:absolute;right:2px;bottom:calc(100% + 2px);padding:2px 7px;border:1px solid #67e8f988;border-radius:999px;background:#1e1b4bd9;color:#e0f2fe;box-shadow:0 0 10px #38bdf84d;text-shadow:0 1px 2px #090d16;font-size:10px;font-weight:600;line-height:1.35;white-space:nowrap;pointer-events:none}

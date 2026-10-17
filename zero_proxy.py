@@ -7,6 +7,7 @@ Secrets or ZERO_* environment variables); errors are fixed codes, never provider
 """
 from concurrent.futures import Future, TimeoutError as FutureTimeout
 import gzip
+import io
 import json
 import os
 import re
@@ -16,7 +17,7 @@ import xml.etree.ElementTree as ET
 import urllib.error
 import urllib.request
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse, RedirectResponse, Response
@@ -68,10 +69,16 @@ def fetch(path):
     if not (client_id and secret):
         raise Unavailable('NOT_CONFIGURED')
     base = (_secret('SITE_URL') or DEFAULT_SITE).rstrip('/')
-    if not base.startswith('https://'):
-        raise Unavailable('BAD_SITE')
-    request = urllib.request.Request(base + path, headers={
-        'CF-Access-Client-Id': client_id, 'CF-Access-Client-Secret': secret, 'User-Agent': 'zero-streamlit/3'})
+    try:
+        site = urlsplit(base)
+        if (site.scheme != 'https' or not site.hostname or site.username is not None
+                or site.password is not None or site.query or site.fragment or site.port == 0
+                or '\\' in base or any(ord(char) < 33 for char in base)):
+            raise ValueError
+        request = urllib.request.Request(base + path, headers={
+            'CF-Access-Client-Id': client_id, 'CF-Access-Client-Secret': secret, 'User-Agent': 'zero-streamlit/3'})
+    except (ValueError, UnicodeError):
+        raise Unavailable('BAD_SITE') from None
     try:
         with urllib.request.build_opener(_NoRedirect()).open(request, timeout=40) as response:
             body = response.read(MAX_BYTES + 1)
@@ -84,7 +91,13 @@ def fetch(path):
     try:
         if len(body) > MAX_BYTES:
             raise ValueError
-        data = json.loads(gzip.decompress(body) if gzipped else body)
+        if gzipped:
+            with gzip.GzipFile(fileobj=io.BytesIO(body)) as stream:
+                body = stream.read(MAX_BYTES + 1)
+            if len(body) > MAX_BYTES:
+                raise ValueError
+        data = json.loads(body)
+        json.dumps(data, allow_nan=False)
     except Exception:
         raise Unavailable('SITE_INVALID') from None
     if not isinstance(data, dict):

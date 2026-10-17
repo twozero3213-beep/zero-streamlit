@@ -4,11 +4,14 @@
   else if(root)root.ZEROOfficeLayout=api;
 })(typeof window==='object'?window:null,function(){
   'use strict';
-  const THEMES=Object.freeze(['wallstreet','boutique','startup']);
+  const THEMES=Object.freeze(['wallstreet','boutique','startup','nordic','japandi','library','botanical','industrial','coastal','night']);
+  const COLORS=Object.freeze(['ink','blue','sage','sand','rose']);
   const FURNITURE=Object.freeze(Object.fromEntries([
     ['desk',2,1,true],['server',1,2,false],['billboard',4,1,true],['meeting',3,2,true],
     ['partition',1,2,false],['plant',1,1,false],['coffee',1,1,true],['guestbook',1,1,true],
-    ['portal',1,1,true],['sofa',2,1,true],['standingdesk',1,1,true]
+    ['portal',1,1,true],['sofa',2,1,true],['standingdesk',1,1,true],
+    ['chair',1,1,true],['bookshelf',2,1,false],['cabinet',2,1,false],['lamp',1,1,false],
+    ['rug',3,2,false],['whiteboard',2,1,true],['water',1,1,true],['printer',1,1,true],['arcade',1,1,true]
   ].map(([kind,width,height,interactive])=>[kind,Object.freeze({width,height,interactive})])));
   const MAX_OBJECTS=60,MAX_ID=2147483647;
   const record=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
@@ -34,6 +37,8 @@
     for(const object of input.objects){
       if(!record(object)||!integer(object.id,1,MAX_ID)||ids.has(object.id)||!itemDefinition(object.kind)||!integer(object.x,0,15)||!integer(object.y,0,9)||![0,90,180,270].includes(object.rotation))return null;
       const clean={id:object.id,kind:object.kind,x:object.x,y:object.y,rotation:object.rotation},f=footprint(clean);
+      if(Object.hasOwn(object,'variant')){if(!integer(object.variant,0,4))return null;clean.variant=object.variant;}
+      if(Object.hasOwn(object,'color')){if(!COLORS.includes(object.color))return null;clean.color=object.color;}
       if(clean.x+f.width>16||clean.y+f.height>10)return null;
       ids.add(clean.id);objects.push(clean);
     }
@@ -56,7 +61,7 @@
   function defaultLayout(theme='wallstreet'){
     if(!THEMES.includes(theme))return null;
     const layout={version:1,width:16,height:10,tilewidth:64,tileheight:64,theme,objects:[
-      {id:1,kind:'portal',x:15,y:8,rotation:0},{id:2,kind:'guestbook',x:0,y:8,rotation:0},
+      {id:1,kind:'portal',x:15,y:4,rotation:0},{id:2,kind:'guestbook',x:0,y:8,rotation:0},
       {id:3,kind:'billboard',x:6,y:0,rotation:0},{id:4,kind:'desk',x:3,y:3,rotation:0},
       {id:5,kind:'desk',x:10,y:3,rotation:0},{id:6,kind:'meeting',x:6,y:5,rotation:0},
       {id:7,kind:'server',x:14,y:1,rotation:0},{id:8,kind:'coffee',x:1,y:1,rotation:0},
@@ -72,6 +77,12 @@
       for(const object of layout.objects)if(object.kind==='desk')object.kind='standingdesk';
       layout.objects.push({id:11,kind:'sofa',x:11,y:5,rotation:0});
     }
+    const extras={nordic:[['bookshelf',3,6],['lamp',12,6]],japandi:[['cabinet',3,6],['plant',12,6]],library:[['bookshelf',3,6],['bookshelf',11,6]],botanical:[['plant',3,6],['water',12,6]],industrial:[['cabinet',3,6],['printer',12,6]],coastal:[['rug',10,6],['lamp',4,6]],night:[['arcade',3,6],['lamp',12,6]]};
+    if(extras[theme]){
+      const color={nordic:'sand',japandi:'sand',library:'ink',botanical:'sage',industrial:'ink',coastal:'blue',night:'rose'}[theme];
+      layout.objects.filter(object=>!['portal','guestbook'].includes(object.kind)).forEach(object=>{object.variant=THEMES.indexOf(theme)%5;object.color=color;});
+      extras[theme].forEach(([kind,x,y],index)=>layout.objects.push({id:11+index,kind,x,y,rotation:0,variant:index,color}));
+    }
     return layout;
   }
   function collision(input){const layout=validate(input);return layout?grid(layout):null;}
@@ -82,7 +93,7 @@
     return {type:'map',version:'1.10',tiledversion:'1.10.2',orientation:'orthogonal',renderorder:'right-down',infinite:false,width:16,height:10,tilewidth:64,tileheight:64,nextlayerid:4,nextobjectid:Math.max(...layout.objects.map(o=>o.id))+1,
       properties:[{name:'officeVersion',type:'int',value:1},{name:'theme',type:'string',value:layout.theme}],
       tilesets:[{firstgid:1,name:'office-collision',tilewidth:64,tileheight:64,tilecount:1,columns:0,tiles:[{id:0,properties:[{name:'blocked',type:'bool',value:true}]}]}],
-      layers:[layer(1,'floor',Array(160).fill(0)),layer(2,'collision',data),{id:3,name:'furniture',type:'objectgroup',draworder:'index',x:0,y:0,opacity:1,visible:true,objects:layout.objects.map(o=>{const d=itemDefinition(o.kind),dx=o.rotation===90?d.height:o.rotation===180?d.width:0,dy=o.rotation===180?d.height:o.rotation===270?d.width:0;return {id:o.id,name:o.kind,type:o.kind,x:(o.x+dx)*64,y:(o.y+dy)*64,width:d.width*64,height:d.height*64,rotation:o.rotation,visible:true};})}]};
+      layers:[layer(1,'floor',Array(160).fill(0)),layer(2,'collision',data),{id:3,name:'furniture',type:'objectgroup',draworder:'index',x:0,y:0,opacity:1,visible:true,objects:layout.objects.map(o=>{const d=itemDefinition(o.kind),dx=o.rotation===90?d.height:o.rotation===180?d.width:0,dy=o.rotation===180?d.height:o.rotation===270?d.width:0;return {id:o.id,name:o.kind,type:o.kind,x:(o.x+dx)*64,y:(o.y+dy)*64,width:d.width*64,height:d.height*64,rotation:o.rotation,visible:true,...(Object.hasOwn(o,'variant')||Object.hasOwn(o,'color')?{properties:[...(Object.hasOwn(o,'variant')?[{name:'variant',type:'int',value:o.variant}]:[]),...(Object.hasOwn(o,'color')?[{name:'color',type:'string',value:o.color}]:[])]}:{})};})}]};
   }
   function same(a,b){
     if(a===b)return true;
@@ -94,7 +105,7 @@
     if(!record(tiled)||!Array.isArray(tiled.layers)||tiled.layers.length!==3||!Array.isArray(tiled.properties)||tiled.properties.length!==2)return null;
     const source=tiled.layers[2]?.objects;if(!Array.isArray(source)||source.length>MAX_OBJECTS||source.some(o=>!record(o)||!itemDefinition(o.type)||![0,90,180,270].includes(o.rotation)))return null;
     const layout=validate({version:1,width:tiled.width,height:tiled.height,tilewidth:tiled.tilewidth,tileheight:tiled.tileheight,theme:tiled.properties.find(p=>p?.name==='theme')?.value,
-      objects:source.map(o=>{const d=itemDefinition(o.type),dx=o.rotation===90?d.height:o.rotation===180?d.width:0,dy=o.rotation===180?d.height:o.rotation===270?d.width:0;return {id:o.id,kind:o.type,x:o.x/64-dx,y:o.y/64-dy,rotation:o.rotation};})});
+      objects:source.map(o=>{const d=itemDefinition(o.type),dx=o.rotation===90?d.height:o.rotation===180?d.width:0,dy=o.rotation===180?d.height:o.rotation===270?d.width:0;return {id:o.id,kind:o.type,x:o.x/64-dx,y:o.y/64-dy,rotation:o.rotation,...(Array.isArray(o.properties)?Object.fromEntries(o.properties.filter(p=>p&&['variant','color'].includes(p.name)).map(p=>[p.name,p.value])):{})};})});
     if(!layout)return null;
     const annotation=tiled.layers[1]?.data;
     if(!Array.isArray(annotation)||annotation.length!==160||annotation.some(value=>value!==0&&value!==1))return null;
@@ -103,5 +114,5 @@
     const normalized={...tiled,layers:tiled.layers.map((layer,index)=>index===1?{...layer,data:canonical.layers[1].data}:layer)};
     return same(normalized,canonical)?layout:null;
   }
-  return Object.freeze({validate,defaultLayout,toTiled,fromTiled,collision,itemDefinition,FURNITURE,THEMES,MAX_OBJECTS,MAX_ID});
+  return Object.freeze({validate,defaultLayout,toTiled,fromTiled,collision,itemDefinition,FURNITURE,THEMES,COLORS,MAX_OBJECTS,MAX_ID});
 });

@@ -7,41 +7,74 @@
   // Pure helpers, shared with Node tests.
   const NICK = /^[0-9A-Za-z_가-힣]{2,12}$/;
   const nickProblem = (nick) => !NICK.test(nick) ? '2~12자의 한글·영문·숫자·밑줄만 쓸 수 있어요.' : /^\d+$/.test(nick) ? '숫자만으로는 만들 수 없어요.' : null;
+  const MEMBER_KEY = 'zero-member-session', REMEMBER_KEY = 'zero-member-remembered', MEMBER_MAX_MS = 30 * 86400000;
+  function createMemberSessionStore(local, tab, clock = Date.now) {
+    const valid = token => typeof token === 'string' && /^[A-Za-z0-9_-]{40,60}$/.test(token);
+    const read = (storage, key) => { try { return storage().getItem(key); } catch (_) { return null; } };
+    const remove = (storage, key) => { try { storage().removeItem(key); } catch (_) { /* storage may be disabled */ } };
+    function savedSession(storage, key, legacy = false) {
+      const raw = read(storage, key); if (!raw) return null;
+      if (legacy && valid(raw)) return {token: raw};
+      try {
+        const saved = JSON.parse(raw), remaining = Date.parse(saved.expires_at) - clock();
+        if (valid(saved.token) && remaining > 0 && remaining <= MEMBER_MAX_MS && (!legacy || typeof saved.remember === 'boolean')) return saved;
+      } catch (_) { /* malformed local state is discarded */ }
+      remove(storage, key); return null;
+    }
+    return {
+      get() { return savedSession(tab, MEMBER_KEY, true)?.token || savedSession(local, REMEMBER_KEY)?.token || null; },
+      preference(token) { const saved = savedSession(tab, MEMBER_KEY, true); return saved?.token === token ? saved.remember : savedSession(local, REMEMBER_KEY)?.token === token ? true : undefined; },
+      persisted() { return savedSession(local, REMEMBER_KEY)?.token || null; },
+      set(result, remember) {
+        const remaining = Date.parse(result.expires_at) - clock();
+        if (!valid(result.token) || !(remaining > 0 && remaining <= MEMBER_MAX_MS)) throw {code: 'UNAUTHORIZED'};
+        remove(tab, MEMBER_KEY); remove(local, REMEMBER_KEY);
+        // First-party opaque ZERO bearer only. XSS can read it; never persist provider credentials.
+        if (remember) { try { local().setItem(REMEMBER_KEY, JSON.stringify({token: result.token, expires_at: result.expires_at})); return; } catch (_) { /* fall back to this tab */ } }
+        try { tab().setItem(MEMBER_KEY, JSON.stringify({token: result.token, expires_at: result.expires_at, remember: !!remember})); } catch (_) { /* session remains in memory */ }
+      },
+      clear(token) {
+        if (token === undefined || savedSession(tab, MEMBER_KEY, true)?.token === token) remove(tab, MEMBER_KEY);
+        if (token === undefined || savedSession(local, REMEMBER_KEY)?.token === token) remove(local, REMEMBER_KEY);
+      }
+    };
+  }
   function weightTotal(inputs) { return Object.values(inputs).reduce((sum, value) => sum + (Number.isFinite(value) && value > 0 ? value : 0), 0); }
   function weightsFrom(inputs) { const weights = Object.fromEntries(Object.entries(inputs).filter(([symbol, value]) => ALLOWED.includes(symbol) && Number.isFinite(value) && value > 0)); return Object.keys(weights).length && Math.abs(weightTotal(weights) - 100) < 1e-6 ? weights : null; }
   const PERSONAS = ['낙천적', '꼼꼼함', '장난꾸러기', '차분함', '열정적', '졸림', '호기심'];
   const SPACE = {floor: [['wood', '원목'], ['gray', '회색'], ['mint', '민트'], ['sand', '모래']], wall: [['sky', '하늘'], ['peach', '복숭아'], ['lavender', '라벤더'], ['white', '하양']],
     props: [['plant', '화분'], ['coffee', '커피머신'], ['sofa', '소파'], ['books', '책장'], ['fish', '어항'], ['poster', '포스터'], ['clock', '시계']]};
-  if (typeof module !== 'undefined' && module.exports) module.exports = {nickProblem, weightTotal, weightsFrom, ALLOWED, PERSONAS, SPACE};
+  if (typeof module !== 'undefined' && module.exports) module.exports = {nickProblem, weightTotal, weightsFrom, ALLOWED, PERSONAS, SPACE, createMemberSessionStore};
   if (typeof document === 'undefined' || !document.getElementById('lobby-view')) return;
 
   const meta = document.querySelector('meta[name="zero-lobby-api"]'), BASE = (meta?.content || '').replace(/\/+$/, '');
   const $ = (id) => document.getElementById(id);
   const node = (tag, className = '', text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
-  const KEY = 'zero-lobby-token', MEMBER_KEY = 'zero-member-session', VISITOR_KEY = 'zero-visitor-nick';
+  const KEY = 'zero-lobby-token', VISITOR_KEY = 'zero-visitor-nick';
   const store = { get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* private mode */ } }, del(k) { try { localStorage.removeItem(k); } catch (_) { /* private mode */ } } };
-  const memberSession = {get() { try { return sessionStorage.getItem(MEMBER_KEY); } catch (_) { return null; } }, set(token) { try { sessionStorage.setItem(MEMBER_KEY, token); } catch (_) { /* session remains in memory */ } }, clear() { try { sessionStorage.removeItem(MEMBER_KEY); } catch (_) { /* private mode */ } }};
+  const memberSession = createMemberSessionStore(() => localStorage, () => sessionStorage);
   const savedVisitor = store.get(VISITOR_KEY);
   const visitorName = savedVisitor && !nickProblem(savedVisitor) ? savedVisitor : null;
   const messages = {NICK_TAKEN: '이미 쓰는 닉네임이에요.', NICK_INVALID: '2~12자의 한글·영문·숫자·밑줄만 쓸 수 있어요.', NICK_RESERVED: '쓸 수 없는 닉네임이에요.', SIGNUP_LIMIT: '오늘은 가입이 많아요. 내일 다시 시도해 주세요.', QUOTES_UNAVAILABLE: '가격을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.',
-    REBALANCE_TOO_SOON: '배분은 20시간에 한 번만 바꿀 수 있어요.', WEIGHTS_MUST_SUM_TO_100: '비중의 합이 100이 되어야 해요.', WEIGHTS_INVALID: '비중을 확인해 주세요.', TEAM_INVALID: '팀 구성을 확인해 주세요(직원 60명까지).', UNAUTHORIZED: '저장된 로그인 정보가 맞지 않아요.'};
+    PAPER_TRADING_ACTIVE: '모의투자 직접 매매 화면에서 보유 종목을 바꿔 주세요.', REBALANCE_TOO_SOON: '배분은 20시간에 한 번만 바꿀 수 있어요.', WEIGHTS_MUST_SUM_TO_100: '비중의 합이 100이 되어야 해요.', WEIGHTS_INVALID: '비중을 확인해 주세요.', TEAM_INVALID: '팀 구성을 확인해 주세요(직원 60명까지).', UNAUTHORIZED: '저장된 로그인 정보가 맞지 않아요.'};
   async function api(path, {method = 'GET', body, token} = {}) {
     // A template literal on purpose: the Streamlit build rewrites quote-led slash-api paths into relative ones, which would break this absolute address.
     const response = await fetch(`${BASE}/api/lobby${path}`, {method, headers: {...(body ? {'Content-Type': 'application/json'} : {}), ...(token ? {Authorization: 'Bearer ' + token} : {})}, body: body ? JSON.stringify(body) : undefined, cache: 'no-store', signal: AbortSignal.timeout(15000)});
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw Object.assign(new Error(data.error || 'LOBBY_ERROR'), {code: data.error || 'LOBBY_ERROR',status:response.status});
+    if (!response.ok) throw Object.assign(new Error(data.error || 'LOBBY_ERROR'), {code: data.error || 'LOBBY_ERROR',status:response.status,terminal:data.terminal===true});
     return data;
   }
   const say = (error) => messages[error?.code] || '지금은 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
 
-  const U = {token: memberSession.get() || store.get(KEY), me: null, visitor: visitorName, generation: 0};
+  const savedMember = memberSession.get();
+  const U = {token: savedMember || store.get(KEY), member: !!savedMember, remember: savedMember ? memberSession.preference(savedMember) : undefined, me: null, visitor: visitorName, generation: 0};
   const button = $('lobby-profile-btn'), entry = $('member-entry');
   if (!BASE) { button.hidden = false; button.textContent = '로그인 연결 준비 중'; button.disabled = true; button.title = '공개 서버 연결 전이에요'; return; }
   button.hidden = false; if (entry) entry.hidden = false;
 
   // ---- dialog -----------------------------------------------------------------------------------
   const dialog = document.createElement('dialog'); dialog.id = 'member-profile-dialog'; dialog.className = 'lobby-chat lobby-profile'; dialog.setAttribute('aria-labelledby', 'profile-title'); dialog.setAttribute('aria-describedby', 'profile-sub');
-  dialog.innerHTML = '<div class="chat-head"><div><h2 id="profile-title"></h2><p id="profile-sub"></p></div><button type="button" class="secondary-button" id="profile-close">닫기</button></div><div id="profile-body" class="profile-body"></div>';
+  dialog.innerHTML = '<div class="chat-head"><div><h2 id="profile-title"></h2><p id="profile-sub"></p></div><button type="button" class="icon-button icon-close" id="profile-close" aria-label="창 닫기" title="닫기">닫기</button></div><div id="profile-body" class="profile-body"></div>';
   document.body.append(dialog);
   $('profile-close').addEventListener('click', () => dialog.close());
   const body = $('profile-body');
@@ -61,12 +94,12 @@
         if (!U.me) { U.visitor = nick; store.set(VISITOR_KEY, nick); window.ZEROLobby.setPlayerName(nick); }
         render(); dialog.close();
       },
-      complete: (method, accessToken, nick) => api('/auth/complete', {method: 'POST', token: U.token,
-        body: {method, access_token: accessToken, ...(nick === undefined ? {} : {nick})}}),
-      async onMember(result) {
+      complete: (method, accessToken, nick, remember) => api('/auth/complete', {method: 'POST', token: U.token,
+        body: {method, access_token: accessToken, remember, ...(nick === undefined ? {} : {nick})}}),
+      async onMember(result, remember) {
         if (typeof result.token !== 'string' || !result.token) throw {code: 'UNAUTHORIZED'};
-        U.token = result.token; U.visitor = null; U.me = null;
-        store.del(KEY); store.del(VISITOR_KEY); memberSession.set(result.token); render();
+        memberSession.set(result, remember); U.token = result.token; U.member = true; U.remember = !!remember; U.visitor = null; U.me = null;
+        store.del(KEY); store.del(VISITOR_KEY); render();
         const memberToken = U.token, memberView = profileEpoch; await refreshMe(); if (profileEpoch !== memberView || !dialog.open) return; if (U.token === memberToken) { if (U.me) viewHome(); else viewPending(); } else if (!U.token) viewSignup();
       },
       onRecover: viewRecover
@@ -115,7 +148,7 @@
     if (!U.me) return viewSignup();
     $('profile-title').textContent = U.me.nick + '의 사무실'; $('profile-sub').textContent = '직원 ' + U.me.staff_count + '명 · 연습 수익률 ' + (U.me.portfolio.return_percent === null ? '집계 전' : (U.me.portfolio.return_percent > 0 ? '+' : '') + U.me.portfolio.return_percent.toFixed(2) + '%');
     const isMember = U.me.membership?.kind === 'MEMBER';
-    const team = node('button', 'primary-button', '팀·직원 구성하기'), portfolio = node('button', 'secondary-button', '연습 포트폴리오 배분'), see = node('button', 'secondary-button', '내 사무실 보기'), out = node('button', 'secondary-button', isMember ? '로그아웃' : '방문자 데이터 나가기');
+    const team = node('button', 'primary-button', '팀·직원 구성하기'), portfolio = node('button', 'secondary-button', isMember ? '모의투자 직접 매매' : '연습 포트폴리오 배분'), see = node('button', 'secondary-button', '내 사무실 보기'), out = node('button', 'secondary-button', isMember ? '로그아웃' : '방문자 데이터 나가기');
     [team, portfolio, see, out].forEach((b) => { b.type = 'button'; });
     team.addEventListener('click', viewTeam); portfolio.addEventListener('click', viewPortfolio); see.addEventListener('click', () => { dialog.close(); window.ZEROLobby.showOwn(window.ZEROCompany?.officeFor(U.me)||{nick: U.me.nick, team: U.me.team, space: U.me.space}); });
     out.addEventListener('click', async () => {
@@ -123,7 +156,7 @@
       try { if (isMember) await api('/logout', {method: 'POST', token, body: {}}); }
       catch (error) { if (error.code !== 'UNAUTHORIZED') { const note = status(); note.textContent = '로그아웃 요청을 완료하지 못했습니다. 다시 시도해 주세요.'; body.append(note); out.disabled = false; return; } }
       if (U.token !== token) return;
-      store.del(KEY); memberSession.clear(); store.del('zero-lobby-name'); U.token = null; U.me = null;
+      store.del(KEY); memberSession.clear(token); store.del('zero-lobby-name'); U.token = null; U.member = false; U.me = null;
       window.ZEROLobby.setPlayerName(U.visitor || 'ZERO'); body.replaceChildren(); dialog.close(); window.ZEROLobby.open(); render();
     });
     const company = node('button', 'secondary-button', '투자회사 · 전략 직원 관리'); company.addEventListener('click',()=>{dialog.close();window.ZERO?.navigate('company');});
@@ -141,7 +174,18 @@
       : '방문자 계정 · 전광판과 수익률 랭킹에 표시되지 않습니다. 기존 사무실은 인증 후에도 유지할 수 있습니다.');
     const verify = node('button', 'primary-button', '이메일·휴대폰으로 인증하기'); verify.type = 'button'; verify.addEventListener('click', viewSignup);
     const rename = node('button','secondary-button','닉네임 변경'); rename.type='button'; rename.addEventListener('click',viewNickname);
-    body.replaceChildren(membership, ...(isMember ? [rename] : []), node('p', 'muted-note', '직원 이름·업무·전략 배분은 대표님만 조회합니다. 팀 이름은 공개를 선택한 경우에만 표시됩니다. 회원 인증은 증권계좌 연결이나 매매 권한을 추가하지 않습니다.'), ...(!isMember ? [verify] : []), team, company, portfolio, see, layout, wardrobe, ...(!isMember ? [renew] : []), out);
+    const retention = node('div','member-onboarding'), keep = input('checkbox',{checked:U.remember!==false}), keepField = field('로그인 유지',keep), saveKeep = node('button','secondary-button','로그인 유지 설정 저장'), keepNote = status();
+    keepField.className='member-remember';saveKeep.type='button';
+    keepNote.textContent=U.rememberError?'로그인 유지 설정을 적용하지 못했습니다. 다시 저장해 주세요.':'최초 로그인부터 최대 30일 유지합니다. 공용 기기에서는 해제하세요.';
+    saveKeep.addEventListener('click',async()=>{
+      if(saveKeep.disabled)return;const token=U.token,generation=U.generation,view=profileEpoch,remember=keep.checked;
+      saveKeep.disabled=true;keep.disabled=true;keepNote.textContent='로그인 유지 설정을 저장하고 있어요.';
+      try{const saved=await rememberSession(remember,token,generation);if(saved&&dialog.open&&profileEpoch===view)keepNote.textContent=remember?'이 기기에서 로그인을 유지합니다.':'이 탭을 닫으면 로그아웃됩니다.';}
+      catch(error){if(U.token===token&&dialog.open&&profileEpoch===view)keepNote.textContent=error.code==='UNAUTHORIZED'?'로그인이 만료되었습니다. 다시 로그인해 주세요.':'로그인 유지 설정을 저장하지 못했습니다. 다시 시도해 주세요.';}
+      finally{if(dialog.open&&profileEpoch===view){saveKeep.disabled=false;keep.disabled=false;}}
+    });
+    retention.append(keepField,saveKeep,keepNote);
+    body.replaceChildren(membership, ...(isMember ? [rename,retention] : []), node('p', 'muted-note', '직원 이름·업무·전략 배분은 대표님만 조회합니다. 팀 이름은 공개를 선택한 경우에만 표시됩니다. 회원 인증은 증권계좌 연결이나 매매 권한을 추가하지 않습니다.'), ...(!isMember ? [verify] : []), team, company, portfolio, see, layout, wardrobe, ...(!isMember ? [renew] : []), out);
   }
 
   function viewNickname() {
@@ -217,6 +261,7 @@
   }
 
   function viewPortfolio() {
+    if(U.me?.membership?.kind==='MEMBER'){dialog.close();window.ZERO?.navigate('company');return;}
     $('profile-title').textContent = '연습 포트폴리오'; $('profile-sub').textContent = '가상의 1억원을 ETF 8종에 나눠 담아요. 가격만 반영한 연습이고 실제 투자가 아니에요.';
     const values = Object.fromEntries(ALLOWED.map((symbol) => [symbol, Number(U.me.portfolio.weights[symbol] || 0)])), total = node('p', 'profile-status'), note = status();
     const rows = ALLOWED.map((symbol) => { const box = input('number', {min: 0, max: 100, step: 5, value: values[symbol]}); box.addEventListener('input', () => { values[symbol] = Number(box.value) || 0; total.textContent = '합계 ' + weightTotal(values) + '% (100이 되어야 해요)'; }); return field(LABELS[symbol] + ' %', box); });
@@ -232,11 +277,33 @@
   }
 
   // ---- state ------------------------------------------------------------------------------------
+  async function rememberSession(remember, token, generation) {
+    let result;
+    try{result=await api('/me/session',{method:'PUT',token,body:{remember}});}
+    catch(error){
+      if(error.code==='UNAUTHORIZED'&&U.token===token&&U.generation===generation){
+        memberSession.clear(token);store.del(KEY);U.token=null;U.member=false;U.me=null;profileEpoch++;body.replaceChildren();dialog.close();
+        window.ZEROLobby.setPlayerName(U.visitor||'ZERO');render();
+      }
+      throw error;
+    }
+    if(U.token!==token||U.generation!==generation)return false;
+    memberSession.set({token,expires_at:result.expires_at},remember);U.remember=remember;U.rememberError=false;return true;
+  }
   async function refreshMe() {
     if (!U.token) { U.me = null; return render(); }
-    const token = U.token;
-    try { const result = await api('/me', {token}); if (U.token !== token) return; U.me = result; window.ZEROLobby.setPlayerName(U.me.nick); }
-    catch (error) { if (U.token !== token) return; if (error.code === 'UNAUTHORIZED') { store.del(KEY); memberSession.clear(); U.token = null; } U.me = null; }
+    const token = U.token, generation = U.generation;
+    try {
+      const result = await api('/me', {token}); if (U.token !== token || U.generation !== generation) return;
+      if(typeof result?.nick!=='string'||!result.nick||!['MEMBER','GUEST'].includes(result.membership?.kind))throw {code:'PROFILE_UNAVAILABLE'};
+      if(result.membership?.kind==='MEMBER'&&U.remember===undefined){
+        try{await rememberSession(true,token,generation);}catch(error){if(error.code==='UNAUTHORIZED')throw error;if(U.token!==token||U.generation!==generation)return;U.rememberError=true;}
+        if(U.token!==token||U.generation!==generation)return;
+      }
+      U.me = result; window.ZEROLobby.setPlayerName(U.me.nick);
+    }
+    // A failed connection or malformed profile is not evidence that the session was revoked.
+    catch (error) { if (U.token !== token || U.generation !== generation) return; if (error.code === 'UNAUTHORIZED') { store.del(KEY); memberSession.clear(token); U.token = null; U.member = false; U.me = null; } }
     render();
   }
   let sessionNick, sessionToken;
@@ -247,15 +314,30 @@
   button.addEventListener('click', () => { U.me ? viewHome() : U.token ? viewPending() : viewSignup(); if (!dialog.open) dialog.showModal?.(); });
 
   entry?.addEventListener('click', () => button.click());
+  window.addEventListener('storage', event => {
+    // sessionStorage events also cross same-origin iframes; only localStorage carries remembered logout.
+    if(event.storageArea){try{if(event.storageArea!==localStorage)return;}catch(_){return;}}
+    if (event.key !== REMEMBER_KEY && event.key !== null || !U.member) return;
+    let replaced=false;try{replaced=JSON.parse(event.oldValue)?.token===U.token;}catch(_){/* unrelated storage event */}
+    if(memberSession.persisted()===U.token||memberSession.get()===U.token&&!replaced&&event.key!==null)return;
+    // A sibling tab signed out or replaced this login; pending responses cannot restore it.
+    memberSession.clear(U.token);U.token = null; U.member = false; U.me = null; profileEpoch++; dialog.close();
+    window.ZEROLobby.setPlayerName(U.visitor || 'ZERO'); render();
+  });
 
   async function loadBoard() {
     try { const data = await api('/leaderboard'); window.ZEROLobby.setUserBoard(data.state === 'AVAILABLE' ? data.items : [], {state: data.state, checkedAt: data.checked_at}); } catch (_) { window.ZEROLobby.setUserBoard([], {state: 'UNAVAILABLE'}); }
   }
+  let visitSequence=0;
+  document.addEventListener('zero-view-changed',()=>{visitSequence++;});
   async function visit(nick) {
-    try { const data = await api('/office?nick=' + encodeURIComponent(nick)); window.ZEROLobby.visit({nick: data.nick, staffCount: data.staff_count, returnPercent: data.return_percent, space: data.space, teams: data.teams, appearance: data.appearance, level: data.level, layout: window.ZEROOfficeLayout?.validate(data.layout) || null}); }
+    const sequence=++visitSequence,token=U.token,generation=U.generation,view=window.ZERO?.currentView?.();
+    try { const data = await api('/office?nick=' + encodeURIComponent(nick)); if(sequence!==visitSequence||U.token!==token||U.generation!==generation||window.ZERO?.currentView?.()!==view)return;window.ZEROLobby.visit({nick: data.nick, staffCount: data.staff_count, returnPercent: data.return_percent, space: data.space, teams: data.teams, appearance: data.appearance, level: data.level, layout: window.ZEROOfficeLayout?.validate(data.layout) || null}); }
     catch (_) { /* a missing office leaves the current scene */ }
   }
   window.ZEROLobbyUsers = {visit, refresh: refreshMe, board: loadBoard,
+    ownOffice: () => U.me ? window.ZEROCompany?.officeFor(U.me)||{nick:U.me.nick,team:U.me.team,space:U.me.space} : null,
+    restoringSession: () => !!U.token && !U.me,
     session: () => U.me ? {nick: U.me.nick, progress: U.me.progress, appearance: U.me.appearance, catalog: U.me.catalog, blocks: U.me.blocks, practiceReturn: U.me.portfolio?.return_percent, membership: U.me.membership} : null,
     request: (path, options = {}) => api(path, {...options, token: U.token}),
     openProfile: () => button.click(),
@@ -266,5 +348,5 @@
       socket.addEventListener('open', () => { if (U.token !== token) socket.close(); else socket.send(JSON.stringify({type: 'auth', token, move_ack: true})); }); return socket;
     }};
   if (U.visitor && !U.token) window.ZEROLobby.setPlayerName(U.visitor);
-  render(); refreshMe(); if(document.documentElement?.dataset.zeroView==='lobby')loadBoard(); setInterval(() => { if (!document.hidden) { if(document.documentElement?.dataset.zeroView==='lobby')loadBoard(); if (U.me) refreshMe(); } }, 60000);
+  render(); refreshMe(); if(document.documentElement?.dataset.zeroView==='lobby')loadBoard(); setInterval(() => { if (!document.hidden) { if(document.documentElement?.dataset.zeroView==='lobby')loadBoard(); if (U.token) refreshMe(); } }, 60000);
 })();

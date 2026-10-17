@@ -9,6 +9,7 @@
 .member-status{font-size:14px;min-height:21px;margin:12px 0;color:#333d4b;overflow-wrap:anywhere}.member-status:empty{display:none}
 .member-form{display:grid;gap:16px;margin-top:20px}.member-form .member-privacy,.member-form .member-status{margin:0}
 .member-field{display:grid;gap:8px;font-size:14px;font-weight:550}.member-field input{font:inherit;font-size:16px;min-height:48px;width:100%;box-sizing:border-box;border:1px solid #b8c4d3;border-radius:10px;background:#fff;color:#333d4b;padding:12px;caret-color:#1b64da}
+.member-remember{display:flex;align-items:center;gap:12px;min-height:44px;font-size:14px;cursor:pointer}.member-remember input{order:-1;width:20px;height:20px;flex:none;accent-color:#1b64da}
 .member-form .primary-button{min-height:48px;width:100%;font-size:16px}.member-onboarding button:disabled{opacity:.65;cursor:not-allowed}
 .member-back{display:block;margin:18px auto 0;border:0;background:transparent;color:#1b64da;padding:10px 14px;min-height:44px;font:inherit;cursor:pointer}
 .member-legacy{font-size:13px;color:#626d7b;margin-top:22px;padding-top:16px;border-top:1px solid #eef0f3}.member-legacy summary{cursor:pointer;min-height:32px}.member-legacy button{margin-top:10px;min-height:44px}

@@ -39,8 +39,21 @@ def build(source, checkout=None):
         raise ValueError('HOSTED_SOURCE_MISSING')
     if output == source or output in source.parents or source in output.parents or OUT.is_symlink() or OUT.is_junction():
         raise ValueError('BUILD_SOURCE_OUTPUT_OVERLAP')
-    if 'data-zero-hosted="true"' not in (source / 'index.html').read_text(encoding='utf-8'):
+    source_html = (source / 'index.html').read_text(encoding='utf-8')
+    if 'data-zero-hosted="true"' not in source_html:
         raise ValueError('HOSTED_FLAG_MISSING')
+    # Reject invalid configuration and missing committed inputs before replacing the UI.
+    api = os.environ.get('ZERO_LOBBY_API', '').strip().rstrip('/')
+    if api and not re.fullmatch(r'https?://[A-Za-z0-9.:-]+', api):
+        raise SystemExit('ZERO_LOBBY_API_INVALID')
+    manifest_source = (source / 'assets/manifest.webmanifest').read_text(encoding='utf-8')
+    if checkout:
+        refs = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/data/research_connections.json'],
+                              capture_output=True, check=True, encoding='utf-8').stdout
+        public = {}
+        for name in ('macro_sources.py', 'market_gauges.py', 'briefing_sources.py', 'research_desk.py', 'company_research.py', 'data/briefing_sources.json'):
+            public[name] = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/' + name],
+                                          capture_output=True, check=True, encoding='utf-8').stdout
     if OUT.exists():
         shutil.rmtree(output)
     shutil.copytree(source / 'assets', OUT / 'assets')
@@ -53,9 +66,9 @@ def build(source, checkout=None):
     for css in (OUT / 'assets').glob('*.css'):
         css.write_text(re.sub(r"""url\((['"]?)/assets/""", r'url(\1', css.read_text(encoding='utf-8')), encoding='utf-8')
     manifest = OUT / 'assets' / 'manifest.webmanifest'
-    text = manifest.read_text(encoding='utf-8').replace('"/assets/', '"')
+    text = manifest_source.replace('"/assets/', '"')
     manifest.write_text(re.sub(r'"(id|start_url|scope)":"/"', r'"\1":"../"', text), encoding='utf-8')
-    html = relative((source / 'index.html').read_text(encoding='utf-8')).replace('본인 전용', '공개 참고 화면').replace('대표님 전용', '공개 참고 화면')
+    html = relative(source_html).replace('본인 전용', '공개 참고 화면').replace('대표님 전용', '공개 참고 화면')
     # Streamlit can strip response headers; keep the document policy aligned with Auth.
     auth_origin = os.environ.get('ZERO_AUTH_SUPABASE_ORIGIN', 'https://txhozsfszjryasemyecx.supabase.co').strip().rstrip('/')
     auth_origin = ' ' + auth_origin if re.fullmatch(r'https://[a-z0-9]{20}\.supabase\.co', auth_origin) else ''
@@ -63,9 +76,6 @@ def build(source, checkout=None):
     if 'data-zero-hosted="true"' not in html:
         raise SystemExit('HOSTED_FLAG_MISSING: build from the hosted (Cloudflare/Sites) public folder')
     # The office's account API (public Cloudflare Worker). Empty keeps the single-visitor office.
-    api = os.environ.get('ZERO_LOBBY_API', '').strip().rstrip('/')
-    if api and not re.fullmatch(r'https?://[A-Za-z0-9.:-]+', api):
-        raise SystemExit('ZERO_LOBBY_API_INVALID')
     html = html.replace('<meta name="zero-lobby-api" content="">', f'<meta name="zero-lobby-api" content="{api}">')
     html = html.replace('<meta name="zero-lightweight-chart" content="">',
                         '<meta name="zero-lightweight-chart" content="./lwc">')
@@ -74,8 +84,6 @@ def build(source, checkout=None):
         html = html.replace('</body>', f'  <script src="assets/{extra.name}" defer></script>\n</body>', 1)
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     if checkout:  # committed content only, so uncommitted work in the checkout never ships
-        refs = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/data/research_connections.json'],
-                              capture_output=True, check=True, encoding='utf-8').stdout
         (OUT / 'assets' / 'research-references.json').write_text(refs, encoding='utf-8')
     if filter_source is not None:
         (Path(__file__).parent / 'zero_trend_filter.py').write_text(filter_source, encoding='utf-8')
@@ -83,10 +91,6 @@ def build(source, checkout=None):
         target = 'zero_streamlit_chart.py' if name.endswith('.py') else name
         (Path(__file__).parent / target).write_text(content, encoding='utf-8')
     if checkout:
-        public = {}
-        for name in ('macro_sources.py', 'market_gauges.py', 'briefing_sources.py', 'research_desk.py', 'company_research.py', 'data/briefing_sources.json'):
-            public[name] = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/' + name],
-                                          capture_output=True, check=True, encoding='utf-8').stdout
         # Ship only the pure statistics used by public collectors, excluding owner file/ledger APIs.
         statistics = ['from datetime import date', 'from decimal import Decimal, localcontext', 'import re',
                       "INVALID = 'RESEARCH_DESK_INVALID'",

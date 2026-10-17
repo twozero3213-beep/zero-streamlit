@@ -73,7 +73,7 @@
   const macro = document.getElementById('macro-list');
   if (macro) {
     const dialog = document.createElement('dialog'); dialog.className = 'indicator-dialog'; dialog.setAttribute('aria-labelledby', 'indicator-title');
-    dialog.innerHTML = '<div class="ind-head"><div><h2 id="indicator-title"></h2><p class="muted-note" id="indicator-sub"></p></div><button type="button" class="secondary-button" id="indicator-close">닫기</button></div><div class="ind-body"></div>';
+    dialog.innerHTML = '<div class="ind-head"><div><h2 id="indicator-title"></h2><p class="muted-note" id="indicator-sub"></p></div><button type="button" class="icon-button icon-close" id="indicator-close" aria-label="창 닫기" title="닫기">닫기</button></div><div class="ind-body"></div>';
     document.body.append(dialog);
     dialog.querySelector('#indicator-close').addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });

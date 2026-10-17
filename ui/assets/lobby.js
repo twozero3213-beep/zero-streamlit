@@ -73,6 +73,9 @@
   const board=$('lobby-board'),wallboard=$('lobby-wallboard');
   if(wallboard&&board)wallboard.prepend(board);
   const boardHome=board?.parentElement,boardNext=board?.nextSibling;
+  const boardSettings=$('lobby-board-settings'),settingsToggle=$('lobby-board-settings-toggle');
+  boardSettings?.addEventListener('keydown',event=>{if(event.key==='Escape'&&boardSettings.open){event.preventDefault();event.stopPropagation();boardSettings.open=false;settingsToggle?.focus();}});
+  document.addEventListener('pointerdown',event=>{if(boardSettings?.open&&!boardSettings.contains(event.target))boardSettings.open=false;});
   function setBoardPreference(id,key,allowed){const control=$(id);if(!control)return;const apply=()=>{const value=allowed.includes(control.value)?control.value:allowed[1];control.value=value;if(wallboard)wallboard.dataset[key]=value;store.set('zero-board-'+key,value);};const saved=store.get('zero-board-'+key);if(allowed.includes(saved))control.value=saved;control.addEventListener('change',apply);apply();}
   setBoardPreference('lobby-board-size','size',['compact','normal','large']);
   setBoardPreference('lobby-board-font','font',['12','14','16']);
@@ -85,7 +88,7 @@
   }
   function openFullBoard(){if(!fullBoardDialog)return;fullBoardDialog.append(board);if(!fullBoardDialog.open)fullBoardDialog.showModal();fullBoardDialog.querySelector('button')?.focus();advanceTutorial('board');}
   function boardPopup(){
-    if(!fullBoardDialog){fullBoardDialog=node('dialog','floor-help-dialog lobby-full-board-dialog office-sprites-ready');fullBoardDialog.id='lobby-full-board-dialog';fullBoardDialog.setAttribute('aria-label','전광판 · 지수·뉴스·연습 랭킹·검색 관심');const close=node('button','secondary-button','닫기');close.type='button';close.addEventListener('click',()=>fullBoardDialog.close());fullBoardDialog.append(node('h2','','전광판'),close);document.body.append(fullBoardDialog);fullBoardDialog.addEventListener('close',restoreBoard);}
+    if(!fullBoardDialog){fullBoardDialog=node('dialog','floor-help-dialog lobby-full-board-dialog office-sprites-ready');fullBoardDialog.id='lobby-full-board-dialog';fullBoardDialog.setAttribute('aria-label','전광판 · 지수·뉴스·연습 랭킹·검색 관심');const close=node('button','icon-button icon-close','닫기');close.type='button';close.title='닫기';close.setAttribute('aria-label','창 닫기');close.addEventListener('click',()=>fullBoardDialog.close());close.setAttribute('aria-label','전광판 닫기');fullBoardDialog.append(node('h2','','전광판'),close);document.body.append(fullBoardDialog);fullBoardDialog.addEventListener('close',restoreBoard);}
   }
   function restoreBoard(){
     if(boardHome&&board?.parentElement!==boardHome)boardHome.insertBefore(board,boardNext?.parentElement===boardHome?boardNext:null);
@@ -136,10 +139,15 @@
   function loadOwnerLayout(){
     const user=window.ZEROLobbyUsers;if(S.layoutPending||S.ownerLayoutConfirmed||!window.ZEROOfficeLayout||!user?.request||user.session()?.nick!==S.sceneOwner)return;
     const nick=S.sceneOwner,epoch=sceneEpoch;
-    S.layoutPending=(async()=>{try{const data=await user.request('/me/office-layout');if(epoch===sceneEpoch&&S.mode==='own'&&S.sceneOwner===nick&&user.session()?.nick===nick&&Number.isSafeInteger(data?.revision)&&data.revision>=0)setLayout(data.layout,data.revision);}catch(_){if(epoch===sceneEpoch)$('lobby-near').textContent='저장 배치를 불러오지 못해 기본 배치를 표시합니다.';}})().finally(()=>{S.layoutPending=null;});
+    const pending=(async()=>{try{const data=await user.request('/me/office-layout');if(epoch===sceneEpoch&&S.mode==='own'&&S.sceneOwner===nick&&user.session()?.nick===nick&&Number.isSafeInteger(data?.revision)&&data.revision>=0)setLayout(data.layout,data.revision);}catch(_){if(epoch===sceneEpoch)$('lobby-near').textContent='저장 배치를 불러오지 못해 기본 배치를 표시합니다.';}})().finally(()=>{if(S.layoutPending===pending)S.layoutPending=null;});S.layoutPending=pending;
   }
   document.addEventListener('zero-office-layout',event=>setLayout(event.detail?.layout,event.detail?.revision));
-  document.addEventListener('zero-session-changed',()=>{S.ownerNick=null;S.ownerLayout=null;S.layoutRevision=null;S.ownerLayoutConfirmed=false;});
+  document.addEventListener('zero-session-changed',()=>{
+    S.ownerNick=null;S.ownerLayout=null;S.layoutRevision=null;S.ownerLayoutConfirmed=false;S.layoutPending=null;
+    if(S.mode==='own'||S.mode==='loading'){invalidateRoster();S.npcs=[];S.visit=null;S.space=null;S.layout=null;S.sceneOwner=null;S.mode='loading';buildStage();renderTutorial();}
+    if(document.documentElement.dataset.zeroView==='lobby'||S.docked)openHome();
+  });
+  document.addEventListener('zero-profile-updated',()=>{if(S.mode==='loading'&&(document.documentElement.dataset.zeroView==='lobby'||S.docked)&&!window.ZEROLobbyUsers?.restoringSession?.())openHome();});
 
   function buildStage() {
     stopSpeech();
@@ -176,7 +184,7 @@
         const def=window.ZEROOfficeLayout.FURNITURE[object.kind],rotated=object.rotation===90||object.rotation===270,w=rotated?def.height:def.width,h=rotated?def.width:def.height;
         const prop=node('div','office-layout-object',({desk:'책상',server:'서버',billboard:'전광판',meeting:'회의',partition:'칸막이',plant:'🪴',coffee:'☕',guestbook:'방명록',portal:'광장',sofa:'소파',standingdesk:'책상'})[object.kind]);
         prop.style.position='absolute';prop.style.left=pct(object.x*10,160);prop.style.top=pct(object.y*10,100);prop.style.width=pct(w*10,160);prop.style.height=pct(h*10,100);prop.style.zIndex=String(Math.round((object.y+h)*100));prop.dataset.kind=object.kind;stage.append(prop);S.visuals.push(prop);
-        if(['portal','guestbook'].includes(object.kind)){const label=object.kind==='portal'?'광장':'방명록',hit=node('button','office-object-hit'),icon=node('span','office-object-icon',object.kind==='portal'?'↗':'✎'),spoken=node('span','sr-only',label);icon.setAttribute('aria-hidden','true');hit.append(icon,spoken);hit.type='button';hit.style.position='absolute';hit.style.left=prop.style.left;hit.style.top=prop.style.top;hit.style.width=prop.style.width;hit.style.height=prop.style.height;hit.style.zIndex='1800';hit.setAttribute('aria-label',object.kind==='portal'?'문까지 걸어가 공용 광장 입장':'방명록까지 걸어가 열기');hit.addEventListener('click',event=>{event.stopPropagation();interactObject(object);});stage.append(hit);S.hotspots.push(hit);}
+        if(['portal','guestbook'].includes(object.kind)){const label=object.kind==='portal'?'광장':'방명록',hit=node('button','office-object-hit'),icon=node('span','office-object-icon',object.kind==='portal'?'':'✎'),spoken=node('span','sr-only',label);icon.setAttribute('aria-hidden','true');hit.append(icon,spoken);hit.type='button';hit.style.position='absolute';hit.style.left=prop.style.left;hit.style.top=prop.style.top;hit.style.width=prop.style.width;hit.style.height=prop.style.height;hit.dataset.kind=object.kind;if(object.kind==='portal'){hit.style.width='44px';hit.style.height='44px';hit.style.left='clamp(22px,'+pct((object.x+w/2)*10,160)+',calc(100% - 22px))';hit.style.top='clamp(22px,'+pct((object.y+h/2)*10,100)+',calc(100% - 22px))';hit.style.transform='translate(-50%,-50%)';}hit.style.zIndex='1800';hit.setAttribute('aria-label',object.kind==='portal'?'문까지 걸어가 공용 광장 입장':'방명록까지 걸어가 열기');hit.addEventListener('click',event=>{event.stopPropagation();interactObject(object);});stage.append(hit);S.hotspots.push(hit);}
       });
       const billboard=S.layout.objects.find(o=>o.kind==='billboard');
       if(board&&billboard){boardPopup();const def=window.ZEROOfficeLayout.FURNITURE.billboard,rotate=billboard.rotation===90||billboard.rotation===270,trigger=node('button','floor-billboard','전광판 · 공개 자료');trigger.type='button';trigger.style.position='absolute';trigger.style.left=pct(billboard.x*10,160);trigger.style.top=pct(billboard.y*10,100);trigger.style.width=pct((rotate?def.height:def.width)*10,160);trigger.style.height=pct((rotate?def.width:def.height)*10,100);trigger.style.zIndex='2200';trigger.setAttribute('aria-label','전광판 상세 열기 · 지수·뉴스·연습 랭킹·검색 관심');trigger.addEventListener('click',event=>{event.stopPropagation();openFullBoard();});stage.append(trigger);S.billboardButton=trigger;S.hotspots.push(trigger);}else if(board){for(const key of ['position','left','top','width','height','zIndex'])board.style[key]='';}
@@ -196,7 +204,7 @@
   function rolePopup(){
     if(roleDialog)return roleDialog;
     roleDialog=node('dialog','floor-help-dialog lobby-roles-dialog');roleDialog.id='lobby-roles-dialog';roleDialog.setAttribute('aria-label','사무실 직원 역할 카드');
-    const close=node('button','secondary-button','닫기');close.type='button';close.addEventListener('click',()=>roleDialog.close());
+    const close=node('button','icon-button icon-close','닫기');close.type='button';close.title='닫기';close.setAttribute('aria-label','창 닫기');close.addEventListener('click',()=>roleDialog.close());
     roleDialog.append(node('h2','','직원 역할 카드'),close);document.body.append(roleDialog);
     const control=node('button','secondary-button','직원 카드');control.id='lobby-roles-open';control.type='button';control.setAttribute('aria-haspopup','dialog');control.addEventListener('click',()=>{roleDialog.showModal();close.focus();});
     document.querySelector('.lobby-meta').append(control);return roleDialog;
@@ -620,7 +628,7 @@
   function showBoardDetail(text) {
     if (!boardDialog) {
       boardDialog = node('dialog', 'floor-help-dialog'); boardDialog.setAttribute('aria-label', '시장 시세 상세');
-      const close = node('button', 'secondary-button', '닫기'); close.type = 'button'; close.addEventListener('click', () => boardDialog.close());
+      const close = node('button','icon-button icon-close','닫기'); close.type = 'button';close.title='닫기';close.setAttribute('aria-label','창 닫기'); close.addEventListener('click', () => boardDialog.close());
       boardDialog.append(close, node('p', 'board-detail')); document.body.append(boardDialog);
     }
     boardDialog.querySelector('.board-detail').textContent = text; boardDialog.showModal();
@@ -776,7 +784,7 @@
   const TUT_KEY = 'zero-lobby-tutorial-v1';
   function tutorialState() { try { return JSON.parse(store.get(TUT_KEY)) || null; } catch (_) { return null; } }
   function renderTutorial() {
-    const panel = $('lobby-tutorial'), state = S.tutorial; panel.hidden = !state || state.done;
+    const panel = $('lobby-tutorial'), state = S.tutorial; panel.hidden = S.mode !== 'zero' || !state || state.done;
     if (panel.hidden) return;
     const step = L.TUTORIAL[state.step]; panel.querySelector('.tut-step').textContent = step.title; panel.querySelector('.tut-text').textContent = step.text;
     panel.querySelector('.tut-progress').style.width = (state.step / (L.TUTORIAL.length - 1) * 100) + '%';
@@ -798,7 +806,7 @@
   // ---- scenes: ZERO and visits ----------------------------------------------------------------
   function setBanner(text, back) {
     const banner = $('lobby-banner'); banner.hidden = !text; banner.replaceChildren();
-    if (!text) return; banner.append(node('span', '', text)); if (back) { const button = node('button', 'secondary-button', '플로어로 돌아가기'); button.type = 'button'; button.addEventListener('click', () => open()); banner.append(button); }
+    if (!text) return; banner.append(node('span', '', text)); if (back) { const button = node('button', 'secondary-button', 'ZERO 팀 보기'); button.type = 'button'; button.addEventListener('click', () => open()); banner.append(button); }
   }
   let teamRequest = null, sceneEpoch = 0;
   let retryButton = $('lobby-retry');
@@ -842,24 +850,25 @@
     return request.promise;
   }
   // The visitor's own company: the names they chose, visible only to them (the server never returns this to others).
-  function showOwn(info) {
-    if(window.ZERO?.currentView?.()&&window.ZERO.currentView()!=='lobby')window.ZERO.navigate('lobby');
-    invalidateRoster();
+  function showOwn(info,navigate=true) {
+    if(navigate&&window.ZERO?.currentView?.()&&window.ZERO.currentView()!=='lobby')window.ZERO.navigate('lobby');
+    invalidateRoster();S.layoutPending=null;$('lobby-error').hidden=true;
+    $('lobby-title').textContent=info.nick+'님의 사무실';$('lobby-sub').textContent='저장한 가구 배치와 내 직원들이에요.';
     S.visit = null; S.mode = 'own'; S.space = info.space || L.DEFAULT_SPACE;
     const sameOwner=S.ownerNick===info.nick,cached=sameOwner?S.ownerLayout:null,supplied=window.ZEROOfficeLayout?.validate(info.layout);if(!sameOwner){S.layoutRevision=null;S.ownerLayoutConfirmed=false;}S.ownerNick=info.nick;S.sceneOwner=info.nick;S.layout=supplied||cached||window.ZEROOfficeLayout?.defaultLayout('startup')||null;S.ownerLayout=S.layout;if(supplied)S.ownerLayoutConfirmed=true;
-    const list = [], chiefs = [], staffByChief = {}, person = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : (value || {name: '', persona: '', duty: ''});
+    const list = [], person = (value) => typeof value === 'string' ? {name: value, persona: '', duty: ''} : (value || {name: '', persona: '', duty: ''});
     const make = (id, department, kind, who, role, mandate, hue, index) => {
       const persona = L.PERSONAS[who.persona];
       return {id, department, kind, name: who.name || '이름 없음', role, mandate, hue, duty: who.duty || '', persona: who.persona || '', strategy_persona:who.strategy_persona||'', display_persona:who.display_persona||'', personaLines: persona?.lines, face: L.faceAt(index)};
     };
-    (info.team?.teams || []).slice(0, 8).forEach((team, index) => {
-      const id = 'own-' + index, hue = (index * 45 + 10) % 360, leader = person(team.leader); chiefs.push(id); staffByChief[id] = [];
+    (info.team?.teams || []).forEach((team, index) => {
+      const id = 'own-' + index, hue = (index * 45 + 10) % 360, leader = person(team.leader);
       list.push(make(id, id, 'chief', {...leader, name: leader.name || team.name}, '팀장 · ' + team.name + (team.role ? ' · ' + team.role : ''), (team.role || team.name) + ' 팀을 이끌어요. ' + (leader.duty ? '맡은 일: ' + leader.duty : ''), hue, list.length));
-      (team.members || []).forEach((raw, n) => { const member = person(raw), memberId = id + '-m' + n; staffByChief[id].push(memberId); list.push(make(memberId, id, 'staff', member, team.name + ' 팀원' + (member.duty ? ' · ' + member.duty : ''), team.name + ' 팀의 일원이에요. ' + (member.duty ? '맡은 일: ' + member.duty : ''), hue, list.length)); });
+      (team.members || []).forEach((raw, n) => { const member = person(raw), memberId = id + '-m' + n; list.push(make(memberId, id, 'staff', member, team.name + ' 팀원' + (member.duty ? ' · ' + member.duty : ''), team.name + ' 팀의 일원이에요. ' + (member.duty ? '맡은 일: ' + member.duty : ''), hue, list.length)); });
     });
-    const spots = L.layoutTeams(chiefs, staffByChief);
-    list.forEach((npc) => { npc.home = spots.get(npc.id); npc.pos = {...npc.home}; });
-    S.npcs = list; setBanner(list.length ? (info.team.company || info.nick + '의 회사') + ' · 직원 ' + list.length + '명 · 이 화면은 나만 볼 수 있어요' : '아직 직원이 없어요. "내 사무실" 창에서 팀을 만들어 보세요.', true);
+    const spots = L.layoutGrid(list.length);
+    list.forEach((npc,index) => { npc.home = spots[index]; npc.pos = {...npc.home}; });
+    S.npcs = list; setBanner(list.length ? (info.team.company || info.nick + '의 회사') + ' · 직원 ' + list.length + '명 · 이 화면은 나만 볼 수 있어요' : '내 사무실 · 직원 0명', true);
     $('lobby-count').textContent = '직원 ' + list.length + '명'; buildStage(); finish();loadOwnerLayout();
   }
   // Visits use only the public projection; roles, conditions and allocation never enter this scene.
@@ -873,6 +882,7 @@
     const spots = L.layoutGrid(Math.min(40, count));
     S.npcs = spots.map((spot, index) => ({id: 'guest-' + index, department: 'GUEST', kind: 'staff', name: '직원', role: '🔒 역할 비공개', mandate: '', hue: (index * 47 + 20) % 360, home: spot, pos: {...spot}, face: L.faceAt(index + 3)}));
     S.npcs.push({id: 'host', department: 'HOST', kind: 'manager', name: info.nick, role: '사무실 주인', mandate: '', hue: 40, face: {eyes: 1, mouth: 1}, home: {x: 80, y: 27}, pos: {x: 80, y: 27}});
+    $('lobby-error').hidden=true;
     setBanner(info.nick + '님의 사무실 · 직원 ' + count + '명 · 수익률 ' + (typeof info.returnPercent === 'number' && Number.isFinite(info.returnPercent) ? money(info.returnPercent) : '집계 전') + ' · 공개 팀 이름: ' + (teams.length ? teams.join(' · ') : '🔒 비공개 또는 미등록') + ' · 🔒 역할·조건·배분 비중 비공개', true);
     $('lobby-title').textContent = info.nick + '님의 사무실';
     $('lobby-sub').textContent = (teams.length ? '공개 팀 이름: ' + teams.join(' · ') : '공개된 팀 이름이 없어요.') + ' · 장식·직원 수·일반 잡담만 보여요. 🔒 상세 역할·조건·비중 비공개';
@@ -943,7 +953,7 @@
     if(S.docked)view.dataset.desktopDocked='true';else delete view.dataset.desktopDocked;
     if(!S.docked){S.dockStarted=false;S.dockHandoff=false;}
     setActive(S.docked||document.documentElement.dataset.zeroView==='lobby');
-    if(S.docked&&!document.hidden&&!S.player&&!teamRequest&&!S.dockStarted){S.dockStarted=true;open();}
+    if(S.docked&&!document.hidden&&!S.player&&!teamRequest&&!S.dockStarted){S.dockStarted=true;openHome();}
     fitOfficeViewport();return S.docked;
   }
   function setCharacterProgress(progress) {
@@ -963,7 +973,7 @@
   const floorHelp = document.createElement('dialog');
   floorHelp.id = 'floor-help-dialog'; floorHelp.className = 'floor-help-dialog';
   floorHelp.setAttribute('aria-labelledby', 'floor-help-title');
-  floorHelp.innerHTML = '<header class="chat-head"><h2 id="floor-help-title">플로어 안내 · 내 사무실</h2><button type="button" class="secondary-button" autofocus>닫기</button></header>';
+  floorHelp.innerHTML = '<header class="chat-head"><h2 id="floor-help-title">플로어 안내 · 내 사무실</h2><button type="button" class="icon-button icon-close" autofocus aria-label="창 닫기" title="닫기">닫기</button></header>';
   document.body.append(floorHelp);
   floorHelp.append(document.querySelector('.lobby-side'));
   floorHelp.querySelector('header button').addEventListener('click', () => floorHelp.close());
@@ -988,7 +998,9 @@
   }
   new ResizeObserver(fitFloor).observe(document.querySelector('.global-header'));
   window.addEventListener('resize', fitFloor); fitFloor();
-  window.addEventListener('resize',()=>{if(S.dockRequested)setDocked(true);fitOfficeViewport();});
+  const officeTools=$('lobby-tools');let compactOfficeTools=window.innerWidth<768;officeTools.open=!compactOfficeTools;
+  function syncOfficeTools(){const compact=window.innerWidth<768;if(compact!==compactOfficeTools){officeTools.open=!compact;compactOfficeTools=compact;}}
+  window.addEventListener('resize',()=>{if(S.dockRequested)setDocked(true);fitOfficeViewport();syncOfficeTools();});
   if(stage.parentElement)new ResizeObserver(fitOfficeViewport).observe(stage.parentElement);
   fitOfficeViewport();
   paintRanking();
@@ -996,8 +1008,20 @@
   const initialTutorial = tutorialState();
   S.tutorial = initialTutorial || {step: 0, done: false};
   if (!initialTutorial) store.set(TUT_KEY, JSON.stringify(S.tutorial));
-  retryButton.addEventListener('click', () => open(true));
-  window.ZEROLobby = {showOwn, open: () => { setActive(true); if(S.dockHandoff&&S.player){S.dockHandoff=false;return;} if (!S.team || !S.player || S.mode !== 'zero') return open(); }, close: () => setActive(false), setActive, setDocked, visit: visitOffice, setLayout,setPlayerName, setCharacterProgress, setUserBoard, state: S};
+  function openHome(){
+    setActive(true);
+    const users=window.ZEROLobbyUsers,office=users?.ownOffice?.();
+    if(office){S.dockHandoff=false;showOwn(office,!S.docked);return;}
+    if(users?.restoringSession?.()){
+      invalidateRoster();S.mode='loading';S.visit=null;S.npcs=[];S.space=null;S.layout=null;setBanner('');buildStage();renderTutorial();
+      $('lobby-title').textContent='내 사무실';$('lobby-count').textContent='';
+      $('lobby-error').hidden=false;$('lobby-error').querySelector('p').textContent='로그인 정보를 확인하고 내 사무실을 불러오는 중이에요.';return;
+    }
+    if(S.dockHandoff&&S.player){S.dockHandoff=false;return;}
+    if(!S.team||!S.player||S.mode!=='zero')return open();
+  }
+  retryButton.addEventListener('click', () => S.mode==='loading'?window.ZEROLobbyUsers?.refresh():open(true));
+  window.ZEROLobby = {showOwn, open: openHome, close: () => setActive(false), setActive, setDocked, visit: visitOffice, setLayout,setPlayerName, setCharacterProgress, setUserBoard, state: S};
   window.ZEROOffice={...(window.ZEROOffice||{}),setLayout};
   document.addEventListener('zero-plaza-closed', () => {
     S.portalBusy = false; S.keys.clear(); S.target = null; stage.classList.remove('portal-travel');
@@ -1006,7 +1030,7 @@
   });
   document.addEventListener('zero-lobby-open', () => window.ZERO?.navigate?window.ZERO.navigate('lobby'):window.ZEROLobby.open());
   const entryRoute=window.location?.hash?.slice(1).split('?')[0];
-  if (document.documentElement.dataset.zeroView === 'lobby'&&(!entryRoute||entryRoute==='lobby')) window.ZEROLobby.open();
+  if (!window.ZERO?.navigate&&document.documentElement.dataset.zeroView === 'lobby'&&(!entryRoute||entryRoute==='lobby')) window.ZEROLobby.open();
   document.addEventListener('visibilitychange', () => {
     if(document.hidden){stopSpeech();S.keys.clear();if(S.docked){setActive(false);S.dockStarted=false;}}
     else if(S.docked)setDocked(true);

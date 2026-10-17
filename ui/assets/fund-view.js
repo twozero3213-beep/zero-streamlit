@@ -178,7 +178,7 @@ function renderFundBenchmark(data) {
 function loadFundBenchmark() {
   if(fundUI.benchmarkPromise)return fundUI.benchmarkPromise;
   if(fund$('tqqq-empty'))fund$('tqqq-empty').textContent='공개 TQQQ 가격·환율 비교 기록을 불러오는 중입니다.';
-  fundUI.benchmarkPromise=(async()=>{const response=await fetch('api/tqqq',{cache:'no-store'});if(!response.ok)throw Error();const data=await response.json();fundUI.benchmark=data;renderFundBenchmark(data);return data;})().catch(()=>{renderFundBenchmark(null);return null;});
+  fundUI.benchmarkPromise=(async()=>{const response=await fetch('api/tqqq',{cache:'no-store'});if(!response.ok)throw Error();const data=await response.json();fundUI.benchmark=data;renderFundBenchmark(data);return data;})().catch(()=>{fundUI.benchmarkPromise=null;renderFundBenchmark(null);return null;});
   return fundUI.benchmarkPromise;
 }
 function loadPublicFunds() {
@@ -191,7 +191,7 @@ function loadPublicFunds() {
       ||data.orders_authorized!==false||data.allocation_changes_authorized!==false
       ||data.source_attested_only!==true||data.independent_validation_completed!==false||!Array.isArray(data.funds))throw Error();
     return data;
-  })().catch(()=>null);
+  })().catch(()=>{fundUI.fundsPromise=null;return null;});
   return fundUI.fundsPromise;
 }
 function fundCanCompare(fund) {
@@ -302,7 +302,7 @@ async function loadInstitutions() {
       ||data.source_attested_only!==true||data.independent_validation_completed!==false||data.orders_authorized!==false
       ||data.allocation_changes_authorized!==false||!Array.isArray(data.institutions)||data.institutions.length>2)throw Error();
     return data;
-  })().catch(()=>null);return fundUI.institutionsPromise;
+  })().catch(()=>{fundUI.institutionsPromise=null;return null;});return fundUI.institutionsPromise;
 }
 function renderInstitutionRows(container,rows,changes) {
   const map=new Map(changes.map((row)=>[row.id,row])),wrapper=node('div','fund-table-scroll');wrapper.tabIndex=0;wrapper.setAttribute('role','region');wrapper.setAttribute('aria-label','국민연금 연간 종목 공시 · 좌우 스크롤 가능');

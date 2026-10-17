@@ -15,7 +15,8 @@
   const $=id=>document.getElementById(id),U=()=>window.ZEROLobbyUsers;
   const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
   const button=(text,run)=>{const n=el('button','secondary-button',text);n.type='button';n.addEventListener('click',run);return n;};
-  let fields=0,epoch=0,marketEpoch=0,staff=[];
+  let fields=0,epoch=0,marketEpoch=0,staff=[],paperPending=new Map(),paperActive=false,paperSelection=null;
+  function portfolioContent(){return $('portfolio-view')?.querySelector('#member-portfolio')||null;}
   function companyContent(){
     return $('company-view')?.querySelector('#company-content')||null;
   }
@@ -28,8 +29,23 @@
   const pct=value=>typeof value==='number'&&Number.isFinite(value)?(Math.trunc(value*100)/100).toFixed(2)+'%':'집계 전';
   const reason=code=>({POINT_IN_TIME_FUNDAMENTALS_REQUIRED:'가치투자에는 당시 공개된 재무 자료가 필요합니다.',DIVIDEND_HISTORY_REQUIRED:'고배당 전략에는 검증된 배당 이력이 필요합니다.',INSUFFICIENT_HISTORY:'공통 가격 이력이 부족합니다.',INSUFFICIENT_COMMON_HISTORY:'관찰 준비 구간을 제외한 공통 가격 이력이 부족합니다.',FUNDAMENTAL_HISTORY_REQUIRED:'가치투자에 필요한 당시 재무 자료가 없습니다.',UNSUPPORTED_SPLIT:'주식 분할이 확인되어 미조정 가격으로 계산하지 않습니다.',SPLIT_METADATA_REQUIRED:'주식 분할 여부를 확인할 근거가 필요합니다.',STRATEGY_UNAVAILABLE:'전략 엔진 연결을 확인하지 못했습니다.',UNAUTHORIZED:'로그인한 뒤 사용해 주세요.',STAFF_INVALID:'직원 설정과 가중치를 확인해 주세요.'}[code]||'자료를 확인하지 못했습니다. 설정과 연결 상태를 확인해 주세요.');
   async function request(path,options={}){if(!U()?.session())throw {code:'UNAUTHORIZED'};return U().request(path,options);}
-  function clearPrivate(){epoch++;staff=[];const target=companyContent();if(target)showLogin(target);}
-  document.addEventListener('zero-session-changed',()=>{clearPrivate();if(document.documentElement.dataset.zeroView==='company')open();});
+  function portfolioEntry(target){
+    const restoring=U()?.restoringSession?.();
+    showState(target,restoring?'loading':'login',restoring?'로그인 정보를 확인하는 중…':'로그인하면 나만의 모의자산으로 매수·매도할 수 있어요.',...(restoring?[]:[button('로그인하기',()=>U()?.openProfile())]),button('ZERO 참고 운용 보기',()=>window.ZERO?.navigate('comparison')));
+  }
+  function clearPrivate(){epoch++;staff=[];paperActive=false;paperSelection=null;const target=companyContent();if(target)showLogin(target);const personal=portfolioContent();if(personal)portfolioEntry(personal);}
+  document.addEventListener('zero-session-changed',()=>{clearPrivate();if(document.documentElement.dataset.zeroView==='company')open();else if(document.documentElement.dataset.zeroView==='portfolio')openPortfolio();});
+  document.addEventListener('zero-view-changed',()=>{epoch++;paperActive=false;const personal=portfolioContent();if(personal&&document.documentElement.dataset.zeroView!=='portfolio')personal.replaceChildren();});
+  async function mountPaper(target){
+    if(!target)return;const generation=++epoch;paperActive=false;
+    try{
+      if(!U()){showState(target,'error','로그인 연결을 불러오지 못했어요.',button('다시 불러오기',()=>mountPaper(target)));return;}
+      if(U().session()?.membership?.kind!=='MEMBER'){portfolioEntry(target);return;}
+      const panel=el('section','panel company-paper member-paper');target.replaceChildren(panel);await drawPaper(panel,generation);
+    }catch(e){if(generation===epoch)showState(target,'error',paperReason(e?.code),button('다시 불러오기',()=>mountPaper(target)));}
+  }
+  function openPortfolio(){return mountPaper(portfolioContent());}
+
   function drawStaff(list){
     list.replaceChildren();staff.forEach((row,index)=>{
       const card=el('fieldset','company-staff');card.append(el('legend','',row.name||'직원 '+(index+1)));
@@ -45,6 +61,104 @@
   function staffOffice(company,rows){
     const groups=new Map();rows.forEach(row=>{if(!groups.has(row.team))groups.set(row.team,[]);groups.get(row.team).push({name:row.name,persona:row.persona==='TREND'?'열정적':'꼼꼼함',duty:PERSONAS[row.persona]+' 전략 연구'});});
     return {company:company.name||'대표님의 회사',teams:[...groups].map(([name,members])=>({name,role:'비공개 전략 연구',leader:members[0],members:members.slice(1)}))};
+  }
+  const paperMoney=value=>Number.isSafeInteger(value)?new Intl.NumberFormat('ko-KR').format(value)+'원':'시세 확인 필요';
+  const paperTime=value=>Number.isFinite(Date.parse(value))?new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',dateStyle:'short',timeStyle:'short',hour12:false}).format(new Date(value))+' KST':'관측 시각 확인 필요';
+  const paperReason=code=>({INSUFFICIENT_CASH:'모의현금이 부족합니다. 기존 가상 지분이나 보유 주식을 먼저 정리해 주세요.',INSUFFICIENT_POSITION:'보유 수량보다 많이 팔 수 없습니다.',QUOTES_UNAVAILABLE:'유효한 공개 시세를 확인하지 못했습니다. 매매를 진행하지 않습니다.',FX_UNAVAILABLE:'유효한 USD/KRW 환율이 없어 미국 종목 매매를 진행하지 않습니다.',QUOTE_CHANGED:'시세가 바뀌었습니다. 새 시세로 금액을 확인해 주세요.',PAPER_CONFLICT:'보유 내역이 바뀌었습니다. 새로 불러온 뒤 다시 확인해 주세요.',LEGACY_ALREADY_LIQUIDATED:'이미 현금화한 기존 가상 지분입니다.',STAFF_REQUIRED:'전략 직원을 먼저 저장해 주세요.',LEGACY_PORTFOLIO_REQUIRED:'기존 연습 포트폴리오가 준비되어야 모의거래를 시작할 수 있습니다.',TRADE_INVALID:'종목과 정수 수량을 확인해 주세요.',IDEMPOTENCY_CONFLICT:'이미 사용한 거래 요청입니다. 거래 내역을 확인해 주세요.',UNAUTHORIZED:'로그인한 뒤 사용해 주세요.'}[code]||'모의투자 연결을 확인하지 못했습니다. 저장 결과와 거래 내역을 다시 확인해 주세요.');
+  function pendingPaper(account_id){
+    if(paperPending.has(account_id))return paperPending.get(account_id);
+    try{const stored=JSON.parse(window.sessionStorage?.getItem('zero.paper.pending.'+account_id)||'null');if(stored?.account_id===account_id&&/^[0-9a-f-]{36}$/.test(stored.body?.idempotency_key||'')){paperPending.set(account_id,stored);return stored;}}catch(_){}
+    return null;
+  }
+  function savePendingPaper(value,account_id=value?.account_id){if(value)paperPending.set(account_id,value);else paperPending.delete(account_id);try{const key='zero.paper.pending.'+account_id;if(value)window.sessionStorage?.setItem(key,JSON.stringify(value));else window.sessionStorage?.removeItem(key);}catch(_){/* In-memory replay remains available when browser storage is disabled. */}}
+  function paperObservation(target,quote){
+    if(!quote){target.append(el('p','muted-note','시세 확인 필요 · 평가액과 거래 가능 여부를 추정하지 않습니다.'));return;}
+    target.append(el('p','muted-note','공개 지연 시세 '+new Intl.NumberFormat('ko-KR',{maximumFractionDigits:6}).format(quote.price_minor/quote.scale)+' '+quote.currency+' · '+paperTime(quote.as_of)));
+    if(quote.fx)target.append(el('p','muted-note','USD/KRW '+new Intl.NumberFormat('ko-KR',{maximumFractionDigits:6}).format(quote.fx.price_minor/quote.fx.scale)+' · '+paperTime(quote.fx.as_of)));
+    for(const [label,url] of [['시세 원문',quote.source],['환율 원문',quote.fx?.source]])if(typeof url==='string'&&/^https:\/\/query1\.finance\.yahoo\.com\/v8\/finance\/chart\//.test(url)){const a=el('a','',label);a.href=url;a.target='_blank';a.rel='noopener noreferrer';target.append(a);}
+  }
+  function paperPreview(quote,quantity,buy){
+    let n=BigInt(quote.price_minor)*BigInt(quantity),d=BigInt(quote.scale);if(quote.currency==='USD'){if(!quote.fx)return null;n*=BigInt(quote.fx.price_minor);d*=BigInt(quote.fx.scale);}
+    const amount=(n+(buy?d-1n:0n))/d;return amount<=BigInt(Number.MAX_SAFE_INTEGER)?Number(amount):null;
+  }
+  function openPaperFor(identity=null){
+    if(identity!==null&&!/^(?:US:[A-Z][A-Z0-9.-]{0,14}|KR:\d{6})$/.test(identity))return;
+    paperSelection=identity;if(document.documentElement.dataset.zeroView==='portfolio'||!window.ZERO?.navigate)return openPortfolio();return window.ZERO.navigate('portfolio');
+  }
+  async function drawPaper(panel,generation){
+    const load=Number(panel.dataset.paperGeneration||0)+1;panel.dataset.paperGeneration=String(load);
+    const current=()=>generation===epoch&&panel.isConnected&&panel.dataset.paperGeneration===String(load);
+    panel.replaceChildren(el('h2','','내 모의투자 · 직접 매매'),el('p','muted-note','앱 모의투자 · 실제 계좌와 분리'));
+    const status=el('p','muted-note','모의투자 보유 내역을 불러오는 중…');status.setAttribute('role','status');status.setAttribute('aria-live','polite');panel.append(status);
+    try{
+      const data=await request('/me/paper');if(!current())return;
+      const account=data.account;if(data.scope!=='APP_PAPER_TRADING'||!account||!Number.isSafeInteger(account.account_id)||account.account_id<1||!Number.isSafeInteger(account.revision)||!Number.isSafeInteger(account.cash_krw)||!Array.isArray(account.positions)||!Array.isArray(account.legacy))throw {code:'PAPER_RESPONSE_INVALID'};
+      paperActive=true;
+      const account_id=account.account_id,summary=el('div','company-paper-summary');
+      for(const [metric,label,value] of [['total','모의 총자산',paperMoney(account.total_krw)],['cash','사용 가능 모의현금',paperMoney(account.cash_krw)],['return','수익률',pct(account.return_percent)],['initial','시작 모의현금',paperMoney(account.initial_capital_krw)]]){const item=el('p','paper-'+metric,label+' '+value);item.dataset.paperMetric=metric;summary.append(item);}panel.append(summary);
+      if(!account.positions.length&&!account.legacy.some(position=>!position.liquidated))panel.append(el('p','muted-note','보유 종목이 없어요. 원하는 종목과 수량을 선택해 모의 매수를 시작해 보세요.'));
+
+      const basis=el('details','company-paper-basis');basis.append(el('summary','','모의거래 계산 기준'),el('p','muted-note',data.disclosure));panel.append(basis);
+      if(account.cash_krw===0&&account.legacy.some(p=>!p.liquidated))panel.append(el('p','muted-note','보유 지분을 먼저 정리하면 매수할 모의현금이 생겨요.'));
+      const pending=pendingPaper(account_id),controls=[],legacyButtons=[],preview=el('div','company-paper-preview'),holdings=el('div','company-paper-holdings');preview.setAttribute('aria-live','polite');
+      const market=field('시장','select',''),symbol=field('종목 코드','text',''),side=field('모의 매매','select',''),quantity=field('수량(정수 주)','number',1,1,100000000);quantity.input.step='1';symbol.input.maxLength=15;symbol.input.placeholder='AAPL 또는 005930';
+      for(const [input,options] of [[market.input,[['US','미국 주식'],['KR','한국 주식']]],[side.input,[['BUY','모의 매수'],['SELL','모의 매도']]]]){for(const [value,text] of options){const option=el('option','',text);option.value=value;input.append(option);}input.value=options[0][0];}
+      if(paperSelection&&!pending){market.input.value=paperSelection.slice(0,2);symbol.input.value=paperSelection.slice(3);paperSelection=null;}
+      const form=el('div','company-paper-form');form.append(market.wrap,symbol.wrap,side.wrap,quantity.wrap);controls.push(market.input,symbol.input,side.input,quantity.input);
+      let previewEpoch=0,intent=null,busy=false,unknown=Boolean(pending);
+      const lock=on=>{controls.forEach(control=>control.disabled=on);legacyButtons.forEach(control=>control.disabled=on||control.dataset.quoteUnavailable==='true');};
+      async function submit(body){
+        if(busy||!current())return;busy=true;lock(true);savePendingPaper({account_id,body});status.textContent='모의거래 저장 결과를 확인하는 중…';
+        try{
+          const result=await request('/me/paper/trades',{method:'POST',body});if(!current())return;if(!result.receipt)throw {code:'PAPER_RESPONSE_INVALID'};
+          savePendingPaper(null,account_id);await drawPaper(panel,generation);if(generation===epoch&&panel.isConnected){const saved=el('p','company-paper-success','모의거래 기록 확인 · '+result.receipt.identity+' · 현금 증감 '+paperMoney(result.receipt.cash_delta_krw));saved.setAttribute('role','status');panel.append(saved);await U()?.refresh();}
+        }catch(e){if(!current())return;
+          // Only a durable server rejection rules out a late commit of the original request.
+          if(e.terminal===true){savePendingPaper(null,account_id);unknown=false;intent=null;preview.replaceChildren();lock(false);status.textContent=paperReason(e.code);}
+          else{unknown=true;preview.replaceChildren(el('p','','저장 여부가 아직 확인되지 않았습니다. 같은 요청으로 결과를 확인하세요.'),button('같은 모의거래 결과 확인',()=>submit(body)));status.textContent=paperReason(e.code);}
+        }finally{busy=false;}
+      }
+      async function prepare(action,identity,count){
+        if(busy||unknown||!current())return;
+        if(!/^(?:US:[A-Z][A-Z0-9.-]{0,14}|KR:\d{6})$/.test(identity)||!Number.isSafeInteger(count)||count<1||count>100000000){status.textContent=paperReason('TRADE_INVALID');return;}
+        const ownPreview=++previewEpoch;intent=null;preview.replaceChildren();status.textContent='공개 시세와 거래 금액을 확인하는 중…';
+        try{
+          const observation=await request('/me/paper/quote?identity='+encodeURIComponent(identity)+(action==='LIQUIDATE_LEGACY'?'&legacy=1':''));if(!current()||ownPreview!==previewEpoch)return;
+          if(!observation.quote||!observation.quote_id)throw {code:'PAPER_RESPONSE_INVALID'};
+          const quote=observation.quote,legacy=action==='LIQUIDATE_LEGACY',amount=legacy?observation.legacy_value_krw:paperPreview(quote,count,action==='BUY');
+          if(legacy&&observation.account_revision!==account.revision)throw {code:'PAPER_CONFLICT'};
+          if(!Number.isSafeInteger(amount))throw {code:'PAPER_RESPONSE_INVALID'};
+          intent={action,identity,quantity:count,expected_revision:account.revision,idempotency_key:crypto.randomUUID(),quote_id:observation.quote_id};
+          preview.append(el('h3','','모의거래 확인'),el('p','',identity+' · '+(legacy?'기존 가상 지분 전량 정리':(action==='BUY'?'매수 ':'매도 ')+count+'주')),el('p','','모의현금 예상 '+(action==='BUY'?'지출 ':'수령 ')+paperMoney(amount)));paperObservation(preview,quote);
+          preview.append(button(legacy?'가상 지분을 모의현금으로 정리':action==='BUY'?'모의 매수 확정':'모의 매도 확정',()=>{if(intent&&ownPreview===previewEpoch)return submit(intent);}));status.textContent='시세와 금액을 확인한 뒤 모의거래를 확정해 주세요.';
+        }catch(e){if(current()&&ownPreview===previewEpoch)status.textContent=paperReason(e.code);}
+      }
+      controls.forEach(control=>{const invalidate=()=>{if(unknown)return;previewEpoch++;intent=null;preview.replaceChildren();status.textContent='입력이 바뀌었습니다. 시세와 금액을 다시 확인해 주세요.';};control.addEventListener('input',invalidate);control.addEventListener('change',invalidate);});
+      const check=button('시세·금액 확인',()=>prepare(side.input.value,market.input.value+':'+symbol.input.value.trim().toUpperCase(),Number(quantity.input.value)));controls.push(check);form.append(check);panel.append(form,preview,holdings);
+      holdings.append(el('h3','','보유 내역'));
+      for(const position of account.legacy){const row=el('div','company-paper-holding');row.append(el('p','',position.identity+' · 기존 가상 지분 '+position.weight_percent+'% · '+(position.liquidated?'정리 완료':paperMoney(position.value_krw))));if(!position.liquidated){paperObservation(row,position.quote);const sell=button('이 가상 지분 정리',()=>prepare('LIQUIDATE_LEGACY',position.identity,1));sell.disabled=!position.quote;sell.dataset.quoteUnavailable=String(!position.quote);legacyButtons.push(sell);row.append(sell);}holdings.append(row);}
+      for(const position of account.positions){const row=el('div','company-paper-holding');row.append(el('p','',position.identity+' · '+position.quantity+'주 · '+paperMoney(position.value_krw)),el('p','muted-note','모의 취득금액 '+paperMoney(position.cost_krw)));paperObservation(row,position.quote);const sell=button('이 종목 모의 매도',()=>{market.input.value=position.identity.slice(0,2);symbol.input.value=position.identity.slice(3);side.input.value='SELL';quantity.input.value=position.quantity;return prepare('SELL',position.identity,position.quantity);});legacyButtons.push(sell);row.append(sell);holdings.append(row);}
+      if(!account.positions.length)holdings.append(el('p','muted-note',account.legacy.some(position=>!position.liquidated)?'새로 매수한 종목이 없습니다. 기존 가상 지분에는 임의 주식 수량을 붙이지 않습니다.':'아직 보유한 종목이 없습니다.'));
+      panel.append(button('모의투자 새로 불러오기',()=>{if(!busy)return drawPaper(panel,generation);}));
+      const history=el('details','company-paper-records'),historyRows=el('div');history.append(el('summary','','모의거래 내역'),historyRows);panel.append(history);
+      async function historyPage(before=null){try{const result=await request('/me/paper/trades'+(before?'?before='+before:''));if(!current())return;if(!Array.isArray(result.items))throw {code:'PAPER_RESPONSE_INVALID'};if(!before&&!result.items.length)historyRows.append(el('p','muted-note','저장된 모의거래가 없습니다.'));result.items.forEach(row=>historyRows.append(el('p','',paperTime(row.created_at)+' · '+row.identity+' · '+({BUY:'모의 매수',SELL:'모의 매도',LIQUIDATE_LEGACY:'기존 지분 정리'}[row.action]||'모의거래')+' · '+(row.unit==='SHARE'?row.quantity+'주 · ':'')+paperMoney(row.cash_delta_krw))));if(result.next_before){const more=button('이전 모의거래 더 보기',async()=>{if(more.disabled)return;more.disabled=true;more.remove();await historyPage(result.next_before);});historyRows.append(more);}}catch(e){if(current())historyRows.append(el('p','muted-note',paperReason(e.code)),button('거래 내역 다시 불러오기',()=>{historyRows.replaceChildren();return historyPage();}));}}
+      const discussions=el('div','company-paper-discussions');discussions.append(el('h3','','직원 일일 보유·시장 점검'));panel.append(discussions);
+      const reports=el('div');function reportRows(items){
+        reports.replaceChildren();if(!items.length)reports.append(el('p','muted-note','아직 저장된 일일 점검이 없습니다. 오늘의 보유와 시장 관찰을 기록해 주세요.'));
+        items.forEach(report=>{
+          const details=el('details');details.append(el('summary','',report.day+' KST · '+(report.revision!==account.revision?'이전 보유 기준 · ':'현재 보유 기준 · ')+(report.state==='PARTIAL'?'시세 일부 확인 필요':'규칙 기반 관찰')),el('p','muted-note',report.notice));
+          for(const text of [report.market_observation,report.hold,report.change])if(text)details.append(el('p','',text));
+          (report.holdings||[]).forEach(p=>{details.append(el('p','',p.identity+' · '+(p.unit==='SHARE'?p.quantity+'주':'기존 가상 지분')+' · '+paperMoney(p.value_krw)),el('p','muted-note','현재 비중 '+pct(p.current_weight_percent)+' · '+(p.unit==='SHARE'?'취득 대비 모의 평가 변화 ':'기존 기준가 대비 가격 변화 ')+pct(p.holding_return_percent)));paperObservation(details,p.quote);if(p.market?.state==='AVAILABLE')details.append(el('p','muted-note',p.market.start_date+'~'+p.market.end_date+' · 완료 일봉 '+p.market.bars+'개 · 기간 가격 변화 '+pct(p.market.return_percent)+' · '+(p.review_focus==='CHANGE_REVIEW'?'변경 필요성 점검':'유지 근거 점검')+' · '+p.market.notice));});
+          (report.staff||[]).forEach(person=>details.append(el('p','',person.name+' · '+(PERSONAS[person.persona]||person.persona)),el('p','',person.observation),el('p','',person.hold),el('p','',person.change)));reports.append(details);
+        });
+      }
+      const dailyStatus=el('p','muted-note');dailyStatus.setAttribute('role','status');
+      const recordDaily=async()=>{if(!current()||daily.disabled||busy||unknown)return;daily.disabled=true;try{const report=await request('/me/paper/discussions',{method:'POST',body:{}});if(!current())return;reportRows([report.discussion]);dailyStatus.textContent='오늘의 실제 보유·공개 시세 관찰을 저장했습니다. 규칙 기반 기록이며 AI 대화 완료가 아닙니다.';const all=await request('/me/paper/discussions');if(current()){const items=all.items||[];if(!items.some(row=>row.day===report.discussion.day&&row.revision===report.discussion.revision))items.unshift(report.discussion);reportRows(items);}}catch(e){if(current())dailyStatus.textContent=paperReason(e.code);}finally{if(current())daily.disabled=busy||unknown;}};
+      const daily=button('오늘 보유·시장 점검 기록',recordDaily);controls.push(daily);discussions.append(el('p','muted-note','오늘 처음 열면 보유·시장 관찰을 자동 저장해요. 직원이 없으면 기본 관찰만 기록해요.'),daily,dailyStatus,reports);
+      status.textContent=account.total_krw===null?'일부 평가 시세를 확인하지 못했습니다. 사용 가능한 모의현금은 별도로 표시합니다.':'내 모의현금과 보유 종목을 불러왔습니다.';
+      if(pending){lock(true);status.textContent='결과를 확인하지 못한 모의거래가 있습니다. 같은 요청으로 먼저 확인해 주세요.';preview.append(button('같은 모의거래 결과 확인',()=>submit(pending.body)));}
+      await Promise.all([historyPage(),(async()=>{try{const rows=await request('/me/paper/discussions');if(!current())return;reportRows(rows.items||[]);const day=new Date(Date.now()+9*3600000).toISOString().slice(0,10);if(!pending&&!(rows.items||[]).some(row=>row.day===day&&row.revision===account.revision))await recordDaily();}catch(e){if(current())reports.append(el('p','muted-note',paperReason(e.code)));}})()]);
+    }catch(e){if(current()){status.textContent=paperReason(e.code);panel.append(button('모의투자 연결 다시 시도',()=>drawPaper(panel,generation)));}}
   }
   async function open(){
     const target=companyContent();if(!target)return;const generation=++epoch;showState(target,'loading','회사를 불러오는 중…');
@@ -66,8 +180,8 @@
           (output.signals||[]).slice(0,16).forEach(signal=>result.append(el('p','','검토 신호 '+signal.symbol+' · '+signal.action+' · 목표 '+pct(signal.target_weight_percent))));
           result.append(el('p','muted-note','시점 이후 자료를 과거 판단에 쓰지 않는 연구 계산입니다. 배당·환율·세금 제외 가정은 결과에서 확인하세요. 신호는 가상 실험의 검토 제안입니다. '+REVIEW_NOTICE+' 계좌 주문·리밸런싱을 실행하지 않습니다.'));
         }catch(e){if(generation===epoch){result.replaceChildren(el('p','',reason(e.code)));run.textContent='백테스트 다시 시도';}}finally{if(generation===epoch)run.disabled=false;}});
-      research.append(el('h2','','백테스트·리밸런싱 신호'),el('p','muted-note',REVIEW_NOTICE),range.wrap,fees.wrap,slip.wrap,run,button('오늘의 운용 검토 완료',async()=>{if(!runId){result.append(el('p','','먼저 서버에 저장된 전략 검증 결과를 확인해 주세요.'));return;}try{await request('/me/daily-review',{method:'POST',body:{run_id:runId}});if(generation!==epoch)return;await U().refresh();result.append(el('p','','서버에서 일일 검토 기록을 확인했어요. 같은 기록은 중복 보상하지 않아요. '+REVIEW_NOTICE));}catch(e){result.append(el('p','',reason(e.code)));}}),result);
-      drawStaff(list);target.replaceChildren(settings,hires,research);target.dataset.companyState='ready';target.setAttribute('aria-busy','false');
+      research.append(el('h2','','백테스트·리밸런싱 신호'),el('p','muted-note',REVIEW_NOTICE),el('p','muted-note','과거 전략은 저장된 연습 비중과 비교하며, 없으면 현금 100%를 기준으로 사용해요. 내 모의계좌의 현재 보유와는 별도예요.'),range.wrap,fees.wrap,slip.wrap,run,button('오늘의 운용 검토 완료',async()=>{if(!runId){result.append(el('p','','먼저 서버에 저장된 전략 검증 결과를 확인해 주세요.'));return;}try{await request('/me/daily-review',{method:'POST',body:{run_id:runId}});if(generation!==epoch)return;await U().refresh();result.append(el('p','','서버에서 일일 검토 기록을 확인했어요. 같은 기록은 중복 보상하지 않아요. '+REVIEW_NOTICE));}catch(e){result.append(el('p','',reason(e.code)));}}),result);
+      const paper=el('section','panel company-paper');drawStaff(list);target.replaceChildren(settings,paper,hires,research);target.dataset.companyState='ready';target.setAttribute('aria-busy','false');await drawPaper(paper,generation);
     }catch(e){if(generation===epoch){if(e?.code==='UNAUTHORIZED')showLogin(target);else showState(target,'error',reason(e?.code),button('다시 불러오기',open));}}
   }
   async function openMarketCard(company,target){
@@ -79,7 +193,7 @@
       const book=el('section');book.append(el('h3','','호가'));if(data.orderbook.status==='UNAVAILABLE')book.append(el('p','muted-note','실시간 호가 제공 연결이 필요합니다. 마지막 가격으로 호가를 만들어 표시하지 않습니다.'));else{[['asks','매도'],['bids','매수']].forEach(([key,label])=>(data.orderbook[key]||[]).slice(0,5).forEach(row=>book.append(el('p','',label+' '+row.price+' · 잔량 '+row.quantity))));}card.append(book);
       const calendar=el('section');calendar.append(el('h3','','배당·실적 일정'));if(!data.calendar.events.length)calendar.append(el('p','muted-note','확인된 발표 일정이 없습니다. 추정 날짜를 일정으로 표시하지 않습니다.'));
       if(data.calendar.reason==='FUTURE_EARNINGS_UNAVAILABLE'||data.calendar.events.some(event=>event.basis==='HISTORICAL_EX_DIVIDEND_DATE'))calendar.append(el('p','muted-note','아래는 확인된 과거 배당락일입니다. 미래 배당·실적 일정 제공 연결은 아직 없습니다.'));
-      data.calendar.events.slice(0,20).forEach(event=>{const row=el('p','',event.date+' · '+(event.kind==='DIVIDEND'?'배당':'실적')+(event.confirmed===false?' · 예정/변경 가능':''));if(/^https:\/\//.test(event.source_url||'')){const link=el('a','','원문');link.href=event.source_url;link.target='_blank';link.rel='noopener noreferrer';row.append(link);}calendar.append(row);});card.append(calendar,button('시장 속보·주요 뉴스',()=>window.ZERO?.navigate('news')));
+      data.calendar.events.slice(0,20).forEach(event=>{const row=el('p','',event.date+' · '+(event.kind==='DIVIDEND'?'배당':'실적')+(event.confirmed===false?' · 예정/변경 가능':''));if(/^https:\/\//.test(event.source_url||'')){const link=el('a','','원문');link.href=event.source_url;link.target='_blank';link.rel='noopener noreferrer';row.append(link);}calendar.append(row);});card.append(calendar,button('시장 속보·주요 뉴스',()=>window.ZERO?.navigate('news')),button('이 종목 모의 매매',()=>openPaperFor(identity)));
     }catch(_){if(generation===marketEpoch&&card.isConnected){
       status.textContent='시장 정보 연결을 확인하지 못했습니다. 종목 차트와 기존 저장 자료는 그대로 사용할 수 있어요.';
       const retry=button('시장 정보 다시 시도',async()=>{if(retry.disabled)return;retry.disabled=true;card.remove();await openMarketCard(company,target);});card.append(retry);
@@ -92,5 +206,5 @@
     hires.teams.forEach(added=>{const existing=team.teams.find(row=>row.name===added.name);if(existing)existing.members=[...(existing.members||[]),added.leader,...added.members];else team.teams.push(added);});
     return {nick:info.nick,team,space:info.company?.space||info.space};
   }
-  window.ZEROCompany={open,openMarketCard,officeFor};if(document.documentElement.dataset.zeroView==='company')open();
+  window.ZEROCompany={open,openPortfolio,mountPaper,openMarketCard,officeFor,openPaperFor,paperTradingActive:()=>paperActive};if(document.documentElement.dataset.zeroView==='company')open();else if(document.documentElement.dataset.zeroView==='portfolio')openPortfolio();
 })();

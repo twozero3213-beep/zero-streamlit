@@ -2,8 +2,9 @@
 (function(root){
 'use strict';
 const credits=Object.freeze([Object.freeze({id:'zero-native-office',name:'ZERO built-in dealing room and characters',author:'ZERO',license:'CC0-1.0',license_url:'https://creativecommons.org/publicdomain/zero/1.0/',source_file:'office-native.js',info:'ZERO가 직접 작성한 Canvas2D 그림 요소입니다. 모니터의 선은 장식이며 실제 시세가 아닙니다. 캐릭터 동작과 꾸미기는 업무 실적·수익률·계좌·주문 권한에 영향을 주지 않습니다.'})]);
-const FURNITURE=Object.freeze({desk:[2,1],server:[1,2],billboard:[4,1],meeting:[3,2],partition:[1,2],plant:[1,1],coffee:[1,1],guestbook:[1,1],portal:[1,1],sofa:[2,1],standingdesk:[1,1]});
+const FURNITURE=Object.freeze({desk:[2,1],server:[1,2],billboard:[4,1],meeting:[3,2],partition:[1,2],plant:[1,1],coffee:[1,1],guestbook:[1,1],portal:[1,1],sofa:[2,1],standingdesk:[1,1],chair:[1,1],bookshelf:[2,1],cabinet:[2,1],lamp:[1,1],rug:[3,2],whiteboard:[2,1],water:[1,1],printer:[1,1],arcade:[1,1]});
 const COLORS={wallstreet:{floor:'#edf0ef',line:'#cfd8da',wood:'#ac8664',dark:'#263c52',accent:'#5586a8'},boutique:{floor:'#b88e69',line:'#a17a58',wood:'#dfc39d',dark:'#40554b',accent:'#bd9864'},startup:{floor:'#697f89',line:'#627782',wood:'#dcc8ac',dark:'#2d4458',accent:'#80b2c1'}};
+for(const [key,floor,wood,dark] of [['nordic','#f1eee5','#d1ba94','#a2afb1'],['japandi','#e2dac8','#ab9876','#807e68'],['library','#bca48d','#86634e','#4f5a56'],['botanical','#d9e4d7','#b69f73','#50735c'],['industrial','#d2d5d5','#a98c75','#505b64'],['coastal','#e3eeec','#c9b695','#7ca4b3'],['night','#373d56','#817393','#252b42']])COLORS[key]={floor,wood,dark,line:dark,accent:wood};
 const OUTFITS=['shirt','hoodie','vest','cardigan','suit','jacket','knit','polo'],SHOES=['dark','white','blue','red'],ACCESSORIES=['none','glasses','cap','headphones'],PETS=['none','cat','dog','bird'];
 const DIRECTIONS=['down','left','right','up'],handles=new Set();let raf=null,last=null,media=null;
 const localSchema=typeof require==='function'?require('./office-layout.js'):null;
@@ -23,6 +24,7 @@ function ellipse(ctx,x,y,rx,ry,fill){ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,M
 function line(ctx,points,color,width=.2){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
 function text(ctx,value,x,y,size,color,align='left'){ctx.font='600 '+size+'px system-ui, sans-serif';ctx.textAlign=align;ctx.fillStyle=color;ctx.fillText(value,x,y);}
 function floor(ctx,theme){
+  if(root.ZEROOfficeArt?.floor){root.ZEROOfficeArt.floor(ctx,theme);return;}
   const c=COLORS[theme];ctx.fillStyle=c.floor;ctx.fillRect(0,0,160,100);
   if(theme==='boutique'){
     for(let y=0;y<100;y+=5){const offset=(y/5)%2?8:0;for(let x=-offset;x<160;x+=16){rr(ctx,x,y,15.85,4.85,.1,(Math.floor(x/16)+y)%3?'#c39c76':'#b98d65');line(ctx,[[x+1,y+1.4],[x+13,y+1.1]],'#d1ae8c',.08);line(ctx,[[x+3,y+3.7],[x+14,y+3.3]],'#ad815b',.07);}}
@@ -39,7 +41,7 @@ function floor(ctx,theme){
 }
 const floorCache=new Map();
 function backgroundFor(theme,width,height,visuals={}){
-  const selected=visualAsset('floor',visuals?.floor),key=(selected?'asset:'+selected.record.id:'builtin')+':'+theme+':'+width+':'+height;if(floorCache.has(key))return floorCache.get(key);
+  const selected=visualAsset('floor',visuals?.floor),key=(selected?'asset:'+selected.record.id:'builtin')+':'+theme+':'+(root.ZEROOfficeArt?.revision||0)+':'+width+':'+height;if(floorCache.has(key))return floorCache.get(key);
   const canvas=root.document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');ctx.setTransform(width/160,0,0,height/100,0,0);floor(ctx,theme);previewFloor(ctx,selected);floorCache.set(key,canvas);while(floorCache.size>6)floorCache.delete(floorCache.keys().next().value);return canvas;
 }
 function monitor(ctx,x,y,w,h,variant=0){
@@ -51,8 +53,11 @@ function plant(ctx,x,y,scale=1){rr(ctx,x-1.1*scale,y,2.2*scale,1.7*scale,.35,'#c
 function furniture(ctx,object,theme,visual=null){
   const c=COLORS[theme],w=object.sourceW*10,h=object.sourceH*10;ctx.save();ctx.translate((object.x+object.w/2)*10,(object.y+object.h/2)*10);ctx.rotate(object.rotation*Math.PI/180);ctx.translate(-w/2,-h/2);
   if(visual){ctx.drawImage(visual.image,0,0,visual.record.width,visual.record.height,0,0,w,h);ctx.restore();return;}
+  if(root.ZEROOfficeArt?.draw?.(ctx,object,w,h,theme)){ctx.restore();return;}
   rr(ctx,.5,1,w-1,h-.8,1,'#00000012');
   switch(object.kind){
+    case 'chair':case 'bookshelf':case 'cabinet':case 'lamp':case 'rug':case 'whiteboard':case 'water':case 'printer':case 'arcade':
+      rr(ctx,1,1,w-2,h-2,.5,c.dark);rr(ctx,2,2,w-4,h-4,.3,c.wood);break;
     case 'desk':
       rr(ctx,.5,3,w-1,h-3,.8,'#5c5047');rr(ctx,.3,2.5,w-.6,h-4,.8,c.wood,'#8d7762');
       for(let row=0;row<2;row++)for(let col=0;col<3;col++)monitor(ctx,2+col*5.4,-.9+row*2.75,4.8,2.45,row*3+col);
@@ -73,7 +78,8 @@ function furniture(ctx,object,theme,visual=null){
     case 'guestbook':
       rr(ctx,1,3,8,5.5,.6,c.wood);ctx.beginPath();ctx.moveTo(2,3.6);ctx.quadraticCurveTo(3.6,2.8,5,3.7);ctx.quadraticCurveTo(6.8,2.8,8,3.6);ctx.lineTo(8,7);ctx.quadraticCurveTo(6.5,6.4,5,7.2);ctx.quadraticCurveTo(3.5,6.4,2,7);ctx.closePath();ctx.fillStyle='#f6efdf';ctx.fill();line(ctx,[[5,3.7],[5,7.1]],'#baa98e',.12);line(ctx,[[7.5,2],[6.2,5]],'#536c7e',.25);break;
     case 'portal':
-      rr(ctx,1.2,.6,7.6,8.8,1.6,'#304c64','#87a6b8');rr(ctx,2.2,1.6,5.6,6.8,1,'#c4d5d9');rr(ctx,2.6,2,4.8,6,.8,'#7199ac');line(ctx,[[5,3],[5,6],[3.7,4.8],[5,6],[6.3,4.8]],'#e9f3ee',.35);break;
+      /* 3시 방향 차원의 문 벡터 렌더링 */
+      rr(ctx,1,8.2,8,1.2,.4,'#1e1b4b','#6366f1');ellipse(ctx,5,4.8,3.8,4.2,'#1e1b4b');ellipse(ctx,5,4.8,3.2,3.6,'#4338ca');ellipse(ctx,5,4.8,2.5,2.9,'#0284c7');ellipse(ctx,5,4.8,1.8,2.2,'#06b6d4');ellipse(ctx,5,4.8,1.1,1.4,'#67e8f9');ellipse(ctx,5,4.8,.55,.75,'#e0f2fe');line(ctx,[[3.4,4.8],[6.2,4.8],[5.3,3.9],[6.2,4.8],[5.3,5.7]],'#ffffff',.32);break;
     case 'sofa':
       rr(ctx,1,1,18,8,.9,'#4f626c');rr(ctx,2,2,16,5.8,1,'#81929a');for(const x of [2.7,10])rr(ctx,x,3.3,6.8,3.8,.7,'#95a4a9');rr(ctx,.5,2,2,6,.6,'#667c87');rr(ctx,17.5,2,2,6,.6,'#667c87');break;
   }
@@ -185,8 +191,8 @@ function attach(stage,{getActors=()=>[],getLayout=()=>null,getVisuals=()=>({}),o
   stage.addEventListener('click',click);const resize=new root.ResizeObserver(()=>{if(handle.active&&!handle.destroyed&&!root.document.hidden)handle.render(0,false);});resize.observe(stage);
   try{handle.render(0,false);}catch(error){resize.disconnect();stage.removeEventListener('click',click);canvas.remove();throw error;}
   canvas.dataset.sprites='ready';stage.classList.add('office-sprites-ready');stage.classList.add('office-native-ready');handles.add(handle);
-  if(handles.size===1){media=root.matchMedia?.('(prefers-reduced-motion: reduce)');media?.addEventListener?.('change',sync);root.document.addEventListener('visibilitychange',sync);}schedule();
-  return {setActive(active){if(handle.destroyed)return;handle.active=active===true;sync();},destroy(){if(handle.destroyed)return;handle.destroyed=true;handles.delete(handle);resize.disconnect();stage.removeEventListener('click',click);handle.pets.clear();canvas.remove();stage.classList.remove('office-sprites-ready');stage.classList.remove('office-native-ready');if(!handles.size){media?.removeEventListener?.('change',sync);media=null;root.document.removeEventListener('visibilitychange',sync);}sync();}};
+  if(handles.size===1){media=root.matchMedia?.('(prefers-reduced-motion: reduce)');media?.addEventListener?.('change',sync);root.document.addEventListener('visibilitychange',sync);root.document.addEventListener('zero-office-art-ready',sync);}schedule();
+  return {setActive(active){if(handle.destroyed)return;handle.active=active===true;sync();},destroy(){if(handle.destroyed)return;handle.destroyed=true;handles.delete(handle);resize.disconnect();stage.removeEventListener('click',click);handle.pets.clear();canvas.remove();stage.classList.remove('office-sprites-ready');stage.classList.remove('office-native-ready');if(!handles.size){media?.removeEventListener?.('change',sync);media=null;root.document.removeEventListener('visibilitychange',sync);root.document.removeEventListener('zero-office-art-ready',sync);}sync();}};
 }
 function drawLayout(canvas,input,time=0,{visuals={}}={}){const ctx=canvas.getContext('2d');if(!ctx)throw Error('CANVAS_UNAVAILABLE');canvas.width=640;canvas.height=400;ctx.setTransform(4,0,0,4,0,0);paint(ctx,layoutOf(input),[],time,false,new Map(),0,null,visuals);return canvas;}
 function openCredits(){
@@ -194,7 +200,7 @@ function openCredits(){
   for(const value of ['ZERO 원본 사무실 그래픽 · CC0-1.0','작가: ZERO',credits[0].info,'CC0는 이 renderer의 원본 그림 요소에만 적용됩니다. 등록된 외부 PNG와 모듈 코드 전체를 재라이선스하지 않습니다.']){const p=root.document.createElement('p');p.textContent=value;dialog.append(p);}
   const base=new URL(root.document.baseURI),source=new URL('assets/office-native.js',base);
   for(const [label,url] of [['그래픽 원본 코드',source.href],['CC0 라이선스 URI',credits[0].license_url]]){const link=root.document.createElement('a');link.textContent=label;link.href=url;link.target='_blank';link.rel='noopener noreferrer';dialog.append(link);}
-  const close=root.document.createElement('button');close.type='button';close.textContent='닫기';close.addEventListener('click',()=>dialog.close());dialog.append(close);dialog.addEventListener('close',()=>dialog.remove(),{once:true});root.document.body.append(dialog);dialog.showModal();close.focus();return dialog;
+  const close=root.document.createElement('button');close.type='button';close.title='닫기';close.setAttribute('aria-label','창 닫기');close.className='icon-button icon-close';close.textContent='닫기';close.addEventListener('click',()=>dialog.close());dialog.append(close);dialog.addEventListener('close',()=>dialog.remove(),{once:true});root.document.body.append(dialog);dialog.showModal();close.focus();return dialog;
 }
 const api={attach,drawLayout,registerAssets,openCredits,credits};root.ZEROOfficeNative=api;
 if(typeof module!=='undefined'&&module.exports)module.exports={...api,assetRecord,appearanceOf,facingOf,layoutOf,blockedCells,safePath,lagPoint,petStep,person,furniture,paint};

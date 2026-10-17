@@ -15,7 +15,8 @@
   let communitySize = 0;
   const requireNick = note => { if (U()?.session()?.nick) return true; note.textContent = '닉네임으로 로그인한 뒤 이용할 수 있어요.'; U()?.openProfile(); return false; };
   function dialog(title, cls = '') {
-    const d = make('dialog', 'social-dialog ' + cls), head = make('header', 'chat-head'), h = make('h2', '', title), close = button('닫기', () => d.close());
+    const d = make('dialog', 'social-dialog ' + cls), head = make('header', 'chat-head'), h = make('h2', '', title), close = button('', () => d.close(), 'icon-button icon-close');
+    close.setAttribute('aria-label',title+' 닫기');close.title='닫기';
     head.append(h, close); d.append(head); d.setAttribute('aria-label', title); document.body.append(d); return d;
   }
   function field(label, type = 'text', max = 80) { const l = make('label', 'social-field', label), input = make(type === 'textarea' ? 'textarea' : 'input'); if (type !== 'textarea') input.type = type; input.maxLength = max; if (type === 'textarea') input.rows = 4; l.append(input); return {l, input}; }
@@ -108,6 +109,7 @@
       note.textContent = rows.length ? '최신순 · 이 페이지 ' + rows.length + '개' : (query || category ? '조건에 맞는 글이 없어요. 검색어나 분류를 바꿔 보세요.' : '아직 글이 없어요. 궁금한 점이나 투자 경험을 첫 글로 나눠 보세요.');
       $('community-list').classList.toggle('community-empty', !rows.length);
       $('community-list').scrollTop = 0;
+      const feed=$('community-list').closest?.('.community-feed');if(feed)feed.scrollTop=0;
       if ($('community-page')) $('community-page').textContent = (previous.length + 1) + '페이지';
       $('community-prev').disabled = !previous.length; $('community-next').disabled = data.next_cursor == null;
       $('community-prev').onclick = () => openCommunity(false, previous.at(-1) ?? null, previous.slice(0, -1));
@@ -415,7 +417,7 @@
           const own = plaza.people.get(plaza.nick);
           ackPlazaMove({seq: plaza.pending.body.seq, ok: false, error: data.error, x: own?.confirmed?.x, y: own?.confirmed?.y, server_seq: own?.seq});
         }
-        if (['UNAUTHORIZED', 'TOKEN_EXPIRED', 'AUTH_FAILED', 'AUTH_REQUIRED', 'AUTH_TIMEOUT', 'SESSION_EXPIRED', 'DATA_UNAVAILABLE'].includes(data.error)) { active = false; closeSocket(); $('lounge-send').disabled = true; plaza.people.forEach(removePet); plaza.people.clear(); $('lounge-people').replaceChildren(); $('lounge-log').replaceChildren(); }
+        if (['UNAUTHORIZED', 'TOKEN_EXPIRED', 'AUTH_FAILED', 'AUTH_REQUIRED', 'AUTH_TIMEOUT', 'SESSION_EXPIRED', 'DATA_UNAVAILABLE'].includes(data.error)) { active = false; closeSocket(); $('lounge-loading').hidden = true; $('lounge-send').disabled = true; plaza.people.forEach(removePet); plaza.people.clear(); $('lounge-people').replaceChildren(); $('lounge-log').replaceChildren(); showLoungeRetry(); }
       }
       if (data.type === 'reported') $('lounge-status').textContent = '신고를 접수했어요.';
     });
@@ -432,7 +434,7 @@
   }
   function openLounge() {
     if(window.ZERO?.currentView?.()&&window.ZERO.currentView()!=='plaza'&&document.getElementById('plaza-view'))return window.ZERO.navigate('plaza');
-    if (!U()?.session()?.nick) { U()?.openProfile(); return false; }
+    if (!U()?.session()?.nick) { if(U()?.restoringSession?.())return true;U()?.openProfile();return false; }
     if (active && lounge && !lounge.hidden) return true;
     if (!lounge) {
       lounge = make('section', 'lounge-dialog'); lounge.hidden = true; lounge.setAttribute('aria-label', 'ZERO 공용 광장');
@@ -582,7 +584,7 @@
   }
   document.addEventListener('zero-ready',paint);
   document.addEventListener('zero-profile-updated',paint);
-  document.addEventListener('zero-session-changed',()=>{sessionEpoch++;guestGeneration++;closeLounge();if(guest?.open)guest.close();guest?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());if(compose?.open)compose.close();compose?.querySelector('form')?.reset();if(closet?.open)closet.close();closet?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());paint();if(window.ZERO?.currentView?.()==='community')openCommunity(true);});
+  document.addEventListener('zero-session-changed',()=>{sessionEpoch++;guestGeneration++;closeLounge();if(guest?.open)guest.close();guest?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());if(compose?.open)compose.close();compose?.querySelector('form')?.reset();if(closet?.open)closet.close();closet?.querySelectorAll(':scope > :not(header)').forEach(e=>e.remove());paint();if(window.ZERO?.currentView?.()==='community')openCommunity(true);if(window.ZERO?.currentView?.()==='plaza'&&U()?.session()?.nick)openLounge();});
   window.ZEROSocial={openCommunity:()=>openCommunity(!loaded),openLounge,closeLounge,openGuestbook,openWardrobe,paintAppearance,updatePet,removePet};
   if(window.ZERO?.currentView?.()==='community')openCommunity(true);
   if(window.ZERO?.currentView?.()==='plaza')openLounge();

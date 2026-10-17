@@ -246,7 +246,8 @@ def _release(client, bid, label, at):
         year, month = map(int, header.groups())
         year = year + 2000 if year < 100 else year
         period = f'{year:04}-{month:02}'
-        if _ordinal(period) > at.year * 12 + at.month - 1 or date.fromisoformat(published[1]) > at.date():
+        local = at.astimezone(ZoneInfo('Asia/Seoul'))
+        if _ordinal(period) > local.year * 12 + local.month - 1 or date.fromisoformat(published[1]) > local.date():
             raise ValueError('PROVIDER_SCHEMA_INVALID')
         return page, period, published[1], BOARD_URL + '?' + urlencode(allowed)
     raise ValueError('PROVIDER_SCHEMA_INVALID')

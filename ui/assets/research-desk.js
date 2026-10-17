@@ -326,7 +326,7 @@ function renderBriefingSources() {
 function openDeskReport(id) {
   const record = deskReportRows(researchDesk.data?.briefing_sources).find((row) => row.id === id); if (!record) return false;
   let dialog = desk$('desk-report-dialog'); if (!dialog) { dialog = node('dialog', 'desk-report-dialog'); dialog.id = 'desk-report-dialog'; dialog.setAttribute('aria-labelledby', 'desk-report-title'); document.body.append(dialog); }
-  const focus = document.activeElement; dialog.replaceChildren(); const head = node('div', 'desk-report-head'), title = node('h2', '', record.title), close = node('button', 'secondary-button', '닫기'); title.id = 'desk-report-title'; close.type = 'button'; close.addEventListener('click', () => dialog.close()); head.append(title, close);
+  const focus = document.activeElement; dialog.replaceChildren(); const head = node('div', 'desk-report-head'), title = node('h2', '', record.title), close = node('button','icon-button icon-close','닫기'); title.id = 'desk-report-title'; close.type = 'button';close.title='닫기';close.setAttribute('aria-label','창 닫기'); close.addEventListener('click', () => dialog.close()); head.append(title, close);
   const body = node('div', 'desk-report-body'); body.append(node('p', 'muted-note', deskText(record.source.label) + ' · 수집 목록'));
   deskFields(body, [['발표', deskPublication(record)], ['목록 확인', stamp(record.retrieved_at) + ' KST'], ['자료 종류', deskText(record.kind)], ['읽기 상태', '목록 수집 · 본문 검토 전']]);
   body.append(node('p', '', '이 항목은 제목·발표일·원문 주소를 확인한 목록입니다. 본문이나 첨부 PDF를 아직 검토하지 않아 요약과 투자 결론을 만들지 않습니다.'), deskLink('보고서 원문에서 읽기', record.url));

@@ -84,9 +84,9 @@
     if(space?.props?.includes('coffee'))locations.unshift({id:'coffee',activity:'coffee',position:{x:15,y:32}});
     return {grid, graph: new search.Graph(grid), floor,layers:{collision:grid,objects},locations};
   }
-  const OBJECT_SIZE={desk:[2,1],server:[1,2],billboard:[4,1],meeting:[3,2],partition:[1,2],plant:[1,1],coffee:[1,1],guestbook:[1,1],portal:[1,1],sofa:[2,1],standingdesk:[1,1]};
-  function objectBounds(object){let [w,h]=OBJECT_SIZE[object.kind];if(object.rotation===90||object.rotation===270)[w,h]=[h,w];return {left:object.x*10,top:object.y*10,right:(object.x+w)*10,bottom:(object.y+h)*10};}
-  function objectAt(world,position){return world.layout?.objects.find(object=>{const b=objectBounds(object);return position.x>=b.left&&position.x<b.right&&position.y>=b.top&&position.y<b.bottom;})||null;}
+  const OBJECT_SIZE={desk:[2,1],server:[1,2],billboard:[4,1],meeting:[3,2],partition:[1,2],plant:[1,1],coffee:[1,1],guestbook:[1,1],portal:[1,1],sofa:[2,1],standingdesk:[1,1],chair:[1,1],bookshelf:[2,1],cabinet:[2,1],lamp:[1,1],rug:[3,2],whiteboard:[2,1],water:[1,1],printer:[1,1],arcade:[1,1]};
+  function objectBounds(object){const size=Object.hasOwn(OBJECT_SIZE,object?.kind)?OBJECT_SIZE[object.kind]:null;if(!size)return null;let [w,h]=size;if(object.rotation===90||object.rotation===270)[w,h]=[h,w];return {left:object.x*10,top:object.y*10,right:(object.x+w)*10,bottom:(object.y+h)*10};}
+  function objectAt(world,position){return world.layout?.objects.find(object=>{const b=objectBounds(object);return !!b&&position.x>=b.left&&position.x<b.right&&position.y>=b.top&&position.y<b.bottom;})||null;}
   function spawn(world,preferred,occupied=[]){
     const points=world.spawns||world.graph.nodes.filter(n=>!n.isWall()).map(n=>point(world,n));
     if(canStand(world,preferred)&&points.some(p=>cell(p).x===cell(preferred).x&&cell(p).y===cell(preferred).y)&&!occupied.some(other=>Math.hypot(other.x-preferred.x,other.y-preferred.y)<(world.layout?10:4)))return {...preferred};
@@ -96,7 +96,7 @@
   }
   function objectApproach(world,object,from){
     const actual=world.layout?.objects.find(row=>row.id===object?.id);if(!actual)return null;
-    const b=objectBounds(actual),cx=(b.left+b.right)/2,cy=(b.top+b.bottom)/2;
+    const b=objectBounds(actual);if(!b)return null;const cx=(b.left+b.right)/2,cy=(b.top+b.bottom)/2;
     const sides=[{x:cx,y:b.bottom+1},{x:b.left-1,y:cy},{x:cx,y:b.top-1},{x:b.right+1,y:cy}];
     const preferred=(actual.rotation||0)/90;
     const perimeter=[...sides];for(let x=b.left+5;x<b.right;x+=10)perimeter.push({x,y:b.top-1},{x,y:b.bottom+1});for(let y=b.top+5;y<b.bottom;y+=10)perimeter.push({x:b.left-1,y},{x:b.right+1,y});

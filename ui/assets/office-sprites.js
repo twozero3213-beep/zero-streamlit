@@ -62,7 +62,7 @@ function frameRect(sheet,elapsed,facing,moving=true){
   const frame=moving?Math.floor(Math.max(0,elapsed)*(sheet.fps||8))%sheet.framesPerDirection:0;
   return {sx:(sheet.frameOffsetX||0)+frame*sheet.frameWidth,sy:(sheet.frameOffsetY||0)+Math.max(0,sheet.directions.indexOf(facingOf(facing)))*sheet.frameHeight,sw:sheet.frameWidth,sh:sheet.frameHeight};
 }
-const FALLBACK_FURNITURE={desk:{width:2,height:1},server:{width:1,height:2},billboard:{width:4,height:1},meeting:{width:3,height:2},partition:{width:1,height:2},plant:{width:1,height:1},coffee:{width:1,height:1},guestbook:{width:1,height:1},portal:{width:1,height:1},sofa:{width:2,height:1},standingdesk:{width:1,height:1}};
+const FALLBACK_FURNITURE={desk:{width:2,height:1},server:{width:1,height:2},billboard:{width:4,height:1},meeting:{width:3,height:2},partition:{width:1,height:2},plant:{width:1,height:1},coffee:{width:1,height:1},guestbook:{width:1,height:1},portal:{width:1,height:1},sofa:{width:2,height:1},standingdesk:{width:1,height:1},chair:{width:1,height:1},bookshelf:{width:2,height:1},cabinet:{width:2,height:1},lamp:{width:1,height:1},rug:{width:3,height:2},whiteboard:{width:2,height:1},water:{width:1,height:1},printer:{width:1,height:1},arcade:{width:1,height:1}};
 const nodeLayout=typeof require==='function'?require('./office-layout.js'):null;
 function layoutOf(value={}){
   value=value&&typeof value==='object'?value:{};
@@ -71,7 +71,7 @@ function layoutOf(value={}){
   const definitions=schema?.FURNITURE||FALLBACK_FURNITURE,seen=new Set(),objects=[];
   for(const item of Array.isArray(value.objects)?value.objects.slice(0,modern?60:160):[]){
     if(!item||seen.has(item.id)||!(modern?Number.isInteger(item.id)&&item.id>0&&item.id<=2147483647:typeof item.id==='string'||Number.isInteger(item.id))||![item.x,item.y].every(finite)||![0,90,180,270].includes(item.rotation??0))continue;
-    const rotation=item.rotation??0,rotated=rotation===90||rotation===270,definition=definitions[item.kind],sourceW=definition?.width??(rotated?(item.h??1):(item.w??1)),sourceH=definition?.height??(rotated?(item.w??1):(item.h??1)),w=rotated?sourceH:sourceW,h=rotated?sourceW:sourceH;
+    const rotation=item.rotation??0,rotated=rotation===90||rotation===270,definition=Object.hasOwn(definitions,item.kind)?definitions[item.kind]:null,sourceW=definition?.width??(rotated?(item.h??1):(item.w??1)),sourceH=definition?.height??(rotated?(item.w??1):(item.h??1)),w=rotated?sourceH:sourceW,h=rotated?sourceW:sourceH;
     if(modern&&!definition||!Number.isInteger(w)||!Number.isInteger(h)||w<=0||h<=0||item.x<0||item.y<0||item.x+w>16||item.y+h>10)continue;
     seen.add(item.id);objects.push({...item,w,h,sourceW,sourceH,rotation});
   }
@@ -185,7 +185,7 @@ async function openCredits(){
   const original=global.document.createElement('article');for(const text of ['ZERO 원본 픽셀 헤드셋 · CC0-1.0','작가: ZERO','64×64 Canvas 좌표의 아치·이어캡·하이라이트 그래픽만 CC0로 공개합니다. 외부 LPC 헤드폰 원본이 아니며 다른 이미지나 엔진 코드 전체를 재라이선스하지 않습니다.']){const p=global.document.createElement('p');p.textContent=text;original.append(p);}
   const source=new URL('assets/office-sprites.js',global.document.baseURI);if(['http:','https:'].includes(source.protocol)&&source.origin===new URL(global.document.baseURI).origin){const link=global.document.createElement('a');link.textContent='헤드셋 그래픽 원본 코드';link.href=source.href;link.target='_blank';link.rel='noopener noreferrer';original.append(link);}
   const license=global.document.createElement('a');license.textContent='CC0 라이선스 URI';license.href=LICENSE_URI['CC0-1.0'];license.target='_blank';license.rel='noopener noreferrer';original.append(license);dialog.append(original);
-  const close=global.document.createElement('button');close.type='button';close.textContent='닫기';close.addEventListener('click',()=>dialog.close());dialog.append(close);dialog.addEventListener('close',()=>dialog.remove(),{once:true});global.document.body.append(dialog);dialog.showModal();close.focus();return dialog;
+  const close=global.document.createElement('button');close.type='button';close.title='닫기';close.setAttribute('aria-label','창 닫기');close.className='icon-button icon-close';close.textContent='닫기';close.addEventListener('click',()=>dialog.close());dialog.append(close);dialog.addEventListener('close',()=>dialog.remove(),{once:true});global.document.body.append(dialog);dialog.showModal();close.focus();return dialog;
 }
 function installGuideCredits(){
   const guide=global.document?.getElementById?.('guide-view');if(!guide||global.document.getElementById('office-sprites-credit-button'))return;

@@ -8,7 +8,7 @@
 
   // history: [{period, value}] oldest first. Returns null when fewer than 12 real up/down moves exist.
   function outlook(history) {
-    const values = (Array.isArray(history) ? history : []).map((row) => Number(row?.value)).filter(Number.isFinite);
+    const values = (Array.isArray(history) ? history : []).map((row) => row?.value).filter((value) => typeof value === 'number' || typeof value === 'string' && value.trim() !== '').map(Number).filter(Number.isFinite);
     const moves = values.slice(1).map((value, index) => sign(value - values[index]));
     const real = moves.filter(Boolean);
     if (real.length < MIN_MOVES) return null;

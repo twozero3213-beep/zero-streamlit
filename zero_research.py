@@ -44,6 +44,19 @@ def read_bls(client, *, payload):
     return hit[1]
 
 
+def _merge_macro(rows, previous):
+    known = {row['id']: row for row in previous}
+    for row in rows:
+        if row['latest_value'] is None or not row['history']:
+            continue
+        old = known.get(row['id'])
+        if old and row.get('latest_period') and old.get('latest_period') and row['latest_period'] < old['latest_period']:
+            continue
+        if old is None or datetime.fromisoformat(row['retrieved_at']) >= datetime.fromisoformat(old['retrieved_at']):
+            known[row['id']] = row
+    return list(known.values())
+
+
 def _refresh(previous):
     global _snapshot, _running, _next_check
     result = None
@@ -72,6 +85,8 @@ def _refresh(previous):
             if result is not None:
                 if 'macro' not in result:
                     result = {**_snapshot, **result}
+                else:
+                    result['macro'] = _merge_macro(result['macro'], _snapshot.get('macro', []))
                 _snapshot = result
             _next_check = time.monotonic() + delay
             _running = False
@@ -88,16 +103,7 @@ def overlay(base):
         running = _running
         remaining = max(0, round(_next_check - time.monotonic()))
     result = deepcopy(base)
-    known = {row['id']: row for row in result.get('macro', [])}
-    for row in current.get('macro', []):
-        if row['latest_value'] is None or not row['history']:
-            continue
-        old = known.get(row['id'])
-        if old and row.get('latest_period') and old.get('latest_period') and row['latest_period'] < old['latest_period']:
-            continue
-        if old is None or datetime.fromisoformat(row['retrieved_at']) >= datetime.fromisoformat(old['retrieved_at']):
-            known[row['id']] = row
-    result['macro'] = list(known.values())
+    result['macro'] = _merge_macro(current.get('macro', []), result.get('macro', []))
     library = current.get('library')
     old_library = result.get('briefing_sources')
     if library and (not old_library or datetime.fromisoformat(library['as_of']) >= datetime.fromisoformat(old_library['as_of'])):

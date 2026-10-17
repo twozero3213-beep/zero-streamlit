@@ -11,7 +11,13 @@ Local file: vendor-astar.js; license: vendor-astar-LICENSE.txt.
 Includes Binary Heap credited to Marijn Haverbeke in the original source.
 Used for local routes around office furniture; no network or financial logic.
 
-Only these two pinned source files are imported. Original license texts and headers are preserved.
-No upstream images, office assets, sounds, analytics or servers are imported.
+The engine helpers above are pinned source imports. Original license texts and headers are preserved.
+Pixel Agents furniture and floor PNGs are imported as detailed below. No sounds, analytics or servers are imported.
 CSS characters and the learning/ranking adapters are ZERO code.
 The assets are served locally from ZERO; no third-party CDN is contacted by the office.
+
+Pixel Agents — MIT, copyright (c) 2026 Pablo De Lucca.
+Source: https://github.com/pixel-agents-hq/pixel-agents/tree/d1e007a9fdf3003c252d2973abe1999ae59aec33
+Fork: https://github.com/twozero3213-beep/pixel-agents
+Local: sprites/office/*.png; full MIT notice: sprites/office/LICENSE.txt.
+File source paths and SHA256: sprites/office/source.json. Original ZERO machine/gate drawings are composed alongside these sprites.

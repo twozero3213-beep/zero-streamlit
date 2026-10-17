@@ -70,8 +70,9 @@ html[data-zero-view='plaza'] body main > .page-header,html[data-zero-view='plaza
 .npc[data-accessory='headphones'] .head { outline: 2px solid #243c56; outline-offset: 1px; }
 html[data-zero-view='community'] main > .notice { display:none; }
 html[data-zero-view='community'] main > .page-header { width:100%; max-width:940px; margin:4px auto; }
-html #community-view:not([hidden]) { display:flex; justify-content:center; }
-.community-feed { width:100%; max-width:940px; min-height:0; display:flex; flex-direction:column; background:var(--surface,#fff); border-radius:14px; padding:16px 24px; }
+/* One feed scroll keeps complete posts, paging and the disclaimer in document order. */
+html #community-view:not([hidden]) { display:flex; justify-content:center; align-items:flex-start; }
+.community-feed { width:100%; max-width:940px; min-height:0; max-height:100%; display:flex; flex-direction:column; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#c4cdd7 transparent; background:var(--surface,#fff); border-radius:14px; padding:16px 24px; }
 .community-toolbar { align-items:center; justify-content:space-between; flex:none; gap:12px; }
 #community-search { display:flex; gap:8px; align-items:center; flex:1; max-width:540px; }
 #community-query { min-width:0; flex:1; width:100%; height:36px; border:1px solid var(--line,#eef0f3); border-radius:8px; background:#f7f8fa; padding:8px 12px; font:inherit; font-size:14px; color:#333d4b; }
@@ -86,8 +87,8 @@ html #community-view:not([hidden]) { display:flex; justify-content:center; }
 #community-reload { background:transparent; border:0; color:#626d7b; white-space:nowrap; }
 #community-status { flex:none; min-height:0; margin:8px 0 0; font-size:12px; }
 #community-status button { margin-left:8px; }
-#community-list { min-height:0; flex:1; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#c4cdd7 transparent; }
-#community-list.community-empty { flex:1; min-height:100px; }
+#community-list { min-height:0; flex:none; overflow:visible; }
+#community-list.community-empty { flex:none; min-height:0; }
 html #community-list .community-post { border:0; border-radius:0; margin:0; padding:10px 0; background:transparent; border-bottom:1px solid #eef0f3; }
 .community-meta { display:flex; align-items:center; gap:8px; margin:0 0 2px; font-size:12px; color:#626d7b; flex-wrap:wrap; }
 .community-meta .community-category { color:#1b64da; font-weight:600; }
@@ -99,7 +100,7 @@ html #community-list .community-post { border:0; border-radius:0; margin:0; padd
 .community-read { display:inline-block; margin-top:4px; font-size:12px; color:#1b64da; }
 .community-content[open] .community-preview,.community-content[open] .community-read { display:none; }
 .community-content > .social-text { font-size:16px; line-height:1.65; margin:8px 0; max-width:75ch; }
-.community-post > .social-actions { align-items:center; flex-wrap:nowrap; gap:4px; margin-top:4px; }
+.community-post > .social-actions { align-items:flex-start; flex-wrap:nowrap; gap:4px; margin-top:4px; }
 .community-post > .social-actions > button { background:transparent; border:0; padding:4px 8px; min-height:30px; color:#626d7b; font-size:13px; }
 .community-post > .social-actions > button[aria-pressed='true'] { color:#1b64da; background:#eaf3ff; }
 .community-post > .social-status:empty { display:none; }
@@ -201,13 +202,14 @@ html #community-list .community-post { border:0; border-radius:0; margin:0; padd
 .lounge-person-figure[data-hair='2'] .head { box-shadow: -2px 0 #384554,2px 0 #384554,inset 0 3px #384554; }
 .plaza-bubbles { position: absolute; inset: 0; pointer-events: none; z-index: 120; }
 .plaza-bubble { position: absolute; width: max-content; max-width: min(150px,70%); box-sizing: border-box; padding: 7px 9px; color: #333d4b; background: #fff; border: 1px solid #8c7956; box-shadow: 0 3px 0 #5a493326; border-radius: 10px; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; max-height: 76px; overflow: hidden; }
-.plaza-pad { display: flex; justify-content: center; gap: 8px; flex: none; }
+.plaza-pad { display: flex; justify-content: center; gap: 4px; flex: none; }
 .plaza-pad,.plaza-pad button { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.plaza-pad button { min-width: 44px; min-height: 44px; }
+/* 광장 내부 방향키도 맵을 가리지 않도록 고투명 원형으로 표시 */
+.plaza-pad button { min-width: 32px; min-height: 32px; padding: 0; border-radius: 999px; border: 1px solid #ffffff59; background: #102d3c29; color: #fff; text-shadow: 0 1px 2px #102d3c99; font-size: 13px; backdrop-filter: blur(1.5px); }
 .player-pet.pet-follower { position: absolute; left: 0; top: 0; right: auto; bottom: auto; width: 24px; font-size: 20px; pointer-events: none; will-change: transform; }
 .pet-follower[data-walking='true'] { animation: pet-step 240ms steps(2,end) infinite; }
 @keyframes pet-step { 50% { margin-top: -2px; } }
-.floor-portal { right: 6%; top: 24%; height: clamp(30px,8cqh,60px); }
+.floor-portal { right: 1.5%; top: 45%; transform: translateY(-50%); height: clamp(36px,9cqh,60px); border-radius: 999px; border: 2px solid #67e8f9cc; background: radial-gradient(ellipse at center,#22d3eecc 0%,#4338ca 65%,#1e1b4b 100%); box-shadow: 0 0 14px #22d3ee99; }
 #lobby-stage { transition: opacity 180ms ease; }
 #lobby-stage.portal-travel { opacity: .2; pointer-events: none; }
 @media(prefers-reduced-motion:reduce) {
