@@ -1010,6 +1010,44 @@ document.addEventListener?.('zero-plaza-closed',()=>{
   window.history?.replaceState?.({view:back.view},'',back.hash);navigate(back.view,false);
   if(back.view==='workbench')openDefaultStock(false);
 });
+// Rail and 더보기 menus share one flow-ordered grouping; icons are Lucide outlines (ISC) so every row matches.
+const NAV_GROUPS=[['내 투자회사',['company','lobby','team']],['광장·커뮤니티',['plaza','community']],['투자',['portfolio','research','workbench','analysis','comparison','audit']],['정보·학습',['news','macro','reports','study','guide']]];
+const NAV_ICONS={
+  company:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2M10 6h4M10 10h4M10 14h4M10 18h4"/>',
+  lobby:'<path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0zM5 18v2M19 18v2"/>',
+  team:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  plaza:'<path d="M14.1 5.55a2 2 0 0 0 1.8 0l3.66-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.55 2.27a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.66 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.8 0zM15 5.76v15M9 3.24v15"/>',
+  community:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/>',
+  portfolio:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+  research:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  workbench:'<path d="M9 5v4M9 15v2M17 3v2M17 13v3M3 3v16a2 2 0 0 0 2 2h16"/><rect width="4" height="6" x="7" y="9" rx="1"/><rect width="4" height="8" x="15" y="5" rx="1"/>',
+  analysis:'<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
+  comparison:'<path d="M3 3v16a2 2 0 0 0 2 2h16M18 17V9M13 17V5M8 17v-3"/>',
+  audit:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 14l2 2 4-4"/>',
+  news:'<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2M18 14h-8M15 18h-5M10 6h8v4h-8V6Z"/>',
+  macro:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/>',
+  reports:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8"/>',
+  study:'<path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0zM22 10v6M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
+  guide:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>'
+};
+function organizeNav(nav){
+  if(!nav?.querySelectorAll||!document.createElementNS)return;
+  const groups=[...nav.querySelectorAll('.nav-group')];if(!groups.length)return;
+  const prefix=(groups[0].querySelector('.nav-group-label')?.id||'nav').split('-')[0];
+  NAV_GROUPS.forEach(([title,views],index)=>{
+    let group=groups[index];
+    if(!group){group=document.createElement('div');group.className='nav-group';group.setAttribute('role','group');const label=document.createElement('p');label.className='nav-group-label';group.append(label);nav.append(group);}
+    const label=group.querySelector('.nav-group-label');label.id=prefix+'-group-'+index;label.textContent=title;group.setAttribute('aria-labelledby',label.id);
+    for(const view of views){const button=nav.querySelector('.nav-item[data-view="'+view+'"]');if(button)group.append(button);}
+  });
+  nav.querySelectorAll('.nav-group').forEach(group=>{if(!group.querySelector('.nav-item'))group.remove();});
+  nav.querySelectorAll('.nav-item[data-view]').forEach(button=>{
+    const paths=NAV_ICONS[button.dataset.view];if(!paths)return;
+    button.querySelector(':scope > svg')?.remove();
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.innerHTML=paths;button.prepend(svg);
+  });
+}
+document.querySelectorAll?.('.rail nav, #more-menu nav').forEach(organizeNav);
 document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => {
   navigate(button.dataset.view);
 }));
