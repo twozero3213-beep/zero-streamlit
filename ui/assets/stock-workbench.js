@@ -238,14 +238,15 @@ if(typeof window!=='undefined') {
   (()=>{
     const explore={catalog:[],identity:null,tab:'chart',range:'5Y',interval:'1d',kind:'candle',averages:new Set([20]),chart:null,loading:false,count:100,start:0,cursor:null,sequence:0,searchSequence:0,compareSequence:0,compareIdentity:null,compareRange:'5Y',currency:'NATIVE'};
     const favoritesKey='zero-watchlist-v1',knownETF=new Set(['SPY','BIL','UUP','VNQ','GLD','TQQQ','QQQ','TMF','SCHD','JEPQ','JEPI','SPYD','HDV','VYM','NOBL','069500','148020']);
+    const watchKey=()=>window.ZEROLobbyUsers?.localKey?.(favoritesKey)??favoritesKey;
     const companyNewsCache=new Map();let companyNewsSequence=0,orderTicket=null;
     const root=()=>document.getElementById('stock-workbench');
     const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text).replaceAll('모의','');return n;};
     const numeric=(value)=>value===null||value===undefined||value===''?NaN:Number(value);
     const fm=(value,decimals=2)=>Number.isFinite(numeric(value))?new Intl.NumberFormat('ko-KR',{maximumFractionDigits:decimals}).format(Number(value)):'미확인';
     const cash=(value,currency)=>!Number.isFinite(stockNumber(value))?'미확인':currency==='KRW'?fm(value,0)+'원':currency==='USD'?'$'+fm(value,2):fm(value)+' · 통화 미확인';
-    function favoriteIds(){try{const raw=JSON.parse(localStorage.getItem(favoritesKey)||'[]');return Array.isArray(raw)?[...new Set(raw.filter(id=>typeof id==='string'&&/^(US:[A-Z][A-Z0-9.-]{0,14}|KR:[A-Z0-9]{6})$/.test(id)))].slice(0,30):[];}catch(_){return [];}}
-    function favorite(identity){const ids=favoriteIds(),index=ids.indexOf(identity);if(index>=0)ids.splice(index,1);else if(ids.length<30)ids.push(identity);else throw Error('WATCHLIST_LIMIT');localStorage.setItem(favoritesKey,JSON.stringify(ids));return ids.includes(identity);}
+    function favoriteIds(){try{const raw=JSON.parse(localStorage.getItem(watchKey())||'[]');return Array.isArray(raw)?[...new Set(raw.filter(id=>typeof id==='string'&&/^(US:[A-Z][A-Z0-9.-]{0,14}|KR:[A-Z0-9]{6})$/.test(id)))].slice(0,30):[];}catch(_){return [];}}
+    function favorite(identity){const ids=favoriteIds(),index=ids.indexOf(identity);if(index>=0)ids.splice(index,1);else if(ids.length<30)ids.push(identity);else throw Error('WATCHLIST_LIMIT');localStorage.setItem(watchKey(),JSON.stringify(ids));return ids.includes(identity);}
     function favoriteLabel(target,active){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),path=document.createElementNS(svg.namespaceURI,'path');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('width','18');svg.setAttribute('height','18');svg.setAttribute('aria-hidden','true');path.setAttribute('d','m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.4-5.7-3-5.7 3 1.1-6.4L2.8 9.7l6.4-.9Z');path.setAttribute('stroke','#3182f6');path.setAttribute('stroke-width','1.7');path.setAttribute('fill',active?'#3182f6':'none');svg.append(path);target.replaceChildren(svg,el('span','','관심종목'));target.setAttribute('aria-pressed',String(active));target.setAttribute('aria-label','관심종목 '+(active?'해제':'추가'));}
     function navigate(){orderTicket?.destroy();orderTicket=null;window.ZERO?.navigate?.('workbench',false);}
     function stockAddress(replace=false){

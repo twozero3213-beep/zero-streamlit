@@ -44,7 +44,15 @@
   const PERSONAS = ['낙천적', '꼼꼼함', '장난꾸러기', '차분함', '열정적', '졸림', '호기심'];
   const SPACE = {floor: [['wood', '원목'], ['gray', '회색'], ['mint', '민트'], ['sand', '모래']], wall: [['sky', '하늘'], ['peach', '복숭아'], ['lavender', '라벤더'], ['white', '하양']],
     props: [['plant', '화분'], ['coffee', '커피머신'], ['sofa', '소파'], ['books', '책장'], ['fish', '어항'], ['poster', '포스터'], ['clock', '시계']]};
-  if (typeof module !== 'undefined' && module.exports) module.exports = {nickProblem, weightTotal, weightsFrom, ALLOWED, PERSONAS, SPACE, createMemberSessionStore};
+  // Device-only preferences (school progress, watchlist) are kept per signed-in nickname so switching IDs never mixes them.
+  // The first account to sign in on this device adopts the older unscoped copy once.
+  function accountKey(store, base, nick) {
+    if (!nick) return base;
+    const key = base + ':' + nick, legacy = store.get(base);
+    if (store.get(key) === null && legacy !== null && store.get(base + ':adopted') === null) { store.set(key, legacy); store.set(base + ':adopted', nick); }
+    return key;
+  }
+  if (typeof module !== 'undefined' && module.exports) module.exports = {nickProblem, weightTotal, weightsFrom, ALLOWED, PERSONAS, SPACE, createMemberSessionStore, accountKey};
   if (typeof document === 'undefined' || !document.getElementById('lobby-view')) return;
 
   const meta = document.querySelector('meta[name="zero-lobby-api"]'), BASE = (meta?.content || '').replace(/\/+$/, '');
@@ -348,6 +356,7 @@
     restoringSession: () => !!U.token && !U.me,
     session: () => U.me ? {nick: U.me.nick, progress: U.me.progress, appearance: U.me.appearance, catalog: U.me.catalog, blocks: U.me.blocks, practiceReturn: U.me.portfolio?.return_percent, membership: U.me.membership} : null,
     request: (path, options = {}) => api(path, {...options, token: U.token}),
+    localKey: (base) => accountKey(store, base, U.me?.nick),
     openProfile: () => button.click(),
     editOffice:()=>{if(!U.me)return;viewTeam();if(!dialog.open)dialog.showModal?.();},
     // office: owner nickname for that office's live room; omitted for the public plaza.

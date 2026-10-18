@@ -7,12 +7,14 @@
   const body = document.getElementById('academy-body'), bar = document.getElementById('academy-bar'), rankLine = document.getElementById('academy-rank');
   const node = (tag, className = '', text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
   const button = (label, className, onClick) => { const element = node('button', className, label); element.type = 'button'; element.addEventListener('click', onClick); return element; };
-  const store = {get() { try { return localStorage.getItem(KEY); } catch (_) { return null; } }, set(value) { try { localStorage.setItem(KEY, value); } catch (_) { /* private mode: progress lasts for this visit only */ } }};
+  const key = () => window.ZEROLobbyUsers?.localKey?.(KEY) ?? KEY;
+  const store = {get() { try { return localStorage.getItem(key()); } catch (_) { return null; } }, set(value) { try { localStorage.setItem(key(), value); } catch (_) { /* private mode: progress lasts for this visit only */ } }};
 
   let accountEpoch = 0;
-  document.addEventListener('zero-session-changed', () => { accountEpoch++; });
   let progress = A.normalize(store.get()), view = {name: 'map'}, session = null;
   const save = (celebrate = false) => { store.set(JSON.stringify(progress)); paintBadges(celebrate); };
+  // Each ID keeps its own school progress on this device; reload it whenever the signed-in account changes.
+  document.addEventListener('zero-session-changed', () => { accountEpoch++; progress = A.normalize(store.get()); paintBadges(); });
 
   // Small level badges elsewhere on the page (hero button, side card) follow the saved progress.
   function paintBadges(celebrate = false) {
