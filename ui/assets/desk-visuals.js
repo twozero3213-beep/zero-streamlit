@@ -56,7 +56,18 @@
     });
     return [...out.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
   }
-  const api = {trendOf, sparkPoints, gauge, categoryIcon, freshness, tally, shortDate, INSTITUTIONS, KINDS, cut};
+  // KST 달력 날짜(YYYY-MM-DD). 발표 일정은 한국 시간으로 읽는다.
+  const kstDay = (time) => new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(time));
+  const dayGap = (from, to) => Math.round((Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / DAY);
+  // 지표의 다음 발표 예정 시각 중 지금부터 days일 안의 것만, 이른 순서로. 시각을 못 읽거나 지난 일정은 버린다.
+  function upcoming(items, now = Date.now(), days = 30, category = () => 'ACTIVITY') {
+    const today = kstDay(now);
+    return (Array.isArray(items) ? items : []).map((item) => ({item, at: Date.parse(item?.next_release_kst || '')}))
+      .filter(({at}) => Number.isFinite(at) && at >= now && at <= now + days * DAY)
+      .map(({item, at}) => { const day = kstDay(at); return {id: item.id, name: item.name, icon: categoryIcon(category(item)), at, day, dday: dayGap(today, day)}; })
+      .sort((a, b) => a.at - b.at || String(a.id).localeCompare(String(b.id)));
+  }
+  const api = {upcoming, kstDay, trendOf, sparkPoints, gauge, categoryIcon, freshness, tally, shortDate, INSTITUTIONS, KINDS, cut};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   window.ZERODeskVisuals = api;
@@ -122,7 +133,34 @@
     });
     list.before(tiles);
   }
+  const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+  function calendar() {
+    const list = document.getElementById('macro-list'); if (!list) return;
+    list.parentElement.querySelector('.dv-calendar')?.remove();
+    const now = Date.now(), events = upcoming(window.ZERODesk?.macro?.() || [], now, 30, (item) => window.ZERODesk?.macroCategory?.(item));
+    const box = node('section', 'dv-calendar'); box.setAttribute('aria-label', '다가오는 지표 발표 일정');
+    box.append(node('h3', '', '🗓️ 다가오는 발표 · 30일'));
+    if (!events.length) { box.append(node('p', 'muted-note', '30일 안에 예정된 발표 정보가 없어요.')); list.before(box); return; }
+    // 오늘부터 14일을 한 줄 달력으로, 발표가 있는 날에 지표 아이콘을 찍는다.
+    const strip = node('ol', 'dv-days'), today = kstDay(now);
+    for (let index = 0; index < 14; index++) {
+      const day = kstDay(Date.parse(today + 'T12:00:00+09:00') + index * DAY), date = new Date(day + 'T12:00:00+09:00'), hits = events.filter((event) => event.day === day);
+      const cell = node('li', 'dv-day' + (index === 0 ? ' dv-today' : '') + (hits.length ? ' dv-has' : '') + ([0, 6].includes(date.getUTCDay()) ? ' dv-weekend' : ''));
+      cell.title = day + (hits.length ? ' · ' + hits.map((event) => event.name).join(', ') : ' · 발표 없음');
+      cell.append(node('small', '', index === 0 ? '오늘' : WEEK[date.getUTCDay()]), node('strong', '', String(Number(day.slice(8)))), node('span', 'dv-day-icons', hits.map((event) => event.icon).join('')));
+      strip.append(cell);
+    }
+    const rows = node('ul', 'dv-events');
+    events.slice(0, 6).forEach((event) => {
+      const time = new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date(event.at));
+      const row = node('li'); row.append(node('span', 'dv-dday', event.dday === 0 ? '오늘' : 'D-' + event.dday), node('span', 'dv-event-icon', event.icon), node('strong', '', event.name), node('small', '', time));
+      rows.append(row);
+    });
+    box.append(strip, rows, node('p', 'muted-note', '발표 기관의 예정 일정이며 바뀔 수 있어요.' + (events.length > 6 ? ' 나머지 ' + (events.length - 6) + '건은 각 지표를 펼치면 보여요.' : '')));
+    list.before(box);
+  }
+  document.addEventListener('zero-macro-rendered', calendar);
   document.addEventListener('zero-macro-rendered', decorateMacro);
   document.addEventListener('zero-reports-rendered', decorateReports);
-  decorateMacro(); decorateReports();
+  calendar(); decorateMacro(); decorateReports();
 })();

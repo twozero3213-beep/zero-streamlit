@@ -27,6 +27,7 @@ from starlette.staticfiles import StaticFiles
 import zero_headlines
 import zero_discovery
 import zero_research
+import zero_rankings
 
 DEFAULT_SITE = 'https://zero-portfolio.zero-cloudflare.workers.dev'
 UI = Path(__file__).parent / 'ui'
@@ -38,6 +39,7 @@ PLAIN = {'/api/portfolio': 60, '/api/team': 300, '/api/office': 60, '/api/resear
          '/api/funds': 1800, '/api/tqqq': 1800, '/api/institutions': 1800, '/api/live-quotes': 20}
 MAX_BYTES = 12_000_000
 TRENDS_SECONDS = 3600
+RANK_SECONDS = 120  # live ranking order; the market moves, but not every request needs a new fetch
 HEADLINES_SECONDS = 60  # live news-search titles; collected here, not on the Cloudflare site
 
 _cache, _pending, _lock = {}, {}, threading.Lock()
@@ -172,6 +174,15 @@ def get_headlines():
     return _cached('headlines', HEADLINES_SECONDS, load)
 
 
+def get_rankings():
+    def load():
+        value = zero_rankings.collect()
+        if value['state'] == 'UNAVAILABLE':
+            raise Unavailable('RANK_UNAVAILABLE')
+        return json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    return _cached('market-rank', RANK_SECONDS, load)
+
+
 def get_trends():
     def load():
         try:
@@ -196,6 +207,8 @@ async def api(request):
             body = await run_in_threadpool(get_public_trends)
         elif path == '/api/headlines' and not query:
             body = await run_in_threadpool(get_headlines)
+        elif path == '/api/market-rank' and not query:
+            body = await run_in_threadpool(get_rankings)
         else:
             body = await run_in_threadpool(get_public, path, query)
     except Unavailable as error:
