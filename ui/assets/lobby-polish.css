@@ -326,3 +326,12 @@ html[data-zero-view='lobby'] main { height: var(--floor-height, calc(100dvh - 14
 .ts-chart { display: grid; gap: 6px; } .ts-chart-svg { width: 100%; height: auto; display: block; } .ts-chart-up polyline { stroke: #f04452; } .ts-chart-up polygon { fill: rgb(240 68 82 / 10%); } .ts-chart-up circle { fill: #f04452; }
 .ts-chart-down polyline { stroke: #3182f6; } .ts-chart-down polygon { fill: rgb(49 130 246 / 10%); } .ts-chart-down circle { fill: #3182f6; } .ts-chart-flat polyline { stroke: #8b95a1; } .ts-chart-flat polygon { fill: rgb(139 149 161 / 10%); } .ts-chart-flat circle { fill: #8b95a1; }
 .ts-chart-ends { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--secondary); } .ts-chart-ends span:nth-child(2) { font-weight: 700; }
+/* 종목 화면 탭: 시세 · 거래현황 · 종목정보 · 뉴스·공시 */
+.ts-facts [hidden] { display: none; }
+.ts-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line, #e5e8eb); } .ts-tabs button { flex: 1 0 auto; min-height: 44px; padding: 8px 10px; border: 0; border-bottom: 3px solid transparent; background: none; font: inherit; font-size: 14.5px; color: #4e5968; cursor: pointer; white-space: nowrap; }
+.ts-tabs button[aria-selected="true"] { color: #191f28; font-weight: 700; border-bottom-color: #191f28; }
+.ts-panel, .ts-info, .ts-news-panel, .ts-investors { display: grid; gap: 14px; } .ts-info h3, .ts-news-section h3 { margin: 0; font-size: 16px; }
+.ts-peers, .ts-news { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; } .ts-peer { grid-template-columns: minmax(0, 1fr) auto; width: 100%; }
+.ts-news li { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: #f7f8fa; } .ts-news-title { font-weight: 600; line-height: 1.5; color: #191f28; text-decoration: none; } a.ts-news-title:hover { text-decoration: underline; } .ts-news small { color: var(--secondary); font-size: 12.5px; }
+.ts-news-section { display: grid; gap: 8px; }
+@media (max-width: 480px) { .ts-tab-icon { display: none; } .ts-tabs button { padding: 8px 8px; } }

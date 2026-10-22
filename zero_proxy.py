@@ -29,6 +29,7 @@ import zero_discovery
 import zero_research
 import zero_rankings
 import zero_stockinfo
+import zero_stocknews
 
 DEFAULT_SITE = 'https://zero-portfolio.zero-cloudflare.workers.dev'
 UI = Path(__file__).parent / 'ui'
@@ -41,6 +42,7 @@ PLAIN = {'/api/portfolio': 60, '/api/team': 300, '/api/office': 60, '/api/resear
 MAX_BYTES = 12_000_000
 TRENDS_SECONDS = 3600
 STOCK_SECONDS = 60
+NEWS_SECONDS = 300
 RANK_SECONDS = 120  # live ranking order; the market moves, but not every request needs a new fetch
 HEADLINES_SECONDS = 60  # live news-search titles; collected here, not on the Cloudflare site
 
@@ -195,6 +197,16 @@ def get_stock_info(code):
     return _cached('stock-info:' + code, STOCK_SECONDS, load)
 
 
+def get_stock_news(code):
+    def load():
+        try:
+            value = zero_stocknews.collect(code)
+        except Exception:  # the provider's text never reaches the client or the cache
+            raise Unavailable('STOCK_NEWS_UNAVAILABLE') from None
+        return json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    return _cached('stock-news:' + code, NEWS_SECONDS, load)
+
+
 def get_trends():
     def load():
         try:
@@ -221,6 +233,8 @@ async def api(request):
             body = await run_in_threadpool(get_headlines)
         elif path == '/api/stock-info' and set(query) == {'code'} and zero_stockinfo.CODE.fullmatch(query['code']):
             body = await run_in_threadpool(get_stock_info, query['code'])
+        elif path == '/api/stock-news' and set(query) == {'code'} and zero_stocknews.CODE.fullmatch(query['code']):
+            body = await run_in_threadpool(get_stock_news, query['code'])
         elif path == '/api/market-rank' and not query:
             body = await run_in_threadpool(get_rankings)
         else:

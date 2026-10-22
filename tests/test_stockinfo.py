@@ -67,6 +67,16 @@ class StockInfoTests(unittest.TestCase):
         broken = zero_stockinfo.collect('005930', NOW, fetch=lambda url: (_ for _ in ()).throw(OSError('x')) if '/price?' in url else serve(info(), TREND)(url))
         self.assertEqual(broken['daily'], [], 'a failing price list leaves the chart empty, not the whole answer')
 
+    def test_peers_keep_only_valid_domestic_rows_and_exclude_the_stock_itself(self):
+        def peer(code, **extra):
+            return {'stockType': 'domestic', 'itemCode': code, 'stockName': '동종' + code, 'closePrice': '1,234,000', 'fluctuationsRatio': '-4.64', 'sosok': '0', **extra}
+        rows = [peer('000660'), peer('005930'), peer('402340', sosok='1'), peer('12345'), peer('000270', closePrice='0'), peer('035720', fluctuationsRatio='x'),
+                peer('068270', stockType='world'), peer('207940', sosok='9'), 'bad']
+        value = zero_stockinfo.collect('005930', NOW, fetch=serve({**info(), 'industryCompareInfo': rows}, TREND))
+        self.assertEqual(value['peers'], [{'code': '000660', 'name': '동종000660', 'market': 'KOSPI', 'price': 1234000, 'change_rate': -4.64},
+                                          {'code': '402340', 'name': '동종402340', 'market': 'KOSDAQ', 'price': 1234000, 'change_rate': -4.64}])
+        self.assertEqual(zero_stockinfo.collect('005930', NOW, fetch=serve(info(), TREND))['peers'], [])
+
     def test_unusable_responses_raise_fixed_codes(self):
         for code in ('0059', 'abc123', 5930, '../etc'):
             with self.assertRaises(ValueError):

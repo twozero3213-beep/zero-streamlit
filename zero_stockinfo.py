@@ -76,6 +76,19 @@ def _real_date(iso):
         return False
 
 
+def _peers(rows, code):
+    """Same-industry stocks the provider lists next to this one; malformed rows are dropped."""
+    out = []
+    for raw in rows if isinstance(rows, list) else []:
+        if not isinstance(raw, dict) or raw.get('stockType') != 'domestic':
+            continue
+        peer, name = raw.get('itemCode'), zero_discovery.plain_text(raw.get('stockName'), 60)
+        price, rate = _number(raw.get('closePrice')), _number(raw.get('fluctuationsRatio'))
+        if isinstance(peer, str) and CODE.fullmatch(peer) and peer != code and name and price and price > 0 and rate is not None and -100 < rate <= 1000 and raw.get('sosok') in ('0', '1'):
+            out.append({'code': peer, 'name': name, 'market': 'KOSPI' if raw['sosok'] == '0' else 'KOSDAQ', 'price': int(price), 'change_rate': rate})
+    return out[:5]
+
+
 def _daily(rows):
     """Oldest-first closes, de-duplicated by date; malformed rows are dropped."""
     seen = {}
@@ -122,5 +135,5 @@ def collect(code, now=None, fetch=None):
         raise ValueError('STOCK_NAME_MISSING')
     return {'schema_version': 1, 'scope': 'PUBLIC_STOCK_INFO', 'orders_authorized': False, 'code': code, 'name': name,
             'price': latest['close'], 'price_date': latest['date'], 'change': change, 'change_rate': round(change / facts['prev_close'] * 100, 2),
-            'facts': facts, 'investors': investors, 'daily': daily, 'unit': 'SHARES', 'retrieved_at': now.astimezone(timezone.utc).isoformat(),
+            'facts': facts, 'investors': investors, 'daily': daily, 'peers': _peers(integration.get('industryCompareInfo'), code), 'unit': 'SHARES', 'retrieved_at': now.astimezone(timezone.utc).isoformat(),
             'source': {'label': '네이버페이 증권 공개 시세', 'url': 'https://stock.naver.com/domestic/stock/' + code + '/total'}}
