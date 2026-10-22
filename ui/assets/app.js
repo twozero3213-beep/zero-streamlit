@@ -1086,7 +1086,11 @@ document.addEventListener?.('DOMContentLoaded', () => {
   const route = window.location?.hash?.slice(1).split('?')[0];
   // The hosted site opens on the Toss-style home; the investment tabs lead there too.
   if (hostedView) document.querySelectorAll('[data-domain="investment"][data-view]').forEach((button) => { button.dataset.view = 'home'; });
-  if (hostedView && !Object.hasOwn(views, route || '')) navigate('home', false);
+  if (hostedView && !Object.hasOwn(views, route || '')) {
+    navigate('home', false);
+    // Give the landing its own history entry so the phone's back button returns to it from a stock screen.
+    window.history?.replaceState?.({view: 'home'}, '', '#home');
+  }
 });
 $('#mobile-view')?.addEventListener('change', (event) => navigate(event.target.value));
 document.querySelectorAll('[data-market]').forEach((button) => button.addEventListener('click', () => { state.market = button.dataset.market; setActive('[data-market]', 'market', state.market); renderRows(); }));

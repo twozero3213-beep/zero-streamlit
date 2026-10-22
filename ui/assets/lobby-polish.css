@@ -336,3 +336,17 @@ html[data-zero-view='lobby'] main { height: var(--floor-height, calc(100dvh - 14
 .ts-news-section { display: grid; gap: 8px; }
 @media (max-width: 480px) { .ts-tab-icon { display: none; } .ts-tabs button { padding: 8px 8px; } }
 .ts-more { justify-self: start; min-height: 44px; } .ts-loading { padding: 24px 8px; color: var(--secondary); }
+/* 다크 테마: 기본 변수와 직접 손봐야 하는 부분. 나머지 밝은 색은 dark-theme.js가 같은 선택자로 다시 칠한다. */
+html[data-zero-theme="dark"] { color-scheme: dark; --canvas: #0f1115; --surface: #1b1d22; --nav: #15171c; --ink: #e6e9ee; --secondary: #a5adb9; --line: #2b2f37; --blue: #6ea8ff; --gain: #ff7480; --success: #3ccfbd; --us: #1d2c44; --kr: #3b2724; --reserve: #173a36; }
+html[data-zero-theme="dark"] body { background: var(--canvas); color: var(--ink); }
+html[data-zero-theme="dark"]:not([data-zero-skin]) body { opacity: 0; }
+html[data-zero-theme="dark"] .th-up, html[data-zero-theme="dark"] .th-pct.th-up { color: #ff7480; } html[data-zero-theme="dark"] .th-down, html[data-zero-theme="dark"] .th-pct.th-down { color: #6ea8ff; }
+html[data-zero-theme="dark"] .th-tabs button[aria-pressed="true"] { background: #e6e9ee !important; border-color: #e6e9ee !important; color: #15171c !important; }
+html[data-zero-theme="dark"] .ts-tabs button[aria-selected="true"] { border-bottom-color: #e6e9ee !important; }
+html[data-zero-theme="dark"] .ts-dot { background: #e6e9ee !important; border-color: #1b1d22 !important; }
+html[data-zero-theme="dark"] .th-heart { color: #8b95a1; } html[data-zero-theme="dark"] .th-heart.th-on { color: #ff5a68; }
+html[data-zero-theme="dark"] .th-bar i { background: #f2a516; } html[data-zero-theme="dark"] .th-bg-up { background: #ff5a68; } html[data-zero-theme="dark"] .th-bg-down { background: #5b9bff; }
+html[data-zero-theme="dark"] .ts-chart-up polyline, html[data-zero-theme="dark"] .ts-chart-up circle { stroke: #ff6b78; fill-opacity: 1; } html[data-zero-theme="dark"] .ts-chart-up circle { fill: #ff6b78; }
+html[data-zero-theme="dark"] .ts-chart-down polyline { stroke: #6ea8ff; } html[data-zero-theme="dark"] .ts-chart-down circle { fill: #6ea8ff; }
+#theme-toggle { flex: none; }
+html[data-zero-theme="dark"] .primary-button, html[data-zero-theme="dark"] .npc.player .player-level { background: #2b6bdc; }
