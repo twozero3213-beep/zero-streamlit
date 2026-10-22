@@ -920,6 +920,7 @@ async function loadTeam(event, force = false) {
 }
 $('#team-event').addEventListener('change', () => loadTeam($('#team-event').value));
 const views = {
+  home: ['홈', '오늘 시장과 내 관심 종목을 한눈에 보세요.'],
   lobby: ['ZERO 트레이딩 플로어', '지금 일하는 ZERO 팀을 보고, 내 캐릭터로 직원과 이야기해 보세요.'],
   plaza: ['실시간 광장', '다른 참가자와 캐릭터를 움직이고 공개 대화를 나누세요.'],
   company: ['내 투자회사 · 전략 직원', '직원을 고용하고 과거 데이터로 전략과 리밸런싱 제안을 확인하세요.'],
@@ -938,7 +939,7 @@ const views = {
   guide: ['자료 설명', '숫자의 계산 기준과 아직 확인하지 못한 범위.']
 };
 let currentView = 'portfolio';
-const domainRoutes={investment:'portfolio',office:'lobby',plaza:'plaza',community:'community'};
+const domainRoutes={investment:hostedView?'home':'portfolio',office:'lobby',plaza:'plaza',community:'community'};
 function domainFor(view){return view==='plaza'||view==='community'?view:['lobby','company','study','team'].includes(view)?'office':'investment';}
 let routeStarted=false,plazaReturn={view:'lobby',hash:'#lobby'},lastWorkbenchHash='';
 function openDefaultStock(updateAddress = true) {
@@ -975,7 +976,7 @@ function navigate(view, updateAddress = true) {
     if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
   });
   document.querySelectorAll('[data-domain]').forEach(button=>{const active=button.dataset.domain===domain;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current',button.dataset.view===view?'page':'true');else button.removeAttribute('aria-current');});
-  const subnav=document.querySelector('.mts-subnav');if(subnav)subnav.hidden=!['portfolio','comparison','research','workbench','analysis','audit'].includes(view);
+  const subnav=document.querySelector('.mts-subnav');if(subnav)subnav.hidden=!['home','portfolio','comparison','research','workbench','analysis','audit'].includes(view);
   $('#page-title').textContent = views[view][0];
   $('#page-subtitle').textContent = views[view][1];
   closeMenu();
@@ -1081,9 +1082,11 @@ window.addEventListener?.('hashchange', restoreRoute);
 
 document.addEventListener?.('DOMContentLoaded', () => {
   restoreRoute();
-  // The hosted site opens on the office; the owner's local app keeps opening on the portfolio.
+  // The owner's local app keeps opening on the portfolio.
   const route = window.location?.hash?.slice(1).split('?')[0];
-  if (hostedView && !Object.hasOwn(views, route || '')) navigate('lobby', false);
+  // The hosted site opens on the Toss-style home; the investment tabs lead there too.
+  if (hostedView) document.querySelectorAll('[data-domain="investment"][data-view]').forEach((button) => { button.dataset.view = 'home'; });
+  if (hostedView && !Object.hasOwn(views, route || '')) navigate('home', false);
 });
 $('#mobile-view')?.addEventListener('change', (event) => navigate(event.target.value));
 document.querySelectorAll('[data-market]').forEach((button) => button.addEventListener('click', () => { state.market = button.dataset.market; setActive('[data-market]', 'market', state.market); renderRows(); }));

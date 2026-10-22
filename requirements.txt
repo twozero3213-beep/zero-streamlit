@@ -3,4 +3,4 @@ feedparser==6.0.14
 lightweight-charts==2.1
 pandas==2.3.3
 
-# Changing this file makes Community Cloud restart the app; bump the date when proxy routes (zero_proxy.py) change: 2026-10-22 (market-rank route)
+# Changing this file makes Community Cloud restart the app; bump the date when proxy routes (zero_proxy.py) change: 2026-10-23 (stock-info route, rank up/down)

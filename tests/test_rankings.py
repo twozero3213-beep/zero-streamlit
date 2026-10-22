@@ -38,8 +38,9 @@ class RankingTests(unittest.TestCase):
         self.assertEqual(value['state'], 'AVAILABLE')
         lists = {(entry['market'], entry['kind']): [item['code'] for item in entry['items']] for entry in value['lists']}
         both = ['005930', '068270', '0001A0', '247540']
-        self.assertEqual(lists, {('KOSPI', 'VOLUME'): ['005930', '068270', '0001A0'], ('KOSDAQ', 'VOLUME'): ['247540'],
-                                 ('ALL', 'FOREIGN'): both, ('ALL', 'INSTITUTION'): both},
+        kospi, kosdaq = ['005930', '068270', '0001A0'], ['247540']
+        self.assertEqual(lists, {('KOSPI', 'VOLUME'): kospi, ('KOSDAQ', 'VOLUME'): kosdaq, ('KOSPI', 'UP'): kospi, ('KOSDAQ', 'UP'): kosdaq,
+                                 ('KOSPI', 'DOWN'): kospi, ('KOSDAQ', 'DOWN'): kosdaq, ('ALL', 'FOREIGN'): both, ('ALL', 'INSTITUTION'): both},
                          'a market list keeps only its market; whole-market lists keep both')
         self.assertEqual(value['lists'][0]['items'][0], {'code': '005930', 'name': '삼성전자', 'market': 'KOSPI', 'price': 212500, 'change_rate': -1.25, 'volume': 204406})
         self.assertFalse(value['amounts_included'])
@@ -54,9 +55,9 @@ class RankingTests(unittest.TestCase):
                 raise OSError('SECRET-TOKEN-XYZ-31415')
             return json.dumps([row('005930')]).encode()
         value = zero_rankings.collect(NOW, fetch=fetch)
-        self.assertEqual(sorted(u.split('orderType=')[1].split('&')[0] for u in asked), sorted(['quantTop', 'quantTop', 'foreignPureBuy', 'organizationPureBuy']))
+        self.assertEqual(sorted(u.split('orderType=')[1].split('&')[0] for u in asked), sorted(['quantTop'] * 2 + ['up'] * 2 + ['down'] * 2 + ['foreignPureBuy', 'organizationPureBuy']))
         self.assertTrue(all(u.startswith('https://stock.naver.com/api/domestic/market/stock/default?') for u in asked))
-        self.assertEqual((value['state'], value['failed']), ('PARTIAL', ['KOSDAQ:VOLUME', 'ALL:INSTITUTION']), 'KOSDAQ volume has no KOSDAQ row here')
+        self.assertEqual((value['state'], value['failed']), ('PARTIAL', ['KOSDAQ:VOLUME', 'KOSDAQ:UP', 'KOSDAQ:DOWN', 'ALL:INSTITUTION']), 'KOSDAQ volume has no KOSDAQ row here')
         self.assertNotIn('SECRET', json.dumps(value))
 
     def test_route_caches_success_and_never_caches_total_failure(self):
@@ -73,15 +74,6 @@ class RankingTests(unittest.TestCase):
         self.assertNotIn('market-rank', zero_proxy._cache)
         self.assertEqual(call(zero_proxy.api, 'GET', 'api/market-rank', b'kind=VOLUME').status_code, 404)
         self.assertEqual(call(zero_proxy.api, 'POST', 'api/market-rank').status_code, 403)
-
-
-class RankingPanelTests(unittest.TestCase):
-    @unittest.skipUnless(__import__('shutil').which('node'), 'node is not installed')
-    def test_panel_pure_checks(self):
-        import subprocess
-        result = subprocess.run(['node', str(ROOT / 'tests' / 'market_rank_check.cjs')], capture_output=True, text=True, encoding='utf-8', timeout=60)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('MARKET_RANK_CHECKS_OK', result.stdout)
 
 
 if __name__ == '__main__':

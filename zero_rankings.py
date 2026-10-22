@@ -1,4 +1,4 @@
-"""Live Korean stock rankings for the hosted market screen: most traded, foreign net buying, institution net buying.
+"""Live Korean stock rankings for the hosted home screen: most traded, biggest risers and fallers, foreign and institution net buying.
 
 Source: Naver Pay Securities' public ranking list (stock.naver.com, free, no key; registered in ZERO's host list).
 That list gives the rank order with today's price, change and volume, but not the net-buy amounts, so this module
@@ -15,6 +15,7 @@ URL = 'https://stock.naver.com/api/domestic/market/stock/default?tradeType=KRX&m
 # The net-buy orders ignore marketType (checked 2026-10-22: KOSPI and KOSDAQ return the same mixed list), so they
 # are fetched once for the whole market and each row keeps its own market from 'sosok'.
 JOBS = (('KOSPI', 'VOLUME', 'quantTop'), ('KOSDAQ', 'VOLUME', 'quantTop'),
+        ('KOSPI', 'UP', 'up'), ('KOSDAQ', 'UP', 'up'), ('KOSPI', 'DOWN', 'down'), ('KOSDAQ', 'DOWN', 'down'),
         ('ALL', 'FOREIGN', 'foreignPureBuy'), ('ALL', 'INSTITUTION', 'organizationPureBuy'))
 SOSOK = {'0': 'KOSPI', '1': 'KOSDAQ'}
 SIZE = 10

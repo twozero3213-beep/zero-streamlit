@@ -541,7 +541,7 @@ if(typeof window!=='undefined') {
       document.addEventListener('pointerdown',event=>{if(!results.contains(event.target)&&event.target!==input)dismiss();});
     }
     function restoreRoute(){const route=parseStockRoute(window.location?.hash);if(!route)return false;if(explore.identity!==route.identity||explore.tab!==route.tab||explore.range!==route.range||explore.interval!==route.interval||explore.compareIdentity!==route.compareIdentity||explore.compareRange!==route.compareRange)openCompany(route.identity,{...route,updateAddress:false});return true;}
-    window.ZEROExplore={search,openCompany,openWatchlist,init,restoreRoute};
+    window.ZEROExplore={search,openCompany,openWatchlist,init,restoreRoute,favorites:favoriteIds,toggleFavorite:(identity)=>{const ids=favorite(identity);document.dispatchEvent(new CustomEvent('zero-watchlist-changed',{detail:{identity}}));return ids;}};
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
   })();
 }
