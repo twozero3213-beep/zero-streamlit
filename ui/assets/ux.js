@@ -12,7 +12,12 @@
   }
   function pageSize(kind,width){const mobile=width<768;return kind==='research'?(mobile?6:10):kind==='cards'?mobile?2:4:kind==='news'?(mobile?1:4):kind==='macro'||kind==='reports'?(mobile?2:4):mobile?4:8;}
   function researchControlsPage(doc){const controls=doc.querySelector?.('#research-view .table-toolbar .stock-analytics-controls'),target=doc.getElementById('research-options');if(controls&&target)target.append(controls);}
-  if (typeof module !== 'undefined' && module.exports) module.exports = {pageModel,pageSize,researchControlsPage};
+  // Only list membership or a direct item's visibility changes paging; card repaints inside items do not,
+  // or the pager and the card painter wake each other forever and freeze the page on phones.
+  function listChanged(records, container) {
+    return records.some((record) => record.type === 'childList' ? record.target === container : record.target.parentElement === container);
+  }
+  if (typeof module !== 'undefined' && module.exports) module.exports = {pageModel,pageSize,researchControlsPage,listChanged};
   if (typeof document === 'undefined') return;
 
   // ---- loading splash -------------------------------------------------------------------------
@@ -54,7 +59,7 @@
       document.dispatchEvent(new CustomEvent('zero-page-changed', {detail:{id:container.id,start:model.start,end:model.end}}));
       queueMicrotask(() => { applying = false; });
     }
-    new MutationObserver(() => { if (!applying) apply(); }).observe(container, {childList: true,subtree:true,attributes:true,attributeFilter:['hidden']});
+    new MutationObserver((records) => { if (!applying && listChanged(records, container)) apply(); }).observe(container, {childList: true,subtree:true,attributes:true,attributeFilter:['hidden']});
     window.addEventListener?.('resize',apply);
     apply();
   }
