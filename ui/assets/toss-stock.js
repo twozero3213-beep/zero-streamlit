@@ -22,24 +22,33 @@
     const parts = [['개인', row.individual], ['외국인', row.foreign], ['기관', row.institution]], top = Math.max(...parts.map(([, v]) => Math.abs(v)));
     return parts.map(([name, value]) => ({name, value, width: top ? Math.max(2, Math.round(Math.abs(value) / top * 100)) : 0, dir: direction(value)}));
   }
+  // 일별 종가를 작은 선 그래프 좌표로(날짜순, 숫자가 아닌 점은 버림). 두 점 미만이면 null.
+  function chartPoints(daily, width = 600, height = 180, pad = 8) {
+    const rows = (Array.isArray(daily) ? daily : []).filter((row) => /^20\d{2}-\d{2}-\d{2}$/.test(row?.date) && num(row.close) !== null && row.close > 0).sort((a, b) => a.date.localeCompare(b.date));
+    if (rows.length < 2) return null;
+    const values = rows.map((row) => row.close), low = Math.min(...values), high = Math.max(...values), span = high - low || 1;
+    return {rows, low, high, points: rows.map((row, index) => [pad + (width - 2 * pad) * index / (rows.length - 1), pad + (height - 2 * pad) * (1 - (row.close - low) / span)])};
+  }
   // 응답 검증. 형식이 틀리면 null.
   function validInfo(data, code) {
     if (data?.scope !== 'PUBLIC_STOCK_INFO' || data.schema_version !== 1 || data.orders_authorized !== false || data.code !== code || data.unit !== 'SHARES'
       || typeof data.name !== 'string' || !data.name || num(data.price) === null || data.price <= 0 || num(data.change) === null || num(data.change_rate) === null
       || !data.facts || typeof data.facts !== 'object' || !Array.isArray(data.investors) || !Number.isFinite(Date.parse(data.retrieved_at))) return null;
     const investors = data.investors.filter((row) => /^20\d{2}-\d{2}-\d{2}$/.test(row?.date) && [row.individual, row.foreign, row.institution].every(Number.isInteger)).slice(0, 10);
-    return {...data, investors};
+    const daily = (Array.isArray(data.daily) ? data.daily : []).filter((row) => /^20\d{2}-\d{2}-\d{2}$/.test(row?.date) && Number.isInteger(row.close) && row.close > 0).slice(-120);
+    return {...data, investors, daily};
   }
-  const api = {rangePosition, shares, investorBars, validInfo, direction};
+  const api = {rangePosition, shares, investorBars, validInfo, direction, chartPoints};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
-  window.ZEROTossStock = api;
+  window.ZEROTossStock = {...api, expect: (id) => { expected = /^KR:[0-9A-Z]{6}$/.test(id) ? id : ''; setTimeout(sync, 400); }};
 
   const make = (tag, className = '', text) => { const e = document.createElement(tag); if (className) e.className = className; if (text !== undefined) e.textContent = text; return e; };
   const won = (value) => value.toLocaleString('ko-KR') + '원';
   const pct = (rate) => ({up: '▲ ', down: '▼ ', flat: '■ '}[direction(rate)]) + Math.abs(rate).toFixed(2) + '%';
   const kst = (iso) => new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date(iso));
   const cache = new Map();
+  let expected = '';  // 홈 순위에서 방금 누른 종목. 기존 목록에 없는 종목도 이 화면이 직접 연다.
   const identity = () => { try { return new URLSearchParams((window.location.hash.split('?')[1]) || '').get('identity') || ''; } catch (_) { return ''; } };
 
   function rangeBar(label, low, high, price) {
@@ -50,13 +59,33 @@
     ends.append(make('span', 'th-down', won(low)), make('strong', '', label), make('span', 'th-up', won(high)));
     box.append(ends, track); return box;
   }
-  function build(data, id) {
+  function lineChart(daily) {
+    const chart = chartPoints(daily); if (!chart) return null;
+    const first = chart.rows[0], last = chart.rows[chart.rows.length - 1], dir = direction(last.close - first.close), ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg'), line = document.createElementNS(ns, 'polyline'), area = document.createElementNS(ns, 'polygon'), dot = document.createElementNS(ns, 'circle');
+    svg.setAttribute('viewBox', '0 0 600 180'); svg.setAttribute('class', 'ts-chart-svg ts-chart-' + dir); svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', '최근 ' + chart.rows.length + '거래일 종가 추세, ' + first.date + ' ' + won(first.close) + '에서 ' + last.date + ' ' + won(last.close) + '까지, 최저 ' + won(chart.low) + ' 최고 ' + won(chart.high));
+    const pts = chart.points.map(([x, y]) => x.toFixed(1) + ',' + y.toFixed(1)).join(' ');
+    area.setAttribute('points', pts + ' 592,180 8,180'); line.setAttribute('points', pts); line.setAttribute('fill', 'none'); line.setAttribute('stroke-width', '2.5'); line.setAttribute('stroke-linejoin', 'round');
+    const [x, y] = chart.points[chart.points.length - 1]; dot.setAttribute('cx', x.toFixed(1)); dot.setAttribute('cy', y.toFixed(1)); dot.setAttribute('r', '4.5');
+    svg.append(area, line, dot);
+    const box = make('div', 'ts-chart'), ends = make('div', 'ts-chart-ends');
+    ends.append(make('span', '', first.date.slice(2).replaceAll('-', '.')), make('span', 'th-' + dir, '이 기간 ' + (last.close >= first.close ? '+' : '') + ((last.close / first.close - 1) * 100).toFixed(1) + '%'), make('span', '', last.date.slice(2).replaceAll('-', '.')));
+    box.append(svg, ends); return box;
+  }
+  function build(data, id, standalone = false) {
     const facts = data.facts, box = make('section', 'ts-facts'); box.dataset.identity = id; box.setAttribute('aria-label', data.name + ' 핵심 숫자');
+    if (standalone) {
+      box.dataset.standalone = 'true';
+      const title = make('div', 'ts-title'); title.append(make('h2', '', data.name), make('small', '', id.slice(3) + ' · 국내'));
+      box.append(title);
+    }
     const head = make('div', 'ts-head'), dir = direction(data.change), price = make('div', 'ts-price');
     price.append(make('strong', '', won(data.price)), make('span', 'th-' + dir, '어제보다 ' + (data.change > 0 ? '+' : '') + data.change.toLocaleString('ko-KR') + '원 (' + Math.abs(data.change_rate).toFixed(2) + '%)'));
     const heart = make('button', 'th-heart'), sync = () => { const on = window.ZEROExplore?.favorites?.().includes(id); heart.textContent = on ? '♥' : '♡'; heart.classList.toggle('th-on', Boolean(on)); heart.setAttribute('aria-pressed', String(Boolean(on))); heart.setAttribute('aria-label', data.name + ' 관심 종목' + (on ? ' 해제' : ' 담기')); };
     heart.type = 'button'; heart.addEventListener('click', () => { try { window.ZEROExplore?.toggleFavorite?.(id); } catch (error) { heart.title = error.message === 'WATCHLIST_LIMIT' ? '관심 종목은 최대 30개예요.' : '저장하지 못했어요.'; } sync(); }); sync();
     head.append(price, heart); box.append(head);
+    if (standalone) { const chart = lineChart(data.daily); if (chart) box.append(chart); }
     const ranges = [rangeBar('1일', facts.low, facts.high, data.price), rangeBar('52주', facts.low52, facts.high52, data.price)].filter(Boolean);
     if (ranges.length) { const wrap = make('div', 'ts-ranges'); wrap.append(...ranges); box.append(wrap); }
     const chips = [['💰 시가총액', facts.market_cap], ['📦 거래량', Number.isInteger(facts.volume) ? facts.volume.toLocaleString('ko-KR') + '주' : null], ['💵 거래대금', facts.trading_value],
@@ -76,9 +105,11 @@
   }
   let busy = false;
   async function sync() {
-    const target = document.getElementById('stock-workbench'), quote = document.getElementById('stock-quote'), id = identity(), match = /^KR:([0-9A-Z]{6})$/.exec(id);
+    const target = document.getElementById('stock-workbench'), quote = document.getElementById('stock-quote');
+    if (identity()) expected = '';
+    const id = identity() || expected, match = /^KR:([0-9A-Z]{6})$/.exec(id), standalone = !quote && Boolean(expected);
     const current = target?.querySelector(':scope > .ts-facts');
-    if (!target || !quote || !match) { current?.remove(); return; }
+    if (!target || (!quote && !standalone) || !match) { current?.remove(); return; }
     if (current?.dataset.identity === id) return;
     if (busy) return; busy = true;
     try {
@@ -87,9 +118,9 @@
         const response = await fetch('api/stock-info?code=' + match[1], {cache: 'no-store', signal: AbortSignal.timeout(25000)}), data = response.ok ? validInfo(await response.json(), match[1]) : null;
         hit = {at: Date.now(), data}; cache.set(id, hit);
       }
-      if (identity() !== id) return;
+      if ((identity() || expected) !== id) return;
       target.querySelector(':scope > .ts-facts')?.remove();
-      if (hit.data) quote.after(build(hit.data, id));
+      if (hit.data) { if (standalone) target.replaceChildren(build(hit.data, id, true)); else quote.after(build(hit.data, id)); }
     } catch (_) { /* the screen simply stays as it was */ } finally { busy = false; }
   }
   const watch = () => { const target = document.getElementById('stock-workbench'); if (target) new MutationObserver(() => sync()).observe(target, {childList: true}); };

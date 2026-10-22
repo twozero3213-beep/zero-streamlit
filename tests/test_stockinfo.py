@@ -37,8 +37,12 @@ def day(date, individual, foreign, institution, close='214,500'):
 TREND = [day('20261022', '+977,352', '-585,787', '-400,833'), day('20261021', '-2,324,529', '+2,055,241', '+313,027', '223,500'), day('20261099', '+1', '+1', '+1')]
 
 
-def serve(integration, trend):
-    return lambda url: json.dumps(integration if url.endswith('/integration') else trend).encode()
+def serve(integration, trend, price=()):
+    def fetch(url):
+        if '/price?' in url:
+            return json.dumps(list(price)).encode()
+        return json.dumps(integration if url.endswith('/integration') else trend).encode()
+    return fetch
 
 
 class StockInfoTests(unittest.TestCase):
@@ -54,6 +58,14 @@ class StockInfoTests(unittest.TestCase):
         self.assertEqual([row['date'] for row in value['investors']], ['2026-10-22', '2026-10-21'], 'impossible date 20261099 is dropped')
         self.assertEqual(value['investors'][0], {'date': '2026-10-22', 'individual': 977352, 'foreign': -585787, 'institution': -400833, 'close': 214500, 'volume': 11418430})
         self.assertEqual((value['unit'], value['orders_authorized']), ('SHARES', False))
+
+    def test_daily_closes_are_sorted_deduplicated_and_optional(self):
+        rows = [{'localTradedAt': '2026-10-22', 'closePrice': '214,500'}, {'localTradedAt': '2026-10-21', 'closePrice': '223,500'}, {'localTradedAt': '2026-10-21', 'closePrice': '223,500'},
+                {'localTradedAt': '2026-13-99', 'closePrice': '1'}, {'localTradedAt': '2026-10-20', 'closePrice': '0'}, {'localTradedAt': '2026-10-19', 'closePrice': 'x'}, 'bad']
+        value = zero_stockinfo.collect('005930', NOW, fetch=serve(info(), TREND, rows))
+        self.assertEqual(value['daily'], [{'date': '2026-10-21', 'close': 223500}, {'date': '2026-10-22', 'close': 214500}])
+        broken = zero_stockinfo.collect('005930', NOW, fetch=lambda url: (_ for _ in ()).throw(OSError('x')) if '/price?' in url else serve(info(), TREND)(url))
+        self.assertEqual(broken['daily'], [], 'a failing price list leaves the chart empty, not the whole answer')
 
     def test_unusable_responses_raise_fixed_codes(self):
         for code in ('0059', 'abc123', 5930, '../etc'):

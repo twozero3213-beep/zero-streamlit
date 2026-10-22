@@ -56,7 +56,7 @@
   const kst = (iso) => new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date(iso));
   const won = (value) => value.toLocaleString('ko-KR') + '원';
   const explore = () => window.ZEROExplore;
-  const open = (id) => explore()?.openCompany?.(id);
+  const open = (id) => { window.ZEROTossStock?.expect?.(id); explore()?.openCompany?.(id); };
 
   // ── 뼈대 ──
   const status = make('div', 'th-status'), indices = make('div', 'th-indices'), schedule = make('section', 'th-card th-schedule'), chart = make('section', 'th-card th-chart'), watch = make('section', 'th-card th-watch');

@@ -16,6 +16,7 @@ BASE = 'https://m.stock.naver.com/api/stock/{code}/{path}'
 CODE = re.compile(r'[0-9A-Z]{6}')
 BODY_LIMIT = 262_144
 DAYS = 10
+PRICE_PAGES = 2  # the price list allows 60 rows per page, so two pages cover about six months of trading days
 TEXT_AMOUNT = re.compile(r'\d{1,4}(,\d{3})*(\.\d+)?(조|억|만)?( \d{1,4}(,\d{3})*(억|만)?)?')
 # source key -> (field, kind); kind 'int' parses a number, 'amount' keeps the source's own Korean unit text,
 # 'ratio' strips the trailing unit and keeps the number.
@@ -67,6 +68,24 @@ def _investor_row(raw):
     return {'date': iso, 'individual': parts[0], 'foreign': parts[1], 'institution': parts[2], 'close': int(close), 'volume': int(volume)}
 
 
+def _real_date(iso):
+    try:
+        datetime.strptime(iso, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
+
+
+def _daily(rows):
+    """Oldest-first closes, de-duplicated by date; malformed rows are dropped."""
+    seen = {}
+    for raw in rows:
+        date, close = (raw.get('localTradedAt'), _number(raw.get('closePrice'))) if isinstance(raw, dict) else (None, None)
+        if isinstance(date, str) and re.fullmatch(r'20\d{2}-\d{2}-\d{2}', date) and close and close > 0 and _real_date(date):
+            seen[date] = int(close)
+    return [{'date': date, 'close': seen[date]} for date in sorted(seen)]
+
+
 def collect(code, now=None, fetch=None):
     if not isinstance(code, str) or not CODE.fullmatch(code):
         raise ValueError('STOCK_CODE_INVALID')
@@ -74,9 +93,17 @@ def collect(code, now=None, fetch=None):
 
     def get(path):
         return json.loads(fetch(BASE.format(code=code, path=path)))
-    with ThreadPoolExecutor(2) as pool:
+
+    def prices(page):
+        try:
+            return get('price?pageSize=60&page=%d' % page)
+        except Exception:  # the chart is optional; the facts and net buying still stand without it
+            return []
+    with ThreadPoolExecutor(2 + PRICE_PAGES) as pool:
         integration, trend = pool.submit(get, 'integration'), pool.submit(get, 'trend')
+        pages = [pool.submit(prices, page) for page in range(1, PRICE_PAGES + 1)]
         integration, trend = integration.result(), trend.result()
+        daily = _daily([row for page in pages for row in (page.result() if isinstance(page.result(), list) else [])])
     if not isinstance(integration, dict) or integration.get('itemCode') != code or not isinstance(trend, list):
         raise ValueError('STOCK_INVALID')
     facts = {}
@@ -95,5 +122,5 @@ def collect(code, now=None, fetch=None):
         raise ValueError('STOCK_NAME_MISSING')
     return {'schema_version': 1, 'scope': 'PUBLIC_STOCK_INFO', 'orders_authorized': False, 'code': code, 'name': name,
             'price': latest['close'], 'price_date': latest['date'], 'change': change, 'change_rate': round(change / facts['prev_close'] * 100, 2),
-            'facts': facts, 'investors': investors, 'unit': 'SHARES', 'retrieved_at': now.astimezone(timezone.utc).isoformat(),
+            'facts': facts, 'investors': investors, 'daily': daily, 'unit': 'SHARES', 'retrieved_at': now.astimezone(timezone.utc).isoformat(),
             'source': {'label': '네이버페이 증권 공개 시세', 'url': 'https://stock.naver.com/domestic/stock/' + code + '/total'}}
