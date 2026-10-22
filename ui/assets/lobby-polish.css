@@ -256,3 +256,15 @@ html[data-zero-view='lobby'] main { height: var(--floor-height, calc(100dvh - 14
 
 /* 지표 시나리오 막대 */
 .outlook-bar { display: flex; gap: 3px; min-height: 40px; border-radius: 12px; overflow: hidden; font-weight: 700; font-size: 15px; } .outlook-bar span { flex-basis: 0; min-width: 84px; display: grid; place-items: center; padding: 0 8px; color: #fff; white-space: nowrap; } .outlook-up { background: #d64550; } .outlook-down { background: #1b64da; }
+
+/* 지표·보고서 그림 */
+.desk-indicator-summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; } .desk-indicator-summary .dv-visual { grid-column: 1 / -1; }
+.dv-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #eef4ff; font-size: 24px; }
+.dv-visual { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.dv-spark { width: 96px; height: 28px; } .dv-spark polyline { stroke: #8a97a8; } .dv-spark circle { fill: #8a97a8; } .dv-spark.dv-up polyline { stroke: #d64550; } .dv-spark.dv-up circle { fill: #d64550; } .dv-spark.dv-down polyline { stroke: #1b64da; } .dv-spark.dv-down circle { fill: #1b64da; }
+.dv-chip { padding: 2px 10px; border-radius: 999px; font-size: 14px; font-weight: 700; background: #eef0f3; color: #4e5968; } .dv-chip.dv-up { background: #fdecee; color: #c93b49; } .dv-chip.dv-down { background: #e9f1ff; color: #1b64da; }
+.dv-gauge { display: grid; gap: 2px; min-width: 150px; } .dv-gauge small { font-size: 12.5px; color: var(--secondary); }
+.dv-track { position: relative; display: block; height: 10px; border-radius: 5px; background: #e5e8eb; } .dv-band { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: #b7d0f5; } .dv-dot { position: absolute; top: -3px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #1b64da; border: 3px solid #fff; box-shadow: 0 1px 4px #0004; }
+.dv-zone-high .dv-dot { background: #d64550; } .dv-zone-low .dv-dot { background: #2f9e66; }
+.dv-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 4px 0 12px; } .dv-tile { display: grid; justify-items: center; gap: 2px; padding: 12px 8px; border-radius: 14px; background: #f7f8fa; text-align: center; } .dv-tile .dv-flag { font-size: 28px; line-height: 1; } .dv-tile strong { font-size: 22px; } .dv-tile small { color: var(--secondary); font-size: 12.5px; }
+.desk-library-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; } .dv-badge { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #eef4ff; font-size: 22px; } .desk-library-date { display: grid; justify-items: end; gap: 3px; } .dv-fresh { padding: 1px 8px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: #eef0f3; } .dv-fresh-new { background: #e8f7ee; color: #17633a; } .dv-fresh-recent { background: #fff4d6; color: #5b4300; } .dv-kind { font-size: 18px; }

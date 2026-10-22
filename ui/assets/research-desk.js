@@ -301,6 +301,7 @@ function renderMacro() {
     renderMacro();
     container.scrollIntoView?.({behavior: 'smooth', block: 'nearest'});
   });
+  document.dispatchEvent(new CustomEvent('zero-macro-rendered'));
 }
 function deskInstitution(source) {
   const id = source.id || source.source_id || '';
@@ -382,8 +383,10 @@ function renderBriefingSources() {
     const cleanTitle = cleanDeskText(record.title, '제목 미확인');
     main.append(node('strong', '', cleanTitle), node('span', 'desk-library-meta', deskText(record.source.label) + ' · ' + ({MACRO_RESEARCH:'경제 연구', POLICY_RELEASE:'정책 발표', EDUCATION:'투자 공부'}[deskReportKind(record.kind)] || '공개 자료')));
     metadata.append(node('span', '', record.published_date || '발표일 미확인'), node('span', 'desk-library-state', '본문 검토 전'));
+    button.setAttribute('data-institution', deskInstitution(record.source)); button.setAttribute('data-kind', deskReportKind(record.kind || record.source.kind)); button.setAttribute('data-published', record.published_date || '');
     button.append(main, metadata); button.addEventListener('click', () => openDeskReport(record.id)); list.append(button);
   }); container.append(list);
+  document.dispatchEvent(new CustomEvent('zero-reports-rendered'));
   if (!rows.length && !desk$('report-empty')) container.append(node('p', 'table-empty', '검색 조건에 맞는 자료가 없습니다.'));
 }
 function openDeskReport(id) {
@@ -484,4 +487,4 @@ function pollDesk() {
 }
 if (typeof setInterval !== 'undefined') setInterval(pollDesk, 15000);
 document.addEventListener?.('visibilitychange', pollDesk);
-window.ZERODesk={macro:()=>researchDesk.data?.macro||[],dailySeries:(id)=>{const record=researchDesk.data?.charts.find((chart)=>chart.id===id&&chart.interval==='1d');return {bars:deskCleanBars(record?.bars),currency:deskText(record?.currency,'통화 미확인')};},load:loadDesk,render:renderDesk,renderReports:renderBriefingSources,openReport:openDeskReport,open:async()=>{await loadDesk();}};
+window.ZERODesk={macro:()=>researchDesk.data?.macro||[],macroCategory:deskMacroCategory,dailySeries:(id)=>{const record=researchDesk.data?.charts.find((chart)=>chart.id===id&&chart.interval==='1d');return {bars:deskCleanBars(record?.bars),currency:deskText(record?.currency,'통화 미확인')};},load:loadDesk,render:renderDesk,renderReports:renderBriefingSources,openReport:openDeskReport,open:async()=>{await loadDesk();}};

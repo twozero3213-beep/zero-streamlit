@@ -2,7 +2,8 @@
    과거 기록을 되돌려 본 것이며 미래를 보장하지 않는다. 수수료·세금·배당·환율은 넣지 않는다. 순수 계산은 simulate에 있다. */
 (() => {
   'use strict';
-  const cut = (value) => Math.trunc(value * 100) / 100;
+  // Round away binary noise (3.9 - 4.3 is -0.3999999999999999) before cutting to two decimals; the cut itself never rounds up.
+  const cut = (value) => Math.trunc(Math.round(value * 1e6) / 1e4) / 100;
   const monthOf = (at) => String(at).slice(0, 7);
   // bars: oldest first, each {at, close}. One purchase on the first bar of every calendar month, fractional shares allowed.
   function simulate(bars, amount) {
