@@ -27,7 +27,8 @@
     if (!statistics?.available || ![value, p25, p75].every(Number.isFinite) || !(p75 > p25)) return null;
     const room = p75 - p25, low = p25 - room, high = p75 + room, pos = Math.min(1, Math.max(0, (value - low) / (high - low)));
     const zone = value < p25 ? 'LOW' : value > p75 ? 'HIGH' : 'MID';
-    return {pos, zone, left: (p25 - low) / (high - low), right: (p75 - low) / (high - low), label: {LOW: '평소보다 낮아요', MID: '평소 범위 안이에요', HIGH: '평소보다 높아요'}[zone]};
+    const median = num(statistics.median), mid = Number.isFinite(median) ? Math.min(1, Math.max(0, (median - low) / (high - low))) : null;
+    return {pos, zone, mid, p25, p75, left: (p25 - low) / (high - low), right: (p75 - low) / (high - low), label: {LOW: '평소보다 낮아요', MID: '평소 범위 안이에요', HIGH: '평소보다 높아요'}[zone]};
   }
   const ICONS = {EMPLOYMENT: '💼', INFLATION: '🛒', MARKETS: '📈', ACTIVITY: '📊'};
   const categoryIcon = (category) => ICONS[category] || '📊';
@@ -88,6 +89,14 @@
       if (trend) { const chip = node('span', 'dv-chip dv-' + dir.toLowerCase(), trend.arrow + ' ' + fmt(Math.abs(trend.diff))); chip.title = '직전 발표 대비 변화'; visual.append(chip); }
       const position = gauge(item.latest_value, item.statistics); if (position) visual.append(meter(position));
       if (visual.childElementCount) summary.append(visual);
+      // 펼친 안쪽에는 같은 위치를 눈금이 있는 큰 막대로 다시 보여 준다(문장은 아래 캡션으로 남는다).
+      const range = card.querySelector('.desk-range');
+      if (position && range) {
+        const big = meter(position); big.classList.add('dv-gauge-lg');
+        if (position.mid !== null) { const tick = node('i', 'dv-median'); tick.style.left = (position.mid * 100).toFixed(1) + '%'; tick.title = '과거 중앙값'; big.querySelector('.dv-track').append(tick); }
+        const scale = node('span', 'dv-scale'); scale.append(node('span', '', '⬇️ 낮음'), node('span', '', '평소 ' + fmt(position.p25) + '~' + fmt(position.p75)), node('span', '', '높음 ⬆️'));
+        big.querySelector('small').replaceWith(scale); range.before(big);
+      }
     });
   }
   function decorateReports() {

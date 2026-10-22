@@ -268,3 +268,16 @@ html[data-zero-view='lobby'] main { height: var(--floor-height, calc(100dvh - 14
 .dv-zone-high .dv-dot { background: #d64550; } .dv-zone-low .dv-dot { background: #2f9e66; }
 .dv-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 4px 0 12px; } .dv-tile { display: grid; justify-items: center; gap: 2px; padding: 12px 8px; border-radius: 14px; background: #f7f8fa; text-align: center; } .dv-tile .dv-flag { font-size: 28px; line-height: 1; } .dv-tile strong { font-size: 22px; } .dv-tile small { color: var(--secondary); font-size: 12.5px; }
 .desk-library-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; } .dv-badge { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #eef4ff; font-size: 22px; } .desk-library-date { display: grid; justify-items: end; gap: 3px; } .dv-fresh { padding: 1px 8px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: #eef0f3; } .dv-fresh-new { background: #e8f7ee; color: #17633a; } .dv-fresh-recent { background: #fff4d6; color: #5b4300; } .dv-kind { font-size: 18px; }
+/* 지표 펼침·보고서 상세 창: 긴 문장 대신 칩·카드·단계 그림 */
+.desk-fact-chips { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 12px 0; } .desk-fact-chips span { padding: 4px 10px; border-radius: 999px; background: #f2f4f6; color: #4e5968; font-size: 13.5px; line-height: 1.5; word-break: keep-all; }
+.dv-gauge-lg { min-width: 0; margin: 14px 0 4px; gap: 6px; } .dv-gauge-lg .dv-track { height: 14px; border-radius: 7px; } .dv-gauge-lg .dv-dot { top: -4px; width: 22px; height: 22px; margin-left: -11px; }
+.dv-median { position: absolute; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: #4e5968; }
+.dv-scale { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--secondary); word-break: keep-all; }
+.desk-meaning { margin-top: 16px; } .desk-meaning-title { font-weight: 700; }
+.desk-meaning-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 8px; }
+.desk-meaning-card { padding: 12px 14px; border-radius: 14px; background: #f7f8fa; border: 2px solid transparent; } .desk-meaning-card p { margin: 6px 0 0; line-height: 1.7; word-break: keep-all; }
+.desk-meaning-now { border-color: #3182f6; background: #eef4ff; } .desk-meaning-badge { margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #1b64da; color: #fff; font-size: 12.5px; }
+.desk-read-steps { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; padding: 0; list-style: none; } .desk-read-steps li { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; font-size: 14px; word-break: keep-all; }
+.desk-step-done { background: #e8f6ee; color: #1f7a4d; } .desk-step-todo { background: #fff4e0; color: #8a5a00; } .desk-step-none { background: #f2f4f6; color: #4e5968; }
+@media (max-width: 680px) { .macro-filter-fields > p { grid-column: 1 / -1; margin: 0; } .macro-filter-fields > label:has(#macro-search) { grid-column: 1 / -1; } }
+.desk-report-head h2 { word-break: keep-all; overflow-wrap: anywhere; }
