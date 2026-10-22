@@ -335,3 +335,4 @@ html[data-zero-view='lobby'] main { height: var(--floor-height, calc(100dvh - 14
 .ts-news li { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: #f7f8fa; } .ts-news-title { font-weight: 600; line-height: 1.5; color: #191f28; text-decoration: none; } a.ts-news-title:hover { text-decoration: underline; } .ts-news small { color: var(--secondary); font-size: 12.5px; }
 .ts-news-section { display: grid; gap: 8px; }
 @media (max-width: 480px) { .ts-tab-icon { display: none; } .ts-tabs button { padding: 8px 8px; } }
+.ts-more { justify-self: start; min-height: 44px; } .ts-loading { padding: 24px 8px; color: var(--secondary); }

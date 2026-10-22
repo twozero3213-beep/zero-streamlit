@@ -51,14 +51,14 @@
   const api = {rangePosition, shares, investorBars, validInfo, validNews, direction, chartPoints};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
-  window.ZEROTossStock = {...api, expect: (id) => { expected = /^KR:[0-9A-Z]{6}$/.test(id) ? id : ''; expectedFrom = identity(); setTimeout(sync, 400); }};
+  window.ZEROTossStock = {...api, show: (id) => showStandalone(id)};
 
   const make = (tag, className = '', text) => { const e = document.createElement(tag); if (className) e.className = className; if (text !== undefined) e.textContent = text; return e; };
   const won = (value) => value.toLocaleString('ko-KR') + '원';
   const pct = (rate) => ({up: '▲ ', down: '▼ ', flat: '■ '}[direction(rate)]) + Math.abs(rate).toFixed(2) + '%';
   const kst = (iso) => new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date(iso));
   const cache = new Map();
-  let expected = '', expectedFrom = '', activeTab = 'quote';  // expected: 순위·같은 업종에서 방금 누른 종목. 기존 목록에 없는 종목도 이 화면이 직접 연다.
+  let standaloneId = '', standaloneFrom = '', activeTab = 'quote', token = 0;  // standaloneId: 홈 순위·관심·같은 업종에서 방금 누른 종목. 느린 기존 종목 화면(목록 불러오기) 없이 이 화면이 바로 연다.
   const newsCache = new Map();
   const identity = () => { try { return new URLSearchParams((window.location.hash.split('?')[1]) || '').get('identity') || ''; } catch (_) { return ''; } };
 
@@ -86,7 +86,7 @@
   }
   const TABS = [['quote', '💹 시세'], ['trade', '👥 거래현황'], ['info', '🏷️ 종목정보'], ['news', '📰 뉴스·공시']];
   const chipGrid = (rows) => { const grid = make('dl', 'ts-chips'); rows.forEach(([label, value]) => { const cell = make('div'); cell.append(make('dt', '', label), make('dd', '', String(value))); grid.append(cell); }); return grid; };
-  const goStock = (id) => { window.ZEROTossStock?.expect?.(id); window.ZEROExplore?.openCompany?.(id); };
+  const goStock = (id) => showStandalone(id);
   function tradePanel(data) {
     const panel = make('div', 'ts-investors');
     if (!data.investors.length) { panel.append(make('p', 'muted-note', '거래 현황을 불러오지 못했어요.')); return panel; }
@@ -137,7 +137,9 @@
     if (standalone) {
       box.dataset.standalone = 'true';
       const title = make('div', 'ts-title'); title.append(make('h2', '', data.name), make('small', '', id.slice(3) + ' · 국내'));
-      box.append(title);
+      const more = make('button', 'secondary-button ts-more', '🧪 분석·모의 매매 화면'); more.type = 'button';
+      more.title = '수집한 기업 목록에 있는 종목만 열려요.'; more.addEventListener('click', () => { standaloneId = ''; window.ZEROExplore?.openCompany?.(id); });
+      box.append(title, more);
     }
     const head = make('div', 'ts-head'), dir = direction(data.change), price = make('div', 'ts-price');
     price.append(make('strong', '', won(data.price)), make('span', 'th-' + dir, '어제보다 ' + (data.change > 0 ? '+' : '') + data.change.toLocaleString('ko-KR') + '원 (' + Math.abs(data.change_rate).toFixed(2) + '%)'));
@@ -164,30 +166,54 @@
     box.append(tabs, ...Object.values(panels)); show(TABS.some(([key]) => key === activeTab) ? activeTab : 'quote');
     return box;
   }
-  let busy = false;
-  async function sync() {
+  function skeleton(target, text) { const note = make('p', 'stock-empty ts-loading', text); target.replaceChildren(note); return note; }
+  function showStandalone(id) {
+    if (!/^KR:[0-9A-Z]{6}$/.test(id)) { window.ZEROExplore?.openCompany?.(id); return; }
+    standaloneId = id; standaloneFrom = identity();
+    // The default stock must not load behind this screen, so the route is changed without opening one.
+    window.ZERO?.navigate?.('workbench', false);
+    if (window.history?.pushState && window.location.hash !== '#workbench') window.history.pushState({view: 'workbench'}, '', '#workbench');
+    const target = document.getElementById('stock-workbench');
+    if (target) skeleton(target, '종목 자료를 불러오는 중이에요.');
+    sync(true);
+  }
+  async function sync(force = false) {
     const target = document.getElementById('stock-workbench'), quote = document.getElementById('stock-quote');
-    if (expected && identity() && identity() !== expectedFrom) expected = '';  // the app moved to another stock by itself
-    const id = expected || identity(), match = /^KR:([0-9A-Z]{6})$/.exec(id), standalone = !quote && Boolean(expected);
+    if (standaloneId && identity() && identity() !== standaloneFrom) standaloneId = '';  // the app moved to another stock by itself
+    const standalone = Boolean(standaloneId), id = standaloneId || identity(), match = /^KR:([0-9A-Z]{6})$/.exec(id);
     const current = target?.querySelector(':scope > .ts-facts');
     if (!target || (!quote && !standalone) || !match) { current?.remove(); return; }
-    if (current?.dataset.identity === id) return;
-    if (busy) return; busy = true;
+    if (!force && current?.dataset.identity === id) return;
+    const mine = ++token;
     try {
       let hit = cache.get(id);
-      if (!hit || Date.now() - hit.at > 60000) {
+      if (force || !hit || Date.now() - hit.at > 60000) {
         const response = await fetch('api/stock-info?code=' + match[1], {cache: 'no-store', signal: AbortSignal.timeout(25000)}), data = response.ok ? validInfo(await response.json(), match[1]) : null;
         hit = {at: Date.now(), data}; cache.set(id, hit);
       }
-      if ((expected || identity()) !== id) return;
+      if (mine !== token || (standaloneId || identity()) !== id) return;  // a newer request or another stock took over
+      if (standalone) {
+        if (hit.data) target.replaceChildren(build(hit.data, id, true));
+        else {
+          const note = skeleton(target, '종목 정보를 불러오지 못했어요.'), retry = make('button', 'secondary-button', '다시 시도');
+          retry.type = 'button'; retry.addEventListener('click', () => { skeleton(target, '종목 자료를 불러오는 중이에요.'); sync(true); }); note.after(retry);
+        }
+        return;
+      }
       target.querySelector(':scope > .ts-facts')?.remove();
-      if (hit.data) { if (standalone) target.replaceChildren(build(hit.data, id, true)); else quote.after(build(hit.data, id)); }
-    } catch (_) { /* the screen simply stays as it was */ } finally { busy = false; }
+      const liveQuote = document.getElementById('stock-quote');
+      if (hit.data && liveQuote) liveQuote.after(build(hit.data, id));
+    } catch (_) {
+      if (mine === token && standalone && standaloneId === id) {
+        const note = skeleton(target, '종목 정보를 불러오지 못했어요.'), retry = make('button', 'secondary-button', '다시 시도');
+        retry.type = 'button'; retry.addEventListener('click', () => { skeleton(target, '종목 자료를 불러오는 중이에요.'); sync(true); }); note.after(retry);
+      }
+    }
   }
   const watch = () => { const target = document.getElementById('stock-workbench'); if (target) new MutationObserver(() => sync()).observe(target, {childList: true}); };
   window.addEventListener('hashchange', sync);
-  document.addEventListener('zero-view-changed', (event) => { if (event.detail?.view === 'workbench') setTimeout(sync, 300); });
-  document.addEventListener('zero-watchlist-changed', () => { const box = document.querySelector('#stock-workbench > .ts-facts'); if (box) { box.remove(); sync(); } });
-  setInterval(() => { if (!document.hidden && document.documentElement.dataset.zeroView === 'workbench') { cache.clear(); const box = document.querySelector('#stock-workbench > .ts-facts'); if (box) { box.remove(); sync(); } } }, 60000);
+  document.addEventListener('zero-view-changed', (event) => { if (event.detail?.view !== 'workbench') standaloneId = ''; else setTimeout(sync, 300); });
+  document.addEventListener('zero-watchlist-changed', () => { if (document.querySelector('#stock-workbench > .ts-facts')) sync(true); });
+  setInterval(() => { if (!document.hidden && document.documentElement.dataset.zeroView === 'workbench' && document.querySelector('#stock-workbench > .ts-facts')) sync(true); }, 60000);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { watch(); sync(); }); else { watch(); sync(); }
 })();
