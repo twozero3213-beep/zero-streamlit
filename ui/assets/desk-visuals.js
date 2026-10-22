@@ -41,6 +41,11 @@
     if (days < 0) return {key: 'NEW', days: 0, icon: '🆕', label: '새 자료'};
     return days <= 7 ? {key: 'NEW', days, icon: '🆕', label: days === 0 ? '오늘' : days + '일 전'} : days <= 30 ? {key: 'RECENT', days, icon: '🕒', label: days + '일 전'} : {key: 'OLD', days, icon: '📁', label: days > 365 ? Math.floor(days / 365) + '년 전' : Math.floor(days / 30) + '개월 전'};
   }
+  // 올해 날짜는 월-일만, 지난해 이전은 연도를 붙여 "최근 12-01"이 올해로 읽히지 않게 한다.
+  function shortDate(date, now = Date.now()) {
+    const match = /^(\d{4})-(\d{2}-\d{2})/.exec(String(date || ''));
+    return match ? (Number(match[1]) === new Date(now).getUTCFullYear() ? match[2] : match[1] + '-' + match[2]) : '';
+  }
   // 보고서 행의 data 속성으로 기관별 건수와 가장 최근 발표일을 모은다(숨겨진 페이지의 행도 센다).
   function tally(rows) {
     const out = new Map();
@@ -50,7 +55,7 @@
     });
     return [...out.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
   }
-  const api = {trendOf, sparkPoints, gauge, categoryIcon, freshness, tally, INSTITUTIONS, KINDS, cut};
+  const api = {trendOf, sparkPoints, gauge, categoryIcon, freshness, tally, shortDate, INSTITUTIONS, KINDS, cut};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   window.ZERODeskVisuals = api;
@@ -103,7 +108,7 @@
     if (!counts.length) return;
     const tiles = node('div', 'dv-tiles'); tiles.setAttribute('aria-label', '기관별 보고서 수');
     counts.forEach((entry) => {
-      const [flag, name] = INSTITUTIONS[entry.key], tile = node('div', 'dv-tile'); tile.append(node('span', 'dv-flag', flag), node('strong', '', String(entry.count)), node('small', '', name + (entry.newest ? ' · 최근 ' + entry.newest.slice(5) : '')));
+      const [flag, name] = INSTITUTIONS[entry.key], tile = node('div', 'dv-tile'); tile.append(node('span', 'dv-flag', flag), node('strong', '', String(entry.count)), node('small', '', name + (entry.newest ? ' · 최근 ' + shortDate(entry.newest) : '')));
       tiles.append(tile);
     });
     list.before(tiles);
