@@ -45,9 +45,16 @@
   if (typeof document === 'undefined') return;
 
   api.render = (item) => {
-    const info = describe(outlook(item?.history), item), box = document.createElement('section'); box.className = 'outlook';
+    const result = outlook(item?.history), info = describe(result, item), box = document.createElement('section'); box.className = 'outlook';
     const add = (tag, className, text) => { const element = document.createElement(tag); if (className) element.className = className; element.textContent = text; box.append(element); return element; };
-    add('h3', '', '다음 발표, 어느 쪽이 더 많았을까?'); add('p', 'outlook-head', info.headline);
+    add('h3', '', '다음 발표, 어느 쪽이 더 많았을까?');
+    if (result) {
+      // The split is drawn first; the words below only repeat it.
+      const bar = document.createElement('div'); bar.className = 'outlook-bar'; bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', '높게 ' + result.up + '퍼센트 대 낮게 ' + result.down + '퍼센트');
+      [['up', '📈 높게 ', result.up], ['down', '📉 낮게 ', result.down]].forEach(([kind, label, value]) => { const part = document.createElement('span'); part.className = 'outlook-' + kind; part.style.flexGrow = String(value); part.textContent = label + value + '%'; bar.append(part); });
+      box.append(bar);
+    }
+    add('p', 'outlook-head', info.headline);
     info.lines.forEach(([title, text]) => { const row = document.createElement('div'); row.className = 'outlook-row'; const strong = document.createElement('strong'); strong.textContent = title; const span = document.createElement('span'); span.textContent = text; row.append(strong, span); box.append(row); });
     if (info.basis) add('p', 'muted-note', info.basis);
     add('p', 'outlook-warn', '⚠ ' + info.disclaimer);

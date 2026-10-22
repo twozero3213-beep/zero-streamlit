@@ -207,6 +207,7 @@ function renderStudyChart() {
   averages.forEach((entry)=>{const points=entry.values.map((value,index)=>value===null?null:x(index)+','+y(value)).filter(Boolean);if(points.length)svg.append(deskSVG('polyline',{points:points.join(' '),fill:'none',stroke:entry.color,'stroke-width':2,'aria-label':entry.period+'일 이동평균'}));});
   svg.append(deskSVG('text',{x:left,y:height-12,class:'desk-axis'},deskPriceTick(bars[0].at,baseInterval,chartWidth<560)),deskSVG('text',{x:width-12,y:height-12,'text-anchor':'end',class:'desk-axis'},deskPriceTick(bars[bars.length-1].at,baseInterval,chartWidth<560)));
   container.append(svg);deskReadCandle(bars,bars.length-1,currency,learning);
+  document.dispatchEvent(new CustomEvent('zero-desk-rendered'));
   desk$('study-ma-note').textContent=baseInterval==='1d'?'일봉 종가의 최근 5·20·60개 관측 평균입니다. 각 시점 이전 봉만 사용하며 필요한 관측 수가 없으면 선을 표시하지 않습니다.':'이동평균 설명은 일봉에서 확인합니다. 분봉은 짧은 기간의 흐름과 잡음을 보여 줍니다.';
 }
 function renderStudyCompany() {
@@ -483,4 +484,4 @@ function pollDesk() {
 }
 if (typeof setInterval !== 'undefined') setInterval(pollDesk, 15000);
 document.addEventListener?.('visibilitychange', pollDesk);
-window.ZERODesk={macro:()=>researchDesk.data?.macro||[],load:loadDesk,render:renderDesk,renderReports:renderBriefingSources,openReport:openDeskReport,open:async()=>{await loadDesk();}};
+window.ZERODesk={macro:()=>researchDesk.data?.macro||[],dailySeries:(id)=>{const record=researchDesk.data?.charts.find((chart)=>chart.id===id&&chart.interval==='1d');return {bars:deskCleanBars(record?.bars),currency:deskText(record?.currency,'통화 미확인')};},load:loadDesk,render:renderDesk,renderReports:renderBriefingSources,openReport:openDeskReport,open:async()=>{await loadDesk();}};

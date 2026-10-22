@@ -247,3 +247,12 @@ html[data-zero-view='lobby'] main { height: var(--floor-height, calc(100dvh - 14
 .npc-fig[data-outfit='polo'] .body::before { left: 28%; width: 44%; height: 18%; border-radius: 50%; background: #fff9; }
 @media(max-width:760px) { #lobby-view .lobby-board { padding: 4px 5px; gap: 1px; margin-bottom: 4px; grid-template-rows: repeat(4, 21px) auto; } #lobby-view .lobby-board-tag { min-width: 59px; font-size: 10px; } #lobby-view .lobby-tick { font-size: 11px; } .board-source { font-size: 9px; } }
 @media(max-height:450px) { #lobby-view > .lobby { gap: 2px; } #lobby-view .lobby-hero { padding: 0; } #hero-talk { display: none; } #lobby-view .lobby-board { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(2, 19px); padding: 2px 5px; margin-bottom: 2px; } #lobby-view .lobby-board-row { min-width: 0; } .board-source { display: none; } }
+
+/* 주식 모으기 계산기 */
+.dca-input { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; } .dca-input input { width: 120px; min-height: 44px; padding: 0 10px; border: 1px solid #c8d3e3; border-radius: 12px; font-size: 16px; }
+.dca-body { display: grid; gap: 12px; } .dca-winner { font-size: 17px; font-weight: 700; } .dca-empty, .dca-note { color: var(--secondary); font-size: 14px; line-height: 1.6; }
+.dca-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; } .dca-card { display: grid; gap: 2px; padding: 12px; border-radius: 14px; background: #f7f8fa; } .dca-card small { color: var(--secondary); } .dca-card strong { font-size: 18px; } .dca-card em { font-style: normal; font-size: 14px; font-weight: 600; } .dca-card em.gain { color: #c93b49; } .dca-card em.loss { color: #1b64da; } .dca-emoji { font-size: 26px; line-height: 1; }
+.dca-body svg { width: 100%; height: auto; background: #fbfcfe; border-radius: 12px; } .dca-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 14px; }
+
+/* 지표 시나리오 막대 */
+.outlook-bar { display: flex; gap: 3px; min-height: 40px; border-radius: 12px; overflow: hidden; font-weight: 700; font-size: 15px; } .outlook-bar span { flex-basis: 0; min-width: 84px; display: grid; place-items: center; padding: 0 8px; color: #fff; white-space: nowrap; } .outlook-up { background: #d64550; } .outlook-down { background: #1b64da; }

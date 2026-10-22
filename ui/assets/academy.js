@@ -163,6 +163,7 @@
   const school = view.querySelector('section[aria-label="주식 입문 학교"]'); if (!school) return;
   const LINES = {
     'study-title': '종목과 주기를 바꾸고, 봉을 움직여 실제 가격의 구조를 확인해요.',
+    'dca-title': '매달 같은 금액을 사 모았다면 한 번에 산 것과 얼마나 다를까요? 그래프로 비교해요.',
     'study-basics-title': '캔들 한 개의 네 가격, 이동평균, VIX를 읽는 순서를 배워요.',
     'study-formulas-title': 'EPS·PER·PBR·ROE 같은 기업 숫자를 주가와 연결해 계산해요.',
     'study-nvda-title': '실제 NVIDIA 공시 숫자로 지표를 직접 계산해 봐요.'
