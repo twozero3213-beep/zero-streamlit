@@ -1,0 +1,465 @@
+/**
+ * ZERO Figma Design System - Three-Layer Token Architecture
+ * Standardized to Figma Design Tokens & Variables (W3C Design Tokens Spec compliant)
+ * Layer 1: Primitive Tokens (Raw Scales)
+ * Layer 2: Semantic Tokens (Themed Aliases for Light & Dark)
+ * Layer 3: Component Tokens (Component-Specific Styling)
+ */
+
+/* ==========================================================================
+   LAYER 1: PRIMITIVE TOKENS (Raw Design Values)
+   ========================================================================== */
+:root {
+  /* --- Colors: Grayscale (Neutral) --- */
+  --figma-gray-0: #ffffff;
+  --figma-gray-50: #f9fafb;
+  --figma-gray-100: #f2f4f6;
+  --figma-gray-150: #e5e8eb;
+  --figma-gray-200: #d1d6db;
+  --figma-gray-300: #b0b8c1;
+  --figma-gray-400: #8b95a1;
+  --figma-gray-500: #6b7684;
+  --figma-gray-600: #4e5968;
+  --figma-gray-700: #333d4b;
+  --figma-gray-800: #191f28;
+  --figma-gray-900: #0f141a;
+  --figma-gray-950: #080b0e;
+
+  /* --- Colors: Toss Blue (Brand Primary) --- */
+  --figma-blue-50: #e8f3ff;
+  --figma-blue-100: #c9e2ff;
+  --figma-blue-200: #90c2fe;
+  --figma-blue-300: #549efd;
+  --figma-blue-400: #2b84fc;
+  --figma-blue-500: #1b64da; /* Toss Standard Blue */
+  --figma-blue-600: #0050d8;
+  --figma-blue-700: #003ea8;
+  --figma-blue-800: #002e7a;
+  --figma-blue-900: #001f52;
+
+  /* --- Colors: Kakao Yellow (Brand Accent) --- */
+  --figma-yellow-50: #fffde6;
+  --figma-yellow-100: #fff9b3;
+  --figma-yellow-200: #fff280;
+  --figma-yellow-300: #ffeb4d;
+  --figma-yellow-400: #ffd600;
+  --figma-yellow-500: #fee500; /* Kakao Standard Yellow */
+  --figma-yellow-600: #e5cc00;
+  --figma-yellow-700: #b8a300;
+  --figma-yellow-800: #8a7a00;
+  --figma-yellow-900: #5c5200;
+
+  /* --- Colors: Market Sentiment (Gain: Red, Loss: Blue, Success: Teal) --- */
+  --figma-gain-50: #fef0f2;
+  --figma-gain-100: #fddde2;
+  --figma-gain-200: #fbbac5;
+  --figma-gain-500: #e13b4c; /* Toss/KRX Gain Red */
+  --figma-gain-600: #c93b49;
+  --figma-gain-700: #a9202f;
+
+  --figma-loss-50: #eef6ff;
+  --figma-loss-100: #d6e8ff;
+  --figma-loss-500: #1b64da; /* Toss/KRX Loss Blue */
+  --figma-loss-600: #124fb3;
+
+  --figma-teal-500: #087f74; /* Reserve/Stable Teal */
+  --figma-teal-100: #d8efeb;
+
+  /* --- Spacing: 4px / 8px Base Grid (Figma Auto Layout Scales) --- */
+  --figma-space-0: 0px;
+  --figma-space-1: 4px;
+  --figma-space-2: 8px;
+  --figma-space-3: 12px;
+  --figma-space-4: 16px;
+  --figma-space-5: 20px;
+  --figma-space-6: 24px;
+  --figma-space-7: 28px;
+  --figma-space-8: 32px;
+  --figma-space-10: 40px;
+  --figma-space-12: 48px;
+  --figma-space-16: 64px;
+
+  /* --- Typography: Font Family & Weights --- */
+  --figma-font-sans: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --figma-font-weight-regular: 400;
+  --figma-font-weight-medium: 500;
+  --figma-font-weight-semibold: 600;
+  --figma-font-weight-bold: 700;
+  --figma-font-weight-extrabold: 800;
+
+  /* --- Typography: Font Sizes & Line Heights (Figma Text Styles) --- */
+  --figma-text-display-lg: 32px;
+  --figma-text-display-lg-lh: 1.3;
+  --figma-text-display-md: 28px;
+  --figma-text-display-md-lh: 1.35;
+  --figma-text-h1: 24px;
+  --figma-text-h1-lh: 1.4;
+  --figma-text-h2: 20px;
+  --figma-text-h2-lh: 1.45;
+  --figma-text-h3: 18px;
+  --figma-text-h3-lh: 1.45;
+  --figma-text-body-lg: 16px;
+  --figma-text-body-lg-lh: 1.55;
+  --figma-text-body-md: 15px;
+  --figma-text-body-md-lh: 1.5;
+  --figma-text-body-sm: 14px;
+  --figma-text-body-sm-lh: 1.45;
+  --figma-text-caption: 12px;
+  --figma-text-caption-lh: 1.4;
+  --figma-text-caption-xs: 11px;
+  --figma-text-caption-xs-lh: 1.35;
+
+  /* --- Corner Radii (Figma Corner Radius) --- */
+  --figma-radius-xs: 4px;
+  --figma-radius-sm: 8px;
+  --figma-radius-md: 12px;
+  --figma-radius-lg: 16px;
+  --figma-radius-xl: 20px;
+  --figma-radius-2xl: 24px;
+  --figma-radius-full: 9999px;
+
+  /* --- Elevation & Shadows (Figma Effect Styles: Smooth Ambient + Directional) --- */
+  --figma-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --figma-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --figma-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --figma-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --figma-shadow-xl: 0 16px 36px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  /* --- Motion / Animations (Figma Smart Animate Curves) --- */
+  --figma-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --figma-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --figma-ease-snappy: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --figma-duration-fast: 150ms;
+  --figma-duration-normal: 240ms;
+  --figma-duration-slow: 360ms;
+}
+
+/* ==========================================================================
+   LAYER 2: SEMANTIC TOKENS (Light Mode Defaults)
+   ========================================================================== */
+:root {
+  /* Surfaces & Backgrounds */
+  --sem-bg-canvas: var(--figma-gray-50);
+  --sem-bg-surface: var(--figma-gray-0);
+  --sem-bg-surface-subtle: var(--figma-gray-100);
+  --sem-bg-elevated: var(--figma-gray-0);
+  --sem-bg-overlay: rgba(15, 20, 26, 0.48);
+
+  /* Typography Colors */
+  --sem-text-primary: var(--figma-gray-800);
+  --sem-text-secondary: var(--figma-gray-500);
+  --sem-text-tertiary: var(--figma-gray-400);
+  --sem-text-quaternary: var(--figma-gray-300);
+  --sem-text-inverse: var(--figma-gray-0);
+
+  /* Lines & Dividers */
+  --sem-line-subtle: var(--figma-gray-100);
+  --sem-line-default: var(--figma-gray-150);
+  --sem-line-strong: var(--figma-gray-200);
+
+  /* Brand Semantic */
+  --sem-brand-primary: var(--figma-blue-500);
+  --sem-brand-primary-hover: var(--figma-blue-600);
+  --sem-brand-primary-active: var(--figma-blue-700);
+  --sem-brand-primary-light: var(--figma-blue-50);
+
+  --sem-brand-accent: var(--figma-yellow-500);
+  --sem-brand-accent-hover: var(--figma-yellow-400);
+  --sem-brand-accent-text: var(--figma-gray-800);
+
+  /* Market Trading Semantic */
+  --sem-market-gain: var(--figma-gain-500);
+  --sem-market-gain-bg: var(--figma-gain-50);
+  --sem-market-loss: var(--figma-loss-500);
+  --sem-market-loss-bg: var(--figma-loss-50);
+  --sem-market-stable: var(--figma-teal-500);
+  --sem-market-stable-bg: var(--figma-teal-100);
+
+  /* Focus & Interactive */
+  --sem-focus-ring: rgba(27, 100, 218, 0.35);
+  --sem-touch-highlight: rgba(0, 0, 0, 0.04);
+}
+
+/* ==========================================================================
+   LAYER 2: SEMANTIC TOKENS (Dark Mode Overrides - Supports zeroTheme, theme, and prefers-color-scheme)
+   ========================================================================== */
+:root[data-zero-theme="dark"],
+html[data-zero-theme="dark"],
+[data-zero-theme="dark"],
+:root[data-theme="dark"],
+html[data-theme="dark"],
+[data-theme="dark"],
+.dark-theme,
+body.dark,
+html.dark {
+  --sem-bg-canvas: var(--figma-gray-950);
+  --sem-bg-surface: var(--figma-gray-900);
+  --sem-bg-surface-subtle: var(--figma-gray-800);
+  --sem-bg-elevated: #1a222c;
+  --sem-bg-overlay: rgba(0, 0, 0, 0.72);
+
+  --sem-text-primary: #f2f4f6;
+  --sem-text-secondary: #8b95a1;
+  --sem-text-tertiary: #6b7684;
+  --sem-text-quaternary: #4e5968;
+  --sem-text-inverse: var(--figma-gray-900);
+
+  --sem-line-subtle: rgba(255, 255, 255, 0.06);
+  --sem-line-default: rgba(255, 255, 255, 0.12);
+  --sem-line-strong: rgba(255, 255, 255, 0.2);
+
+  --sem-brand-primary: #3182f6;
+  --sem-brand-primary-hover: #4593fc;
+  --sem-brand-primary-active: #1b64da;
+  --sem-brand-primary-light: rgba(49, 130, 246, 0.16);
+
+  /* Kakao Yellow maintains high visibility on dark mode with dark text */
+  --sem-brand-accent: #fee500;
+  --sem-brand-accent-hover: #ffd600;
+  --sem-brand-accent-text: #191f28;
+
+  --sem-market-gain: #f04452;
+  --sem-market-gain-bg: rgba(240, 68, 82, 0.15);
+  --sem-market-loss: #3182f6;
+  --sem-market-loss-bg: rgba(49, 130, 246, 0.15);
+  --sem-market-stable: #20c997;
+  --sem-market-stable-bg: rgba(32, 201, 151, 0.15);
+
+  --figma-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.35);
+  --figma-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --figma-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-zero-theme="light"]):not([data-theme="light"]) {
+    --sem-bg-canvas: var(--figma-gray-950);
+    --sem-bg-surface: var(--figma-gray-900);
+    --sem-bg-surface-subtle: var(--figma-gray-800);
+    --sem-bg-elevated: #1a222c;
+    --sem-bg-overlay: rgba(0, 0, 0, 0.72);
+
+    --sem-text-primary: #f2f4f6;
+    --sem-text-secondary: #8b95a1;
+    --sem-text-tertiary: #6b7684;
+    --sem-text-quaternary: #4e5968;
+    --sem-text-inverse: var(--figma-gray-900);
+
+    --sem-line-subtle: rgba(255, 255, 255, 0.06);
+    --sem-line-default: rgba(255, 255, 255, 0.12);
+    --sem-line-strong: rgba(255, 255, 255, 0.2);
+
+    --sem-brand-primary: #3182f6;
+    --sem-brand-primary-hover: #4593fc;
+    --sem-brand-primary-active: #1b64da;
+    --sem-brand-primary-light: rgba(49, 130, 246, 0.16);
+
+    --sem-brand-accent: #fee500;
+    --sem-brand-accent-hover: #ffd600;
+    --sem-brand-accent-text: #191f28;
+
+    --sem-market-gain: #f04452;
+    --sem-market-gain-bg: rgba(240, 68, 82, 0.15);
+    --sem-market-loss: #3182f6;
+    --sem-market-loss-bg: rgba(49, 130, 246, 0.15);
+    --sem-market-stable: #20c997;
+    --sem-market-stable-bg: rgba(32, 201, 151, 0.15);
+
+    --figma-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.35);
+    --figma-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --figma-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* ==========================================================================
+   LAYER 3: COMPONENT TOKENS & SPECS (Figma UI Components)
+   ========================================================================== */
+
+/* --- Component: Figma Card (Bento Style) --- */
+.figma-card {
+  background: var(--sem-bg-surface);
+  border: 1px solid var(--sem-line-subtle);
+  border-radius: var(--figma-radius-lg);
+  box-shadow: var(--figma-shadow-sm);
+  padding: var(--figma-space-5);
+  transition: transform var(--figma-duration-fast) var(--figma-ease-standard),
+              box-shadow var(--figma-duration-fast) var(--figma-ease-standard),
+              border-color var(--figma-duration-fast) var(--figma-ease-standard);
+}
+.figma-card:hover {
+  box-shadow: var(--figma-shadow-md);
+  border-color: var(--sem-line-default);
+}
+.figma-card-elevated {
+  background: var(--sem-bg-elevated);
+  box-shadow: var(--figma-shadow-md);
+  border: 1px solid var(--sem-line-subtle);
+}
+
+/* --- Component: Figma Buttons (Toss & Kakao Variants) --- */
+.figma-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--figma-space-2);
+  height: 48px;
+  padding: 0 var(--figma-space-5);
+  border-radius: var(--figma-radius-md);
+  font-family: var(--figma-font-sans);
+  font-size: var(--figma-text-body-md);
+  font-weight: var(--figma-font-weight-bold);
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: all var(--figma-duration-fast) var(--figma-ease-standard);
+}
+.figma-btn:active {
+  transform: scale(0.98);
+}
+.figma-btn-primary {
+  background: var(--sem-brand-primary);
+  color: #ffffff;
+}
+.figma-btn-primary:hover {
+  background: var(--sem-brand-primary-hover);
+}
+.figma-btn-kakao {
+  background: var(--sem-brand-accent);
+  color: var(--sem-brand-accent-text);
+  font-weight: var(--figma-font-weight-bold);
+}
+.figma-btn-kakao:hover {
+  background: var(--sem-brand-accent-hover);
+}
+.figma-btn-secondary {
+  background: var(--sem-bg-surface-subtle);
+  color: var(--sem-text-primary);
+}
+.figma-btn-secondary:hover {
+  background: var(--sem-line-default);
+}
+.figma-btn-ghost {
+  background: transparent;
+  color: var(--sem-text-secondary);
+}
+.figma-btn-ghost:hover {
+  background: var(--sem-bg-surface-subtle);
+  color: var(--sem-text-primary);
+}
+.figma-btn-sm {
+  height: 36px;
+  padding: 0 var(--figma-space-3);
+  font-size: var(--figma-text-body-sm);
+  border-radius: var(--figma-radius-sm);
+}
+.figma-btn-lg {
+  height: 56px;
+  padding: 0 var(--figma-space-6);
+  font-size: var(--figma-text-body-lg);
+  border-radius: var(--figma-radius-lg);
+}
+
+/* --- Component: Figma Floor Badge (Kakao 층수 전광판) --- */
+.figma-floor-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--figma-space-1);
+  padding: 4px 10px;
+  background: var(--sem-brand-accent);
+  color: var(--sem-brand-accent-text);
+  border-radius: var(--figma-radius-full);
+  font-size: var(--figma-text-caption);
+  font-weight: var(--figma-font-weight-extrabold);
+  letter-spacing: -0.02em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.figma-floor-badge-siren {
+  background: var(--sem-market-gain-bg);
+  color: var(--sem-market-gain);
+  border: 1px solid var(--sem-market-gain);
+}
+.figma-floor-badge-sky {
+  background: var(--sem-market-stable-bg);
+  color: var(--sem-market-stable);
+  border: 1px solid var(--sem-market-stable);
+}
+
+/* --- Component: Figma Trading Badges & Pills --- */
+.figma-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--figma-space-1);
+  padding: 3px 8px;
+  border-radius: var(--figma-radius-sm);
+  font-size: var(--figma-text-caption);
+  font-weight: var(--figma-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+}
+.figma-pill-gain {
+  background: var(--sem-market-gain-bg);
+  color: var(--sem-market-gain);
+}
+.figma-pill-loss {
+  background: var(--sem-market-loss-bg);
+  color: var(--sem-market-loss);
+}
+.figma-pill-neutral {
+  background: var(--sem-bg-surface-subtle);
+  color: var(--sem-text-secondary);
+}
+
+/* --- Component: Figma Input Fields --- */
+.figma-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 var(--figma-space-4);
+  background: var(--sem-bg-surface);
+  border: 1.5px solid var(--sem-line-default);
+  border-radius: var(--figma-radius-md);
+  font-family: var(--figma-font-sans);
+  font-size: var(--figma-text-body-md);
+  color: var(--sem-text-primary);
+  outline: none;
+  transition: border-color var(--figma-duration-fast) var(--figma-ease-standard),
+              box-shadow var(--figma-duration-fast) var(--figma-ease-standard);
+}
+.figma-input:focus {
+  border-color: var(--sem-brand-primary);
+  box-shadow: 0 0 0 3px var(--sem-focus-ring);
+}
+.figma-input::placeholder {
+  color: var(--sem-text-tertiary);
+}
+
+/* --- Component: Figma Segmented Controls / Tab Bar --- */
+.figma-segmented-bar {
+  display: flex;
+  background: var(--sem-bg-surface-subtle);
+  padding: 3px;
+  border-radius: var(--figma-radius-md);
+  gap: 2px;
+}
+.figma-segmented-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  border-radius: var(--figma-radius-sm);
+  font-size: var(--figma-text-body-sm);
+  font-weight: var(--figma-font-weight-medium);
+  color: var(--sem-text-secondary);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--figma-duration-fast) var(--figma-ease-standard);
+}
+.figma-segmented-item.active {
+  background: var(--sem-bg-surface);
+  color: var(--sem-text-primary);
+  font-weight: var(--figma-font-weight-bold);
+  box-shadow: var(--figma-shadow-xs);
+}

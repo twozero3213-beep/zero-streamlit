@@ -350,3 +350,316 @@ html[data-zero-theme="dark"] .ts-chart-up polyline, html[data-zero-theme="dark"]
 html[data-zero-theme="dark"] .ts-chart-down polyline { stroke: #6ea8ff; } html[data-zero-theme="dark"] .ts-chart-down circle { fill: #6ea8ff; }
 #theme-toggle { flex: none; }
 html[data-zero-theme="dark"] .primary-button, html[data-zero-theme="dark"] .npc.player .player-level { background: #2b6bdc; }
+.ts-summary { display: grid; gap: 6px; padding: 12px 14px; border-radius: 14px; background: #f7f8fa; } .ts-summary h3 { margin: 0; font-size: 15px; } .ts-summary ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; line-height: 1.6; } .ts-summary small { color: var(--secondary); font-size: 12.5px; }
+/* 넓은 화면(1360px 이상)의 오른쪽 관심 패널 */
+.th-dock { position: fixed; top: 76px; right: 16px; bottom: 16px; width: 300px; overflow: auto; padding: 16px; border-radius: 18px; background: #fff; border: 1px solid var(--line, #e5e8eb); z-index: 5; word-break: keep-all; overflow-wrap: anywhere; } .th-dock[hidden] { display: none; } .th-dock h2 { margin: 0 0 10px; font-size: 17px; }
+.th-dock .th-list li { grid-template-columns: 40px minmax(0, 1fr); } .th-dock .th-heart { width: 40px; }
+@media (min-width: 1360px) { html[data-zero-dock="on"] .zero-main-viewport { margin-right: 332px; } }
+.ts-filings { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; width: fit-content; }
+
+/* 토스증권 스타일 10호가 UI 및 실시간 토론 커뮤니티 스타일 */
+.ts-orderbook, .ts-community { display: grid; gap: 12px; }
+.ts-orderbook-head, .ts-community-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ts-orderbook-head h3, .ts-community-head h3 { margin: 0; font-size: 16px; font-weight: 700; }
+.ts-orderbook-head small, .ts-community-head small { color: var(--secondary); font-size: 13px; }
+.ts-orderbook-grid { display: grid; gap: 2px; border-radius: 12px; background: #f7f8fa; padding: 6px; }
+.ts-ob-row { position: relative; display: grid; grid-template-columns: 80px minmax(0, 1fr) 90px; align-items: center; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-variant-numeric: tabular-nums; overflow: hidden; }
+.ts-ob-bar { position: absolute; top: 0; bottom: 0; opacity: 0.15; border-radius: 4px; pointer-events: none; }
+.ts-ob-ask .ts-ob-bar { right: 0; background: #3182f6; }
+.ts-ob-ask .ts-ob-price { color: #3182f6; font-weight: 600; text-align: center; }
+.ts-ob-ask .ts-ob-qty { text-align: right; color: var(--secondary); }
+.ts-ob-bid .ts-ob-bar { left: 0; background: #f04452; }
+.ts-ob-bid .ts-ob-price { color: #f04452; font-weight: 600; text-align: center; }
+.ts-ob-bid .ts-ob-qty { text-align: right; color: var(--secondary); }
+.ts-ob-current { background: #fff; border: 1px solid var(--line, #e5e8eb); font-weight: 700; z-index: 1; }
+.ts-ob-current-tag { font-size: 12px; color: var(--secondary); font-weight: 600; }
+.ts-ob-current .ts-ob-price { text-align: center; font-size: 15px; }
+.ts-ob-current .ts-ob-qty { text-align: right; }
+html[data-zero-theme="dark"] .ts-orderbook-grid { background: #16181d; }
+html[data-zero-theme="dark"] .ts-ob-current { background: #22262e; border-color: #2b2f37; }
+html[data-zero-theme="dark"] .ts-ob-ask .ts-ob-price { color: #6ea8ff; }
+html[data-zero-theme="dark"] .ts-ob-bid .ts-ob-price { color: #ff7480; }
+
+.ts-community-feed { display: grid; gap: 8px; max-height: 480px; overflow-y: auto; padding-right: 4px; }
+.ts-post-card { display: grid; gap: 6px; padding: 12px 14px; border-radius: 12px; background: #f7f8fa; border: 1px solid transparent; }
+.ts-post-meta { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.ts-post-meta strong { font-weight: 600; color: #191f28; }
+.ts-post-meta small { color: var(--secondary); }
+.ts-post-body { margin: 0; font-size: 14.5px; line-height: 1.5; color: #333d4b; word-break: keep-all; }
+.ts-post-foot { display: flex; justify-content: flex-end; }
+.ts-post-like { border: 0; background: none; font-size: 13px; color: var(--secondary); cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.ts-post-like:hover { background: #eef0f3; color: #191f28; }
+.ts-post-form { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+.ts-post-input { flex: 1; min-height: 42px; padding: 8px 14px; border-radius: 21px; border: 1px solid var(--line, #e5e8eb); font: inherit; font-size: 14px; background: #f7f8fa; }
+.ts-post-input:focus { outline: none; border-color: #3182f6; background: #fff; }
+.ts-post-btn { flex: none; min-height: 42px; padding: 0 16px; border-radius: 21px; font-weight: 600; }
+html[data-zero-theme="dark"] .ts-post-card { background: #16181d; }
+html[data-zero-theme="dark"] .ts-post-meta strong { color: #e6e9ee; }
+html[data-zero-theme="dark"] .ts-post-body { color: #c4cdd8; }
+html[data-zero-theme="dark"] .ts-post-input { background: #16181d; border-color: #2b2f37; color: #e6e9ee; }
+html[data-zero-theme="dark"] .ts-post-input:focus { border-color: #6ea8ff; background: #22262e; }
+
+/* 카카오증권 스타일 '몇 층이지? & 구조대 대기 현황' 스타일 */
+.ts-floor { display: grid; gap: 14px; }
+.ts-floor-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ts-floor-head h3 { margin: 0; font-size: 16px; font-weight: 700; }
+.ts-floor-head small { color: var(--secondary); font-size: 13px; }
+
+.ts-floor-card { padding: 14px 16px; border-radius: 14px; background: #f7f8fa; border: 1px solid var(--line, #e5e8eb); }
+.ts-elevator-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ts-elevator-badge { background: #fee500; color: #191f28; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; }
+.ts-elevator-floor { font-size: 24px; font-weight: 800; color: #191f28; }
+.ts-elevator-price { font-size: 14px; font-weight: 600; color: #4e5968; }
+
+.ts-floor-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.ts-stat-item { display: grid; gap: 2px; padding: 8px 10px; background: #fff; border-radius: 10px; border: 1px solid var(--line, #e5e8eb); }
+.ts-stat-label { font-size: 12px; color: var(--secondary); }
+.ts-stat-val { font-size: 16px; font-weight: 700; color: #191f28; }
+.ts-stat-sub { font-size: 11px; color: #8b95a1; }
+
+.ts-sec-title { margin: 10px 0 6px; font-size: 14.5px; font-weight: 700; }
+.ts-building-grid { display: grid; gap: 6px; background: #f7f8fa; padding: 10px; border-radius: 12px; }
+.ts-bld-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 140px; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 8px; background: #fff; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ts-bld-current { border: 2px solid #3182f6; background: #eef5ff; font-weight: 700; }
+.ts-bld-flabel { display: grid; gap: 1px; }
+.ts-bld-flabel small { font-size: 11px; color: var(--secondary); }
+.ts-bld-barwrap { background: #f2f4f6; height: 16px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; }
+.ts-bld-bar { height: 100%; background: linear-gradient(90deg, #ff9478, #f04452); border-radius: 8px; display: flex; align-items: center; padding-left: 6px; font-size: 10px; color: #fff; font-weight: 600; white-space: nowrap; }
+.ts-bld-tag { font-size: 11.5px; color: var(--secondary); text-align: right; }
+.ts-bld-current .ts-bld-tag { color: #3182f6; font-weight: 700; }
+
+.ts-rescue-form { margin: 8px 0; }
+.ts-rescue-inputwrap { display: flex; gap: 8px; }
+.ts-rescue-input { flex: 1; min-height: 40px; padding: 6px 12px; border-radius: 20px; border: 1px solid var(--line, #e5e8eb); font: inherit; font-size: 14px; background: #f7f8fa; }
+.ts-rescue-btn { flex: none; border-radius: 20px; padding: 0 16px; font-size: 13.5px; font-weight: 600; }
+
+.ts-result-card { padding: 12px 14px; border-radius: 12px; display: grid; gap: 6px; margin-top: 8px; }
+.ts-res-waiting { background: #fff9e6; border: 1px solid #ffe28a; }
+.ts-res-profit { background: #eefbf3; border: 1px solid #b6efcb; }
+.ts-res-boarding { background: #eef5ff; border: 1px solid #bad6ff; }
+.ts-res-header { display: flex; justify-content: space-between; align-items: center; }
+.ts-res-badge { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,0.06); }
+.ts-res-distance { margin: 0; font-size: 14px; font-weight: 700; color: #191f28; }
+.ts-res-quote { margin: 0; font-size: 13px; color: #4e5968; line-height: 1.4; }
+
+.ts-shouts-list { display: grid; gap: 6px; }
+.ts-shout-card { padding: 8px 12px; border-radius: 10px; background: #f7f8fa; font-size: 13px; }
+.ts-shout-head { font-weight: 700; color: #191f28; font-size: 12px; margin-bottom: 2px; }
+.ts-shout-body { margin: 0; color: #4e5968; }
+
+html[data-zero-theme="dark"] .ts-floor-card,
+html[data-zero-theme="dark"] .ts-building-grid,
+html[data-zero-theme="dark"] .ts-shout-card { background: #16181d; }
+html[data-zero-theme="dark"] .ts-bld-row { background: #22262e; }
+html[data-zero-theme="dark"] .ts-bld-current { background: #1c2738; border-color: #6ea8ff; }
+html[data-zero-theme="dark"] .ts-stat-item { background: #22262e; border-color: #2b2f37; }
+html[data-zero-theme="dark"] .ts-stat-val,
+html[data-zero-theme="dark"] .ts-elevator-floor,
+html[data-zero-theme="dark"] .ts-res-distance,
+html[data-zero-theme="dark"] .ts-shout-head { color: #e6e9ee; }
+html[data-zero-theme="dark"] .ts-rescue-input { background: #16181d; border-color: #2b2f37; color: #e6e9ee; }
+html[data-zero-theme="dark"] .ts-res-waiting { background: #2b2513; border-color: #5c4e1f; }
+html[data-zero-theme="dark"] .ts-res-profit { background: #132b1a; border-color: #1f5c32; }
+html[data-zero-theme="dark"] .ts-res-boarding { background: #131f2b; border-color: #1f3b5c; }
+html[data-zero-theme="dark"] .ts-res-quote,
+html[data-zero-theme="dark"] .ts-shout-body { color: #c4cdd8; }
+
+/* 카카오증권 스타일 주주 실시간 찬반 투표 스타일 */
+.ts-vote-card { display: grid; gap: 10px; padding: 14px 16px; border-radius: 14px; background: #f7f8fa; border: 1px solid var(--line, #e5e8eb); }
+.ts-vote-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ts-vote-head h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.ts-vote-head small { color: var(--secondary); font-size: 12.5px; }
+.ts-vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ts-vote-btn { display: grid; gap: 4px; padding: 12px; border-radius: 12px; border: 2px solid var(--line, #e5e8eb); background: #fff; cursor: pointer; text-align: center; font: inherit; transition: all 0.15s ease; }
+.ts-vote-btn:hover { border-color: #3182f6; }
+.ts-vote-up strong { color: #f04452; font-size: 20px; font-weight: 800; }
+.ts-vote-down strong { color: #3182f6; font-size: 20px; font-weight: 800; }
+.ts-vote-title { font-size: 13.5px; font-weight: 700; color: #191f28; }
+.ts-vote-cnt { font-size: 11.5px; color: #8b95a1; }
+.ts-vote-btn.ts-voted { border-color: #191f28; background: #f2f4f6; }
+
+/* 토스증권 스타일 주식 모으기 (적립식 투자 시뮬레이터) 스타일 */
+.ts-acc-card { display: grid; gap: 12px; padding: 16px; border-radius: 14px; background: #f7f8fa; border: 1px solid var(--line, #e5e8eb); }
+.ts-acc-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ts-acc-head h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.ts-acc-head small { color: var(--secondary); font-size: 12.5px; }
+.ts-acc-controls { display: grid; gap: 8px; }
+.ts-acc-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.ts-acc-label { flex: none; width: 36px; color: var(--secondary); font-weight: 600; }
+.ts-acc-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.ts-acc-chip { border: 1px solid var(--line, #e5e8eb); background: #fff; border-radius: 16px; padding: 5px 12px; font: inherit; font-size: 12.5px; cursor: pointer; color: #4e5968; }
+.ts-acc-chip.active { background: #191f28; color: #fff; border-color: #191f28; font-weight: 600; }
+.ts-acc-result { margin-top: 4px; }
+.ts-acc-res-card { padding: 12px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--line, #e5e8eb); display: grid; gap: 4px; }
+.ts-acc-res-title { margin: 0; font-size: 13px; color: var(--secondary); }
+.ts-acc-res-big { font-size: 20px; font-weight: 800; color: #191f28; }
+.ts-acc-res-desc { margin: 0; font-size: 12px; color: #8b95a1; line-height: 1.4; }
+
+/* 카카오증권 스타일 커뮤니티 주주 층수 뱃지 */
+.ts-post-auth-wrap { display: flex; align-items: center; gap: 6px; }
+.ts-post-floor-badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: #fee500; color: #191f28; }
+.ts-post-floor-badge.ts-badge-me { background: #3182f6; color: #fff; }
+
+html[data-zero-theme="dark"] .ts-vote-card,
+html[data-zero-theme="dark"] .ts-acc-card { background: #16181d; }
+html[data-zero-theme="dark"] .ts-vote-btn,
+html[data-zero-theme="dark"] .ts-acc-chip,
+html[data-zero-theme="dark"] .ts-acc-res-card { background: #22262e; border-color: #2b2f37; }
+html[data-zero-theme="dark"] .ts-vote-title,
+html[data-zero-theme="dark"] .ts-acc-res-big { color: #e6e9ee; }
+html[data-zero-theme="dark"] .ts-acc-chip { color: #c4cdd8; }
+html[data-zero-theme="dark"] .ts-acc-chip.active { background: #6ea8ff; color: #000; border-color: #6ea8ff; }
+html[data-zero-theme="dark"] .ts-vote-btn.ts-voted { background: #2b2f37; border-color: #6ea8ff; }
+html[data-zero-theme="dark"] .ts-post-floor-badge { background: #ffd600; color: #000; }
+html[data-zero-theme="dark"] .ts-post-floor-badge.ts-badge-me { background: #6ea8ff; color: #000; }
+
+/* 전면 내 주식 몇 층이지? & 구조대 대시보드 (Figma Design System 규격) */
+.th-floor-radar {
+  margin-bottom: var(--figma-space-4, 16px);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  border-radius: var(--figma-radius-xl, 20px);
+  padding: var(--figma-space-5, 20px);
+  background: var(--sem-bg-surface, #ffffff);
+  box-shadow: var(--figma-shadow-sm, 0 2px 4px rgba(0,0,0,0.05));
+  transition: box-shadow var(--figma-duration-normal, 240ms) var(--figma-ease-standard);
+}
+.th-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--figma-space-2, 8px);
+  margin-bottom: var(--figma-space-1, 4px);
+}
+.th-card-heading h2 {
+  margin: 0;
+  font-family: var(--figma-font-sans);
+  font-size: var(--figma-text-body-lg, 16px);
+  font-weight: var(--figma-font-weight-bold, 700);
+  color: var(--sem-text-primary, #191f28);
+}
+.badge-kakao-floor {
+  font-size: var(--figma-text-caption, 12px);
+  font-weight: var(--figma-font-weight-extrabold, 800);
+  padding: 4px 10px;
+  border-radius: var(--figma-radius-full, 9999px);
+  background: var(--sem-brand-accent, #fee500);
+  color: var(--sem-brand-accent-text, #191f28);
+  box-shadow: var(--figma-shadow-xs);
+}
+.th-floor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--figma-space-3, 12px);
+  margin-top: var(--figma-space-4, 16px);
+}
+.th-floor-card {
+  padding: var(--figma-space-4, 16px);
+  border-radius: var(--figma-radius-lg, 16px);
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  cursor: pointer;
+  box-shadow: var(--figma-shadow-xs);
+  transition: transform var(--figma-duration-fast, 150ms) var(--figma-ease-spring),
+              border-color var(--figma-duration-fast) var(--figma-ease-standard),
+              box-shadow var(--figma-duration-fast) var(--figma-ease-standard);
+}
+.th-floor-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--sem-brand-accent, #fee500);
+  box-shadow: var(--figma-shadow-md);
+}
+.th-floor-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--figma-space-2, 8px);
+}
+.th-floor-name {
+  font-size: var(--figma-text-body-md, 15px);
+  font-weight: var(--figma-font-weight-bold, 700);
+  color: var(--sem-text-primary, #191f28);
+}
+.th-floor-current {
+  font-size: var(--figma-text-caption, 12px);
+  color: var(--sem-text-secondary, #6b7684);
+  font-weight: var(--figma-font-weight-semibold, 600);
+  font-variant-numeric: tabular-nums;
+}
+.th-floor-card-mid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--figma-space-2, 8px);
+  flex-wrap: wrap;
+  margin-bottom: var(--figma-space-3, 12px);
+}
+.badge-my-floor {
+  font-size: var(--figma-text-caption, 12px);
+  font-weight: var(--figma-font-weight-bold, 700);
+  padding: 3px 8px;
+  border-radius: var(--figma-radius-sm, 8px);
+  background: var(--sem-text-primary, #191f28);
+  color: var(--sem-text-inverse, #ffffff);
+  font-variant-numeric: tabular-nums;
+}
+.badge-rescue-status {
+  font-size: var(--figma-text-caption-xs, 11px);
+  font-weight: var(--figma-font-weight-semibold, 600);
+  padding: 3px 8px;
+  border-radius: var(--figma-radius-sm, 8px);
+}
+.rescue-wait {
+  background: var(--sem-market-gain-bg, #fef0f2);
+  color: var(--sem-market-gain, #e13b4c);
+  border: 1px solid var(--sem-market-gain, #e13b4c);
+}
+.rescue-near {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffb74d;
+}
+.rescue-profit {
+  background: var(--sem-market-stable-bg, #d8efeb);
+  color: var(--sem-market-stable, #087f74);
+  border: 1px solid var(--sem-market-stable, #087f74);
+}
+.th-floor-bar-wrap {
+  width: 100%;
+}
+.th-floor-bar-track {
+  height: 8px;
+  border-radius: var(--figma-radius-full, 9999px);
+  background: var(--sem-line-default, #e5e8eb);
+  overflow: hidden;
+}
+.th-floor-bar-fill {
+  height: 100%;
+  border-radius: var(--figma-radius-full, 9999px);
+  background: linear-gradient(90deg, var(--sem-brand-primary, #1b64da), var(--sem-brand-accent, #fee500));
+  transition: width var(--figma-duration-normal, 240ms) var(--figma-ease-standard);
+}
+
+html[data-zero-theme="dark"] .th-floor-radar {
+  background: var(--sem-bg-surface);
+  border-color: var(--sem-line-subtle);
+}
+html[data-zero-theme="dark"] .th-card-heading h2 {
+  color: var(--sem-text-primary);
+}
+html[data-zero-theme="dark"] .th-floor-card {
+  background: var(--sem-bg-elevated);
+  border-color: var(--sem-line-subtle);
+}
+html[data-zero-theme="dark"] .th-floor-name {
+  color: var(--sem-text-primary);
+}
+html[data-zero-theme="dark"] .th-floor-current {
+  color: var(--sem-text-secondary);
+}
+html[data-zero-theme="dark"] .badge-my-floor {
+  background: var(--sem-text-primary);
+  color: var(--sem-text-inverse);
+}
+html[data-zero-theme="dark"] .th-floor-bar-track {
+  background: var(--sem-line-default);
+}

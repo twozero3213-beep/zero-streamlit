@@ -91,7 +91,14 @@
     if (match) return match[1] + ':where([data-zero-theme="dark"])' + match[2];  // keeps the html type's specificity: `html .x.active` must still lose to its own recolor
     return SCOPE + ' ' + selector;
   }
-  const api = {parseColor, darkBackground, darkText, darkBorder, darkValue, splitSelectors, scoped, toHsl};
+  // 수정 이유: 카카오 노란색(#fee500)처럼 채도가 높은 밝은 배경은 HSL 명도가 0.5라서 예전 기준(명도 0.6 이상)으로는 "밝은 배경"으로 인식되지 않았다.
+  // 그 결과 노란 뱃지의 어두운 글자만 밝게 바뀌어 다크 모드에서 글자가 사라졌다(층수 엘리베이터·주주 층수 뱃지). 사람 눈에 보이는 밝기(휘도)로 다시 판정한다.
+  const luma = ([r, g, b]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  function keepsLightFill(token) {
+    const fill = parseColor(token);
+    return Boolean(fill && fill[3] > 0.5 && (toHsl(fill)[2] >= 0.6 || luma(fill) >= 0.6) && !darkBackground(token));
+  }
+  const api = {parseColor, darkBackground, darkText, darkBorder, darkValue, splitSelectors, scoped, toHsl, keepsLightFill};
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
   if (typeof document === 'undefined') return;
   window.ZERODarkTheme = api;
@@ -99,12 +106,12 @@
   function buildRules(rules, out) {
     for (const rule of rules) {
       if (rule.type === CSSRule.STYLE_RULE) {
-        const declarations = [], fill = parseColor(rule.style.getPropertyValue('background-color'));
+        const declarations = [];
         // A light accent fill that stays light (yellow badge) keeps its dark text too; recoloring only the text would make it unreadable.
-        const keepsLightFill = Boolean(fill && fill[3] > 0.5 && toHsl(fill)[2] >= 0.6 && !darkBackground(rule.style.getPropertyValue('background-color')));
+        const lightFill = keepsLightFill(rule.style.getPropertyValue('background-color'));
         for (let i = 0; i < rule.style.length; i++) {
           const property = rule.style[i];
-          if (!ROLES[property] || (property === 'color' && keepsLightFill)) continue;
+          if (!ROLES[property] || (property === 'color' && lightFill)) continue;
           const next = darkValue(property, rule.style.getPropertyValue(property));
           if (next) declarations.push(property + ': ' + next + (rule.style.getPropertyPriority(property) ? ' !important' : ''));
         }
@@ -139,6 +146,12 @@
   }
   function setTheme(theme) {
     document.documentElement.dataset.zeroTheme = theme;
+    document.documentElement.dataset.theme = theme;
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     try { window.localStorage.setItem('zero-theme', theme); } catch (_) { /* the choice just is not remembered */ }
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#ffffff' : '#0f1115');
     if (theme === 'dark') ensureSkin();

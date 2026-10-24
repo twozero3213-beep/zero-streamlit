@@ -1,0 +1,140 @@
+/**
+ * ZERO Figma Design System - Auto Layout & Layout Grid Utilities
+ * Implements Figma Auto Layout specifications natively in pure CSS.
+ * Provides Flexbox-based 1:1 mappings for Figma Auto Layout properties:
+ * - Direction (Horizontal / Vertical)
+ * - Resizing (Hug contents / Fill container / Fixed)
+ * - Alignment & Justification
+ * - Spacing / Gap scales (4px grid)
+ * - Padding scales
+ */
+
+/* ==========================================================================
+   AUTO LAYOUT CONTAINERS
+   ========================================================================== */
+
+/* Figma Auto Layout: Horizontal (Direction = Horizontal) */
+.figma-auto-h {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Figma Auto Layout: Vertical (Direction = Vertical) */
+.figma-auto-v {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+/* Figma Auto Layout: Wrap */
+.figma-wrap {
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   RESIZING RULES (Fill container / Hug contents / Fixed)
+   ========================================================================== */
+
+/* Fill Container (width/flex-grow stretches to parent) */
+.figma-fill {
+  flex: 1 1 0%;
+  width: 100%;
+  min-width: 0;
+}
+.figma-fill-w {
+  width: 100%;
+  min-width: 0;
+}
+.figma-fill-h {
+  height: 100%;
+  min-height: 0;
+}
+
+/* Hug Contents (Shrinks to fit content, no shrink) */
+.figma-hug {
+  flex-shrink: 0;
+  width: fit-content;
+}
+
+/* Fixed sizing helpers */
+.figma-shrink-0 {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   ALIGNMENT & JUSTIFICATION (Figma 9-point alignment grid)
+   ========================================================================== */
+.figma-align-start { align-items: flex-start; }
+.figma-align-center { align-items: center; }
+.figma-align-end { align-items: flex-end; }
+.figma-align-stretch { align-items: stretch; }
+
+.figma-justify-start { justify-content: flex-start; }
+.figma-justify-center { justify-content: center; }
+.figma-justify-end { justify-content: flex-end; }
+.figma-justify-between { justify-content: space-between; }
+.figma-justify-around { justify-content: space-around; }
+
+/* ==========================================================================
+   GAP / SPACING (Figma item spacing based on 4px grid)
+   ========================================================================== */
+.figma-gap-0 { gap: var(--figma-space-0); }
+.figma-gap-1 { gap: var(--figma-space-1); } /* 4px */
+.figma-gap-2 { gap: var(--figma-space-2); } /* 8px */
+.figma-gap-3 { gap: var(--figma-space-3); } /* 12px */
+.figma-gap-4 { gap: var(--figma-space-4); } /* 16px */
+.figma-gap-5 { gap: var(--figma-space-5); } /* 20px */
+.figma-gap-6 { gap: var(--figma-space-6); } /* 24px */
+.figma-gap-8 { gap: var(--figma-space-8); } /* 32px */
+.figma-gap-10 { gap: var(--figma-space-10); } /* 40px */
+
+/* ==========================================================================
+   PADDING (Figma container padding based on 4px grid)
+   ========================================================================== */
+.figma-p-0 { padding: var(--figma-space-0); }
+.figma-p-2 { padding: var(--figma-space-2); } /* 8px */
+.figma-p-3 { padding: var(--figma-space-3); } /* 12px */
+.figma-p-4 { padding: var(--figma-space-4); } /* 16px */
+.figma-p-5 { padding: var(--figma-space-5); } /* 20px */
+.figma-p-6 { padding: var(--figma-space-6); } /* 24px */
+
+.figma-px-3 { padding-left: var(--figma-space-3); padding-right: var(--figma-space-3); }
+.figma-px-4 { padding-left: var(--figma-space-4); padding-right: var(--figma-space-4); }
+.figma-px-5 { padding-left: var(--figma-space-5); padding-right: var(--figma-space-5); }
+.figma-px-6 { padding-left: var(--figma-space-6); padding-right: var(--figma-space-6); }
+
+.figma-py-2 { padding-top: var(--figma-space-2); padding-bottom: var(--figma-space-2); }
+.figma-py-3 { padding-top: var(--figma-space-3); padding-bottom: var(--figma-space-3); }
+.figma-py-4 { padding-top: var(--figma-space-4); padding-bottom: var(--figma-space-4); }
+.figma-py-5 { padding-top: var(--figma-space-5); padding-bottom: var(--figma-space-5); }
+
+/* ==========================================================================
+   FIGMA BENTO GRID (Responsive Grid Layouts)
+   ========================================================================== */
+.figma-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--figma-space-4);
+  width: 100%;
+}
+.figma-col-12 { grid-column: span 12; }
+.figma-col-8 { grid-column: span 8; }
+.figma-col-6 { grid-column: span 6; }
+.figma-col-4 { grid-column: span 4; }
+.figma-col-3 { grid-column: span 3; }
+
+@media (max-width: 768px) {
+  .figma-bento-grid {
+    grid-template-columns: 1fr;
+    gap: var(--figma-space-3);
+  }
+  .figma-col-8,
+  .figma-col-6,
+  .figma-col-4,
+  .figma-col-3 {
+    grid-column: span 1;
+  }
+}

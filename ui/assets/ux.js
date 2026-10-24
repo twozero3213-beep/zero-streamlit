@@ -10,7 +10,7 @@
     [...wanted].sort((a, b) => a - b).forEach((n) => { if (n - previous > 1) numbers.push(null); numbers.push(n); previous = n; });
     return {pages, current, start: current * size, end: Math.min(count, current * size + size), numbers};
   }
-  function pageSize(kind,width){const mobile=width<768;return kind==='research'?(mobile?6:10):kind==='cards'?mobile?2:4:kind==='news'?(mobile?1:4):kind==='macro'||kind==='reports'?(mobile?2:4):mobile?4:8;}
+  function pageSize(kind,width){const mobile=width<768;return kind==='research'?(mobile?6:10):kind==='cards'?mobile?2:4:kind==='news'?(mobile?5:5):kind==='macro'||kind==='reports'?(mobile?2:4):mobile?4:8;}
   function researchControlsPage(doc){const controls=doc.querySelector?.('#research-view .table-toolbar .stock-analytics-controls'),target=doc.getElementById('research-options');if(controls&&target)target.append(controls);}
   // Only list membership or a direct item's visibility changes paging; card repaints inside items do not,
   // or the pager and the card painter wake each other forever and freeze the page on phones.

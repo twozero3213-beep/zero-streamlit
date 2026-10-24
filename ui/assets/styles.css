@@ -1,6 +1,6 @@
 @font-face {
   font-family: Pretendard;
-  src: url('fonts/PretendardVariable.woff2') format('woff2');
+  src: url('assets/fonts/PretendardVariable.woff2') format('woff2');
   font-weight: 100 900;
   font-display: swap;
 }
@@ -9,6 +9,56 @@
   --secondary: #626d7b; --line: #eef0f3; --blue: #1b64da;
   --us: #dce9fb; --kr: #f9e4df; --reserve: #d8efeb;
   --gain: #c93b49; --success: #087f74; --radius: 14px;
+}
+:root[data-zero-theme="dark"],
+html[data-zero-theme="dark"],
+:root[data-theme="dark"],
+html[data-theme="dark"],
+html.dark {
+  color-scheme: dark;
+  --canvas: #0f1115;
+  --surface: #1b1d22;
+  --nav: #15171c;
+  --ink: #e6e9ee;
+  --secondary: #a5adb9;
+  --line: #2b2f37;
+  --blue: #6ea8ff;
+  --gain: #ff7480;
+  --success: #3ccfbd;
+  --us: #1d2c44;
+  --kr: #3b2724;
+  --reserve: #173a36;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-zero-theme="light"]):not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #0f1115;
+    --surface: #1b1d22;
+    --nav: #15171c;
+    --ink: #e6e9ee;
+    --secondary: #a5adb9;
+    --line: #2b2f37;
+    --blue: #6ea8ff;
+    --gain: #ff7480;
+    --success: #3ccfbd;
+    --us: #1d2c44;
+    --kr: #3b2724;
+    --reserve: #173a36;
+  }
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) body {
+  background: var(--canvas);
+  color: var(--ink);
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) :is(.panel, .th-card, .ts-facts, #stock-workbench, .team-card, .community-post, .mobile-tabbar, .global-header, .th-floor-radar, .th-index, .desk-indicators, .desk-news-list) {
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) :is(.th-floor-card, .ts-bld-row, .ts-stat-item, .ts-acc-card, .ts-vote-card, .ts-news li, .th-events li) {
+  background: #1e222a !important;
+  border-color: #2b2f37 !important;
+  color: var(--ink) !important;
 }
 * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: #a7b8cf var(--canvas); }
 body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.6 Pretendard, 'Malgun Gothic', sans-serif; font-variant-numeric: tabular-nums; }
