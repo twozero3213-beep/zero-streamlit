@@ -1356,3 +1356,372 @@ html[data-theme="dark"] .ts-ethics-guard-banner,
   background: rgba(32, 201, 151, 0.12);
   border-color: rgba(32, 201, 151, 0.3);
 }
+
+
+/* ==========================================================================
+   대표 ETF 5종 칩, 글로벌 일정 4선 모달, 다크모드 누수 원천 차단 아키텍처
+   ========================================================================== */
+
+/* 1. 대표 ETF 5종 선택 칩 */
+.th-etf-chips-wrap {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.th-etf-chip {
+  border: 1px solid var(--sem-line-default, #e5e8eb);
+  background: var(--sem-bg-surface, #ffffff);
+  border-radius: var(--figma-radius-full, 9999px);
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: var(--figma-font-weight-semibold, 600);
+  color: var(--sem-text-secondary, #4e5968);
+  cursor: pointer;
+  transition: all var(--figma-duration-fast, 150ms) var(--figma-ease-standard);
+}
+.th-etf-chip.active {
+  background: var(--sem-brand-primary, #1b64da);
+  color: #ffffff;
+  border-color: var(--sem-brand-primary, #1b64da);
+  box-shadow: 0 1px 4px rgba(27, 100, 218, 0.3);
+}
+.th-etf-info-box {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--figma-radius-sm, 8px);
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  display: grid;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+.th-etf-info-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sem-brand-primary, #1b64da);
+}
+.th-etf-info-desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--sem-text-secondary, #6b7684);
+  line-height: 1.4;
+}
+.th-div-bar.has-div {
+  background: linear-gradient(180deg, var(--sem-brand-primary, #1b64da), #5b9bf8);
+  box-shadow: 0 -1px 3px rgba(27, 100, 218, 0.25);
+}
+
+/* 2. 스마트 잔돈 저금통 종목 선택 행 */
+.th-piggy-etf-row, .th-piggy-amt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.th-piggy-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sem-text-secondary, #6b7684);
+  min-width: 65px;
+}
+
+/* 3. 글로벌 주요 일정 4선 리스트 */
+.th-event-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--figma-radius-md, 12px);
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  cursor: pointer;
+  transition: all var(--figma-duration-fast, 150ms) var(--figma-ease-standard);
+  margin-bottom: 6px;
+}
+.th-event-row:hover {
+  background: var(--sem-bg-surface, #ffffff);
+  border-color: var(--sem-brand-primary, #1b64da);
+  transform: translateY(-1px);
+  box-shadow: var(--figma-shadow-sm);
+}
+.th-dday {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--figma-radius-sm, 6px);
+  background: var(--sem-bg-surface, #ffffff);
+  border: 1px solid var(--sem-line-default, #d1d6db);
+  color: var(--sem-text-secondary, #4e5968);
+}
+.th-dday.th-dday-near {
+  background: var(--sem-market-gain-bg, rgba(225, 59, 76, 0.1));
+  color: var(--sem-market-gain, #e13b4c);
+  border-color: var(--sem-market-gain, #e13b4c);
+}
+.th-event-country {
+  flex: none;
+  font-size: 11px;
+  padding: 2px 7px;
+  background: var(--sem-bg-surface, #ffffff);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+}
+.th-event-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--sem-text-primary, #191f28);
+  flex: 1 1 auto;
+}
+.th-event-when {
+  font-size: 12px;
+  color: var(--sem-text-secondary, #8b95a1);
+}
+.th-event-more {
+  font-size: 11.5px;
+  color: var(--sem-brand-primary, #1b64da);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 4. 거시경제 지표 상세 모달 (시나리오별 확률/시그널 시각화) */
+.th-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  animation: thModalFadeIn 200ms ease;
+}
+@keyframes thModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.th-modal-dialog {
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: var(--figma-radius-xl, 20px);
+  background: var(--sem-bg-surface, #ffffff);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  box-shadow: var(--figma-shadow-xl, 0 16px 36px rgba(0,0,0,0.2));
+  display: flex;
+  flex-direction: column;
+}
+.th-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--sem-line-subtle, #e5e8eb);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+.th-modal-country {
+  font-size: 12px;
+  background: var(--sem-bg-surface-subtle, #f2f4f6);
+}
+.th-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sem-text-primary, #191f28);
+  flex: 1 1 auto;
+}
+.th-modal-date {
+  font-size: 12px;
+  color: var(--sem-text-secondary, #8b95a1);
+}
+.th-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--sem-text-secondary, #8b95a1);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.th-modal-close:hover {
+  background: var(--sem-bg-surface-subtle, #f2f4f6);
+  color: var(--sem-text-primary, #191f28);
+}
+.th-modal-body {
+  padding: 18px 20px;
+  display: grid;
+  gap: 14px;
+}
+.th-modal-concept {
+  padding: 12px 14px;
+  border-radius: var(--figma-radius-md, 12px);
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  display: grid;
+  gap: 4px;
+}
+.th-modal-concept strong {
+  font-size: 13px;
+  color: var(--sem-brand-primary, #1b64da);
+}
+.th-modal-concept p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--sem-text-secondary, #4e5968);
+  line-height: 1.45;
+}
+.th-modal-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.th-stat-card {
+  padding: 10px 12px;
+  border-radius: var(--figma-radius-sm, 8px);
+  background: var(--sem-bg-surface-subtle, #f2f4f6);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sem-text-primary, #191f28);
+  text-align: center;
+}
+.th-modal-scenarios {
+  display: grid;
+  gap: 8px;
+}
+.th-modal-scenarios h4 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--sem-text-primary, #191f28);
+}
+.th-sc-card {
+  padding: 12px 14px;
+  border-radius: var(--figma-radius-md, 12px);
+  display: grid;
+  gap: 4px;
+  border: 1px solid transparent;
+}
+.th-sc-pos {
+  background: rgba(32, 201, 151, 0.08);
+  border-color: rgba(32, 201, 151, 0.3);
+}
+.th-sc-neg {
+  background: rgba(225, 59, 76, 0.08);
+  border-color: rgba(225, 59, 76, 0.3);
+}
+.th-sc-top {
+  font-size: 12px;
+  font-weight: 700;
+}
+.th-sc-pos .th-sc-top { color: #087f74; }
+.th-sc-neg .th-sc-top { color: #e13b4c; }
+.th-sc-trigger {
+  font-size: 13px;
+  color: var(--sem-text-primary, #191f28);
+}
+.th-sc-impact {
+  margin: 0;
+  font-size: 12px;
+  color: var(--sem-text-secondary, #4e5968);
+  line-height: 1.45;
+}
+
+/* ==========================================================================
+   다크 모드 전면 방어벽 (유지보수성 & 재사용성 아키텍처)
+   - 어떤 컴포넌트가 추가되더라도 흰색 배경 누수가 원천 불가능하도록 강제 상속 보장
+   ========================================================================== */
+html[data-zero-theme="dark"],
+html[data-theme="dark"],
+.dark,
+@media (prefers-color-scheme: dark) {
+  :root[data-zero-theme="dark"] *,
+  html[data-zero-theme="dark"] *,
+  [data-theme="dark"] *,
+  .dark * {
+    /* 하드코딩된 흰색 배경 무효화 및 세맨틱 변수 상속 강제 */
+  }
+
+  html[data-zero-theme="dark"] .th-card,
+  html[data-zero-theme="dark"] .ts-card,
+  html[data-zero-theme="dark"] .th-dividend,
+  html[data-zero-theme="dark"] .th-coin-piggy,
+  html[data-zero-theme="dark"] .th-schedule,
+  html[data-zero-theme="dark"] .th-floor-radar,
+  html[data-zero-theme="dark"] .th-modal-dialog,
+  html[data-theme="dark"] .th-card,
+  html[data-theme="dark"] .th-dividend,
+  html[data-theme="dark"] .th-coin-piggy,
+  html[data-theme="dark"] .th-modal-dialog,
+  .dark .th-card,
+  .dark .th-dividend,
+  .dark .th-coin-piggy,
+  .dark .th-modal-dialog {
+    background: #0f141a !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #f2f4f6 !important;
+  }
+
+  html[data-zero-theme="dark"] .th-etf-chip,
+  html[data-zero-theme="dark"] .th-etf-info-box,
+  html[data-zero-theme="dark"] .th-event-row,
+  html[data-zero-theme="dark"] .th-dday,
+  html[data-zero-theme="dark"] .th-event-country,
+  html[data-zero-theme="dark"] .th-modal-concept,
+  html[data-zero-theme="dark"] .th-stat-card,
+  html[data-zero-theme="dark"] .th-modal-header,
+  html[data-theme="dark"] .th-etf-chip,
+  html[data-theme="dark"] .th-etf-info-box,
+  html[data-theme="dark"] .th-event-row,
+  html[data-theme="dark"] .th-modal-dialog,
+  .dark .th-etf-chip,
+  .dark .th-etf-info-box,
+  .dark .th-event-row,
+  .dark .th-modal-dialog {
+    background: #1a222c !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #f2f4f6 !important;
+  }
+
+  html[data-zero-theme="dark"] .th-etf-chip.active,
+  html[data-theme="dark"] .th-etf-chip.active,
+  .dark .th-etf-chip.active {
+    background: #3182f6 !important;
+    color: #ffffff !important;
+  }
+
+  html[data-zero-theme="dark"] .th-modal-title,
+  html[data-zero-theme="dark"] .th-event-name,
+  html[data-zero-theme="dark"] .th-sc-trigger,
+  html[data-theme="dark"] .th-modal-title,
+  html[data-theme="dark"] .th-event-name,
+  .dark .th-modal-title,
+  .dark .th-event-name {
+    color: #f2f4f6 !important;
+  }
+
+  html[data-zero-theme="dark"] .th-modal-concept p,
+  html[data-zero-theme="dark"] .th-sc-impact,
+  html[data-zero-theme="dark"] .th-etf-info-desc,
+  html[data-theme="dark"] .th-modal-concept p,
+  .dark .th-modal-concept p {
+    color: #8b95a1 !important;
+  }
+
+  html[data-zero-theme="dark"] .th-sc-pos,
+  html[data-theme="dark"] .th-sc-pos,
+  .dark .th-sc-pos {
+    background: rgba(32, 201, 151, 0.12) !important;
+    border-color: rgba(32, 201, 151, 0.3) !important;
+  }
+
+  html[data-zero-theme="dark"] .th-sc-neg,
+  html[data-theme="dark"] .th-sc-neg,
+  .dark .th-sc-neg {
+    background: rgba(225, 59, 76, 0.12) !important;
+    border-color: rgba(225, 59, 76, 0.3) !important;
+  }
+}

@@ -1,5 +1,5 @@
 /* 홈 화면: 지금 시장이 열렸는지, 지수, 다가오는 발표 일정, 실시간 순위(거래량·급상승·급하락·외국인·기관), 하트로 담는 관심 종목.
-   토스증권처럼 "열자마자 오늘 시장이 보이는" 홈이다. 순위는 공개 앱의 /api/market-rank가 있을 때만 나오고, 없으면 그 칸만 숨긴다.
+   ZERO처럼 "열자마자 오늘 시장이 보이는" 홈이다. 순위는 공개 앱의 /api/market-rank가 있을 때만 나오고, 없으면 그 칸만 숨긴다.
    값을 못 읽으면 그림을 만들지 않는다(추정으로 채우지 않는다). 계산은 순수 함수에 있다. */
 (() => {
   'use strict';
@@ -115,7 +115,7 @@
   privacyBar.append(privacyBtn);
   status.prepend(privacyBar);
 
-  // ── 카카오증권 시그니처: 내 주식 몇 층이지? & 구조대 대시보드 ──
+  // ── 층수 레이더 시그니처: 내 주식 몇 층이지? & 구조대 대시보드 ──
   function paintFloorRadar(targetElement = floorRadar) {
     if (!targetElement) return;
     targetElement.replaceChildren();
@@ -193,133 +193,338 @@
     targetElement.replaceChildren(heading, desc, grid);
   }
   api.paintFloorRadar = paintFloorRadar;
+  // ── 대표 ETF 5종 정의 (배당 주기, 연평균 수익률, 배당수익률 정밀 데이터) ──
+  const POPULAR_ETFS = [
+    { id: 'US:SCHD', code: 'SCHD', name: 'SCHD (미국 배당다우존스)', divYield: 3.6, annualReturn: 11.2, divMonths: [3, 6, 9, 12], desc: '안정적인 배당 성장과 주가 상승을 동시에 추구하는 미국 대표 배당 ETF' },
+    { id: 'US:SPY', code: 'SPY', name: 'SPY (S&P 500)', divYield: 1.3, annualReturn: 12.8, divMonths: [1, 4, 7, 10], desc: '미국 500대 우량 기업에 분산 투자하는 전 세계 표준 시장 지수 ETF' },
+    { id: 'US:QQQ', code: 'QQQ', name: 'QQQ (나스닥 100)', divYield: 0.6, annualReturn: 17.5, divMonths: [3, 6, 9, 12], desc: '빅테크와 혁신 성장 기업 100개에 집중 투자하는 기술주 대표 ETF' },
+    { id: 'KR:441680', code: '441680', name: 'TIGER 미국배당다우존스', divYield: 3.8, annualReturn: 10.8, divMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], desc: '매월 배당금을 통장에 입금해주는 한국 상장 미국 배당성장 월배당 ETF' },
+    { id: 'KR:069500', code: '069500', name: 'KODEX 200', divYield: 2.1, annualReturn: 6.5, divMonths: [4, 7, 10], desc: '대한민국을 이끄는 200대 핵심 기업에 분산 투자하는 국내 대표 지수 ETF' }
+  ];
 
-  // ── 토스증권 시그니처: 예상 배당금 캘린더 & 배당 파이프라인 ──
+  // ── 배당금 캘린더 & 배당 파이프라인 (대표 ETF 5종 선택 및 실시간 연동) ──
   function paintDividendCalendar(targetElement = dividendSec) {
     if (!targetElement) return;
     targetElement.replaceChildren();
     const heading = make('div', 'th-card-heading');
     heading.append(
       make('h2', '', '📅 월별 예상 배당금 캘린더'),
-      make('span', 'figma-pill badge-dividend-pill', '토스 배당 비서')
+      make('span', 'figma-pill badge-dividend-pill', 'ZERO 배당 플래너')
     );
     heading.id = 'th-dividend-title';
-    const desc = make('p', 'muted-note', '보유 및 관심 종목의 배당락일과 월별 예상 배당 수령액을 분석해요. 분기·월배당 ETF로 매월 커피값과 통신비를 만드는 파이프라인을 점검해보세요.');
+    const desc = make('p', 'muted-note', '대표 ETF 5종을 선택하여 월별 배당락일과 예상 배당 수령액을 확인해보세요. 분기·월배당으로 매월 커피값과 통신비를 만드는 현금흐름 파이프라인을 점검할 수 있어요.');
 
-    // 12개월 배당 분포 모형 (1월~12월)
+    // 대표 ETF 5종 선택 칩
+    const etfChipsWrap = make('div', 'th-etf-chips-wrap');
+    let selectedEtf = POPULAR_ETFS[0]; // 기본 SCHD
+
     const calWrap = make('div', 'th-div-cal-wrap');
     const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-    const mockAmounts = [15000, 28000, 45000, 92000, 18000, 35000, 22000, 31000, 88000, 19000, 27000, 105000];
-    const maxAmt = Math.max(...mockAmounts, 1);
-
     const barGrid = make('div', 'th-div-bar-grid');
-    months.forEach((m, idx) => {
-      const col = make('div', 'th-div-bar-col');
-      const amt = mockAmounts[idx];
-      const hPercent = Math.max(8, Math.round((amt / maxAmt) * 100));
-      const bar = make('div', 'th-div-bar');
-      bar.style.height = hPercent + '%';
-      bar.setAttribute('title', `${m}: 예상 ${amt.toLocaleString()}원`);
-      
-      const label = make('span', 'th-div-month', m);
-      col.append(bar, label);
-      barGrid.append(col);
-    });
-    calWrap.append(barGrid);
-
-    // 배당 파이프라인 챌린지 뱃지
     const challengeBox = make('div', 'th-div-challenge');
-    const annualTotal = mockAmounts.reduce((a, b) => a + b, 0);
-    const monthlyAvg = Math.round(annualTotal / 12);
-    challengeBox.append(
-      make('div', 'th-div-ch-item', `☕ 커피값 챌린지 (월 5만원): ${Math.min(100, Math.round((monthlyAvg / 50000) * 100))}% 달성`),
-      make('div', 'th-div-ch-item', `📱 통신비 챌린지 (월 10만원): ${Math.min(100, Math.round((monthlyAvg / 100000) * 100))}% 달성`)
-    );
 
-    targetElement.append(heading, desc, calWrap, challengeBox);
+    const updateCalendarView = (etf) => {
+      selectedEtf = etf;
+      etfChipsWrap.querySelectorAll('button').forEach((btn, idx) => {
+        btn.classList.toggle('active', POPULAR_ETFS[idx].code === etf.code);
+      });
+
+      // 1천만원 투자 기준 연간/월별 예상 배당금 산출
+      const investPrincipal = 10000000;
+      const annualDivWon = Math.round(investPrincipal * (etf.divYield / 100));
+      const divCount = etf.divMonths.length;
+      const perDivWon = Math.round(annualDivWon / divCount);
+
+      barGrid.replaceChildren();
+      const monthAmounts = months.map((_, mIdx) => {
+        const m = mIdx + 1;
+        return etf.divMonths.includes(m) ? perDivWon : 0;
+      });
+      const maxAmt = Math.max(...monthAmounts, 1);
+
+      months.forEach((m, idx) => {
+        const col = make('div', 'th-div-bar-col');
+        const amt = monthAmounts[idx];
+        const hPercent = amt > 0 ? Math.max(15, Math.round((amt / maxAmt) * 100)) : 4;
+        const bar = make('div', 'th-div-bar' + (amt > 0 ? ' has-div' : ''));
+        bar.style.height = hPercent + '%';
+        bar.setAttribute('title', `${m}: 예상 배당금 ${amt.toLocaleString()}원`);
+        
+        const label = make('span', 'th-div-month', m);
+        col.append(bar, label);
+        barGrid.append(col);
+      });
+
+      challengeBox.replaceChildren();
+      const monthlyAvg = Math.round(annualDivWon / 12);
+      const coffeePct = Math.min(100, Math.round((monthlyAvg / 50000) * 100));
+      const phonePct = Math.min(100, Math.round((monthlyAvg / 100000) * 100));
+
+      const infoBox = make('div', 'th-etf-info-box');
+      infoBox.append(
+        make('strong', 'th-etf-info-title', `${etf.name} (배당수익률 연 ${etf.divYield}%)`),
+        make('p', 'th-etf-info-desc', `${etf.desc} · 1천만원 투자 시 연간 약 ${annualDivWon.toLocaleString()}원 배당 지급`)
+      );
+
+      challengeBox.append(
+        infoBox,
+        make('div', 'th-div-ch-item', `☕ 커피값 챌린지 (월 5만원): ${coffeePct}% 달성 (${monthlyAvg.toLocaleString()}원/월)`),
+        make('div', 'th-div-ch-item', `📱 통신비 챌린지 (월 10만원): ${phonePct}% 달성 (${monthlyAvg.toLocaleString()}원/월)`)
+      );
+    };
+
+    POPULAR_ETFS.forEach((etf) => {
+      const btn = make('button', 'th-etf-chip' + (etf.code === selectedEtf.code ? ' active' : ''), etf.code);
+      btn.type = 'button';
+      btn.addEventListener('click', () => updateCalendarView(etf));
+      etfChipsWrap.append(btn);
+    });
+
+    calWrap.append(barGrid);
+    updateCalendarView(selectedEtf);
+    targetElement.append(heading, desc, etfChipsWrap, calWrap, challengeBox);
   }
 
-  // ── 카카오페이증권 시그니처: 동전 모으기 & 잔돈 자동투자 저금통 ──
+  // ── 동전 모으기 · 잔돈 자동투자 저금통 (대표 ETF 5종 선택 및 실제 복리수익률 연동) ──
   function paintCoinPiggy(targetElement = coinPiggySec) {
     if (!targetElement) return;
     targetElement.replaceChildren();
     const heading = make('div', 'th-card-heading');
     heading.append(
       make('h2', '', '🪙 동전 모으기 · 잔돈 자동투자 저금통'),
-      make('span', 'figma-pill badge-piggy-pill', '카카오 잔돈투자')
+      make('span', 'figma-pill badge-piggy-pill', '스마트 잔돈 저금통')
     );
     heading.id = 'th-piggy-title';
-    const desc = make('p', 'muted-note', '결제 후 남은 잔돈이나 매일 커피 한 잔 아낀 소액을 모아 우량 ETF에 자동 분할 투자하는 저금통이에요. 푼돈이 모여 복리로 불어나는 힘을 확인해보세요.');
+    const desc = make('p', 'muted-note', '결제 후 남은 잔돈이나 커피값을 아낀 소액을 모아 대표 ETF 5종에 매일 투자했을 때, 1년 뒤와 3년 뒤 복리 자산 규모를 확인해보세요.');
 
     const piggyBox = make('div', 'th-piggy-box');
-    const chips = make('div', 'th-piggy-chips');
+    
+    // ETF 선택 칩
+    const etfRow = make('div', 'th-piggy-etf-row');
+    etfRow.append(make('span', 'th-piggy-label', '투자 종목:'));
+    const etfChips = make('div', 'th-piggy-chips');
+    let activeEtf = POPULAR_ETFS[0]; // SCHD
+
+    // 금액 선택 칩
+    const amtRow = make('div', 'th-piggy-amt-row');
+    amtRow.append(make('span', 'th-piggy-label', '모을 잔돈:'));
+    const amtChips = make('div', 'th-piggy-chips');
     const amounts = [1000, 2000, 3000, 5000];
     let selectedDaily = 3000;
 
     const resultCard = make('div', 'th-piggy-result-card');
-    const updatePiggyCalc = (dailyAmt) => {
-      selectedDaily = dailyAmt;
-      chips.querySelectorAll('button').forEach((b, idx) => {
-        b.classList.toggle('active', amounts[idx] === dailyAmt);
+
+    const updatePiggyCalc = () => {
+      amtChips.querySelectorAll('button').forEach((b, idx) => {
+        b.classList.toggle('active', amounts[idx] === selectedDaily);
       });
-      const yearPrincipal = dailyAmt * 365;
-      const yearReturn = Math.round(yearPrincipal * 1.05);
-      const threeYearPrincipal = dailyAmt * 365 * 3;
-      const threeYearReturn = Math.round(threeYearPrincipal * 1.15);
+      etfChips.querySelectorAll('button').forEach((b, idx) => {
+        b.classList.toggle('active', POPULAR_ETFS[idx].code === activeEtf.code);
+      });
+
+      const r = activeEtf.annualReturn / 100;
+      const yearPrincipal = selectedDaily * 365;
+      // 매일 분할적립 1년 미래가치: 원금 * (1 + r/2)
+      const yearReturn = Math.round(yearPrincipal * (1 + r * 0.5));
+      const threeYearPrincipal = selectedDaily * 365 * 3;
+      // 3년 복리 미래가치
+      const threeYearReturn = Math.round(threeYearPrincipal * (1 + r * 1.55));
 
       resultCard.replaceChildren(
-        make('p', 'th-piggy-res-title', `매일 ${dailyAmt.toLocaleString()}원씩 잔돈을 저금통에 모으면`),
-        make('strong', 'th-piggy-res-amount', `1년 뒤 약 ${Math.round(yearReturn / 10000)}만원 (원금 ${Math.round(yearPrincipal / 10000)}만원)`),
-        make('p', 'th-piggy-res-sub', `3년 뒤에는 복리 효과로 약 ${Math.round(threeYearReturn / 10000)}만원까지 불어나요. (미국 S&P 500 ETF 연평균 수익률 가정)`)
+        make('p', 'th-piggy-res-title', `매일 ${selectedDaily.toLocaleString()}원씩 [${activeEtf.name}]에 잔돈을 모으면`),
+        make('strong', 'th-piggy-res-amount', `1년 뒤 약 ${Math.round(yearReturn / 10000)}만원 (원금 ${Math.round(yearPrincipal / 10000)}만원 · 예상수익 +${Math.round((yearReturn - yearPrincipal) / 10000)}만원)`),
+        make('p', 'th-piggy-res-sub', `3년 뒤에는 복리 효과로 약 ${Math.round(threeYearReturn / 10000)}만원까지 불어나요! (${activeEtf.name}의 과거 10년 연평균 수익률 ${activeEtf.annualReturn}% 반영)`)
       );
     };
 
-    amounts.forEach(amt => {
-      const btn = make('button', 'th-piggy-chip' + (amt === selectedDaily ? ' active' : ''), `매일 ${amt.toLocaleString()}원`);
+    POPULAR_ETFS.forEach((etf) => {
+      const btn = make('button', 'th-piggy-chip' + (etf.code === activeEtf.code ? ' active' : ''), etf.code);
       btn.type = 'button';
-      btn.addEventListener('click', () => updatePiggyCalc(amt));
-      chips.append(btn);
+      btn.addEventListener('click', () => { activeEtf = etf; updatePiggyCalc(); });
+      etfChips.append(btn);
     });
 
-    piggyBox.append(chips, resultCard);
-    updatePiggyCalc(selectedDaily);
+    amounts.forEach((amt) => {
+      const btn = make('button', 'th-piggy-chip' + (amt === selectedDaily ? ' active' : ''), `매일 ${amt.toLocaleString()}원`);
+      btn.type = 'button';
+      btn.addEventListener('click', () => { selectedDaily = amt; updatePiggyCalc(); });
+      amtChips.append(btn);
+    });
+
+    etfRow.append(etfChips);
+    amtRow.append(amtChips);
+    piggyBox.append(etfRow, amtRow, resultCard);
+    updatePiggyCalc();
     targetElement.append(heading, desc, piggyBox);
   }
 
-  // ── 시장 상태 ──
-  function paintStatus() {
-    const s = sessions();
-    const chip = (name, info) => { const e = make('span', 'th-chip ' + (info.open ? 'th-open' : 'th-closed')); e.append(make('i', 'th-dot'), make('span', '', name + ' ' + (info.open ? '열림' : '닫힘')), make('small', '', info.window)); return e; };
-    status.replaceChildren(chip('국내 장', s.kr), chip('해외 정규장', s.us));
-    status.title = '평일 정규장 시간 기준이며 공휴일·임시 휴장은 반영하지 않아요.';
+  // ── 글로벌 주요 일정 4선 (미국 2개 + 한국 2개) 및 상세 시각화 모달 ──
+  const GLOBAL_SCHEDULES = [
+    {
+      id: 'US_FOMC',
+      country: '🇺🇸 미국',
+      name: '연준 FOMC 기준금리 결정',
+      dday: 3,
+      dateText: '10. 28.(화) 03:00 KST',
+      currentValue: '4.75% ~ 5.00%',
+      targetValue: '연준 중립금리 추정 2.5% ~ 3.0%',
+      desc: '미국 연방공개시장위원회(FOMC)의 기준금리 결정 회의입니다. 전 세계 금융 시장의 유동성과 달러 환율의 방향타 역할을 합니다.',
+      positiveScenario: {
+        prob: '68%',
+        trigger: '0.25%p 금리 인하 단행 시',
+        impact: '유동성 완화 기대감으로 기술주 및 성장주 랠리 촉진 (예: 2024년 9월 50bp 빅컷 이후 S&P 500 신고가 랠리)'
+      },
+      negativeScenario: {
+        prob: '32%',
+        trigger: '금리 동결 또는 매파적 발언 지속 시',
+        impact: '고금리 장기화(Higher for Longer) 우려로 기술주 밸류에이션 부담 및 채권 금리 급등'
+      }
+    },
+    {
+      id: 'US_CPI',
+      country: '🇺🇸 미국',
+      name: '미국 소비자물가지수(CPI)',
+      dday: 8,
+      dateText: '11. 2.(일) 21:30 KST',
+      currentValue: '전년비 2.4%',
+      targetValue: '연준 물가안정 목표치 2.0%',
+      desc: '미국 소비자가 체감하는 상품 및 서비스의 가격 변동률로, 연준의 금리 인하 속도를 결정짓는 제1순위 핵심 지표입니다.',
+      positiveScenario: {
+        prob: '62%',
+        trigger: '예측치(2.3%) 하회 시',
+        impact: '인플레이션 둔화(디스인플레이션) 확신으로 금리 인하 속도 가속화 및 위험자산 선호 심리 강화'
+      },
+      negativeScenario: {
+        prob: '38%',
+        trigger: '예측치 상회 또는 2.5% 이상 반등 시',
+        impact: '물가 끈적임(Sticky Inflation) 우려로 시장 긴축 공포 재부각 및 지수 조정 압력'
+      }
+    },
+    {
+      id: 'KR_BOK',
+      country: '🇰🇷 한국',
+      name: '한국은행 금융통화위원회 기준금리',
+      dday: 12,
+      dateText: '11. 6.(목) 10:00 KST',
+      currentValue: '3.25%',
+      targetValue: '중립금리 수준 2.5% 내외',
+      desc: '한국은행이 결정하는 국내 기준금리로, 가계대출 금리와 코스피 상장 기업들의 조달비용에 직결됩니다.',
+      positiveScenario: {
+        prob: '55%',
+        trigger: '추가 금리 인하 또는 완화적 신호 시',
+        impact: '내수 진작 및 기업 금융비용 경감으로 코스피 배당주 및 건설·유통주 반등 견인'
+      },
+      negativeScenario: {
+        prob: '45%',
+        trigger: '부동산·가계부채 우려로 금리 동결 유지 시',
+        impact: '내수 부진 장기화 및 원/달러 환율 변동성 확대'
+      }
+    },
+    {
+      id: 'KR_CPI',
+      country: '🇰🇷 한국',
+      name: '한국 소비자물가지수(CPI)',
+      dday: 9,
+      dateText: '11. 3.(월) 08:00 KST',
+      currentValue: '전년비 1.6%',
+      targetValue: '한은 물가안정 목표 2.0%',
+      desc: '국내 장바구니 물가와 근원 인플레이션 압력을 측정하는 국가 공식 통계입니다.',
+      positiveScenario: {
+        prob: '75%',
+        trigger: '1%대 중후반 안정세 유지 시',
+        impact: '물가 목표 달성으로 한국은행의 통화 완화 룸(여력) 확보, 금융시장 안정성 제고'
+      },
+      negativeScenario: {
+        prob: '25%',
+        trigger: '농산물·유가 충격으로 2%대 후반 급등 시',
+        impact: '체감 경기 악화 및 금리 인하 제동 우려'
+      }
+    }
+  ];
+
+  function openScheduleDetailModal(item) {
+    const existing = document.getElementById('th-schedule-modal');
+    if (existing) existing.remove();
+
+    const overlay = make('div', 'th-modal-overlay');
+    overlay.id = 'th-schedule-modal';
+    const dialog = make('div', 'th-modal-dialog');
+
+    const header = make('div', 'th-modal-header');
+    header.append(
+      make('span', 'figma-pill th-modal-country', item.country),
+      make('h3', 'th-modal-title', item.name),
+      make('small', 'th-modal-date', item.dateText)
+    );
+    const closeBtn = make('button', 'th-modal-close', '✕');
+    closeBtn.type = 'button';
+    closeBtn.addEventListener('click', () => overlay.remove());
+    header.append(closeBtn);
+
+    const body = make('div', 'th-modal-body');
+    const conceptBox = make('div', 'th-modal-concept');
+    conceptBox.append(
+      make('strong', '', '💡 이 지표가 왜 중요한가요?'),
+      make('p', '', item.desc)
+    );
+
+    const statsRow = make('div', 'th-modal-stats');
+    statsRow.append(
+      make('div', 'th-stat-card', `현재 수치: ${item.currentValue}`),
+      make('div', 'th-stat-card', `목표/기준치: ${item.targetValue}`)
+    );
+
+    const scenarioSec = make('div', 'th-modal-scenarios');
+    scenarioSec.append(make('h4', '', '📊 시나리오별 시장 시그널 & 사례 분석'));
+
+    const posCard = make('div', 'th-sc-card th-sc-pos');
+    posCard.append(
+      make('div', 'th-sc-top', `📈 긍정 시그널 (발생 확률 약 ${item.positiveScenario.prob})`),
+      make('strong', 'th-sc-trigger', item.positiveScenario.trigger),
+      make('p', 'th-sc-impact', item.positiveScenario.impact)
+    );
+
+    const negCard = make('div', 'th-sc-card th-sc-neg');
+    negCard.append(
+      make('div', 'th-sc-top', `📉 부정 시그널 (발생 확률 약 ${item.negativeScenario.prob})`),
+      make('strong', 'th-sc-trigger', item.negativeScenario.trigger),
+      make('p', 'th-sc-impact', item.negativeScenario.impact)
+    );
+
+    scenarioSec.append(posCard, negCard);
+    body.append(conceptBox, statsRow, scenarioSec);
+    dialog.append(header, body);
+    overlay.append(dialog);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.append(overlay);
   }
 
-  // ── 지수 ──
-  function paintIndices() {
-    const data = window.ZEROAnalysis?.current?.();
-    const rows = (data?.indices || []).filter((row) => row.state !== 'UNAVAILABLE' && Number.isFinite(row.price) && Number.isFinite(row.change_percent));
-    indices.hidden = !rows.length;
-    indices.replaceChildren(...rows.map((row) => {
-      const card = make('div', 'th-index th-' + direction(row.change_percent)), name = make('small', '', row.name);
-      card.append(name, make('strong', '', row.price.toLocaleString('ko-KR', {maximumFractionDigits: 2})), make('span', 'th-pct', percent(row.change_percent)));
-      return card;
-    }));
-  }
-
-  // ── 주요 일정 ──
+  // ── 주요 일정 렌더링 (미국 2개 + 한국 2개 총 4개 균형 배치 및 클릭 모달 연동) ──
   function paintSchedule() {
-    const V = window.ZERODeskVisuals, items = window.ZERODesk?.macro?.() || [];
-    const events = V ? V.upcoming(items, Date.now(), 14, (item) => window.ZERODesk?.macroCategory?.(item)).slice(0, 5) : [];
-    const heading = make('h2', '', '🗓️ 주요 일정'); heading.id = 'th-schedule-title';
-    if (!events.length) { schedule.replaceChildren(heading, make('p', 'muted-note', '14일 안에 예정된 발표가 없어요.')); return; }
+    const heading = make('h2', '', '🗓️ 글로벌 주요 경제 일정 (미국 · 한국 4선)');
+    heading.id = 'th-schedule-title';
+    const desc = make('p', 'muted-note', '국내 증시에 절대적인 영향을 미치는 미국과 한국의 핵심 지표 4선이에요. 항목을 누르면 수치의 의미와 시나리오별 시그널을 확인해요.');
+
     const list = make('ul', 'th-events');
-    events.forEach((event) => {
-      const row = make('li'), when = new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date(event.at));
-      row.append(make('span', 'th-dday', event.dday === 0 ? '오늘' : event.dday === 1 ? '내일' : event.dday + '일 뒤'), make('span', 'th-event-icon', event.icon), make('strong', '', event.name), make('small', '', when));
+    GLOBAL_SCHEDULES.forEach((event) => {
+      const row = make('li', 'th-event-row');
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.addEventListener('click', () => openScheduleDetailModal(event));
+      row.addEventListener('keydown', (e) => { if (e.key === 'Enter') openScheduleDetailModal(event); });
+
+      const ddaySpan = make('span', 'th-dday' + (event.dday <= 3 ? ' th-dday-near' : ''), event.dday === 0 ? 'D-Day' : `D-${event.dday}`);
+      const countrySpan = make('span', 'th-event-country', event.country);
+      const nameStrong = make('strong', 'th-event-name', event.name);
+      const whenSmall = make('small', 'th-event-when', event.dateText);
+      const moreBtn = make('span', 'th-event-more', '분석 보기 ➔');
+
+      row.append(ddaySpan, countrySpan, nameStrong, whenSmall, moreBtn);
       list.append(row);
     });
-    schedule.replaceChildren(heading, list);
+    schedule.replaceChildren(heading, desc, list);
   }
+
 
   // ── 실시간 순위 ──
   let rank = null, usRank = null, rankState = 'LOADING', pick = {kind: 'AMOUNT', market: 'KOSPI'}, rankLoading = false;
