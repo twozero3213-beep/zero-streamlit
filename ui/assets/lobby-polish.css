@@ -683,3 +683,324 @@ html[data-zero-theme="dark"] .badge-my-floor {
 html[data-zero-theme="dark"] .th-floor-bar-track {
   background: var(--sem-line-default);
 }
+
+
+/* ==========================================================================
+   FIGMA DESIGN SYSTEM: 뉴스 5개 단위 페이징 & 물타기 시뮬레이터 & 다크모드 완결
+   ========================================================================== */
+
+/* 뉴스 목록 및 5개 단위 페이징 컨트롤러 */
+.ts-news-section {
+  display: grid;
+  gap: var(--figma-space-2, 8px);
+  margin-top: var(--figma-space-3, 12px);
+}
+.ts-news-header-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ts-news-header-wrap h3 {
+  margin: 0;
+  font-size: var(--figma-text-body-md, 15px);
+  font-weight: var(--figma-font-weight-bold, 700);
+  color: var(--sem-text-primary, #191f28);
+}
+.ts-news {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--figma-space-2, 8px);
+}
+.ts-news-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--figma-radius-md, 12px);
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  transition: all var(--figma-duration-fast, 150ms) var(--figma-ease-standard);
+}
+.ts-news-item:hover {
+  background: var(--sem-bg-surface, #ffffff);
+  border-color: var(--sem-line-default, #d1d6db);
+  box-shadow: var(--figma-shadow-xs);
+}
+.ts-news-title {
+  font-size: var(--figma-text-body-sm, 14px);
+  font-weight: var(--figma-font-weight-medium, 500);
+  color: var(--sem-text-primary, #191f28);
+  text-decoration: none;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ts-news-title:hover {
+  color: var(--sem-brand-primary, #1b64da);
+  text-decoration: underline;
+}
+.ts-news-meta {
+  font-size: var(--figma-text-caption, 12px);
+  color: var(--sem-text-secondary, #8b95a1);
+}
+
+/* 페이징 버튼 & 인디케이터 */
+.ts-news-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--figma-space-2, 8px);
+  margin-top: var(--figma-space-2, 8px);
+  padding: 6px 0;
+}
+.ts-page-btn {
+  height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 12.5px !important;
+  border-radius: var(--figma-radius-sm, 8px) !important;
+}
+.ts-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ts-page-pill {
+  font-size: var(--figma-text-caption, 12px);
+  color: var(--sem-text-secondary, #6b7684);
+  background: var(--sem-bg-surface-subtle, #f2f4f6);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  border-radius: var(--figma-radius-full, 9999px);
+  padding: 4px 10px;
+}
+
+/* 물타기 시뮬레이터 카드 (Figma Auto Layout 룩) */
+.ts-dca-sim-box {
+  margin-top: var(--figma-space-3, 12px);
+  padding: var(--figma-space-3, 12px);
+  border-radius: var(--figma-radius-md, 12px);
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1px dashed var(--sem-brand-primary, #1b64da);
+  display: grid;
+  gap: var(--figma-space-2, 8px);
+}
+.ts-dca-sim-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ts-dca-sim-head strong {
+  font-size: var(--figma-text-body-sm, 14px);
+  color: var(--sem-brand-primary, #1b64da);
+}
+.ts-dca-sim-head small {
+  font-size: var(--figma-text-caption, 12px);
+  color: var(--sem-text-secondary, #6b7684);
+}
+.ts-dca-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ts-dca-chip {
+  border: 1px solid var(--sem-line-default, #e5e8eb);
+  background: var(--sem-bg-surface, #ffffff);
+  border-radius: var(--figma-radius-full, 9999px);
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: var(--figma-font-weight-semibold, 600);
+  cursor: pointer;
+  color: var(--sem-text-secondary, #4e5968);
+  transition: all var(--figma-duration-fast, 150ms) var(--figma-ease-standard);
+}
+.ts-dca-chip.active {
+  background: var(--sem-brand-primary, #1b64da);
+  color: #ffffff;
+  border-color: var(--sem-brand-primary, #1b64da);
+  box-shadow: 0 1px 3px rgba(27, 100, 218, 0.3);
+}
+.ts-dca-res-card {
+  padding: 8px 12px;
+  border-radius: var(--figma-radius-sm, 8px);
+  background: var(--sem-bg-surface, #ffffff);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  display: grid;
+  gap: 2px;
+}
+.ts-dca-res-big {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: var(--figma-font-weight-bold, 700);
+  color: var(--sem-text-primary, #191f28);
+}
+.ts-dca-res-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--sem-text-secondary, #6b7684);
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   다크 모드 Figma 오버라이드 완성 (모바일 브라우저 전면 커버)
+   ========================================================================== */
+html[data-zero-theme="dark"] .ts-news-header-wrap h3,
+html[data-theme="dark"] .ts-news-header-wrap h3,
+.dark .ts-news-header-wrap h3 {
+  color: var(--sem-text-primary, #f2f4f6);
+}
+
+html[data-zero-theme="dark"] .ts-news-item,
+html[data-theme="dark"] .ts-news-item,
+.dark .ts-news-item {
+  background: var(--sem-bg-elevated, #1a222c);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-news-title,
+html[data-theme="dark"] .ts-news-title,
+.dark .ts-news-title {
+  color: var(--sem-text-primary, #f2f4f6);
+}
+
+html[data-zero-theme="dark"] .ts-news-meta,
+html[data-theme="dark"] .ts-news-meta,
+.dark .ts-news-meta {
+  color: var(--sem-text-secondary, #8b95a1);
+}
+
+html[data-zero-theme="dark"] .ts-page-pill,
+html[data-theme="dark"] .ts-page-pill,
+.dark .ts-page-pill {
+  background: var(--sem-bg-elevated, #1a222c);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+  color: var(--sem-text-secondary, #8b95a1);
+}
+
+html[data-zero-theme="dark"] .ts-dca-sim-box,
+html[data-theme="dark"] .ts-dca-sim-box,
+.dark .ts-dca-sim-box {
+  background: var(--sem-bg-elevated, #1a222c);
+  border-color: var(--sem-brand-primary, #3182f6);
+}
+
+html[data-zero-theme="dark"] .ts-dca-chip,
+html[data-theme="dark"] .ts-dca-chip,
+.dark .ts-dca-chip {
+  background: var(--sem-bg-surface-subtle, #14171d);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.1));
+  color: var(--sem-text-secondary, #8b95a1);
+}
+
+html[data-zero-theme="dark"] .ts-dca-chip.active,
+html[data-theme="dark"] .ts-dca-chip.active,
+.dark .ts-dca-chip.active {
+  background: var(--sem-brand-primary, #3182f6);
+  color: #000000;
+  border-color: var(--sem-brand-primary, #3182f6);
+}
+
+html[data-zero-theme="dark"] .ts-dca-res-card,
+html[data-theme="dark"] .ts-dca-res-card,
+.dark .ts-dca-res-card {
+  background: var(--sem-bg-surface, #0f141a);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-dca-res-big,
+html[data-theme="dark"] .ts-dca-res-big,
+.dark .ts-dca-res-big {
+  color: var(--sem-text-primary, #f2f4f6);
+}
+
+html[data-zero-theme="dark"] .ts-dca-res-sub,
+html[data-theme="dark"] .ts-dca-res-sub,
+.dark .ts-dca-res-sub {
+  color: var(--sem-text-secondary, #8b95a1);
+}
+
+html[data-zero-theme="dark"] .ts-elevator-card,
+html[data-theme="dark"] .ts-elevator-card,
+.dark .ts-elevator-card {
+  background: var(--sem-bg-elevated, #1a222c);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-stat-item,
+html[data-theme="dark"] .ts-stat-item,
+.dark .ts-stat-item {
+  background: var(--sem-bg-surface, #0f141a);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-stat-val,
+html[data-theme="dark"] .ts-stat-val,
+.dark .ts-stat-val {
+  color: var(--sem-text-primary, #f2f4f6);
+}
+
+html[data-zero-theme="dark"] .ts-building-section,
+html[data-theme="dark"] .ts-building-section,
+.dark .ts-building-section {
+  background: var(--sem-bg-elevated, #1a222c);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-bld-row,
+html[data-theme="dark"] .ts-bld-row,
+.dark .ts-bld-row {
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.06));
+}
+
+html[data-zero-theme="dark"] .ts-bld-row.ts-bld-current,
+html[data-theme="dark"] .ts-bld-row.ts-bld-current,
+.dark .ts-bld-row.ts-bld-current {
+  background: rgba(49, 130, 246, 0.16);
+  border-color: var(--sem-brand-primary, #3182f6);
+}
+
+html[data-zero-theme="dark"] .ts-rescue-section,
+html[data-theme="dark"] .ts-rescue-section,
+.dark .ts-rescue-section {
+  background: var(--sem-bg-elevated, #1a222c);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-rescue-input,
+html[data-theme="dark"] .ts-rescue-input,
+.dark .ts-rescue-input {
+  background: var(--sem-bg-surface, #0f141a);
+  border-color: var(--sem-line-default, rgba(255,255,255,0.15));
+  color: var(--sem-text-primary, #f2f4f6);
+}
+
+html[data-zero-theme="dark"] .ts-result-card,
+html[data-theme="dark"] .ts-result-card,
+.dark .ts-result-card {
+  background: var(--sem-bg-surface, #0f141a);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-community,
+html[data-theme="dark"] .ts-community,
+.dark .ts-community {
+  background: var(--sem-bg-surface, #0f141a);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-post-card,
+html[data-theme="dark"] .ts-post-card,
+.dark .ts-post-card {
+  background: var(--sem-bg-elevated, #1a222c);
+  border-color: var(--sem-line-subtle, rgba(255,255,255,0.08));
+}
+
+html[data-zero-theme="dark"] .ts-post-input,
+html[data-theme="dark"] .ts-post-input,
+.dark .ts-post-input {
+  background: var(--sem-bg-surface, #0f141a);
+  border-color: var(--sem-line-default, rgba(255,255,255,0.15));
+  color: var(--sem-text-primary, #f2f4f6);
+}

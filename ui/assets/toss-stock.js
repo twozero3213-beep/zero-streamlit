@@ -618,14 +618,103 @@
   }
   function paintNews(panel, data) {
     panel.replaceChildren();
-    const section = (title, rows, render, empty) => { const box = make('div', 'ts-news-section'); box.append(make('h3', '', title)); if (!rows.length) box.append(make('p', 'muted-note', empty)); else { const list = make('ul', 'ts-news'); rows.forEach((row) => list.append(render(row))); box.append(list); } return box; };
-    panel.append(section('📰 뉴스', data.news, (row) => { const item = make('li'), link = make('a', 'ts-news-title', row.title); link.href = row.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; item.append(link, make('small', '', row.publisher + ' · ' + kst(row.published_at))); return item; }, data.failed.includes('news') ? '뉴스를 불러오지 못했어요.' : '최근 뉴스가 없어요.'));
+    let newsPage = 0;
+    const newsPageSize = 5;
+
+    const newsBox = make('div', 'ts-news-section');
+    const newsHead = make('div', 'ts-news-header-wrap');
+    newsHead.append(make('h3', '', '📰 뉴스'));
+
+    const newsListContainer = make('div', 'ts-news-container');
+    const newsPageControls = make('div', 'ts-news-pagination');
+
+    const renderNewsList = () => {
+      newsListContainer.replaceChildren();
+      newsPageControls.replaceChildren();
+
+      if (!data.news.length) {
+        newsListContainer.append(make('p', 'muted-note', data.failed.includes('news') ? '뉴스를 불러오지 못했어요.' : '최근 뉴스가 없어요.'));
+        return;
+      }
+
+      const totalPages = Math.ceil(data.news.length / newsPageSize) || 1;
+      newsPage = Math.max(0, Math.min(newsPage, totalPages - 1));
+      const pageRows = data.news.slice(newsPage * newsPageSize, (newsPage + 1) * newsPageSize);
+
+      const list = make('ul', 'ts-news');
+      pageRows.forEach((row) => {
+        const item = make('li', 'ts-news-item');
+        const link = make('a', 'ts-news-title', row.title);
+        link.href = row.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        const meta = make('small', 'ts-news-meta', row.publisher + ' · ' + kst(row.published_at));
+        item.append(link, meta);
+        list.append(item);
+      });
+      newsListContainer.append(list);
+
+      // 5개 단위 페이징 컨트롤 바 (Figma 버튼 토큰 규격)
+      if (totalPages > 1) {
+        const prevBtn = make('button', 'figma-btn figma-btn-secondary figma-btn-sm ts-page-btn', '◀ 이전');
+        prevBtn.type = 'button';
+        prevBtn.disabled = newsPage === 0;
+        prevBtn.addEventListener('click', () => {
+          if (newsPage > 0) {
+            newsPage--;
+            renderNewsList();
+          }
+        });
+
+        const pageIndicator = make('span', 'figma-pill ts-page-pill', (newsPage + 1) + ' / ' + totalPages + ' 페이지');
+
+        const nextBtn = make('button', 'figma-btn figma-btn-secondary figma-btn-sm ts-page-btn', '다음 ▶');
+        nextBtn.type = 'button';
+        nextBtn.disabled = newsPage >= totalPages - 1;
+        nextBtn.addEventListener('click', () => {
+          if (newsPage < totalPages - 1) {
+            newsPage++;
+            renderNewsList();
+          }
+        });
+
+        newsPageControls.append(prevBtn, pageIndicator, nextBtn);
+      }
+    };
+
+    renderNewsList();
+    newsBox.append(newsHead, newsListContainer, newsPageControls);
+    panel.append(newsBox);
+
     if (data.market === 'US') {
-      if (data.filings_url) { const link = make('a', 'secondary-button ts-filings', '🏛️ SEC EDGAR에서 공시 보기'); link.href = data.filings_url; link.target = '_blank'; link.rel = 'noopener noreferrer'; panel.append(link); }
+      if (data.filings_url) {
+        const link = make('a', 'secondary-button ts-filings', '🏛️ SEC EDGAR에서 공시 보기');
+        link.href = data.filings_url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        panel.append(link);
+      }
       panel.append(make('p', 'muted-note', '제목만 모은 목록이에요. 영어 원문 제목이며 번역하지 않았어요. 누르면 기사 출처로 이동해요. 🔄 ' + kst(data.retrieved_at) + ' KST 확인 · 투자 추천이 아니에요.'));
       return;
     }
-    panel.append(section('📋 공시', data.disclosures, (row) => { const item = make('li'); item.append(make('span', 'ts-news-title', row.title), make('small', '', row.source + ' · ' + kst(row.published_at))); return item; }, data.failed.includes('disclosures') ? '공시를 불러오지 못했어요.' : '최근 공시가 없어요.'));
+
+    const discBox = make('div', 'ts-news-section');
+    discBox.append(make('h3', '', '📋 공시'));
+    if (!data.disclosures.length) {
+      discBox.append(make('p', 'muted-note', data.failed.includes('disclosures') ? '공시를 불러오지 못했어요.' : '최근 공시가 없어요.'));
+    } else {
+      const discList = make('ul', 'ts-news');
+      data.disclosures.forEach((row) => {
+        const item = make('li', 'ts-news-item');
+        item.append(
+          make('span', 'ts-news-title', row.title),
+          make('small', 'ts-news-meta', row.source + ' · ' + kst(row.published_at))
+        );
+        discList.append(item);
+      });
+      discBox.append(discList);
+    }
+    panel.append(discBox);
     panel.append(make('p', 'muted-note', '제목만 모은 목록이에요. 기사 본문은 누르면 네이버 뉴스에서 열려요. 🔄 ' + kst(data.retrieved_at) + ' KST 확인 · 투자 추천이 아니에요.'));
   }
   async function loadNews(panel, id) {
