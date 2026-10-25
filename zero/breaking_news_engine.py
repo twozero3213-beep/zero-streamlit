@@ -64,13 +64,18 @@ EXCLUSIVE_PATTERN = re.compile(r"\[단독\]|\[단독입수\]|\[단독포착\]|Ex
 
 
 class BreakingNewsEngine:
-    """24시간 속보 감시 및 공신력 기반 중복 제거 엔진"""
+    """24시간 속보 감시 및 공신력 기반 중복 제거 엔진 (메모리 누수 방지 버퍼 탑재)"""
 
-    def __init__(self, jaccard_threshold: float = 0.25):
+    MAX_BUFFER_LIMIT: int = 500  # 메모리 고갈 방지 최대 버퍼 상한
+    DEFAULT_MAX_OUTPUT: int = 50  # 반환 최대 기사 수
+
+    def __init__(self, jaccard_threshold: float = 0.25, max_output_items: int = 50):
         """
         jaccard_threshold: 두 기사 제목 간의 문자/단어 집합 유사도 임계치 (기본 0.25 이상이면 동일 사건으로 판정)
+        max_output_items: 반환할 최대 기사 수 (메모리 및 네트워크 누수 방지)
         """
         self.jaccard_threshold = jaccard_threshold
+        self.max_output_items = max_output_items
 
     @classmethod
     def clean_title(cls, title: str) -> str:
@@ -194,4 +199,5 @@ class BreakingNewsEngine:
 
         # 4. 전체 선별 기사 정렬 (속보 우선 -> 공신력 순)
         final_selected.sort(key=lambda x: (x.is_breaking, x.authority_score), reverse=True)
-        return final_selected
+        # 메모리 누수 방지: 최대 반환 기사 수(기본 50건)로 엄격 제한
+        return final_selected[:self.max_output_items]

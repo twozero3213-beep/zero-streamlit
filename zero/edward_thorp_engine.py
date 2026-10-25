@@ -145,7 +145,15 @@ class EdwardThorpEngine:
             allocated += w
 
         cash_key = "cash" if "cash" in expected_returns else "liquidity"
-        result[cash_key] = round(max(0.05, 1.0 - allocated), 4)
+        # 부동소수점 오차 누수 원천 차단: 위험자산 할당 합계를 차감하여 정확히 1.0(100.0%) 합계 보장
+        risk_sum = sum(result.values())
+        result[cash_key] = round(max(0.05, 1.0 - risk_sum), 4)
+
+        # 미세 0.0001 반올림 오차 최종 정규화
+        diff = round(1.0 - sum(result.values()), 4)
+        if diff != 0:
+            result[cash_key] = round(result[cash_key] + diff, 4)
+
         return result
 
     def evaluate_rebalance_hurdle(

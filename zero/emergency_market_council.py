@@ -56,11 +56,16 @@ class EmergencyMarketMonitor:
         is_surge = False
 
         for idx in indices:
-            if abs(idx.change_percent) >= cls.ALERT_THRESHOLD_PERCENT:
+            try:
+                chg = float(idx.change_percent if idx.change_percent is not None else 0.0)
+            except (ValueError, TypeError):
+                chg = 0.0
+
+            if abs(chg) >= cls.ALERT_THRESHOLD_PERCENT:
                 triggered.append(idx)
-                if idx.change_percent <= -cls.ALERT_THRESHOLD_PERCENT:
+                if chg <= -cls.ALERT_THRESHOLD_PERCENT:
                     is_drop = True
-                elif idx.change_percent >= cls.ALERT_THRESHOLD_PERCENT:
+                elif chg >= cls.ALERT_THRESHOLD_PERCENT:
                     is_surge = True
 
         alert_level = "NORMAL"
