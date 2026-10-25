@@ -437,6 +437,26 @@ html[data-zero-theme="dark"] .ts-post-input:focus { border-color: #6ea8ff; backg
 .ts-res-waiting { background: #fff9e6; border: 1px solid #ffe28a; }
 .ts-res-profit { background: #eefbf3; border: 1px solid #b6efcb; }
 .ts-res-boarding { background: #eef5ff; border: 1px solid #bad6ff; }
+/* 물타면 몇 층이지? (물타기 층수 하강 시뮬레이터) 스타일 */
+.ts-dca-sim-box { margin-top: 10px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.7); border: 1px dashed var(--line, #e5e8eb); display: grid; gap: 8px; }
+.ts-dca-sim-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px; }
+.ts-dca-sim-head strong { font-size: 13.5px; color: #191f28; font-weight: 700; }
+.ts-dca-sim-head small { font-size: 12px; color: #6b7684; }
+.ts-dca-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.ts-dca-chip { padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line, #e5e8eb); background: #ffffff; color: #333d4b; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.ts-dca-chip.active { background: #3182f6; color: #ffffff; border-color: #3182f6; }
+.ts-dca-res-card { padding: 8px 10px; border-radius: 8px; background: rgba(49, 130, 246, 0.08); border: 1px solid rgba(49, 130, 246, 0.2); display: grid; gap: 2px; }
+.ts-dca-res-big { margin: 0; font-size: 14px; font-weight: 800; color: #1b64da; }
+.ts-dca-res-sub { margin: 0; font-size: 12px; color: #4e5968; line-height: 1.4; }
+
+html[data-zero-theme="dark"] .ts-dca-sim-box { background: rgba(0,0,0,0.25); border-color: #2b2f37; }
+html[data-zero-theme="dark"] .ts-dca-sim-head strong { color: #e6e9ee; }
+html[data-zero-theme="dark"] .ts-dca-chip { background: #22262e; border-color: #2b2f37; color: #c4cdd8; }
+html[data-zero-theme="dark"] .ts-dca-chip.active { background: #6ea8ff; color: #000; border-color: #6ea8ff; }
+html[data-zero-theme="dark"] .ts-dca-res-card { background: rgba(110, 168, 255, 0.12); border-color: rgba(110, 168, 255, 0.25); }
+html[data-zero-theme="dark"] .ts-dca-res-big { color: #6ea8ff; }
+html[data-zero-theme="dark"] .ts-dca-res-sub { color: #a6b2c2; }
+
 .ts-res-header { display: flex; justify-content: space-between; align-items: center; }
 .ts-res-badge { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,0.06); }
 .ts-res-distance { margin: 0; font-size: 14px; font-weight: 700; color: #191f28; }

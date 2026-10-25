@@ -455,6 +455,52 @@
           humorousQuote = '🤝 구조대원이 엘리베이터 문을 두드리고 있습니다! 탈출 준비를 하세요!';
         }
         resBody.append(dist, make('p', 'ts-res-quote', humorousQuote));
+
+        // ── 카카오증권 핵심 재미·실용: 물타면 몇 층? (물타기 층수 하강 시뮬레이터) ──
+        const dcaSim = make('div', 'ts-dca-sim-box');
+        const dcaHead = make('div', 'ts-dca-sim-head');
+        dcaHead.append(
+          make('strong', '', '💧 여기서 물타면 내 층수는?'),
+          make('small', '', '현재가(' + currentFloor + '층) 기준 추가 매수 시뮬레이션')
+        );
+        const dcaChips = make('div', 'ts-dca-chips');
+        const dcaResult = make('div', 'ts-dca-result');
+        
+        let existingShares = 10; // 기본 가정 보유량
+        const addOptions = isUS ? [1, 2, 5, 10, 20] : [1, 5, 10, 30, 50];
+        let selectedAdd = addOptions[2]; // 기본 10주
+
+        const calcDca = (addShares) => {
+          selectedAdd = addShares;
+          dcaChips.querySelectorAll('button').forEach((b, idx) => {
+            b.classList.toggle('active', addOptions[idx] === addShares);
+          });
+          const newAvg = Math.round((myBuyPrice * existingShares + curPrice * addShares) / (existingShares + addShares));
+          const newFloor = Math.max(1, Math.floor(newAvg / floorUnit));
+          const droppedFloors = myFloor - newFloor;
+          const newDiffWon = newAvg - curPrice;
+          const newDiffPct = (newDiffWon / (curPrice || 1)) * 100;
+          const requiredDropCost = addShares * curPrice;
+
+          dcaResult.replaceChildren();
+          const resBadge = make('div', 'ts-dca-res-card');
+          resBadge.append(
+            make('p', 'ts-dca-res-big', '🏢 ' + myFloor + '층 ➔ ' + newFloor + '층 (' + (droppedFloors > 0 ? droppedFloors + '개 층 급강하 🛟' : '현재층 유지') + ')'),
+            make('p', 'ts-dca-res-sub', '+' + addShares + '주 물타기 시(투입금 ' + money(requiredDropCost) + '): 새 평단 ' + money(newAvg) + ' · 구조대 거리 ' + diffPct.toFixed(1) + '% ➔ ' + newDiffPct.toFixed(1) + '%로 단축!')
+          );
+          dcaResult.append(resBadge);
+        };
+
+        addOptions.forEach((cnt) => {
+          const btn = make('button', 'ts-dca-chip' + (cnt === selectedAdd ? ' active' : ''), '+' + cnt + '주');
+          btn.type = 'button';
+          btn.addEventListener('click', () => calcDca(cnt));
+          dcaChips.append(btn);
+        });
+
+        dcaSim.append(dcaHead, dcaChips, dcaResult);
+        calcDca(selectedAdd);
+        resBody.append(dcaSim);
       } else if (diffWon === 0) {
         resCard.classList.add('ts-res-boarding');
         resBody.append(
