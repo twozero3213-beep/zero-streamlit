@@ -102,7 +102,7 @@
     const heading = make('div', 'th-card-heading');
     heading.append(
       make('h2', '', '🏢 내 주식 몇 층이지? · 구조대 현황'),
-      make('span', 'badge-kakao-floor', '카카오증권')
+      make('span', 'badge-kakao-floor', '층수 레이더')
     );
     heading.id = targetElement === floorRadar ? 'th-floor-title' : 'portfolio-floor-title';
 

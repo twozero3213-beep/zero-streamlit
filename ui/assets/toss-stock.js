@@ -233,7 +233,7 @@
     const head = make('div', 'ts-acc-head');
     head.append(
       make('h3', '', '🌱 ' + data.name + ' 주식 모으기'),
-      make('small', '', '토스증권 스타일 적립식 투자 플랜')
+      make('small', '', '적립식 분할투자 플랜')
     );
 
     let period = 'week';
@@ -346,7 +346,7 @@
     const head = make('div', 'ts-floor-head');
     head.append(
       make('h3', '', '🏢 ' + data.name + ' 몇 층이지?'),
-      make('small', '', '카카오증권 스타일 주주 평단가 & 구조대 현황')
+      make('small', '', '주주 평균단가 층수 & 구조대 현황')
     );
 
     // 현재 엘리베이터 상태 카드
