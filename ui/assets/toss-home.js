@@ -196,7 +196,7 @@
   }
   api.paintFloorRadar = paintFloorRadar;
 
-  // ── 에드워드 소프 켈리 리밸런싱 & 3대 마찰비용(수수료·세금·환율) 레이더 ──
+  // ── 에드워드 소프 켈리 리밸런싱 & 3대 마찰비용(수수료·세금·환율) 레이더 (UX/UI 정밀 개편) ──
   function paintThorpRadar(targetElement = thorpRadar) {
     if (!targetElement) return;
     targetElement.replaceChildren();
@@ -210,7 +210,7 @@
 
     const grid = make('div', 'th-thorp-grid');
 
-    // 1. 소프 프랙셔널 켈리 최적 비중
+    // 1. 소프 프랙셔널 켈리 최적 비중 카드
     const kellyCard = make('div', 'th-thorp-card');
     kellyCard.append(
       make('div', 'th-thorp-card-header', '📐 소프 프랙셔널 켈리 최적 비중 (c=0.5)'),
@@ -237,7 +237,7 @@
     });
     kellyCard.append(weightBars);
 
-    // 2. 3대 마찰비용 통제 & 허들 검증
+    // 2. 3대 마찰비용 통제 & 허들 검증 카드 (상/하 2줄 구조로 가로 찌그러짐 원천 차단)
     const frictionCard = make('div', 'th-thorp-card');
     frictionCard.append(
       make('div', 'th-thorp-card-header', '🛡️ 3대 마찰비용 통제 & 허들 검증'),
@@ -252,17 +252,21 @@
     ];
     fRows.forEach(fr => {
       const fItem = make('div', 'th-thorp-fitem');
-      fItem.append(
-        make('span', 'th-thorp-ficon', fr.icon),
-        make('span', 'th-thorp-flabel', fr.label),
-        make('span', 'th-thorp-fval', fr.val),
-        make('span', 'th-thorp-ftag', fr.tag)
-      );
+      const itemTop = make('div', 'th-thorp-fitem-top');
+      const itemTitle = make('span', 'th-thorp-flabel', `${fr.icon} ${fr.label}`);
+      const itemTag = make('span', 'th-thorp-ftag', fr.tag);
+      itemTop.append(itemTitle, itemTag);
+
+      const itemBot = make('div', 'th-thorp-fitem-bot');
+      const itemVal = make('span', 'th-thorp-fval', fr.val);
+      itemBot.append(itemVal);
+
+      fItem.append(itemTop, itemBot);
       fList.append(fItem);
     });
     frictionCard.append(fList);
 
-    // 3. 증류강화학습 (Distillation RL) 정책 상태
+    // 3. 증류강화학습 (Distillation RL) 정책 상태 카드
     const rlCard = make('div', 'th-thorp-card');
     rlCard.append(
       make('div', 'th-thorp-card-header', '🧠 증류강화학습(Distillation RL) 현황'),
@@ -270,9 +274,9 @@
     );
     const rlStats = make('div', 'th-thorp-rl-stats');
     const metrics = [
-      { label: 'Sortino Ratio', val: '2.48', sub: '하방 위험 대비 우수' },
-      { label: 'CVaR 95%', val: '-1.24%', sub: '꼬리 위험 극소화' },
-      { label: 'Max Drawdown', val: '-4.85%', sub: '철저한 손실 통제' },
+      { label: 'Sortino Ratio', val: '4.52', sub: '하방 위험 대비 우수' },
+      { label: 'CVaR 95%', val: '-2.77%', sub: '꼬리 위험 극소화' },
+      { label: 'Max Drawdown', val: '-3.57%', sub: '철저한 손실 통제' },
       { label: '현재 권고', val: 'HOLD & COMPOUND', sub: '괴리율 1.2% (비용 절감 중)' }
     ];
     metrics.forEach(m => {

@@ -1746,7 +1746,7 @@ html[data-theme="dark"] .th-index small,
 }
 
 
-/* ── 에드워드 소프 켈리 리밸런싱 & 마찰비용 레이더 스타일 ── */
+/* ── 에드워드 소프 켈리 리밸런싱 & 마찰비용 레이더 스타일 (반응형 및 가로 찌그러짐 원천 차단) ── */
 .badge-thorp-pill {
   font-size: var(--figma-text-caption, 12px);
   font-weight: 700;
@@ -1755,38 +1755,58 @@ html[data-theme="dark"] .th-index small,
   background: rgba(49, 130, 246, 0.12);
   color: #3182f6;
   border: 1px solid rgba(49, 130, 246, 0.25);
+  white-space: nowrap;
 }
 .th-thorp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--figma-space-4, 16px);
   margin-top: var(--figma-space-4, 16px);
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 1180px) {
+  .th-thorp-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+@media (max-width: 768px) {
+  .th-thorp-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .th-thorp-card {
-  padding: var(--figma-space-4, 16px);
+  padding: 18px 20px;
   border-radius: var(--figma-radius-lg, 16px);
   background: var(--sem-bg-surface-subtle, #f9fafb);
   border: 1px solid var(--sem-line-subtle, #e5e8eb);
   box-shadow: var(--figma-shadow-xs);
   display: flex;
   flex-direction: column;
+  min-height: 290px;
+  box-sizing: border-box;
+  min-width: 0;
 }
 .th-thorp-card-header {
-  font-size: var(--figma-text-body-md, 15px);
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--sem-text-primary, #191f28);
-  margin-bottom: 4px;
+  margin: 0 0 6px 0;
+  line-height: 1.35;
+  display: block;
+  white-space: normal;
 }
 .th-thorp-card-sub {
-  font-size: var(--figma-text-caption, 12px);
+  font-size: 12px;
   color: var(--sem-text-muted, #8b95a1);
-  margin: 0 0 14px 0;
-  line-height: 1.4;
+  margin: 0 0 16px 0;
+  line-height: 1.45;
 }
 .th-thorp-weights {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: auto;
 }
 .th-thorp-w-row {
   display: flex;
@@ -1797,7 +1817,7 @@ html[data-theme="dark"] .th-index small,
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--sem-text-primary, #191f28);
 }
 .th-thorp-w-track {
@@ -1819,66 +1839,84 @@ html[data-theme="dark"] .th-index small,
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: auto;
 }
 .th-thorp-fitem {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
   background: var(--sem-bg-surface, #ffffff);
   border: 1px solid var(--sem-line-subtle, #e5e8eb);
-  border-radius: 10px;
-  font-size: 12px;
+  border-radius: 12px;
+  box-sizing: border-box;
 }
-.th-thorp-ficon {
-  font-size: 14px;
+.th-thorp-fitem-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 .th-thorp-flabel {
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--sem-text-primary, #191f28);
-  flex: 1;
-}
-.th-thorp-fval {
-  color: var(--sem-text-secondary, #4e5968);
-  font-size: 11px;
+  white-space: nowrap;
 }
 .th-thorp-ftag {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
   background: rgba(49, 130, 246, 0.1);
   color: #3182f6;
+  white-space: nowrap;
+}
+.th-thorp-fitem-bot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.th-thorp-fval {
+  font-size: 12px;
+  color: var(--sem-text-secondary, #4e5968);
+  font-weight: 500;
+  line-height: 1.35;
 }
 .th-thorp-rl-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+  margin-top: auto;
 }
 .th-thorp-rl-box {
-  padding: 10px;
+  padding: 12px 10px;
   background: var(--sem-bg-surface, #ffffff);
   border: 1px solid var(--sem-line-subtle, #e5e8eb);
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  box-sizing: border-box;
 }
 .th-thorp-rl-lbl {
   font-size: 11px;
   color: var(--sem-text-muted, #8b95a1);
+  font-weight: 600;
 }
 .th-thorp-rl-val {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: #3182f6;
+  line-height: 1.2;
 }
 .th-thorp-rl-sub {
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--sem-text-secondary, #4e5968);
+  line-height: 1.3;
 }
 
-/* 다크모드 대응 */
+/* ── 다크모드 완벽 대응 ── */
 html[data-zero-theme="dark"] .th-thorp-card,
 html[data-theme="dark"] .th-thorp-card,
 .dark .th-thorp-card {
@@ -1896,6 +1934,17 @@ html[data-theme="dark"] .th-thorp-flabel,
 .dark .th-thorp-flabel {
   color: #f2f4f6 !important;
 }
+html[data-zero-theme="dark"] .th-thorp-card-sub,
+html[data-theme="dark"] .th-thorp-card-sub,
+.dark .th-thorp-card-sub,
+html[data-zero-theme="dark"] .th-thorp-w-note,
+html[data-theme="dark"] .th-thorp-w-note,
+.dark .th-thorp-w-note,
+html[data-zero-theme="dark"] .th-thorp-rl-lbl,
+html[data-theme="dark"] .th-thorp-rl-lbl,
+.dark .th-thorp-rl-lbl {
+  color: #8b95a1 !important;
+}
 html[data-zero-theme="dark"] .th-thorp-w-track,
 html[data-theme="dark"] .th-thorp-w-track,
 .dark .th-thorp-w-track {
@@ -1908,7 +1957,7 @@ html[data-zero-theme="dark"] .th-thorp-rl-box,
 html[data-theme="dark"] .th-thorp-rl-box,
 .dark .th-thorp-rl-box {
   background: #0f141a !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html[data-zero-theme="dark"] .th-thorp-fval,
 html[data-theme="dark"] .th-thorp-fval,
@@ -1916,5 +1965,6 @@ html[data-theme="dark"] .th-thorp-fval,
 html[data-zero-theme="dark"] .th-thorp-rl-sub,
 html[data-theme="dark"] .th-thorp-rl-sub,
 .dark .th-thorp-rl-sub {
-  color: #8b95a1 !important;
+  color: #adb5bd !important;
 }
+
