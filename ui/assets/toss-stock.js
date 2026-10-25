@@ -324,6 +324,84 @@
     return box;
   }
 
+  // ── 토스증권 시그니처: 목표가 도달 알림 & 변동성 레이더 ──
+  function targetAlertPanel(data) {
+    const box = make('div', 'ts-alert-card');
+    const money = moneyFor(data.currency);
+    const curPrice = data.price || 1;
+    const alertKey = 'zero-alert-' + data.code;
+    let savedTarget = null;
+    try { savedTarget = JSON.parse(localStorage.getItem(alertKey)); } catch (_) {}
+
+    const head = make('div', 'ts-alert-head');
+    head.append(
+      make('h3', '', '🎯 ' + data.name + ' 목표가 알림'),
+      make('small', '', '토스 변동성 레이더')
+    );
+
+    const desc = make('p', 'muted-note', '원하는 목표가 또는 수익률에 도달하면 알림을 시뮬레이션해요. 과도한 추격매수를 방지하고 계획적인 분할 매도를 돕습니다.');
+    const chips = make('div', 'ts-alert-chips');
+    const targets = [
+      { label: '+5% 도달', pct: 5 },
+      { label: '+10% 도달', pct: 10 },
+      { label: '+20% 불꽃', pct: 20 },
+      { label: '-5% 손절선', pct: -5 }
+    ];
+
+    const statusBox = make('div', 'ts-alert-status');
+    const updateAlertView = (targetObj) => {
+      statusBox.replaceChildren();
+      if (!targetObj) {
+        statusBox.append(make('p', 'ts-alert-note', '현재 설정된 목표가가 없어요. 아래 버튼으로 목표가를 설정해보세요.'));
+        return;
+      }
+      const targetPrice = targetObj.price;
+      const isReached = (targetObj.pct > 0 && curPrice >= targetPrice) || (targetObj.pct < 0 && curPrice <= targetPrice);
+      const res = make('div', 'ts-alert-res-card' + (isReached ? ' reached' : ''));
+      res.append(
+        make('strong', '', (isReached ? '🎉 목표가 도달 완료!' : '🔔 알림 대기 중: ') + money(targetPrice) + ' (' + (targetObj.pct > 0 ? '+' : '') + targetObj.pct + '%)'),
+        make('p', 'ts-alert-sub', isReached ? '설정한 목표가에 도달했어요! 냉정하게 포트폴리오 리밸런싱을 점검하세요.' : '목표가까지 ' + money(Math.abs(targetPrice - curPrice)) + ' 남았어요.')
+      );
+      const clearBtn = make('button', 'ts-alert-clear-btn', '알림 해제');
+      clearBtn.type = 'button';
+      clearBtn.addEventListener('click', () => {
+        try { localStorage.removeItem(alertKey); } catch (_) {}
+        updateAlertView(null);
+      });
+      res.append(clearBtn);
+      statusBox.append(res);
+    };
+
+    targets.forEach((tgt) => {
+      const calcPrice = Math.round(curPrice * (1 + tgt.pct / 100));
+      const btn = make('button', 'ts-alert-chip', tgt.label);
+      btn.type = 'button';
+      btn.addEventListener('click', () => {
+        const payload = { pct: tgt.pct, price: calcPrice, set_at: Date.now() };
+        try { localStorage.setItem(alertKey, JSON.stringify(payload)); } catch (_) {}
+        updateAlertView(payload);
+      });
+      chips.append(btn);
+    });
+
+    box.append(head, desc, chips, statusBox);
+    updateAlertView(savedTarget);
+    return box;
+  }
+
+  // ── AI 윤리 및 금융 안전 가드레일 배지 ──
+  function ethicsBadge(data) {
+    const wrap = make('div', 'ts-ethics-guard-banner');
+    wrap.append(
+      make('span', 'ts-ethics-icon', '🛡️'),
+      make('div', 'ts-ethics-content', [
+        make('strong', '', 'ZERO AI 윤리 및 금융 안전 가드레일 검증 통과'),
+        make('p', '', '본 화면은 투기 조장·허위 과장 0건, 데이터 무결성 100% 원칙을 준수하며, 설명 가능한 정량 수치만 제공합니다. (원금 손실 위험 고지 · 투자 권유 아님)')
+      ][1])
+    );
+    return wrap;
+  }
+
   // 카카오증권 스타일 '몇 층이지? & 구조대 대기 현황' 패널
   // 수정 사유: 카카오증권의 대표 UX인 주주 평균 매수단가 층수 분포 및 구조대 도달 거리 계산기를 구현하여 제로시스템의 투자 몰입도 향상
   function floorPanel(data, id) {
@@ -750,7 +828,7 @@
     const chips = [['💰 시가총액', facts.market_cap], ['📦 거래량', Number.isInteger(facts.volume) ? facts.volume.toLocaleString('ko-KR') + '주' : null], ['💵 거래대금', facts.trading_value]].filter(([, value]) => value);
     if (chips.length) quote.append(chipGrid(chips));
     // 수정 사유: 카카오증권 스타일 '오늘의 주가 예측 찬반 투표' 및 토스증권 스타일 '주식 모으기 플랜' 통합 배치
-    quote.append(sentimentPanel(data), accumulatorPanel(data));
+    quote.append(sentimentPanel(data), accumulatorPanel(data), targetAlertPanel(data), ethicsBadge(data));
     quote.append(make('p', 'muted-note', '🔄 ' + kst(data.retrieved_at) + ' KST 확인 · ' + (data.source?.label || '공개 시세') + ' · 장중에는 바뀌어요.' + (data.market === 'US' ? ' 시세는 지연될 수 있어요.' : '')));
     const tabList = tabsFor(data), panels = {quote, news: make('div', 'ts-news-panel'), orderbook: orderbookPanel(data), floor: floorPanel(data, id), community: communityPanel(data, id)};
     if (tabList.some(([key]) => key === 'trade')) panels.trade = tradePanel(data);

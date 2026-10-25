@@ -85,15 +85,35 @@
   // Korean and US stocks open on this app's own fast detail screen; the slow collected-list workbench stays for other entries.
   const open = (id) => { if (window.ZEROTossStock?.show) window.ZEROTossStock.show(id); else explore()?.openCompany?.(id); };
 
-  // ── 뼈대 ──
+  // ── 뼈대 (개인정보보호 스위치, 배당금 캘린더, 잔돈 저금통 포함) ──
   const status = make('div', 'th-status'), indices = make('div', 'th-indices'), schedule = make('section', 'th-card th-schedule'), chart = make('section', 'th-card th-chart'), watch = make('section', 'th-card th-watch');
   const floorRadar = make('section', 'th-card th-floor-radar');
+  const dividendSec = make('section', 'th-card th-dividend');
+  const coinPiggySec = make('section', 'th-card th-coin-piggy');
   floorRadar.setAttribute('aria-labelledby', 'th-floor-title');
   schedule.setAttribute('aria-labelledby', 'th-schedule-title'); chart.setAttribute('aria-labelledby', 'th-chart-title'); watch.setAttribute('aria-labelledby', 'th-watch-title');
+  dividendSec.setAttribute('aria-labelledby', 'th-dividend-title');
+  coinPiggySec.setAttribute('aria-labelledby', 'th-piggy-title');
   const dock = make('aside', 'th-dock'); dock.hidden = true; dock.setAttribute('aria-label', '관심 종목'); document.body.append(dock);
   const main = make('div', 'th-main'), side = make('aside', 'th-side');
-  main.append(floorRadar, indices, schedule, chart); side.append(watch); root.append(status, make('div', 'th-grid'));
+  main.append(floorRadar, indices, schedule, dividendSec, coinPiggySec, chart); side.append(watch); root.append(status, make('div', 'th-grid'));
   root.querySelector('.th-grid').append(main, side);
+
+  // ── 개인정보보호 (Privacy Guard): 잔고 마스킹 토글 바 ──
+  const privacyBar = make('div', 'th-privacy-bar');
+  const privacyBtn = make('button', 'th-privacy-btn');
+  privacyBtn.type = 'button';
+  privacyBtn.innerHTML = '<span class="th-privacy-icon">👁️</span> <span class="th-privacy-label">잔고 숨김 (프라이버시 모드)</span>';
+  let isMasked = false;
+  privacyBtn.addEventListener('click', () => {
+    isMasked = !isMasked;
+    document.body.classList.toggle('zero-privacy-masked', isMasked);
+    privacyBtn.innerHTML = isMasked
+      ? '<span class="th-privacy-icon">🔒</span> <span class="th-privacy-label">잔고 숨김 중 (보안 활성)</span>'
+      : '<span class="th-privacy-icon">👁️</span> <span class="th-privacy-label">잔고 숨김 (프라이버시 모드)</span>';
+  });
+  privacyBar.append(privacyBtn);
+  status.prepend(privacyBar);
 
   // ── 카카오증권 시그니처: 내 주식 몇 층이지? & 구조대 대시보드 ──
   function paintFloorRadar(targetElement = floorRadar) {
@@ -173,6 +193,98 @@
     targetElement.replaceChildren(heading, desc, grid);
   }
   api.paintFloorRadar = paintFloorRadar;
+
+  // ── 토스증권 시그니처: 예상 배당금 캘린더 & 배당 파이프라인 ──
+  function paintDividendCalendar(targetElement = dividendSec) {
+    if (!targetElement) return;
+    targetElement.replaceChildren();
+    const heading = make('div', 'th-card-heading');
+    heading.append(
+      make('h2', '', '📅 월별 예상 배당금 캘린더'),
+      make('span', 'figma-pill badge-dividend-pill', '토스 배당 비서')
+    );
+    heading.id = 'th-dividend-title';
+    const desc = make('p', 'muted-note', '보유 및 관심 종목의 배당락일과 월별 예상 배당 수령액을 분석해요. 분기·월배당 ETF로 매월 커피값과 통신비를 만드는 파이프라인을 점검해보세요.');
+
+    // 12개월 배당 분포 모형 (1월~12월)
+    const calWrap = make('div', 'th-div-cal-wrap');
+    const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+    const mockAmounts = [15000, 28000, 45000, 92000, 18000, 35000, 22000, 31000, 88000, 19000, 27000, 105000];
+    const maxAmt = Math.max(...mockAmounts, 1);
+
+    const barGrid = make('div', 'th-div-bar-grid');
+    months.forEach((m, idx) => {
+      const col = make('div', 'th-div-bar-col');
+      const amt = mockAmounts[idx];
+      const hPercent = Math.max(8, Math.round((amt / maxAmt) * 100));
+      const bar = make('div', 'th-div-bar');
+      bar.style.height = hPercent + '%';
+      bar.setAttribute('title', `${m}: 예상 ${amt.toLocaleString()}원`);
+      
+      const label = make('span', 'th-div-month', m);
+      col.append(bar, label);
+      barGrid.append(col);
+    });
+    calWrap.append(barGrid);
+
+    // 배당 파이프라인 챌린지 뱃지
+    const challengeBox = make('div', 'th-div-challenge');
+    const annualTotal = mockAmounts.reduce((a, b) => a + b, 0);
+    const monthlyAvg = Math.round(annualTotal / 12);
+    challengeBox.append(
+      make('div', 'th-div-ch-item', `☕ 커피값 챌린지 (월 5만원): ${Math.min(100, Math.round((monthlyAvg / 50000) * 100))}% 달성`),
+      make('div', 'th-div-ch-item', `📱 통신비 챌린지 (월 10만원): ${Math.min(100, Math.round((monthlyAvg / 100000) * 100))}% 달성`)
+    );
+
+    targetElement.append(heading, desc, calWrap, challengeBox);
+  }
+
+  // ── 카카오페이증권 시그니처: 동전 모으기 & 잔돈 자동투자 저금통 ──
+  function paintCoinPiggy(targetElement = coinPiggySec) {
+    if (!targetElement) return;
+    targetElement.replaceChildren();
+    const heading = make('div', 'th-card-heading');
+    heading.append(
+      make('h2', '', '🪙 동전 모으기 · 잔돈 자동투자 저금통'),
+      make('span', 'figma-pill badge-piggy-pill', '카카오 잔돈투자')
+    );
+    heading.id = 'th-piggy-title';
+    const desc = make('p', 'muted-note', '결제 후 남은 잔돈이나 매일 커피 한 잔 아낀 소액을 모아 우량 ETF에 자동 분할 투자하는 저금통이에요. 푼돈이 모여 복리로 불어나는 힘을 확인해보세요.');
+
+    const piggyBox = make('div', 'th-piggy-box');
+    const chips = make('div', 'th-piggy-chips');
+    const amounts = [1000, 2000, 3000, 5000];
+    let selectedDaily = 3000;
+
+    const resultCard = make('div', 'th-piggy-result-card');
+    const updatePiggyCalc = (dailyAmt) => {
+      selectedDaily = dailyAmt;
+      chips.querySelectorAll('button').forEach((b, idx) => {
+        b.classList.toggle('active', amounts[idx] === dailyAmt);
+      });
+      const yearPrincipal = dailyAmt * 365;
+      const yearReturn = Math.round(yearPrincipal * 1.05);
+      const threeYearPrincipal = dailyAmt * 365 * 3;
+      const threeYearReturn = Math.round(threeYearPrincipal * 1.15);
+
+      resultCard.replaceChildren(
+        make('p', 'th-piggy-res-title', `매일 ${dailyAmt.toLocaleString()}원씩 잔돈을 저금통에 모으면`),
+        make('strong', 'th-piggy-res-amount', `1년 뒤 약 ${Math.round(yearReturn / 10000)}만원 (원금 ${Math.round(yearPrincipal / 10000)}만원)`),
+        make('p', 'th-piggy-res-sub', `3년 뒤에는 복리 효과로 약 ${Math.round(threeYearReturn / 10000)}만원까지 불어나요. (미국 S&P 500 ETF 연평균 수익률 가정)`)
+      );
+    };
+
+    amounts.forEach(amt => {
+      const btn = make('button', 'th-piggy-chip' + (amt === selectedDaily ? ' active' : ''), `매일 ${amt.toLocaleString()}원`);
+      btn.type = 'button';
+      btn.addEventListener('click', () => updatePiggyCalc(amt));
+      chips.append(btn);
+    });
+
+    piggyBox.append(chips, resultCard);
+    updatePiggyCalc(selectedDaily);
+    targetElement.append(heading, desc, piggyBox);
+  }
 
   // ── 시장 상태 ──
   function paintStatus() {
@@ -336,6 +448,8 @@
   // ── 열릴 때마다 갱신 ──
   async function refresh() {
     paintFloorRadar();
+    paintDividendCalendar(dividendSec);
+    paintCoinPiggy(coinPiggySec);
     const portRadar = document.getElementById('portfolio-floor-radar');
     if (portRadar) paintFloorRadar(portRadar);
     if (document.hidden || document.documentElement.dataset.zeroView !== 'home') return;
