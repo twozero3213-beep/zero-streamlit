@@ -1744,3 +1744,177 @@ html[data-theme="dark"] .th-index small,
 .dark .th-index small {
   color: #8b95a1 !important;
 }
+
+
+/* ── 에드워드 소프 켈리 리밸런싱 & 마찰비용 레이더 스타일 ── */
+.badge-thorp-pill {
+  font-size: var(--figma-text-caption, 12px);
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--figma-radius-full, 9999px);
+  background: rgba(49, 130, 246, 0.12);
+  color: #3182f6;
+  border: 1px solid rgba(49, 130, 246, 0.25);
+}
+.th-thorp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--figma-space-4, 16px);
+  margin-top: var(--figma-space-4, 16px);
+}
+.th-thorp-card {
+  padding: var(--figma-space-4, 16px);
+  border-radius: var(--figma-radius-lg, 16px);
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  box-shadow: var(--figma-shadow-xs);
+  display: flex;
+  flex-direction: column;
+}
+.th-thorp-card-header {
+  font-size: var(--figma-text-body-md, 15px);
+  font-weight: 700;
+  color: var(--sem-text-primary, #191f28);
+  margin-bottom: 4px;
+}
+.th-thorp-card-sub {
+  font-size: var(--figma-text-caption, 12px);
+  color: var(--sem-text-muted, #8b95a1);
+  margin: 0 0 14px 0;
+  line-height: 1.4;
+}
+.th-thorp-weights {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.th-thorp-w-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.th-thorp-w-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sem-text-primary, #191f28);
+}
+.th-thorp-w-track {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.th-thorp-w-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+.th-thorp-w-note {
+  font-size: 11px;
+  color: var(--sem-text-muted, #8b95a1);
+}
+.th-thorp-flist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.th-thorp-fitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--sem-bg-surface, #ffffff);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  border-radius: 10px;
+  font-size: 12px;
+}
+.th-thorp-ficon {
+  font-size: 14px;
+}
+.th-thorp-flabel {
+  font-weight: 600;
+  color: var(--sem-text-primary, #191f28);
+  flex: 1;
+}
+.th-thorp-fval {
+  color: var(--sem-text-secondary, #4e5968);
+  font-size: 11px;
+}
+.th-thorp-ftag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(49, 130, 246, 0.1);
+  color: #3182f6;
+}
+.th-thorp-rl-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.th-thorp-rl-box {
+  padding: 10px;
+  background: var(--sem-bg-surface, #ffffff);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.th-thorp-rl-lbl {
+  font-size: 11px;
+  color: var(--sem-text-muted, #8b95a1);
+}
+.th-thorp-rl-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: #3182f6;
+}
+.th-thorp-rl-sub {
+  font-size: 10px;
+  color: var(--sem-text-secondary, #4e5968);
+}
+
+/* 다크모드 대응 */
+html[data-zero-theme="dark"] .th-thorp-card,
+html[data-theme="dark"] .th-thorp-card,
+.dark .th-thorp-card {
+  background: #141b24 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .th-thorp-card-header,
+html[data-theme="dark"] .th-thorp-card-header,
+.dark .th-thorp-card-header,
+html[data-zero-theme="dark"] .th-thorp-w-top,
+html[data-theme="dark"] .th-thorp-w-top,
+.dark .th-thorp-w-top,
+html[data-zero-theme="dark"] .th-thorp-flabel,
+html[data-theme="dark"] .th-thorp-flabel,
+.dark .th-thorp-flabel {
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-thorp-w-track,
+html[data-theme="dark"] .th-thorp-w-track,
+.dark .th-thorp-w-track {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .th-thorp-fitem,
+html[data-theme="dark"] .th-thorp-fitem,
+.dark .th-thorp-fitem,
+html[data-zero-theme="dark"] .th-thorp-rl-box,
+html[data-theme="dark"] .th-thorp-rl-box,
+.dark .th-thorp-rl-box {
+  background: #0f141a !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html[data-zero-theme="dark"] .th-thorp-fval,
+html[data-theme="dark"] .th-thorp-fval,
+.dark .th-thorp-fval,
+html[data-zero-theme="dark"] .th-thorp-rl-sub,
+html[data-theme="dark"] .th-thorp-rl-sub,
+.dark .th-thorp-rl-sub {
+  color: #8b95a1 !important;
+}
