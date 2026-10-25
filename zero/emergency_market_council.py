@@ -137,7 +137,7 @@ class VirtualCouncil45Emergency:
             ))
 
         # 총괄 디렉터 단일 결론 도출
-        idx_names = ", ".join([f"{idx.name}({idx.change_percent:+.2f}%)" for idx in triggered_indices])
+        idx_names = ", ".join([f"{idx.name}({idx.change_percent:+.2f}%)" for idx in triggered_indices]) if triggered_indices else "주요 시장 지수"
         
         if is_drop:
             decision = (
@@ -259,7 +259,8 @@ class FreeNotificationDispatcher:
         Gmail 무료 SMTP(포트 587) 또는 무료 Google API 클라이언트를 통해 전송 페이로드를 생성합니다.
         비용 0원: 개인 무료 계정(일일 500통 발송 한도) 범위 내에서 작동.
         """
-        subject = f"🚨 [ZERO 긴급 리포트] {report.triggered_indices[0].name} 급변동 대응 총괄디렉터 지침"
+        target_name = report.triggered_indices[0].name if report.triggered_indices else "주요 시장 지수"
+        subject = f"🚨 [ZERO 긴급 리포트] {target_name} 급변동 대응 총괄디렉터 지침"
         return {
             "status": "READY_FREE_GMAIL",
             "cost_krw": 0,

@@ -75,13 +75,17 @@ class BreakingNewsEngine:
     @classmethod
     def clean_title(cls, title: str) -> str:
         """기사 제목에서 특수문자 및 태그 정제"""
-        cleaned = re.sub(r"\[.*?\]|\(.*?\)|<.*?>", " ", title)
+        if not title:
+            return ""
+        cleaned = re.sub(r"\[.*?\]|\(.*?\)|<.*?>", " ", str(title))
         cleaned = re.sub(r"[^\w\s]", " ", cleaned)
         return " ".join(cleaned.split()).lower()
 
     @classmethod
     def tokenize(cls, text: str) -> Set[str]:
         """한국어 및 영어 혼합 제목의 핵심 단어 및 문자 bi-gram 토큰 집합 추출 (조사·어미 변화에 강건)"""
+        if not text:
+            return set()
         cleaned = cls.clean_title(text)
         words = cleaned.split()
         tokens = set()
@@ -115,11 +119,11 @@ class BreakingNewsEngine:
 
     def process_raw_item(self, raw_item: Dict[str, str]) -> NewsItem:
         """원시 뉴스 데이터를 NewsItem으로 파싱 및 속보·단독·공신력 평가"""
-        title = raw_item.get("title", "")
-        publisher = raw_item.get("publisher", "일반")
-        url = raw_item.get("url", "")
-        published_at = raw_item.get("published_at", datetime.now().isoformat())
-        summary = raw_item.get("summary", "")
+        title = str(raw_item.get("title") or "")
+        publisher = str(raw_item.get("publisher") or "일반")
+        url = str(raw_item.get("url") or "")
+        published_at = str(raw_item.get("published_at") or datetime.now().isoformat())
+        summary = str(raw_item.get("summary") or "")
 
         is_breaking = bool(BREAKING_PATTERN.search(title))
         is_exclusive = bool(EXCLUSIVE_PATTERN.search(title))
