@@ -1725,3 +1725,22 @@ html[data-theme="dark"],
     border-color: rgba(225, 59, 76, 0.3) !important;
   }
 }
+
+/* 지수 카드 다크모드 완벽 보장 */
+html[data-zero-theme="dark"] .th-index,
+html[data-theme="dark"] .th-index,
+.dark .th-index {
+  background: #0f141a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-index strong,
+html[data-theme="dark"] .th-index strong,
+.dark .th-index strong {
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-index small,
+html[data-theme="dark"] .th-index small,
+.dark .th-index small {
+  color: #8b95a1 !important;
+}

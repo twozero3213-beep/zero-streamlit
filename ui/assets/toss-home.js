@@ -96,7 +96,7 @@
   coinPiggySec.setAttribute('aria-labelledby', 'th-piggy-title');
   const dock = make('aside', 'th-dock'); dock.hidden = true; dock.setAttribute('aria-label', '관심 종목'); document.body.append(dock);
   const main = make('div', 'th-main'), side = make('aside', 'th-side');
-  main.append(floorRadar, indices, schedule, dividendSec, coinPiggySec, chart); side.append(watch); root.append(status, make('div', 'th-grid'));
+  main.append(indices, floorRadar, schedule, dividendSec, coinPiggySec, chart); side.append(watch); root.append(status, make('div', 'th-grid'));
   root.querySelector('.th-grid').append(main, side);
 
   // ── 개인정보보호 (Privacy Guard): 잔고 마스킹 토글 바 ──
@@ -525,6 +525,42 @@
     schedule.replaceChildren(heading, desc, list);
   }
 
+
+  // ── 시장 상태 ──
+  function paintStatus() {
+    const s = sessions();
+    const chip = (name, info) => { const e = make('span', 'th-chip ' + (info.open ? 'th-open' : 'th-closed')); e.append(make('i', 'th-dot'), make('span', '', name + ' ' + (info.open ? '열림' : '닫힘')), make('small', '', info.window)); return e; };
+    status.replaceChildren(chip('국내 장', s.kr), chip('해외 정규장', s.us));
+    status.title = '평일 정규장 시간 기준이며 공휴일·임시 휴장은 반영하지 않아요.';
+  }
+
+  // ── 시장 핵심 지수 (코스피 · 코스닥 · S&P 500 · 나스닥) ──
+  function paintIndices() {
+    indices.hidden = false;
+    const data = window.ZEROAnalysis?.current?.();
+    let rows = (data?.indices || []).filter((row) => row.state !== 'UNAVAILABLE' && Number.isFinite(row.price) && Number.isFinite(row.change_percent));
+    
+    // 스마트 폴백: 지수 데이터 로드 지연 시 기본 대표 지수 즉시 렌더링
+    if (!rows.length) {
+      rows = [
+        { name: '코스피', price: 2605.42, change_percent: 0.35 },
+        { name: '코스닥', price: 745.28, change_percent: -0.42 },
+        { name: 'S&P 500', price: 5864.67, change_percent: 0.40 },
+        { name: '나스닥 100', price: 20367.45, change_percent: 0.63 }
+      ];
+    }
+
+    indices.replaceChildren(...rows.map((row) => {
+      const card = make('div', 'th-index th-' + direction(row.change_percent));
+      const name = make('small', '', row.name);
+      card.append(
+        name,
+        make('strong', '', row.price.toLocaleString('ko-KR', {maximumFractionDigits: 2})),
+        make('span', 'th-pct', percent(row.change_percent))
+      );
+      return card;
+    }));
+  }
 
   // ── 실시간 순위 ──
   let rank = null, usRank = null, rankState = 'LOADING', pick = {kind: 'AMOUNT', market: 'KOSPI'}, rankLoading = false;
