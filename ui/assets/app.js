@@ -1015,8 +1015,9 @@ document.addEventListener?.('zero-plaza-closed',()=>{
   if(back.view==='workbench')openDefaultStock(false);
 });
 // Rail and 더보기 menus share one flow-ordered grouping; icons are Lucide outlines (ISC) so every row matches.
-const NAV_GROUPS=[['내 투자회사',['company','lobby','team']],['광장·커뮤니티',['plaza','community']],['투자',['portfolio','research','workbench','analysis','comparison','audit']],['정보·학습',['news','macro','reports','study','guide']]];
+const NAV_GROUPS=[['투자',['home','portfolio','research','workbench','analysis','comparison','audit']],['정보·학습',['news','macro','reports','study','guide']],['내 투자회사',['company','lobby','team']],['광장·커뮤니티',['plaza','community']]];
 const NAV_ICONS={
+  home:'<path d="M4 11.5 12 4l8 7.5V20h-5.5v-5h-5v5H4Z"/>',
   company:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2M10 6h4M10 10h4M10 14h4M10 18h4"/>',
   lobby:'<path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0zM5 18v2M19 18v2"/>',
   team:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',

@@ -6347,3 +6347,389 @@ html[data-zero-theme="dark"] .tp-ranking-list li small,
 html[data-zero-theme="dark"] .tm-roadmap-step small {
   color: #cbd5e1 !important;
 }
+
+/* === ZERO PRO INVESTOR WORKSTATION CSS === */
+.inv-toolkit-card,
+.inv-screener-card {
+  margin-bottom: 18px;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e5e8eb);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+}
+.inv-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.inv-head h2 {
+  font-size: 1.12rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  color: var(--ink, #191f28);
+}
+.inv-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.inv-preset-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.inv-preset-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted, #6b7684);
+}
+.inv-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.81rem;
+  font-weight: 600;
+  border: 1px solid var(--border, #d1d6db);
+  background: var(--canvas, #f2f4f6);
+  color: var(--ink, #333d4b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.inv-chip:hover {
+  border-color: #3182f6;
+  color: #3182f6;
+}
+.inv-chip.active {
+  background: #3182f6;
+  border-color: #3182f6;
+  color: #ffffff;
+}
+.inv-inline-switch {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.inv-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px 0;
+}
+.inv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--canvas, #f9fafb);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #e5e8eb);
+}
+.inv-field-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--muted, #6b7684);
+}
+.inv-input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #d1d6db);
+  background: var(--surface, #ffffff);
+  color: var(--ink, #191f28);
+  font-size: 0.94rem;
+  font-weight: 700;
+  width: 100%;
+  box-sizing: border-box;
+}
+.inv-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.inv-kpi-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--canvas, #f9fafb);
+  border: 1px solid var(--border, #e5e8eb);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.inv-kpi-card.inv-kpi-primary {
+  border-color: rgba(49, 130, 246, 0.45);
+  background: rgba(49, 130, 246, 0.06);
+}
+.inv-kpi-card.inv-kpi-good {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.06);
+}
+.inv-kpi-card.inv-kpi-warn {
+  border-color: rgba(240, 68, 82, 0.45);
+  background: rgba(240, 68, 82, 0.06);
+}
+.inv-kpi-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted, #6b7684);
+}
+.inv-kpi-val {
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--ink, #191f28);
+}
+.inv-kpi-sub {
+  font-size: 0.76rem;
+  color: var(--muted, #6b7684);
+}
+.inv-advice-banner {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(49, 130, 246, 0.08);
+  border-left: 4px solid #3182f6;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink, #191f28);
+}
+.inv-tax-gauge-box {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--canvas, #f9fafb);
+  border: 1px solid var(--border, #e5e8eb);
+  margin-bottom: 12px;
+}
+.inv-tax-gauge-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.83rem;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.inv-tax-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+.inv-tax-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #3182f6);
+  border-radius: 999px;
+}
+.inv-tax-fill.over {
+  background: linear-gradient(90deg, #f59e0b, #f04452);
+}
+.inv-check-score {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.09);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+.inv-check-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.inv-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--canvas, #f9fafb);
+  border: 1px solid var(--border, #e5e8eb);
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+.inv-sub-heading {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin: 12px 0 8px 0;
+}
+.inv-journal-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 2fr auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+@media (max-width: 768px) {
+  .inv-journal-form {
+    grid-template-columns: 1fr;
+  }
+}
+.inv-journal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.inv-journal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--canvas, #f9fafb);
+  border: 1px solid var(--border, #e5e8eb);
+  flex-wrap: wrap;
+}
+.inv-journal-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.inv-journal-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(49, 130, 246, 0.14);
+  color: #3182f6;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.inv-journal-price {
+  font-size: 0.8rem;
+  color: var(--muted, #6b7684);
+}
+.inv-journal-memo {
+  margin: 2px 0 0 0;
+  width: 100%;
+  font-size: 0.84rem;
+}
+.inv-journal-del {
+  margin-left: 8px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border, #d1d6db);
+  background: transparent;
+  color: var(--muted, #6b7684);
+  cursor: pointer;
+}
+.inv-sector-desc {
+  font-size: 0.84rem;
+  color: var(--muted, #6b7684);
+  margin: 0 0 12px 0;
+}
+.inv-screener-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.inv-stock-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--canvas, #f9fafb);
+  border: 1px solid var(--border, #e5e8eb);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+.inv-stock-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.inv-market-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 5px;
+  margin-right: 6px;
+}
+.inv-market-badge.us {
+  background: rgba(49, 130, 246, 0.15);
+  color: #3182f6;
+}
+.inv-market-badge.kr {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+.inv-stock-name {
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+.inv-stock-tag {
+  font-size: 0.73rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+.inv-stock-point {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted, #4e5968);
+  margin: 0;
+}
+.inv-stock-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.inv-action-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 0.79rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-align: center;
+}
+.inv-action-btn.primary {
+  background: #3182f6;
+  color: #ffffff;
+}
+.inv-action-btn.secondary {
+  background: var(--surface, #ffffff);
+  border-color: var(--border, #d1d6db);
+  color: var(--ink, #333d4b);
+}
+:root[data-zero-theme="dark"] .inv-toolkit-card,
+:root[data-zero-theme="dark"] .inv-screener-card,
+html.dark .inv-toolkit-card,
+html.dark .inv-screener-card {
+  background: #171b22 !important;
+  border-color: #2a313d !important;
+}
+:root[data-zero-theme="dark"] .inv-field,
+:root[data-zero-theme="dark"] .inv-kpi-card,
+:root[data-zero-theme="dark"] .inv-stock-card,
+:root[data-zero-theme="dark"] .inv-check-row,
+:root[data-zero-theme="dark"] .inv-journal-item,
+:root[data-zero-theme="dark"] .inv-tax-gauge-box,
+html.dark .inv-field,
+html.dark .inv-kpi-card,
+html.dark .inv-stock-card,
+html.dark .inv-check-row,
+html.dark .inv-journal-item,
+html.dark .inv-tax-gauge-box {
+  background: #1e2430 !important;
+  border-color: #2e3646 !important;
+  color: #f1f5f9 !important;
+}
+:root[data-zero-theme="dark"] .inv-input,
+:root[data-zero-theme="dark"] .inv-chip:not(.active),
+:root[data-zero-theme="dark"] .inv-action-btn.secondary,
+html.dark .inv-input,
+html.dark .inv-chip:not(.active),
+html.dark .inv-action-btn.secondary {
+  background: #12161f !important;
+  border-color: #333c4d !important;
+  color: #f1f5f9 !important;
+}
+
