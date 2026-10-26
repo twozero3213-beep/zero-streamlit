@@ -6733,3 +6733,142 @@ html.dark .inv-action-btn.secondary {
   color: #f1f5f9 !important;
 }
 
+/* ── 가볍고 사용하기 편한 실전 주식 투자자용 더보기 메뉴 스타일 ── */
+.more-menu {
+  width: min(560px, calc(100vw - 20px)) !important;
+  max-height: 88vh !important;
+  border-radius: 20px !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+  background: var(--surface, #ffffff) !important;
+  border: 1px solid var(--border, #e5e8eb) !important;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.16) !important;
+}
+.more-header-text h2 {
+  margin: 0 0 2px 0 !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  color: var(--ink, #191f28) !important;
+}
+.more-subtitle {
+  margin: 0 !important;
+  font-size: 12.5px !important;
+  color: var(--muted, #8b95a1) !important;
+}
+.more-group {
+  margin-bottom: 14px !important;
+}
+.more-cat-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: var(--ink, #191f28) !important;
+  margin: 10px 0 8px 0 !important;
+  padding-bottom: 4px !important;
+  border-bottom: 1px solid var(--border, #f2f4f6) !important;
+}
+.more-cat-badge {
+  font-size: 15px !important;
+}
+.more-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  gap: 7px !important;
+}
+.more-card-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 9px 12px !important;
+  border-radius: 12px !important;
+  background: var(--canvas, #f9fafb) !important;
+  border: 1px solid var(--border, #e5e8eb) !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+  min-height: 48px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.more-card-item:hover {
+  background: #f2f4f6 !important;
+  border-color: #3182f6 !important;
+  transform: translateY(-1px) !important;
+}
+.more-card-item.active {
+  background: rgba(49, 130, 246, 0.08) !important;
+  border-color: #3182f6 !important;
+}
+.more-card-item svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+  color: #3182f6 !important;
+}
+.more-text-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  min-width: 0 !important;
+}
+.more-text-wrap strong {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--ink, #191f28) !important;
+}
+.more-text-wrap small {
+  font-size: 11px !important;
+  color: var(--muted, #8b95a1) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+@media (max-width: 520px) {
+  .more-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .more-menu {
+    padding: 16px !important;
+  }
+}
+
+:root[data-zero-theme="dark"] .more-menu,
+html.dark .more-menu {
+  background: #171b22 !important;
+  border-color: #2a313d !important;
+}
+:root[data-zero-theme="dark"] .more-header-text h2,
+:root[data-zero-theme="dark"] .more-cat-label,
+html.dark .more-header-text h2,
+html.dark .more-cat-label {
+  color: #f1f5f9 !important;
+  border-color: #2e3646 !important;
+}
+:root[data-zero-theme="dark"] .more-card-item,
+html.dark .more-card-item {
+  background: #1e2430 !important;
+  border-color: #2e3646 !important;
+}
+:root[data-zero-theme="dark"] .more-card-item:hover,
+html.dark .more-card-item:hover {
+  background: #242c3b !important;
+  border-color: #3182f6 !important;
+}
+:root[data-zero-theme="dark"] .more-card-item.active,
+html.dark .more-card-item.active {
+  background: rgba(49, 130, 246, 0.18) !important;
+  border-color: #3182f6 !important;
+}
+:root[data-zero-theme="dark"] .more-text-wrap strong,
+html.dark .more-text-wrap strong {
+  color: #f8fafc !important;
+}
+:root[data-zero-theme="dark"] .more-text-wrap small,
+html.dark .more-text-wrap small {
+  color: #94a3b8 !important;
+}
+
