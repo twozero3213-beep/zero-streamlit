@@ -294,15 +294,72 @@
     setTimeout(() => el.remove(), 1250);
   }
 
+  // 수정 사유: 더보기(#more-menu)에서 '실시간 광장' 등을 클릭했을 때 로그인 팝업(#member-profile-dialog)이 자동으로 가로막지 않도록 제어하고 즉시 화면을 전환·스크롤 초기화하도록 개선
+  let explicitProfileRequest = false;
+
+  function suppressAutoProfileModal() {
+    if (explicitProfileRequest) return;
+    const profDialog = document.getElementById('member-profile-dialog');
+    if (profDialog && profDialog.open) {
+      try { profDialog.close(); } catch (_) {}
+    }
+  }
+
   function goView(viewName) {
+    if (!viewName) return;
     playRetroSound('click');
+    const menu = document.getElementById('more-menu');
+    if (menu?.open) {
+      try { menu.close(); } catch (_) {}
+      menu.removeAttribute('open');
+    }
     if (window.ZERO?.navigate) {
       window.ZERO.navigate(viewName);
     } else {
       window.location.hash = '#' + viewName;
     }
-    const menu = document.getElementById('more-menu');
-    if (menu?.open) menu.close();
+    if (viewName === 'plaza') {
+      suppressAutoProfileModal();
+      setTimeout(suppressAutoProfileModal, 25);
+      setTimeout(suppressAutoProfileModal, 120);
+    }
+    if (viewName === 'team') {
+      setTimeout(() => {
+        const officePanel = document.getElementById('office-panel');
+        if (officePanel) officePanel.classList.remove('viewport-page-away');
+        window.dispatchEvent(new Event('resize'));
+      }, 30);
+    }
+    const mainEl = document.getElementById('main');
+    if (mainEl && typeof mainEl.scrollTo === 'function') {
+      mainEl.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }
+
+  // 전역 클릭 위임: 더보기(#more-menu) 내부 모든 카드 버튼([data-view]) 클릭 시 100% 작동 보장
+  if (!window.__zeroRpgGlobalClickBound) {
+    window.__zeroRpgGlobalClickBound = true;
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!target || typeof target.closest !== 'function') return;
+
+      const profileBtn = target.closest('#lobby-profile-btn, #member-entry, #open-member-profile, #lounge-open-profile, #rpg-plaza-login-btn');
+      if (profileBtn) {
+        explicitProfileRequest = true;
+        setTimeout(() => { explicitProfileRequest = false; }, 800);
+        return;
+      }
+
+      const moreViewBtn = target.closest('#more-menu [data-view]');
+      if (moreViewBtn) {
+        const targetView = moreViewBtn.getAttribute('data-view');
+        if (targetView) {
+          e.preventDefault();
+          e.stopPropagation();
+          goView(targetView);
+        }
+      }
+    }, true);
   }
 
   const RPG_PRESETS = [
@@ -620,8 +677,8 @@
     if (!dialog.open) dialog.showModal();
   }
 
-  // ── 0. 글로벌 5대 핵심 모드 원터치 바로가기 바 (초보자 3초 접근성) ──
-  // 수정 사유: 실제 DOM 구조(main#main)에 맞게 마운트하여 모든 화면 최상단에 초보자용 5대 게임 모드 바로가기 바가 표시되도록 수정
+  // ── 0. 글로벌 5대 핵심 모드 원터치 바로가기 바 (초보자 3초 접근성 + 전체메뉴 + 다크모드 스위치) ──
+  // 수정 사유: 내 사무실·제로 팀(45인 광장)·실시간 광장·1억 모의투자·투자 홈·전체메뉴를 최상단 1줄에서 언제든 1초 만에 오갈 수 있도록 직관화
   function setupGlobalEasyBar() {
     const main = document.getElementById('main') || document.getElementById('main-content') || document.querySelector('main');
     if (!main) return;
@@ -631,31 +688,37 @@
       bar = document.createElement('nav');
       bar.id = 'zero-easy-mode-bar';
       bar.className = 'zero-easy-mode-bar';
-      bar.setAttribute('aria-label', '초보자 5대 핵심 모드 바로가기');
+      bar.setAttribute('aria-label', '초보자 핵심 메뉴 바로가기');
       main.prepend(bar);
     }
 
-    const current = document.documentElement.dataset.zeroView || 'portfolio';
+    const current = document.documentElement.dataset.zeroView || 'home';
+    const isDark = document.documentElement.dataset.zeroTheme === 'dark' || document.documentElement.classList.contains('dark');
     const modes = [
-      { view: 'lobby', icon: '🏰', title: '1. 내 사무실 (RPG 맵)', sub: '맵 탐험 · 보물 수확' },
-      { view: 'team', icon: '⚔️', title: '2. 영웅 도감 · 팀편성', sub: '1-Click 덱 장착' },
-      { view: 'plaza', icon: '🐉', title: '3. 보스 레이드 광장', sub: '고금리 드래곤 토벌' },
-      { view: 'home', icon: '🏠', title: '4. RPG 홈 라운지', sub: '영웅 스테이지 · 일정' },
-      { view: 'portfolio', icon: '💰', title: '5. 1억 모의투자', sub: '내 자산 · 실전 연습' }
+      { view: 'lobby', icon: '🏰', title: '내 사무실' },
+      { view: 'team', icon: '⚔️', title: '제로 팀 (45인 광장)' },
+      { view: 'plaza', icon: '🐉', title: '실시간 광장' },
+      { view: 'portfolio', icon: '💰', title: '1억 모의투자' },
+      { view: 'home', icon: '🏠', title: '투자 홈' }
     ];
 
     bar.innerHTML = `
       <div class="easy-bar-inner">
-        <span class="easy-bar-label">🎮 초보자 1초 이동:</span>
         <div class="easy-bar-pills">
           ${modes.map(m => `
             <button type="button" class="easy-mode-pill ${current === m.view ? 'active' : ''}" data-easy-view="${m.view}">
               <span class="easy-mode-icon">${m.icon}</span>
-              <span class="easy-mode-text">
-                <strong>${m.title}</strong>
-              </span>
+              <span class="easy-mode-text"><strong>${m.title}</strong></span>
             </button>
           `).join('')}
+          <button type="button" class="easy-mode-pill easy-pill-menu" id="easy-open-more-btn" title="전체 메뉴 열기">
+            <span class="easy-mode-icon">☰</span>
+            <span class="easy-mode-text"><strong>전체메뉴</strong></span>
+          </button>
+          <button type="button" class="easy-mode-pill easy-pill-theme" id="easy-toggle-theme-btn" title="다크모드 / 라이트모드 전환">
+            <span class="easy-mode-icon">${isDark ? '☀️' : '🌙'}</span>
+            <span class="easy-mode-text"><strong>${isDark ? '라이트' : '다크'}</strong></span>
+          </button>
         </div>
       </div>
     `;
@@ -664,6 +727,25 @@
       btn.addEventListener('click', () => {
         goView(btn.dataset.easyView);
       });
+    });
+
+    bar.querySelector('#easy-open-more-btn')?.addEventListener('click', () => {
+      playRetroSound('click');
+      const menu = document.getElementById('more-menu');
+      if (menu && !menu.open) menu.showModal?.();
+    });
+
+    bar.querySelector('#easy-toggle-theme-btn')?.addEventListener('click', () => {
+      playRetroSound('click');
+      const root = document.documentElement;
+      const nowDark = root.dataset.zeroTheme === 'dark' || root.classList.contains('dark');
+      const nextTheme = nowDark ? 'light' : 'dark';
+      root.dataset.zeroTheme = nextTheme;
+      root.dataset.theme = nextTheme;
+      root.classList.toggle('dark', nextTheme === 'dark');
+      root.classList.toggle('light', nextTheme === 'light');
+      try { localStorage.setItem('zero-theme', nextTheme); } catch (_) {}
+      setupGlobalEasyBar();
     });
   }
 
@@ -817,10 +899,15 @@
           <span class="slim-stat cp">⚔️ CP ${activePreset.cp}</span>
         </div>
         <div class="slim-bar-right">
+          <button type="button" id="slim-warp-team" class="slim-action-btn warp">⚔️ 제로 팀(45인 광장)</button>
+          <button type="button" id="slim-warp-plaza" class="slim-action-btn warp">🐉 실시간 광장</button>
           <button type="button" id="slim-vault-quick" class="slim-action-btn gold">💰 금고 +${(state.vaultGold || 1250).toLocaleString()}G 수확</button>
           <button type="button" id="hud-box-btn" class="slim-action-btn gift">🎁 출석 보물상자</button>
         </div>
       `;
+
+      slimBar.querySelector('#slim-warp-team')?.addEventListener('click', () => goView('team'));
+      slimBar.querySelector('#slim-warp-plaza')?.addEventListener('click', () => goView('plaza'));
 
       slimBar.querySelector('#hud-box-btn')?.addEventListener('click', (e) => {
         const today = new Date().toDateString();
@@ -859,7 +946,7 @@
     }
     renderSlimBar();
 
-    // (B) 사무실 맵(#lobby-stage) 내부 직접 게임화: RPG 월드맵 랜드마크 & 테마 스위치 오버레이
+    // (B) 사무실 맵(#lobby-stage) 내부 직접 게임화: RPG 월드맵 랜드마크 & 테마 스위치 + 광장 워프 포털 오버레이
     if (stage) {
       let mapOverlay = stage.querySelector('#office-map-rpg-overlay');
       if (!mapOverlay) {
@@ -874,9 +961,9 @@
             <div class="rpg-map-zone-title">
               <span class="rpg-compass-icon">🧭</span>
               <strong>ZERO 황금 길드 성소 월드맵</strong>
-              <small>바닥을 터치해 이동 · 성소 아이콘을 눌러 보물 수확</small>
+              <small>바닥 터치 이동 · 포털 클릭 시 광장 워프</small>
             </div>
-            <div class="rpg-map-theme- pills" role="group" aria-label="사무실 맵 테마 변경">
+            <div class="rpg-map-theme-pills" role="group" aria-label="사무실 맵 테마 변경">
               <button type="button" class="rpg-map-theme-btn ${currentTheme === 'sanctuary' ? 'active' : ''}" data-map-theme="sanctuary" data-floor="wood">🏰 황금성소</button>
               <button type="button" class="rpg-map-theme-btn ${currentTheme === 'dungeon' ? 'active' : ''}" data-map-theme="dungeon" data-floor="stone">🌙 암흑던전</button>
               <button type="button" class="rpg-map-theme-btn ${currentTheme === 'forest' ? 'active' : ''}" data-map-theme="forest" data-floor="mint">🌲 엘프의숲</button>
@@ -884,20 +971,33 @@
             </div>
           </div>
 
+          <!-- 맵 내부 워프 게이트 2종 (제로 팀 45인 광장 & 실시간 광장) -->
+          <button type="button" class="rpg-map-node node-portal-team" style="left: 50%; top: 22%;" data-node-act="warp-team" title="제로 팀 45인 광장으로 워프">
+            <span class="node-quest-mark">WARP</span>
+            <span class="node-icon">⚔️</span>
+            <span class="node-label">제로 팀 광장</span>
+          </button>
+
+          <button type="button" class="rpg-map-node node-portal-plaza" style="left: 82%; top: 20%;" data-node-act="warp-plaza" title="실시간 보스 레이드 광장으로 워프">
+            <span class="node-quest-mark">LIVE</span>
+            <span class="node-icon">🐉</span>
+            <span class="node-label">실시간 광장</span>
+          </button>
+
           <!-- 맵 내부 5대 인터랙티브 RPG 랜드마크 오브젝트 -->
-          <button type="button" class="rpg-map-node node-mage" style="left: 19%; top: 34%;" data-node-act="mage" title="마법 연구소 (소프 켈리 성소)">
+          <button type="button" class="rpg-map-node node-mage" style="left: 19%; top: 36%;" data-node-act="mage" title="마법 연구소 (소프 켈리 성소)">
             <span class="node-quest-mark">🔮</span>
             <span class="node-icon">🧙‍♂️</span>
             <span class="node-label">켈리 마법성소</span>
           </button>
 
-          <button type="button" class="rpg-map-node node-chest" style="left: 81%; top: 34%;" data-node-act="chest" title="황금 보물상자 열기">
+          <button type="button" class="rpg-map-node node-chest" style="left: 81%; top: 44%;" data-node-act="chest" title="황금 보물상자 열기">
             <span class="node-quest-mark">❗</span>
             <span class="node-icon">🎁</span>
             <span class="node-label">황금 보물고</span>
           </button>
 
-          <button type="button" class="rpg-map-node node-altar" style="left: 50%; top: 53%;" data-node-act="altar" title="중앙 황금 룬 마법진 소환">
+          <button type="button" class="rpg-map-node node-altar" style="left: 50%; top: 55%;" data-node-act="altar" title="중앙 황금 룬 마법진 소환">
             <span class="node-quest-mark">✨</span>
             <span class="node-icon">🔯</span>
             <span class="node-label">중앙 룬 마법진</span>
@@ -933,13 +1033,19 @@
           nodeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const act = nodeBtn.dataset.nodeAct;
-            if (act === 'chest') {
+            if (act === 'warp-team') {
+              goView('team');
+              return;
+            } else if (act === 'warp-plaza') {
+              goView('plaza');
+              return;
+            } else if (act === 'chest') {
               state.gold += 650;
               state.exp += 60;
               saveRpgState(state);
               playRetroSound('levelup');
               spawnFloatingEffect('🎁 보물상자 발견! +650 G & +60 EXP!', e.clientX, e.clientY);
-              showToast('🎁 맵 우측 상단 [황금 보물고]에서 650 Gold와 60 EXP를 획득했습니다!');
+              showToast('🎁 맵 우측 [황금 보물고]에서 650 Gold와 60 EXP를 획득했습니다!');
             } else if (act === 'mage') {
               playRetroSound('coin');
               spawnFloatingEffect('🔮 대마법사 소프 호출!', e.clientX, e.clientY);
@@ -1297,19 +1403,123 @@
     }
   }
 
-  // ── 3. 실시간 광장 (Plaza / plaza-view) 드래곤 월드 보스 레이드 ──
+  // ── 3. 실시간 광장 (Plaza / plaza-view) 인터랙티브 RPG 광장 월드맵 & 드래곤 보스 레이드 ──
+  // 수정 사유: 로그인 전에도 즉시 캐릭터를 움직이고 말풍선 소통·보스 타격·분수대 수확·포털 워프를 즐길 수 있는 실시간 인터랙티브 광장 맵(#rpg-plaza-interactive-stage)을 최상단에 구현
   function setupPlazaRpg() {
     const plazaView = document.getElementById('plaza-view');
-    if (!plazaView || document.getElementById('plaza-rpg-deck')) return;
+    if (!plazaView) return;
 
     const state = getRpgState();
-    const deck = document.createElement('div');
-    deck.id = 'plaza-rpg-deck';
-    deck.className = 'plaza-rpg-container';
+    const activePreset = RPG_PRESETS.find(p => p.id === state.activePartyId) || RPG_PRESETS[0];
+    let deck = document.getElementById('plaza-rpg-deck');
+    if (!deck) {
+      deck = document.createElement('div');
+      deck.id = 'plaza-rpg-deck';
+      deck.className = 'plaza-rpg-container';
+      plazaView.prepend(deck);
+    } else if (plazaView.firstElementChild !== deck) {
+      plazaView.prepend(deck);
+    }
+
+    let heroPos = { x: 50, y: 66 };
+    let heroSpeech = '“실시간 광장에 도착했습니다! 바닥을 터치해 이동해 보세요!”';
+    const npcList = [
+      { nick: '소프마법사_77', role: 'LEADER', x: 23, y: 42, msg: '“소프 황금 밸런스 파티 맞추니까 폭락장도 든든하네요!”' },
+      { nick: '국채탱커_민준', role: 'TANKER', x: 76, y: 62, msg: '“단기국채 29.4% 방패 덕분에 고금리 드래곤 브레스 노데미지!”' },
+      { nick: '배당힐러_지수', role: 'HEALER', x: 34, y: 72, msg: '“황금 분수대에 동전 던지고 +500 골드 받았어요 ⛲”' },
+      { nick: '린치드래곤_99', role: 'DEALER', x: 66, y: 38, msg: '“보스 레이드 같이 타격하실 분! 필살기 쿨타임 돌았습니다 ⚡”' }
+    ];
 
     function renderPlazaBoss() {
       const hpPct = Math.max(0, Math.min(100, (state.bossHp / state.bossMaxHp) * 100)).toFixed(1);
       deck.innerHTML = `
+        <!-- (1) 최상단 실시간 인터랙티브 RPG 광장 월드맵 -->
+        <div class="rpg-plaza-world-card" id="rpg-plaza-interactive-stage">
+          <div class="rpg-plaza-world-topbar">
+            <div class="rpg-plaza-world-title">
+              <span class="plaza-live-dot">● LIVE</span>
+              <strong>🐉 ZERO 실시간 모험가 광장 월드맵</strong>
+              <small>바닥을 터치하거나 방향키로 내 영웅을 이동하세요!</small>
+            </div>
+            <div class="rpg-plaza-world-warps">
+              <button type="button" class="plaza-warp-pill" data-plaza-warp="lobby">🏰 내 사무실</button>
+              <button type="button" class="plaza-warp-pill" data-plaza-warp="team">⚔️ 제로 팀 (45인 광장)</button>
+              <button type="button" class="plaza-warp-pill" data-plaza-warp="portfolio">💰 1억 모의투자</button>
+            </div>
+          </div>
+
+          <div class="rpg-plaza-map-canvas" id="rpg-plaza-map-canvas" tabindex="0" aria-label="실시간 광장 인터랙티브 맵">
+            <!-- 상단 ZERO 거래소 전광판 -->
+            <div class="plaza-map-board">
+              <span class="board-badge">🏛️ ZERO 거래소 전광판</span>
+              <span class="board-ticker">S&amp;P 500 <strong>+1.42% ▲</strong> · 나스닥100 <strong>+1.85% ▲</strong> · 단기국채(SHV) <strong>연 4.8% 🛡️</strong> · 금리 드래곤 출현중!</span>
+            </div>
+
+            <!-- 중앙 바닥 황금 문양 -->
+            <div class="plaza-map-floor-emblem" aria-hidden="true">ZERO PLAZA</div>
+
+            <!-- 광장 3대 인터랙티브 오브젝트: 황금 분수대 / 드래곤 보스 / 제로 팀 광장 게이트 -->
+            <button type="button" class="plaza-map-spot spot-fountain" style="left: 24%; top: 48%;" id="map-spot-fountain" title="황금 분수대 동전 던지기 (+500G)">
+              <span class="spot-float-tag">+500 G</span>
+              <span class="spot-emoji">⛲</span>
+              <span class="spot-name">황금 복리 분수대</span>
+            </button>
+
+            <button type="button" class="plaza-map-spot spot-boss" style="left: 74%; top: 36%;" id="map-spot-boss" title="고금리 드래곤 보스 타격하기!">
+              <span class="spot-float-tag boss">HP ${hpPct}%</span>
+              <div class="spot-boss-svg">${getHeroSvg('BOSS', 68)}</div>
+              <span class="spot-name">🐉 고금리 드래곤 (터치 타격!)</span>
+            </button>
+
+            <!-- 하단 3대 포털 워프 게이트 -->
+            <button type="button" class="plaza-map-portal" style="left: 16%; top: 86%;" data-plaza-warp="lobby">
+              <span>🏰 내 사무실 포털</span>
+            </button>
+            <button type="button" class="plaza-map-portal highlight" style="left: 50%; top: 86%;" data-plaza-warp="team">
+              <span>⚔️ 제로 팀 45인 광장 포털</span>
+            </button>
+            <button type="button" class="plaza-map-portal" style="left: 84%; top: 86%;" data-plaza-warp="community">
+              <span>💬 커뮤니티 게시판</span>
+            </button>
+
+            <!-- 실시간 동료 모험가 NPC 4인 -->
+            ${npcList.map((npc, i) => `
+              <div class="plaza-map-npc" style="left: ${npc.x}%; top: ${npc.y}%;" data-npc-idx="${i}">
+                <div class="plaza-speech-bubble npc-bubble">${npc.msg}</div>
+                <div class="plaza-char-sprite">${getHeroSvg(npc.role, 50)}</div>
+                <span class="plaza-char-nick">${npc.nick}</span>
+              </div>
+            `).join('')}
+
+            <!-- 내 플레이어 영웅 캐릭터 (터치/방향키 이동) -->
+            <div class="plaza-map-player" id="rpg-plaza-my-hero" style="left: ${heroPos.x}%; top: ${heroPos.y}%;">
+              <div class="plaza-speech-bubble my-bubble" id="rpg-plaza-my-bubble">${heroSpeech}</div>
+              <div class="plaza-char-sprite my-sprite">${getHeroSvg(activePreset.leader.role, 60)}</div>
+              <span class="plaza-char-nick my-nick">👑 나 · ${activePreset.leader.name} (Lv.${state.level})</span>
+            </div>
+          </div>
+
+          <!-- 광장 하단 컨트롤 바: 방향키 패드 + 원클릭 말풍선 채팅 -->
+          <div class="rpg-plaza-controls-bar">
+            <div class="rpg-plaza-dpad" role="group" aria-label="광장 캐릭터 방향키 이동">
+              <button type="button" class="dpad-btn" data-move-dir="left" aria-label="왼쪽 이동">⬅️</button>
+              <button type="button" class="dpad-btn" data-move-dir="up" aria-label="위로 이동">⬆️</button>
+              <button type="button" class="dpad-btn" data-move-dir="down" aria-label="아래로 이동">⬇️</button>
+              <button type="button" class="dpad-btn" data-move-dir="right" aria-label="오른쪽 이동">➡️</button>
+            </div>
+            <div class="rpg-plaza-quick-chats">
+              <button type="button" class="quick-shout-btn" data-shout="🔥 드래곤 레이드 같이 토벌해요! 가즈아!">💬 "드래곤 토벌 가즈아!"</button>
+              <button type="button" class="quick-shout-btn" data-shout="⚖️ 소프 황금 밸런스 파티 맞추니 마음이 편해요!">💬 "소프 파티 추천!"</button>
+              <button type="button" class="quick-shout-btn" data-shout="⛲ 분수대 동전 던지고 500골드 받았어요!">💬 "분수대 500G 대박!"</button>
+            </div>
+            <form class="rpg-plaza-shout-form" id="rpg-plaza-shout-form">
+              <input type="text" id="rpg-plaza-shout-input" maxlength="80" placeholder="광장에 말풍선 외치기 (입력 후 엔터)" aria-label="광장 말풍선 대화 입력" />
+              <button type="submit" class="shout-submit-btn">말풍선 발사</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- (2) 월드 보스 협동 레이드 & 황금 분수대 상세 카드 -->
         <div class="plaza-boss-box">
           <div class="plaza-boss-visual-row">
             <div class="plaza-boss-svg-wrap">
@@ -1356,6 +1566,105 @@
         </div>
       `;
 
+      const myHeroEl = deck.querySelector('#rpg-plaza-my-hero');
+      const myBubbleEl = deck.querySelector('#rpg-plaza-my-bubble');
+      const mapCanvas = deck.querySelector('#rpg-plaza-map-canvas');
+
+      function moveHeroTo(nx, ny, speechText) {
+        heroPos.x = Math.max(10, Math.min(90, nx));
+        heroPos.y = Math.max(22, Math.min(82, ny));
+        if (myHeroEl) {
+          myHeroEl.style.left = `${heroPos.x}%`;
+          myHeroEl.style.top = `${heroPos.y}%`;
+        }
+        if (speechText && myBubbleEl) {
+          heroSpeech = speechText;
+          myBubbleEl.textContent = speechText;
+        }
+      }
+
+      mapCanvas?.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button')) return;
+        const rect = mapCanvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const nx = ((e.clientX - rect.left) / rect.width) * 100;
+        const ny = ((e.clientY - rect.top) / rect.height) * 100;
+        playRetroSound('click');
+        moveHeroTo(nx, ny);
+        const marker = document.createElement('span');
+        marker.className = 'rpg-click-reticle';
+        marker.style.left = `${e.clientX - rect.left}px`;
+        marker.style.top = `${e.clientY - rect.top}px`;
+        mapCanvas.appendChild(marker);
+        setTimeout(() => marker.remove(), 650);
+      });
+
+      deck.querySelectorAll('[data-move-dir]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          playRetroSound('click');
+          const dir = btn.dataset.moveDir;
+          const step = 8;
+          if (dir === 'left') moveHeroTo(heroPos.x - step, heroPos.y);
+          if (dir === 'right') moveHeroTo(heroPos.x + step, heroPos.y);
+          if (dir === 'up') moveHeroTo(heroPos.x, heroPos.y - step);
+          if (dir === 'down') moveHeroTo(heroPos.x, heroPos.y + step);
+        });
+      });
+
+      deck.querySelectorAll('[data-shout]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          playRetroSound('coin');
+          const msg = btn.dataset.shout;
+          moveHeroTo(heroPos.x, heroPos.y, `“${msg}”`);
+          state.exp += 20;
+          saveRpgState(state);
+          spawnFloatingEffect('💬 광장 외침! +20 EXP', e.clientX, e.clientY);
+        });
+      });
+
+      deck.querySelector('#rpg-plaza-shout-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = deck.querySelector('#rpg-plaza-shout-input');
+        const val = input?.value?.trim();
+        if (!val) return;
+        playRetroSound('coin');
+        moveHeroTo(heroPos.x, heroPos.y, `“${val}”`);
+        input.value = '';
+        state.exp += 30;
+        saveRpgState(state);
+        showToast(`💬 광장에 말풍선을 띄웠습니다: "${val}" (+30 EXP)`);
+      });
+
+      deck.querySelectorAll('[data-plaza-warp]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          goView(btn.dataset.plazaWarp);
+        });
+      });
+
+      deck.querySelector('#map-spot-fountain')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moveHeroTo(28, 54, '“황금 분수대야, 복리 행운을 부탁해! 🪙”');
+        state.gold += 500;
+        state.exp += 80;
+        saveRpgState(state);
+        playRetroSound('levelup');
+        spawnFloatingEffect('⛲ 분수의 축복! +500 G & +80 EXP!', e.clientX, e.clientY);
+        showToast('⛲ 캐릭터가 황금 분수대에 동전을 던져 +500 Gold와 +80 EXP를 획득했습니다!');
+      });
+
+      deck.querySelector('#map-spot-boss')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moveHeroTo(64, 44, '“받아라! 소프 켈리 황금 번개!! ⚡”');
+        state.bossHp = Math.max(0, state.bossHp - 1000);
+        if (state.bossHp === 0) state.bossHp = 10000;
+        state.gold += 400;
+        state.exp += 90;
+        saveRpgState(state);
+        playRetroSound('levelup');
+        spawnFloatingEffect('💥 드래곤 강타! -1,000 HP (+400 G)', e.clientX, e.clientY);
+        openPlazaRaidModal(renderPlazaBoss);
+      });
+
       deck.querySelector('#plaza-raid-btn')?.addEventListener('click', () => {
         openPlazaRaidModal(renderPlazaBoss);
       });
@@ -1371,7 +1680,6 @@
     }
 
     renderPlazaBoss();
-    plazaView.prepend(deck);
   }
 
   function openPlazaRaidModal(onUpdate) {
@@ -1463,18 +1771,94 @@
     dialog.showModal();
   }
 
-  // ── 4. ZERO 팀 (Team / team-view) 1-Click RPG 영웅 도감 & 45인 캐릭터 카드 시각화 ──
+  // ── 4. ZERO 팀 (Team / team-view) 45인 사무실·광장 월드맵 최상단 복원 & 1-Click RPG 영웅 도감 ──
+  // 수정 사유: viewport.js 페이지네이션으로 인해 #office-panel(45인 사무실 광장 맵)이 숨겨지거나 밀려나는 현상을 방지하기 위해 #office-panel을 최상단에 고정하고, 순간이동 컨트롤 바를 맵 바로 위에 장착하며, 4인 파티 덱 카드는 맵 바로 아래에 배치
   function setupTeamRpg() {
     const teamView = document.getElementById('team-view');
     if (!teamView) return;
 
+    // #team-view 내부의 모든 섹션에서 .viewport-page-away 클래스를 제거하여 45인 광장 맵(#office-panel)이 절대 사라지지 않도록 보장
+    teamView.querySelectorAll('.viewport-page-away').forEach(el => {
+      el.classList.remove('viewport-page-away');
+    });
+
+    const officePanel = document.getElementById('office-panel');
+    const officeMap = document.getElementById('office-map');
+
+    // (A) 45인 사무실·광장 맵(#office-map) 바로 위에 1줄 순간이동 & 광장 워프 바 장착
+    if (officePanel) {
+      officePanel.classList.remove('viewport-page-away');
+      officePanel.hidden = false;
+      let quickTop = document.getElementById('team-rpg-quick-top');
+      if (!quickTop) {
+        quickTop = document.createElement('div');
+        quickTop.id = 'team-rpg-quick-top';
+        quickTop.className = 'team-rpg-quick-top';
+        const mapFrame = officePanel.querySelector('.office-map-frame') || officeMap;
+        if (mapFrame && mapFrame.parentNode) {
+          mapFrame.parentNode.insertBefore(quickTop, mapFrame);
+        } else {
+          officePanel.prepend(quickTop);
+        }
+      }
+
+      if (!quickTop.dataset.bound) {
+        quickTop.dataset.bound = 'true';
+        quickTop.innerHTML = `
+          <div class="team-quick-top-row">
+            <span class="team-quick-badge">⚔️ ZERO 45인 길드 사무실 &amp; 중앙 광장 월드맵</span>
+            <div class="team-quick-warps">
+              <button type="button" class="team-teleport-btn active" data-dept="ALL">🗺️ 45인 전체 광장</button>
+              <button type="button" class="team-teleport-btn" data-dept="CHAIRPERSON">👑 ZERO 의장실</button>
+              <button type="button" class="team-teleport-btn" data-dept="MEETING">🏰 중앙 원탁광장</button>
+              <button type="button" class="team-teleport-btn" data-dept="THORP">🧙‍♂️ 소프 마법성소</button>
+              <button type="button" class="team-teleport-btn" data-dept="GREENBLATT">⚔️ 그린블라트 공방</button>
+              <button type="button" class="team-teleport-btn" data-dept="BOGLE">🛡️ 보글 수호요새</button>
+              <button type="button" class="team-teleport-btn" data-dept="QUANT_RESEARCH_CHIEF">🔮 퀀트 마탑</button>
+              <button type="button" class="team-warp-link" data-go-view="lobby">🏰 내 사무실로</button>
+              <button type="button" class="team-warp-link" data-go-view="plaza">🐉 실시간 광장으로</button>
+            </div>
+          </div>
+        `;
+
+        quickTop.querySelectorAll('.team-teleport-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            playRetroSound('coin');
+            const dept = e.currentTarget.dataset.dept || 'ALL';
+            quickTop.querySelectorAll('.team-teleport-btn').forEach(b => b.classList.toggle('active', b === btn));
+            const deptSelect = document.getElementById('office-department');
+            if (deptSelect) {
+              deptSelect.value = dept;
+              deptSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            spawnFloatingEffect(`⚡ [${btn.textContent.trim()}] 이동!`, e.clientX, e.clientY);
+          });
+        });
+
+        quickTop.querySelectorAll('[data-go-view]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            goView(btn.dataset.goView);
+          });
+        });
+      }
+    }
+
+    // (B) #office-panel(45인 사무실 광장 월드맵) 바로 아래에 4인 영웅 파티 덱 편성기 배치 (div 태그를 사용하여 viewport.js가 #office-panel을 숨기지 않게 함)
     const state = getRpgState();
     let builder = document.getElementById('team-rpg-builder');
     if (!builder) {
-      builder = document.createElement('section');
+      builder = document.createElement('div');
       builder.id = 'team-rpg-builder';
       builder.className = 'team-rpg-container';
-      teamView.prepend(builder);
+      if (officePanel && officePanel.nextSibling) {
+        officePanel.parentNode.insertBefore(builder, officePanel.nextSibling);
+      } else if (officePanel && officePanel.parentNode) {
+        officePanel.parentNode.appendChild(builder);
+      } else {
+        teamView.appendChild(builder);
+      }
+    } else if (officePanel && builder.previousElementSibling !== officePanel) {
+      officePanel.parentNode.insertBefore(builder, officePanel.nextSibling);
     }
 
     let selectedPresetId = state.activePartyId || 'thorp_balance';
@@ -1487,9 +1871,9 @@
       builder.innerHTML = `
         <div class="team-rpg-header">
           <div>
-            <span class="team-rpg-tag">⚔️ ZERO 영웅 도감 & 1-Click 파티 편성소</span>
+            <span class="team-rpg-tag">⚔️ ZERO 영웅 도감 &amp; 1-Click 파티 편성소</span>
             <h3 class="team-rpg-title">주식을 몰라도 1초 만에 완성하는 전설의 4인 영웅 파티</h3>
-            <p class="team-rpg-desc">원하는 파티 탭을 누르고 [⚡ 이 파티로 출격하기]만 누르면 끝! 영웅 카드를 눌러 장비를 강화해 보세요.</p>
+            <p class="team-rpg-desc">위쪽 45인 광장 맵에서 팀원들을 만나고, 아래에서 대표님의 주력 4인 파티를 즉시 장착해 보세요.</p>
           </div>
           <div class="team-rpg-tabs">
             ${RPG_PRESETS.map(p => `
@@ -1539,47 +1923,21 @@
                   <span class="th-rpg-skill-name">⚡ 고유 마법: ${m.skill}</span>
                   <p class="th-rpg-skill-desc">${m.desc}</p>
                 </div>
-                <button type="button" class="th-rpg-card-upgrade-btn">🔍 장비 보기 & 영웅 강화</button>
+                <button type="button" class="th-rpg-card-upgrade-btn">🔍 장비 보기 &amp; 영웅 강화</button>
               </div>
             `;
           }).join('')}
         </div>
 
         <div class="team-rpg-filter-bar">
-          <span class="team-rpg-filter-lbl">📖 45인 길드원 도감 클래스 필터:</span>
+          <span class="team-rpg-filter-lbl">📖 아래 45인 길드원 도감 클래스 필터:</span>
           <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'ALL' ? 'active' : ''}" data-role="ALL">전체 길드원 (45인)</button>
           <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'LEADER' ? 'active' : ''}" data-role="LEADER">👑 대마법사·팀장</button>
           <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'DEALER' ? 'active' : ''}" data-role="DEALER">⚔️ 공격 딜러</button>
           <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'TANKER' ? 'active' : ''}" data-role="TANKER">🛡️ 방어 탱커</button>
           <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'HEALER' ? 'active' : ''}" data-role="HEALER">💖 배당·치유 힐러</button>
         </div>
-
-        <div class="team-rpg-teleport-bar">
-          <span class="team-rpg-filter-lbl">🗺️ 45인 사무실 월드맵 순간이동:</span>
-          <button type="button" class="team-teleport-btn" data-dept="ALL">🗺️ 전체 길드맵</button>
-          <button type="button" class="team-teleport-btn" data-dept="CHAIRPERSON">👑 ZERO 의장실</button>
-          <button type="button" class="team-teleport-btn" data-dept="MEETING">🏰 중앙 원탁회의실</button>
-          <button type="button" class="team-teleport-btn" data-dept="THORP">🧙‍♂️ 소프 켈리 마법성소</button>
-          <button type="button" class="team-teleport-btn" data-dept="GREENBLATT">⚔️ 그린블라트 가치공방</button>
-          <button type="button" class="team-teleport-btn" data-dept="BOGLE">🛡️ 보글 수호요새</button>
-          <button type="button" class="team-teleport-btn" data-dept="QUANT_RESEARCH_CHIEF">🔮 퀀트 마탑</button>
-        </div>
       `;
-
-      builder.querySelectorAll('.team-teleport-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          playRetroSound('coin');
-          const dept = e.currentTarget.dataset.dept || 'ALL';
-          const deptSelect = document.getElementById('office-department');
-          if (deptSelect) {
-            deptSelect.value = dept;
-            deptSelect.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          const mapEl = document.getElementById('office-map');
-          mapEl?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-          spawnFloatingEffect(`⚡ [${btn.textContent.trim()}] 순간이동!`, e.clientX, e.clientY);
-        });
-      });
 
       builder.querySelectorAll('.team-rpg-tab').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -1658,7 +2016,16 @@
     });
   }
 
-  function checkAndInitViews() {
+  function checkAndInitViews(event) {
+    const activeView = event?.detail?.view || document.documentElement.dataset.zeroView || '';
+    if (activeView === 'plaza') {
+      suppressAutoProfileModal();
+      setTimeout(suppressAutoProfileModal, 30);
+    }
+    if (activeView === 'team') {
+      const officePanel = document.getElementById('office-panel');
+      if (officePanel) officePanel.classList.remove('viewport-page-away');
+    }
     setupGlobalEasyBar();
     setupHomeRpgGateway();
     setupOfficeRpg();

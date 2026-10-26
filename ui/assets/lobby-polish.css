@@ -4236,15 +4236,29 @@ html #lobby-view .lobby-main {
   overflow: visible !important;
 }
 
-/* 모바일에서 쪼개진 섹션 페이지(.viewport-page-away)도 한 번에 쭉 스크롤하며 볼 수 있도록 해제 */
-@media (max-width: 960px) {
-  .viewport-section-page,
-  .viewport-section-page.viewport-page-away {
-    display: block !important;
-    height: auto !important;
-    overflow: visible !important;
-    margin-bottom: 14px !important;
+/* 모든 해상도(PC·태블릿·모바일)에서 섹션 페이지네이션(.viewport-page-away)으로 인해 ZERO 팀 45인 광장 맵 등이 숨겨지는 현상 원천 차단 */
+html .viewport-section-page,
+html .viewport-section-page.viewport-page-away {
+  display: block !important;
+  height: auto !important;
+  overflow: visible !important;
+  margin-bottom: 16px !important;
+}
+html .viewport-controls {
+  display: none !important;
+}
+
+/* 768px ~ 900px 태블릿 구간에서 좌측 레일과 상단 네비게이션이 숨겨질 때 하단 탭바가 항상 표시되도록 보장 */
+@media (max-width: 900px) {
+  .mobile-tabbar {
+    display: grid !important;
   }
+}
+
+/* 실시간 광장 진입 시 social.css가 #plaza-rpg-deck을 숨기지 못하도록 강제 표시 */
+#plaza-view[data-entered="true"] > #plaza-rpg-deck,
+#plaza-view > #plaza-rpg-deck {
+  display: flex !important;
 }
 
 /* 사무실 맵(#lobby-stage)이 0px로 찌그러지지 않고 황금 액자 비율로 선명하게 표시되도록 고정 */
@@ -4342,6 +4356,12 @@ html #lobby-view .lobby-meta {
   cursor: pointer;
   transition: transform 0.15s ease;
 }
+.slim-action-btn.warp {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  border: 1px solid #93c5fd;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
 .slim-action-btn.gold {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   color: #0f172a;
@@ -4356,7 +4376,7 @@ html #lobby-view .lobby-meta {
   transform: translateY(-1px) scale(1.03);
 }
 
-/* 2. 사무실 맵(#lobby-stage) 내부 RPG 월드맵 오버레이 & 5대 랜드마크 오브젝트 */
+/* 2. 사무실 맵(#lobby-stage) 내부 RPG 월드맵 오버레이 & 랜드마크 오브젝트 */
 .office-map-rpg-overlay {
   position: absolute;
   inset: 0;
@@ -4368,7 +4388,7 @@ html #lobby-view .lobby-meta {
   position: absolute;
   top: 6px;
   left: 8px;
-  right: 8px;
+  right: 92px; /* 우측 상단 원래 '광장' 포털 버튼(.floor-portal)이 가려지지 않도록 여백 확보 */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4380,7 +4400,7 @@ html #lobby-view .lobby-meta {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(15, 23, 42, 0.82);
+  background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(251, 191, 36, 0.55);
   color: #fde68a;
   padding: 4px 10px;
@@ -4404,7 +4424,7 @@ html #lobby-view .lobby-meta {
 }
 .rpg-map-theme-btn {
   pointer-events: auto;
-  background: rgba(15, 23, 42, 0.82);
+  background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #f8fafc;
   border-radius: 999px;
@@ -4422,12 +4442,12 @@ html #lobby-view .lobby-meta {
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.45);
 }
 
-/* 맵 위 5대 인터랙티브 RPG 오브젝트 마커 */
+/* 맵 위 인터랙티브 RPG 오브젝트 마커 */
 .rpg-map-node {
   position: absolute;
   transform: translate(-50%, -50%);
   pointer-events: auto;
-  background: rgba(15, 23, 42, 0.86);
+  background: rgba(15, 23, 42, 0.88);
   border: 1.5px solid #fbbf24;
   border-radius: 14px;
   padding: 4px 8px;
@@ -4439,6 +4459,12 @@ html #lobby-view .lobby-meta {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.38), 0 0 12px rgba(251, 191, 36, 0.35);
   animation: rpgNodeFloat 2.6s ease-in-out infinite;
   transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.rpg-map-node.node-portal-team,
+.rpg-map-node.node-portal-plaza {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  border: 2px solid #38bdf8;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.45);
 }
 .rpg-map-node:hover {
   transform: translate(-50%, -56%) scale(1.1);
@@ -4514,18 +4540,36 @@ html #lobby-view .lobby-meta {
   100% { transform: scale(1.6); opacity: 0; }
 }
 
-/* 3. ZERO 팀 45인 월드맵 순간이동 바 & SVG 맵 RPG 액자화 */
-.team-rpg-teleport-bar {
+/* 3. ZERO 팀 45인 월드맵 상단 1줄 순간이동 바 & SVG 맵 RPG 액자화 */
+.team-rpg-quick-top {
+  background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 100%);
+  border: 1.5px solid rgba(251, 191, 36, 0.55);
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin: 8px 0 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.22);
+}
+.team-quick-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.team-quick-badge {
+  font-size: 13px;
+  font-weight: 900;
+  color: #fde68a;
+  white-space: nowrap;
+}
+.team-quick-warps {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(245, 158, 11, 0.35);
 }
 .team-teleport-btn {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
+  background: rgba(30, 41, 59, 0.9);
   color: #fde68a;
   border: 1px solid rgba(251, 191, 36, 0.45);
   border-radius: 999px;
@@ -4535,10 +4579,22 @@ html #lobby-view .lobby-meta {
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.team-teleport-btn:hover {
+.team-teleport-btn:hover,
+.team-teleport-btn.active {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #0f172a;
+  border-color: #fde047;
   transform: translateY(-1px);
+}
+.team-warp-link {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  border: 1px solid #93c5fd;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 900;
+  cursor: pointer;
 }
 html #team-view #office-map.office-map {
   border: 2.5px solid #f59e0b !important;
@@ -4546,4 +4602,578 @@ html #team-view #office-map.office-map {
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18) !important;
   min-height: 360px !important;
   touch-action: pan-x pan-y !important;
+}
+
+/* 4. 실시간 광장 인터랙티브 RPG 광장 월드맵 (#rpg-plaza-interactive-stage) */
+.rpg-plaza-world-card {
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 20px;
+  padding: 14px;
+  color: #f8fafc;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rpg-plaza-world-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rpg-plaza-world-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.plaza-live-dot {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  animation: rpgNodeFloat 1.8s infinite;
+}
+.rpg-plaza-world-title strong {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fde68a;
+}
+.rpg-plaza-world-title small {
+  font-size: 11.5px;
+  color: #cbd5e1;
+}
+.rpg-plaza-world-warps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.plaza-warp-pill {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  color: #fde68a;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.plaza-warp-pill:hover {
+  background: #f59e0b;
+  color: #0f172a;
+}
+
+.rpg-plaza-map-canvas {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  aspect-ratio: 16 / 9;
+  max-height: 500px;
+  border-radius: 16px;
+  border: 2px solid rgba(251, 191, 36, 0.65);
+  background:
+    radial-gradient(circle at 50% 52%, rgba(251, 191, 36, 0.18) 0%, rgba(56, 189, 248, 0.08) 38%, transparent 70%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0px, rgba(255, 255, 255, 0.04) 1px, transparent 1px, transparent 36px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0px, rgba(255, 255, 255, 0.04) 1px, transparent 1px, transparent 36px),
+    linear-gradient(180deg, #0b132b 0%, #1c2541 48%, #0f172a 100%);
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+@media (max-width: 640px) {
+  .rpg-plaza-map-canvas {
+    min-height: 300px;
+    aspect-ratio: 4 / 3;
+  }
+}
+.plaza-map-board {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(94%, 740px);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1.5px solid #38bdf8;
+  border-radius: 12px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  z-index: 4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.board-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.board-ticker {
+  font-size: 11.5px;
+  color: #e2e8f0;
+}
+.board-ticker strong {
+  color: #34d399;
+}
+.plaza-map-floor-emblem {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  transform: translate(-50%, -50%);
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 2px dashed rgba(251, 191, 36, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: rgba(251, 191, 36, 0.35);
+  pointer-events: none;
+}
+.plaza-map-spot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 23, 42, 0.88);
+  border: 2px solid #fbbf24;
+  border-radius: 16px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  z-index: 6;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s ease;
+}
+.plaza-map-spot:hover {
+  transform: translate(-50%, -54%) scale(1.06);
+}
+.plaza-map-spot.spot-boss {
+  border-color: #ef4444;
+  background: radial-gradient(circle, rgba(127, 29, 29, 0.92), rgba(15, 23, 42, 0.94));
+}
+.spot-float-tag {
+  background: #f59e0b;
+  color: #0f172a;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.spot-float-tag.boss {
+  background: #ef4444;
+  color: #ffffff;
+}
+.spot-emoji {
+  font-size: 28px;
+  line-height: 1.1;
+}
+.spot-name {
+  font-size: 11px;
+  font-weight: 900;
+  color: #fde68a;
+  white-space: nowrap;
+}
+.plaza-map-portal {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1.5px solid #38bdf8;
+  color: #e0f2fe;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  z-index: 6;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.35);
+}
+.plaza-map-portal.highlight {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-color: #fde047;
+  color: #ffffff;
+}
+.plaza-map-npc,
+.plaza-map-player {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 5;
+}
+.plaza-map-player {
+  z-index: 8;
+  transition: left 0.28s ease-out, top 0.28s ease-out;
+}
+.plaza-speech-bubble {
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #f8fafc;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 10px;
+  max-width: 190px;
+  text-align: center;
+  margin-bottom: 2px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+.plaza-speech-bubble.my-bubble {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  border-color: #fde047;
+  font-weight: 900;
+}
+.plaza-char-nick {
+  background: rgba(15, 23, 42, 0.85);
+  color: #cbd5e1;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.plaza-char-nick.my-nick {
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #fde047;
+}
+@media (max-width: 560px) {
+  .plaza-map-npc[data-npc-idx="1"],
+  .plaza-map-npc[data-npc-idx="3"] {
+    display: none;
+  }
+}
+
+.rpg-plaza-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+.rpg-plaza-dpad {
+  display: flex;
+  gap: 4px;
+}
+.dpad-btn {
+  background: #1e293b;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.dpad-btn:active {
+  transform: scale(0.94);
+  background: #f59e0b;
+}
+.rpg-plaza-quick-chats {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.quick-shout-btn {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  color: #e0f2fe;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.quick-shout-btn:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+.rpg-plaza-shout-form {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  min-width: 210px;
+}
+.rpg-plaza-shout-form input {
+  flex: 1;
+  background: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #f8fafc !important;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.shout-submit-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 5. 다크모드 화이트 누수(White Leak) 100% 완전 차단 블록 */
+html[data-zero-theme="dark"],
+html[data-theme="dark"],
+html.dark {
+  color-scheme: dark !important;
+  --bg-canvas: #0b0f17 !important;
+  --bg-surface: #131b26 !important;
+  --bg-elevated: #1a2433 !important;
+  --sem-bg-canvas: #0b0f17 !important;
+  --sem-bg-surface: #131b26 !important;
+  --sem-bg-surface-subtle: #1a2433 !important;
+  --sem-surface-subtle: #1a2433 !important;
+  --sem-text-primary: #f8fafc !important;
+  --sem-text-secondary: #cbd5e1 !important;
+  --sem-text-muted: #94a3b8 !important;
+  --sem-line-subtle: rgba(255, 255, 255, 0.1) !important;
+  --sem-border-subtle: rgba(255, 255, 255, 0.1) !important;
+}
+
+html[data-zero-theme="dark"] body,
+html[data-theme="dark"] body,
+html.dark body,
+html[data-zero-theme="dark"] main,
+html[data-theme="dark"] main,
+html.dark main,
+html[data-zero-theme="dark"] .view,
+html[data-theme="dark"] .view,
+html.dark .view {
+  background-color: #0b0f17 !important;
+  color: #f8fafc !important;
+}
+
+/* 모든 다이얼로그·모달·더보기·채팅창·영웅상세·레이드창·오피스패널 다크모드 배경 통일 */
+html[data-zero-theme="dark"] dialog,
+html[data-theme="dark"] dialog,
+html.dark dialog,
+html[data-zero-theme="dark"] #more-menu,
+html[data-theme="dark"] #more-menu,
+html.dark #more-menu,
+html[data-zero-theme="dark"] #member-profile-dialog,
+html[data-theme="dark"] #member-profile-dialog,
+html.dark #member-profile-dialog,
+html[data-zero-theme="dark"] #lobby-chat,
+html[data-theme="dark"] #lobby-chat,
+html.dark #lobby-chat,
+html[data-zero-theme="dark"] #rpg-hero-detail-dialog,
+html[data-theme="dark"] #rpg-hero-detail-dialog,
+html.dark #rpg-hero-detail-dialog,
+html[data-zero-theme="dark"] #plaza-raid-dialog,
+html[data-theme="dark"] #plaza-raid-dialog,
+html.dark #plaza-raid-dialog,
+html[data-zero-theme="dark"] #office-request-dialog,
+html[data-theme="dark"] #office-request-dialog,
+html.dark #office-request-dialog,
+html[data-zero-theme="dark"] .rpg-hero-modal-inner,
+html[data-theme="dark"] .rpg-hero-modal-inner,
+html.dark .rpg-hero-modal-inner,
+html[data-zero-theme="dark"] .plaza-raid-modal,
+html[data-theme="dark"] .plaza-raid-modal,
+html.dark .plaza-raid-modal,
+html[data-zero-theme="dark"] .raid-modal-head,
+html[data-theme="dark"] .raid-modal-head,
+html.dark .raid-modal-head,
+html[data-zero-theme="dark"] .raid-battle-ground,
+html[data-theme="dark"] .raid-battle-ground,
+html.dark .raid-battle-ground,
+html[data-zero-theme="dark"] .team-rpg-container,
+html[data-theme="dark"] .team-rpg-container,
+html.dark .team-rpg-container,
+html[data-zero-theme="dark"] .office-tycoon-showcase,
+html[data-theme="dark"] .office-tycoon-showcase,
+html.dark .office-tycoon-showcase,
+html[data-zero-theme="dark"] .office-hotspots-container,
+html[data-theme="dark"] .office-hotspots-container,
+html.dark .office-hotspots-container,
+html[data-zero-theme="dark"] .office-panel,
+html[data-theme="dark"] .office-panel,
+html.dark .office-panel,
+html[data-zero-theme="dark"] .office-records,
+html[data-theme="dark"] .office-records,
+html.dark .office-records,
+html[data-zero-theme="dark"] .office-meeting,
+html[data-theme="dark"] .office-meeting,
+html.dark .office-meeting,
+html[data-zero-theme="dark"] .office-inspector,
+html[data-theme="dark"] .office-inspector,
+html.dark .office-inspector,
+html[data-zero-theme="dark"] .team-panel,
+html[data-theme="dark"] .team-panel,
+html.dark .team-panel,
+html[data-zero-theme="dark"] .lounge-card,
+html[data-theme="dark"] .lounge-card,
+html.dark .lounge-card,
+html[data-zero-theme="dark"] .lounge-dialog,
+html[data-theme="dark"] .lounge-dialog,
+html.dark .lounge-dialog,
+html[data-zero-theme="dark"] .community-feed,
+html[data-theme="dark"] .community-feed,
+html.dark .community-feed,
+html[data-zero-theme="dark"] .community-compose,
+html[data-theme="dark"] .community-compose,
+html.dark .community-compose,
+html[data-zero-theme="dark"] .panel,
+html[data-theme="dark"] .panel,
+html.dark .panel,
+html[data-zero-theme="dark"] .card,
+html[data-theme="dark"] .card,
+html.dark .card {
+  background: #131b26 !important;
+  background-color: #131b26 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+}
+
+/* 서브 카드·아이템·칩·입력창 다크모드 배경 통일 */
+html[data-zero-theme="dark"] .more-card-item,
+html[data-theme="dark"] .more-card-item,
+html.dark .more-card-item,
+html[data-zero-theme="dark"] .rpg-hero-explain-box,
+html[data-theme="dark"] .rpg-hero-explain-box,
+html.dark .rpg-hero-explain-box,
+html[data-zero-theme="dark"] .rpg-hero-stats-box,
+html[data-theme="dark"] .rpg-hero-stats-box,
+html.dark .rpg-hero-stats-box,
+html[data-zero-theme="dark"] .rpg-hero-equip-box,
+html[data-theme="dark"] .rpg-hero-equip-box,
+html.dark .rpg-hero-equip-box,
+html[data-zero-theme="dark"] .rpg-equip-chip,
+html[data-theme="dark"] .rpg-equip-chip,
+html.dark .rpg-equip-chip,
+html[data-zero-theme="dark"] .raid-combat-log,
+html[data-theme="dark"] .raid-combat-log,
+html.dark .raid-combat-log,
+html[data-zero-theme="dark"] .team-rpg-banner,
+html[data-theme="dark"] .team-rpg-banner,
+html.dark .team-rpg-banner,
+html[data-zero-theme="dark"] .th-rpg-card,
+html[data-theme="dark"] .th-rpg-card,
+html.dark .th-rpg-card,
+html[data-zero-theme="dark"] .th-rpg-skill-box,
+html[data-theme="dark"] .th-rpg-skill-box,
+html.dark .th-rpg-skill-box,
+html[data-zero-theme="dark"] .team-card,
+html[data-theme="dark"] .team-card,
+html.dark .team-card,
+html[data-zero-theme="dark"] .office-selected-details,
+html[data-theme="dark"] .office-selected-details,
+html.dark .office-selected-details,
+html[data-zero-theme="dark"] .office-flow-team,
+html[data-theme="dark"] .office-flow-team,
+html.dark .office-flow-team,
+html[data-zero-theme="dark"] .office-board-column,
+html[data-theme="dark"] .office-board-column,
+html.dark .office-board-column,
+html[data-zero-theme="dark"] .office-board-job,
+html[data-theme="dark"] .office-board-job,
+html.dark .office-board-job,
+html[data-zero-theme="dark"] .office-ledger-section,
+html[data-theme="dark"] .office-ledger-section,
+html.dark .office-ledger-section,
+html[data-zero-theme="dark"] .office-room-navigator,
+html[data-theme="dark"] .office-room-navigator,
+html.dark .office-room-navigator,
+html[data-zero-theme="dark"] .office-room-link,
+html[data-theme="dark"] .office-room-link,
+html.dark .office-room-link,
+html[data-zero-theme="dark"] .office-view-switch button,
+html[data-theme="dark"] .office-view-switch button,
+html.dark .office-view-switch button,
+html[data-zero-theme="dark"] .office-reload,
+html[data-theme="dark"] .office-reload,
+html.dark .office-reload,
+html[data-zero-theme="dark"] .office-stat,
+html[data-theme="dark"] .office-stat,
+html.dark .office-stat,
+html[data-zero-theme="dark"] .office-summary > div,
+html[data-theme="dark"] .office-summary > div,
+html.dark .office-summary > div,
+html[data-zero-theme="dark"] .plaza-boss-box,
+html[data-theme="dark"] .plaza-boss-box,
+html.dark .plaza-boss-box,
+html[data-zero-theme="dark"] .plaza-fountain-card,
+html[data-theme="dark"] .plaza-fountain-card,
+html.dark .plaza-fountain-card,
+html[data-zero-theme="dark"] .plaza-hall-card,
+html[data-theme="dark"] .plaza-hall-card,
+html.dark .plaza-hall-card,
+html[data-zero-theme="dark"] .chat-rpg-actions,
+html[data-theme="dark"] .chat-rpg-actions,
+html.dark .chat-rpg-actions,
+html[data-zero-theme="dark"] .chat-rpg-btn,
+html[data-theme="dark"] .chat-rpg-btn,
+html.dark .chat-rpg-btn,
+html[data-zero-theme="dark"] .lobby-hero,
+html[data-theme="dark"] .lobby-hero,
+html.dark .lobby-hero,
+html[data-zero-theme="dark"] .lobby-meta,
+html[data-theme="dark"] .lobby-meta,
+html.dark .lobby-meta,
+html[data-zero-theme="dark"] .mts-holding-card,
+html[data-theme="dark"] .mts-holding-card,
+html.dark .mts-holding-card,
+html[data-zero-theme="dark"] .account-metrics > div,
+html[data-theme="dark"] .account-metrics > div,
+html.dark .account-metrics > div,
+html[data-zero-theme="dark"] input,
+html[data-theme="dark"] input,
+html.dark input,
+html[data-zero-theme="dark"] select,
+html[data-theme="dark"] select,
+html.dark select,
+html[data-zero-theme="dark"] textarea,
+html[data-theme="dark"] textarea,
+html.dark textarea {
+  background: #1a2433 !important;
+  background-color: #1a2433 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+}
+
+html[data-zero-theme="dark"] .more-cat-label,
+html[data-theme="dark"] .more-cat-label,
+html.dark .more-cat-label,
+html[data-zero-theme="dark"] .more-header-text h2,
+html[data-theme="dark"] .more-header-text h2,
+html.dark .more-header-text h2,
+html[data-zero-theme="dark"] .th-rpg-card-name,
+html[data-theme="dark"] .th-rpg-card-name,
+html.dark .th-rpg-card-name,
+html[data-zero-theme="dark"] .team-rpg-title,
+html[data-theme="dark"] .team-rpg-title,
+html.dark .team-rpg-title,
+html[data-zero-theme="dark"] .plaza-fountain-card h4,
+html[data-theme="dark"] .plaza-fountain-card h4,
+html.dark .plaza-fountain-card h4,
+html[data-zero-theme="dark"] .plaza-hall-card h4,
+html[data-theme="dark"] .plaza-hall-card h4,
+html.dark .plaza-hall-card h4 {
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
