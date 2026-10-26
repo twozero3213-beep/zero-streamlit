@@ -5177,3 +5177,1173 @@ html.dark .plaza-hall-card h4 {
   color: #f8fafc !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
+
+
+/* ══ ZERO 자산운용사 타이쿤 (Toss + Kakao + AI Fund House) 통합 스타일 ══ */
+
+/* 1. 상단 캡슐 내비게이션 & 운용사 패스 배지 */
+.tycoon-pass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1px solid #93c5fd;
+  color: #1e3a8a;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.tycoon-pass-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(49, 130, 246, 0.18);
+}
+.tycoon-pass-pill .pass-lv {
+  background: #3182f6;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.tycoon-pass-pill .pass-tier {
+  font-weight: 800;
+  color: #191f28;
+}
+.tycoon-pass-pill .pass-zp {
+  font-weight: 700;
+  color: #2563eb;
+}
+.tycoon-pass-pill .pass-mission-dot {
+  background: #10b981;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.easy-util-btn {
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid #d1d6db;
+  background: #ffffff;
+  color: #333d4b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 2. 투자 홈 상단 '내 운용사 브리핑' 컴팩트 배너 */
+.tycoon-home-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e5e8eb;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+.tycoon-home-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 260px;
+}
+.tycoon-home-avatar {
+  flex-shrink: 0;
+}
+.tycoon-home-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.tycoon-pill-blue {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(49, 130, 246, 0.12);
+  color: #3182f6;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.tycoon-pill-gray {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f2f4f6;
+  color: #4e5968;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.tycoon-home-headline {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #191f28;
+  margin-bottom: 3px;
+}
+.tycoon-home-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #4e5968;
+  line-height: 1.45;
+}
+.tycoon-home-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tycoon-btn-primary {
+  padding: 9px 15px;
+  border-radius: 12px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.tycoon-btn-primary:hover {
+  background: #1b64da;
+}
+.tycoon-btn-secondary {
+  padding: 9px 14px;
+  border-radius: 12px;
+  border: 1px solid #d1d6db;
+  background: #ffffff;
+  color: #333d4b;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 3. 내 사무실 하단 '내 운용사 데스크 & 오늘의 3분 투자 미션' 카드 */
+.tycoon-office-desk-card {
+  margin-top: 14px;
+  padding: 20px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+}
+.tycoon-desk-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f2f4f6;
+}
+.tycoon-firm-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.tycoon-lv-pill {
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.tycoon-firm-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #191f28;
+}
+.tycoon-streak-pill {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.tycoon-zp-pill {
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.tycoon-xp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tycoon-xp-bar-bg {
+  width: 220px;
+  max-width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e8eb;
+  overflow: hidden;
+}
+.tycoon-xp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3182f6, #10b981);
+}
+.tycoon-xp-text {
+  font-size: 12px;
+  color: #6b7684;
+  font-weight: 600;
+}
+.tycoon-theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tycoon-theme-lbl {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7684;
+}
+.tycoon-theme-btn {
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  color: #4e5968;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tycoon-theme-btn.active {
+  background: #3182f6;
+  border-color: #3182f6;
+  color: #ffffff;
+}
+.tycoon-desk-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .tycoon-desk-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.tycoon-box-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.tycoon-box-head strong {
+  display: block;
+  font-size: 14.5px;
+  color: #191f28;
+}
+.tycoon-box-head small {
+  display: block;
+  font-size: 12px;
+  color: #6b7684;
+}
+.tycoon-link-btn {
+  border: none;
+  background: transparent;
+  color: #3182f6;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.tycoon-mission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tycoon-mission-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+.tycoon-mission-item:hover {
+  border-color: #3182f6;
+  transform: translateY(-1px);
+}
+.tycoon-mission-item.done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.tm-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.tm-text {
+  flex: 1;
+  min-width: 0;
+}
+.tm-text strong {
+  display: block;
+  font-size: 13.5px;
+  color: #191f28;
+  margin-bottom: 2px;
+}
+.tm-text small {
+  display: block;
+  font-size: 12px;
+  color: #6b7684;
+}
+.tm-reward {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(49, 130, 246, 0.12);
+  color: #3182f6;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.tycoon-mission-item.done .tm-reward {
+  background: #dcfce7;
+  color: #15803d;
+}
+.tycoon-mini-analysts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 520px) {
+  .tycoon-mini-analysts {
+    grid-template-columns: 1fr;
+  }
+}
+.tycoon-mini-analyst-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  cursor: pointer;
+}
+.tycoon-mini-analyst-card:hover {
+  border-color: #3182f6;
+}
+.tma-info {
+  min-width: 0;
+}
+.tma-role {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #3182f6;
+}
+.tma-name {
+  display: block;
+  font-size: 13.5px;
+  color: #191f28;
+}
+.tma-desc {
+  display: block;
+  font-size: 11.5px;
+  color: #6b7684;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 4. ZERO 45인 팀: 상단 부서 바로가기 바 & 나만의 AI 투자위원회 편성소 */
+.tycoon-team-quickbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e8eb;
+}
+.ttq-left, .ttq-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ttq-badge {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #191f28;
+  margin-right: 4px;
+}
+.ttq-chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid #d1d6db;
+  background: #ffffff;
+  color: #333d4b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ttq-chip:hover {
+  border-color: #3182f6;
+  color: #3182f6;
+}
+.ttq-warp {
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tycoon-committee-builder {
+  margin: 18px 0;
+  padding: 22px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+.tcb-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.tcb-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #3182f6;
+  margin-bottom: 4px;
+}
+.tcb-title {
+  margin: 0 0 4px 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #191f28;
+}
+.tcb-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7684;
+}
+.tcb-preset-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tcb-preset-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  color: #333d4b;
+  cursor: pointer;
+  text-align: left;
+}
+.tcb-preset-tab strong {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.tcb-preset-tab small {
+  font-size: 11px;
+  color: #6b7684;
+}
+.tcb-preset-tab.active {
+  background: #eff6ff;
+  border-color: #3182f6;
+  color: #1e3a8a;
+}
+.tcb-summary-banner {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e5e8eb;
+  margin-bottom: 18px;
+}
+@media (max-width: 860px) {
+  .tcb-summary-banner {
+    grid-template-columns: 1fr;
+  }
+}
+.tcb-summary-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.tcb-summary-title-row h4 {
+  margin: 0;
+  font-size: 17px;
+  color: #191f28;
+}
+.tcb-tag-pill {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.tcb-summary-desc {
+  margin: 0 0 12px 0;
+  font-size: 13.5px;
+  color: #4e5968;
+  line-height: 1.5;
+}
+.tcb-alloc-bar {
+  display: flex;
+  height: 28px;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
+}
+.tcb-alloc-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 0 6px;
+}
+.tcb-metric-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  margin-bottom: 7px;
+}
+.tcb-metric-row span {
+  width: 110px;
+  font-weight: 700;
+  color: #4e5968;
+}
+.tcb-mbar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e8eb;
+  overflow: hidden;
+}
+.tcb-mbar > div {
+  height: 100%;
+  border-radius: 999px;
+}
+.tcb-equip-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.tcb-equip-btn.equipped {
+  background: #10b981;
+}
+.tcb-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 980px) {
+  .tcb-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .tcb-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.tcb-analyst-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.tcb-analyst-card:hover {
+  transform: translateY(-2px);
+  border-color: #3182f6;
+}
+.tcb-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.tcb-role-pill {
+  font-size: 11px;
+  font-weight: 800;
+  color: #3182f6;
+  background: #eff6ff;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.tcb-lv-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7684;
+}
+.tcb-avatar-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 10px;
+}
+.tcb-analyst-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #191f28;
+  text-align: center;
+}
+.tcb-analyst-spec {
+  font-size: 12px;
+  color: #6b7684;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.tcb-analyst-easy {
+  font-size: 12.5px;
+  color: #333d4b;
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+  flex: 1;
+}
+.tcb-analyst-quote {
+  margin: 0 0 12px 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 11.5px;
+  color: #4e5968;
+  font-style: normal;
+}
+.tcb-detail-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #d1d6db;
+  background: #f9fafb;
+  color: #333d4b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tcb-roster-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid #f2f4f6;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4e5968;
+}
+.tcb-fbtn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  color: #4e5968;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tcb-fbtn.active {
+  background: #3182f6;
+  border-color: #3182f6;
+  color: #ffffff;
+}
+
+/* 5. 실시간 광장 (#plaza-view): 아바타 라운지 & 🐂강세 vs 🐻약세 예측 매치 */
+.tycoon-plaza-stage {
+  padding: 20px;
+  margin-bottom: 18px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+.tp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.tp-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #3182f6;
+  margin-bottom: 4px;
+}
+.tp-title {
+  margin: 0 0 4px 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #191f28;
+}
+.tp-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7684;
+}
+.tp-nav-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tp-pill-btn {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #d1d6db;
+  background: #f9fafb;
+  color: #333d4b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tp-main-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .tp-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.tp-lounge-canvas {
+  position: relative;
+  height: 290px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
+  border: 1px solid #dbeafe;
+  overflow: hidden;
+  cursor: pointer;
+}
+.tp-floor-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#93c5fd 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.45;
+}
+.tp-center-board {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #ffffff;
+  text-align: center;
+  font-size: 12px;
+  z-index: 2;
+}
+.tp-center-board span {
+  display: block;
+  font-size: 10px;
+  color: #93c5fd;
+  font-weight: 700;
+}
+.tp-npc, .tp-player {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: left 0.25s ease, top 0.25s ease;
+  z-index: 3;
+}
+.tp-bubble, .tp-player-bubble {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #191f28;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  margin-bottom: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.tp-player-bubble {
+  background: #3182f6;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+.tp-avatar, .tp-player-avatar {
+  font-size: 28px;
+  line-height: 1;
+}
+.tp-npc small, .tp-player-tag {
+  margin-top: 2px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tp-lounge-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.tp-dpad {
+  display: flex;
+  gap: 4px;
+}
+.tp-pad-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #d1d6db;
+  background: #f9fafb;
+  cursor: pointer;
+}
+.tp-chat-form {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+.tp-chat-form input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d6db;
+  font-size: 12.5px;
+}
+.tp-league-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tp-match-card, .tp-ranking-card {
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+}
+.tp-match-head, .tp-ranking-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.tp-reward-tag {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #059669;
+}
+.tp-match-card h4 {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  color: #191f28;
+}
+.tp-vote-gauge {
+  display: flex;
+  height: 28px;
+  border-radius: 999px;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+.tp-gauge-bull {
+  background: #ef4444;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+}
+.tp-gauge-bear {
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+}
+.tp-vote-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tp-vote-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #d1d6db;
+  background: #ffffff;
+  cursor: pointer;
+}
+.tp-vote-btn.bull.selected {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.tp-vote-btn.bear.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.tp-ranking-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tp-ranking-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+}
+.tp-Ranking-list li div, .tp-ranking-list li div {
+  flex: 1;
+  min-width: 0;
+}
+.tp-ranking-list li strong {
+  display: block;
+  font-size: 13px;
+  color: #191f28;
+}
+.tp-ranking-list li small {
+  display: block;
+  font-size: 11.5px;
+  color: #6b7684;
+}
+.tp-ranking-list b.up {
+  color: #ef4444;
+  font-size: 13px;
+}
+.tp-ranking-list b.mine {
+  color: #3182f6;
+  font-size: 12.5px;
+}
+
+/* 6. 모달 (운용사 패스 & 애널리스트 브리핑) */
+.tycoon-modal {
+  width: min(520px, calc(100vw - 24px));
+  border-radius: 22px;
+  border: 1px solid #e5e8eb;
+  padding: 0;
+  background: #ffffff;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.24);
+}
+.tycoon-modal-box {
+  padding: 22px;
+}
+.tycoon-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f2f4f6;
+}
+.tycoon-modal-head h3 {
+  margin: 4px 0 0 0;
+  font-size: 18px;
+  color: #191f28;
+}
+.tm-analyst-head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tycoon-modal-close {
+  padding: 7px 13px;
+  border-radius: 10px;
+  border: 1px solid #d1d6db;
+  background: #f9fafb;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tm-tier-roadmap {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 14px 0;
+}
+.tm-roadmap-step {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  opacity: 0.6;
+}
+.tm-roadmap-step.unlocked {
+  opacity: 1;
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+.tm-roadmap-step strong {
+  display: block;
+  font-size: 13px;
+  color: #191f28;
+}
+.tm-roadmap-step small {
+  font-size: 11.5px;
+  color: #4e5968;
+}
+.tm-quote-card, .tm-current-committee, .tm-upgrade-row {
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e8eb;
+  margin-bottom: 12px;
+}
+.tm-upgrade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 7. 다크모드 완벽 대응 (.tycoon-* 전체) */
+html[data-zero-theme="dark"] .tycoon-home-banner,
+html[data-zero-theme="dark"] .tycoon-office-desk-card,
+html[data-zero-theme="dark"] .tycoon-committee-builder,
+html[data-zero-theme="dark"] .tycoon-plaza-stage,
+html[data-zero-theme="dark"] .tycoon-modal {
+  background: #131b26 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+}
+html[data-zero-theme="dark"] .tycoon-pass-pill,
+html[data-zero-theme="dark"] .easy-util-btn,
+html[data-zero-theme="dark"] .tycoon-btn-secondary,
+html[data-zero-theme="dark"] .tycoon-theme-btn,
+html[data-zero-theme="dark"] .tycoon-mission-item,
+html[data-zero-theme="dark"] .tycoon-mini-analyst-card,
+html[data-zero-theme="dark"] .tycoon-team-quickbar,
+html[data-zero-theme="dark"] .ttq-chip,
+html[data-zero-theme="dark"] .tcb-preset-tab,
+html[data-zero-theme="dark"] .tcb-summary-banner,
+html[data-zero-theme="dark"] .tcb-analyst-card,
+html[data-zero-theme="dark"] .tcb-analyst-quote,
+html[data-zero-theme="dark"] .tcb-detail-btn,
+html[data-zero-theme="dark"] .tcb-fbtn,
+html[data-zero-theme="dark"] .tp-pill-btn,
+html[data-zero-theme="dark"] .tp-pad-btn,
+html[data-zero-theme="dark"] .tp-match-card,
+html[data-zero-theme="dark"] .tp-ranking-card,
+html[data-zero-theme="dark"] .tp-ranking-list li,
+html[data-zero-theme="dark"] .tp-vote-btn,
+html[data-zero-theme="dark"] .tm-roadmap-step,
+html[data-zero-theme="dark"] .tm-quote-card,
+html[data-zero-theme="dark"] .tm-current-committee,
+html[data-zero-theme="dark"] .tm-upgrade-row,
+html[data-zero-theme="dark"] .tycoon-modal-close {
+  background: #1a2433 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #f8fafc !important;
+}
+html[data-zero-theme="dark"] .tycoon-lounge-canvas,
+html[data-zero-theme="dark"] .tp-lounge-canvas {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+  border-color: rgba(147, 197, 253, 0.25) !important;
+}
+html[data-zero-theme="dark"] .tp-bubble {
+  background: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #f8fafc !important;
+}
+html[data-zero-theme="dark"] .tycoon-home-headline,
+html[data-zero-theme="dark"] .tycoon-firm-name,
+html[data-zero-theme="dark"] .tycoon-box-head strong,
+html[data-zero-theme="dark"] .tm-text strong,
+html[data-zero-theme="dark"] .tma-name,
+html[data-zero-theme="dark"] .ttq-badge,
+html[data-zero-theme="dark"] .tcb-title,
+html[data-zero-theme="dark"] .tcb-summary-title-row h4,
+html[data-zero-theme="dark"] .tcb-analyst-name,
+html[data-zero-theme="dark"] .tp-title,
+html[data-zero-theme="dark"] .tp-match-card h4,
+html[data-zero-theme="dark"] .tp-ranking-list li strong,
+html[data-zero-theme="dark"] .tycoon-modal-head h3,
+html[data-zero-theme="dark"] .tm-roadmap-step strong {
+  color: #f8fafc !important;
+}
+html[data-zero-theme="dark"] .tycoon-home-sub,
+html[data-zero-theme="dark"] .tycoon-xp-text,
+html[data-zero-theme="dark"] .tycoon-box-head small,
+html[data-zero-theme="dark"] .tm-text small,
+html[data-zero-theme="dark"] .tma-desc,
+html[data-zero-theme="dark"] .tcb-sub,
+html[data-zero-theme="dark"] .tcb-summary-desc,
+html[data-zero-theme="dark"] .tcb-analyst-spec,
+html[data-zero-theme="dark"] .tcb-analyst-easy,
+html[data-zero-theme="dark"] .tp-sub,
+html[data-zero-theme="dark"] .tp-ranking-list li small,
+html[data-zero-theme="dark"] .tm-roadmap-step small {
+  color: #cbd5e1 !important;
+}

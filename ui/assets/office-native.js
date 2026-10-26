@@ -137,7 +137,7 @@ function person(ctx,actor,time,animated){
   const customClothes=registeredFor(actor,'clothes'),customHair=registeredFor(actor,'hair'),customShoes=registeredFor(actor,'shoes');
   const skin=['#e5b899','#c88f70','#a97154','#eed0b2'][seed%4],hair=['#31343c','#624737','#423a36','#b19270'][seed%4],outfit={shirt:'#3b82f6',hoodie:'#8b5cf6',vest:'#10b981',cardigan:'#f59e0b',suit:'#2563eb',jacket:'#ec4899',knit:'#ef4444',polo:'#06b6d4'}[a.outfit],shoe={dark:'#293541',white:'#e0e5df',blue:'#50728f',red:'#9d5a50'}[a.shoes];
   const body=registeredFor(actor,'body');if(body){ctx.save();ctx.translate(actor.pos.x,actor.pos.y);overlay(ctx,body,-5,-11,10,12,facing);for(const category of ['shoes','clothes','hair','accessories'])overlay(ctx,registeredFor(actor,category),-5,-11,10,12,facing);ctx.restore();return;}
-  ctx.save();ctx.translate(actor.pos.x,actor.pos.y);ellipse(ctx,0,.25,3.5,1.15,['#3b82f638','#8b5cf638','#10b98138','#f59e0b38'][seed%4]);ellipse(ctx,0,.1,2.5,.7,'#1d334528');if(facing==='left'||facing==='right')ctx.scale(.82,1);
+  ctx.save();ctx.translate(actor.pos.x,actor.pos.y);if(actor.id==='player')ellipse(ctx,0,.22,3.4,1.1,'#3182f633');ellipse(ctx,0,.1,2.5,.7,'#1d334528');if(facing==='left'||facing==='right')ctx.scale(.82,1);
   for(const side of [-1,1]){const offset=side*stride;rr(ctx,side<0?-1.5:.25,-2.3+offset,1.25,2.3,.35,'#3f4c5b');if(!customShoes)ellipse(ctx,side*.94,.05+offset,.8,.35,shoe);}
   ctx.translate(0,breathe);rr(ctx,-2,-6.4,4,4.5,1,customClothes?skin:outfit);rr(ctx,-1.5,-6.1,3,.45,.1,'#ffffff22');rr(ctx,-2,-3.3,4,1.4,.9,'#0000001a');
   if(facing!=='up'&&['suit','vest','jacket','cardigan'].includes(a.outfit)){ctx.beginPath();ctx.moveTo(-1.1,-6.4);ctx.lineTo(0,-3.9);ctx.lineTo(1.1,-6.4);ctx.closePath();ctx.fillStyle='#e9e9df';ctx.fill();line(ctx,[[-1.3,-6.2],[-.4,-4.5],[-1,-3.9]],'#ffffff55',.16);if(a.outfit==='suit'){line(ctx,[[0,-6],[0,-4.5]],'#9b6d6e',.4);ellipse(ctx,.7,-2.7,.12,.12,'#c7c7bc');}}
@@ -160,13 +160,8 @@ function person(ctx,actor,time,animated){
   if(a.accessory==='cap'){ellipse(ctx,0,-9.6,2.3,.9,'#4f6b84');ellipse(ctx,profile?profile*1.1:.6,-9.1,1.8,.35,'#304b65');}
   if(a.accessory==='headphones'){ctx.beginPath();ctx.ellipse(0,-8.6,2.2,1.8,0,Math.PI,Math.PI*2);ctx.strokeStyle='#344960';ctx.lineWidth=.4;ctx.stroke();for(const x of [-2,2])rr(ctx,x-.3,-8.8,.6,1.2,.25,'#38536a','#a9bfcd');}
   if(actor.activity==='coffee'){rr(ctx,2,-4,1.2,1.3,.2,'#f6eddf');ellipse(ctx,2.6,-4,.6,.2,'#765f4c');}
-  /* RPG 영웅 무기·방패·왕관·체력바(HP Bar) 캔버스 렌더링 */
-  const rpgClass=seed%4;
-  if(rpgClass===0){line(ctx,[[2.6,-6.8],[2.6,-1.2]],'#f59e0b',.32);ellipse(ctx,2.6,-7.2,.55,.55,'#38bdf8');ellipse(ctx,0,-10.7,1.4,.45,'#7c3aed');}
-  else if(rpgClass===1){line(ctx,[[-2.6,-6.8],[-2.6,-2.2]],'#e2e8f0',.38);line(ctx,[[-3.2,-3.6],[-2,-3.6]],'#fbbf24',.32);rr(ctx,-1.1,-11,2.2,.75,.2,'#fbbf24');}
-  else if(rpgClass===2){rr(ctx,1.8,-5.8,1.6,2.2,.4,'#1d4ed8','#fbbf24');rr(ctx,-1,-10.9,2,.65,.2,'#38bdf8');}
-  else{line(ctx,[[2.5,-6.4],[2.5,-1.8]],'#fde047',.3);ellipse(ctx,2.5,-6.8,.5,.5,'#10b981');ellipse(ctx,0,-11,1.5,.35,'#fde047');}
-  rr(ctx,-2.2,-12.3,4.4,.68,.2,'#0f172acc');rr(ctx,-2,-12.12,3.9,.34,.15,actor.id==='player'?'#fbbf24':'#22c55e');
+  /* 판타지 무기·HP바를 제거하고 자산운용사 애널리스트 사원증(ID 배지)으로 깔끔하게 표현 */
+  if(facing!=='up')rr(ctx,.55,-5.1,.75,.95,.15,'#f8fafc',actor.id==='player'?'#f59e0b':'#3182f6');
   for(const category of ['shoes','clothes','hair','accessories'])overlay(ctx,registeredFor(actor,category),-5,-11,10,12,facing);
   ctx.restore();
 }

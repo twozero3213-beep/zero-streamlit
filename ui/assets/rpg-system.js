@@ -1,2042 +1,1323 @@
 // -*- coding: utf-8 -*-
-/* ZERO RPG 게임화 통합 시스템 v3:
-   1) 글로벌 5대 핵심 모드 이지-액세스 바 (초보자 3초 접근성)
-   2) 커스텀 SVG 치비(Chibi) RPG 영웅 일러스트 엔진 (대마법사·성기사·철벽탱커·대사제·보스드래곤)
-   3) 홈 화면 RPG 영웅 웰컴 스테이지 & 1-2-3초 입문 가이드
-   4) 사무실(Office) 영웅 집무실 라운지 & 실시간 황금 금고 타이쿤(Idle Gold Vault) & 영웅 상세/강화 모달
-   5) 실시간 광장(Plaza) 드래곤 보스 레이드 배틀 & ZERO 팀(Team) 45인 영웅 도감 시각화 */
+/* ZERO 자산운용사 타이쿤 (AI Fund House Tycoon) — 토스증권 + 카카오페이증권 + 내 운용사 키우기 통합 시스템
+   - 중세 판타지 요소(마법사·드래곤·포션·성검)를 전면 제거하고 ZERO의 정체성인 '1억 시드 AI 자산운용사 경영 & 소셜 투자 리그'로 일원화
+   - 1) 상단 원터치 캡슐 내비게이션 & 내 운용사 등급 배지 (#zero-easy-mode-bar)
+   - 2) 내 사무실 (#lobby-view): 캔버스 맵 시야 방해 제로 + 하단 '내 운용사 데스크 & 오늘의 3분 투자 미션' 카드 (#office-rpg-hud)
+   - 3) ZERO 45인 팀 (#team-view): 45인 전문가 오피스 맵 최상단 유지 + 초보자 3초 선택 '나만의 AI 투자위원회(4인 드림팀)' (#team-rpg-builder)
+   - 4) 실시간 광장 (#plaza-view): 아바타 라운지 + '오늘의 🐂강세장(Bull) vs 🐻약세장(Bear) 실시간 예측 매치 & 수익률 리그' (#rpg-plaza-interactive-stage)
+   - 5) 투자 홈 (#home-view): 토스증권 스타일 '내 운용사 & AI 투자위원회 브리핑' 컴팩트 배너 (#home-rpg-gateway) */
 (() => {
   'use strict';
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const RPG_STORE_KEY = 'zero_rpg_state_v3';
-  function getRpgState() {
+  const TYCOON_STORE_KEY = 'zero_tycoon_state_v5';
+
+  const FIRM_TIERS = [
+    { minLv: 1, badge: '🌱 루키 에셋', title: '시드 1억 스타트 운용사', nextGoal: '데일리 미션으로 부티크 펀드 승격' },
+    { minLv: 3, badge: '🏢 부티크 파트너스', title: '강남 프라이빗 자산운용사', nextGoal: 'AI 투자위원회 스카우트 완성' },
+    { minLv: 6, badge: '🏛️ 월스트리트 알파', title: '글로벌 퀀트·배당 헤지펀드', nextGoal: '주간 수익률 리그 상위권 도전' },
+    { minLv: 10, badge: '👑 글로벌 마스터 펀드', title: '전설의 AI 자산운용 하우스', nextGoal: '장기 복리 포트폴리오 완성' }
+  ];
+
+  function getTierForLevel(lv) {
+    let current = FIRM_TIERS[0];
+    for (const t of FIRM_TIERS) {
+      if (lv >= t.minLv) current = t;
+    }
+    return current;
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function getTycoonState() {
     try {
-      const raw = localStorage.getItem(RPG_STORE_KEY);
+      const raw = localStorage.getItem(TYCOON_STORE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object') return parsed;
       }
     } catch (_) {}
     return {
-      level: 12,
-      title: '그랜드 마스터 모험가',
-      exp: 450,
-      maxExp: 1000,
-      gold: 64500,
-      stamina: 100,
-      maxStamina: 100,
-      gems: 250,
-      vaultGold: 1250,
-      bossHp: 6800,
-      bossMaxHp: 10000,
-      heroLevels: {
-        leader: 15,
-        dealer: 12,
-        tanker: 14,
-        healer: 13
+      level: 3,
+      exp: 180,
+      maxExp: 300,
+      zp: 1250, // ZERO 운용 포인트 (ZP)
+      streak: 3,
+      activeCommitteeId: 'golden_balance',
+      officeTheme: 'wallstreet',
+      analystLevels: {
+        quant: 5,
+        growth: 4,
+        macro: 5,
+        dividend: 4
       },
-      completedQuests: {},
-      lastFountainDate: null,
-      lastCoffeeDate: null,
-      lastBullDate: null,
-      lastBookDate: null,
-      lastRouletteDate: null,
-      lastAttendanceDate: null,
-      activePartyId: 'thorp_balance',
-      activeBuffs: ['절세 에메랄드 장막', '켈리 황금 복리 부스터']
+      dailyMissions: {}, // { 'YYYY-MM-DD:market': true, ... }
+      marketVote: null,  // { date: 'YYYY-MM-DD', side: 'BULL' | 'BEAR' }
+      bullVotes: 64,
+      bearVotes: 36
     };
   }
 
-  function saveRpgState(state) {
+  function saveTycoonState(state) {
     try {
-      localStorage.setItem(RPG_STORE_KEY, JSON.stringify(state));
+      localStorage.setItem(TYCOON_STORE_KEY, JSON.stringify(state));
     } catch (_) {}
   }
 
-  // ── 커스텀 SVG 치비(Chibi) RPG 영웅 일러스트 생성기 ──
-  function getHeroSvg(role, size = 84) {
-    const r = String(role || 'LEADER').toUpperCase();
-    if (r === 'LEADER') {
-      // 🧙‍♂️ 대마법사 (Archmage - 에드워드 소프)
-      return `<svg class="rpg-hero-svg role-leader" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
-        <defs>
-          <radialGradient id="auraL" cx="50%" cy="55%" r="48%">
-            <stop offset="0%" stop-color="#c084fc" stop-opacity="0.55"/>
-            <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
-          </radialGradient>
-          <linearGradient id="robeL" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#6d28d9"/>
-            <stop offset="100%" stop-color="#312e81"/>
-          </linearGradient>
-        </defs>
-        <circle cx="50" cy="54" r="44" fill="url(#auraL)"/>
-        <ellipse cx="50" cy="88" rx="28" ry="6" fill="#4c1d95" opacity="0.35"/>
-        <!-- 마법 지팡이 -->
-        <line x1="80" y1="26" x2="72" y2="86" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="81" cy="22" r="8" fill="#38bdf8" stroke="#fde047" stroke-width="2.5"/>
-        <circle cx="81" cy="22" r="3.5" fill="#ffffff"/>
-        <!-- 마법사 로브 & 망토 -->
-        <path d="M28 84 L36 52 L64 52 L72 84 Z" fill="url(#robeL)" stroke="#fbbf24" stroke-width="2"/>
-        <path d="M45 52 L50 84 L55 52 Z" fill="#fbbf24" opacity="0.85"/>
-        <!-- 얼굴 -->
-        <circle cx="50" cy="42" r="15" fill="#fde6ce" stroke="#475569" stroke-width="1.5"/>
-        <!-- 은빛 헤어 -->
-        <path d="M35 40 Q38 28 50 28 Q62 28 65 40" fill="#e2e8f0"/>
-        <!-- 지혜의 안경 & 눈 -->
-        <circle cx="44" cy="42" r="4.2" fill="none" stroke="#d97706" stroke-width="1.6"/>
-        <circle cx="56" cy="42" r="4.2" fill="none" stroke="#d97706" stroke-width="1.6"/>
-        <line x1="48.2" y1="42" x2="51.8" y2="42" stroke="#d97706" stroke-width="1.6"/>
-        <circle cx="44" cy="42" r="2" fill="#1e293b"/>
-        <circle cx="56" cy="42" r="2" fill="#1e293b"/>
-        <circle cx="44.8" cy="41.2" r="0.8" fill="#ffffff"/>
-        <circle cx="56.8" cy="41.2" r="0.8" fill="#ffffff"/>
-        <!-- 미소 -->
-        <path d="M46 48 Q50 51 54 48" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
-        <!-- 대마법사 고깔모자 -->
-        <path d="M24 31 Q50 25 76 31 L50 6 Z" fill="#4c1d95" stroke="#fbbf24" stroke-width="2"/>
-        <path d="M33 28 L67 28" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
-        <polygon points="50,14 52,19 57,19 53,22 54.5,27 50,24 45.5,27 47,22 43,19 48,19" fill="#fde047"/>
+  function gainReward(state, expGain, zpGain, reasonText) {
+    state.exp = (Number(state.exp) || 0) + expGain;
+    state.zp = (Number(state.zp) || 0) + zpGain;
+    let leveledUp = false;
+    while (state.exp >= (state.maxExp || 300)) {
+      state.exp -= (state.maxExp || 300);
+      state.level = (Number(state.level) || 1) + 1;
+      state.maxExp = 200 + state.level * 100;
+      leveledUp = true;
+    }
+    saveTycoonState(state);
+    if (leveledUp) {
+      const tier = getTierForLevel(state.level);
+      showToast(`🎉 운용사 레벨 업! [Lv.${state.level} ${tier.badge}] 등급으로 승격했습니다!`);
+    } else if (reasonText) {
+      showToast(`✅ ${reasonText} (+${expGain} XP · +${zpGain} ZP)`);
+    }
+    refreshAllTycoonUI();
+  }
+
+  // ── 모던 핀테크 AI 애널리스트 SVG 아바타 (판타지 모자/무기 제거, 세련된 수트·안경·차트·태블릿) ──
+  function getAnalystSvg(role, size = 72) {
+    const r = String(role || 'QUANT').toUpperCase();
+    if (r === 'QUANT' || r === 'LEADER') {
+      // ⚖️ 수석 퀀트·자산배분 위원장 (네이비 수트 + 스마트 안경 + 황금 배지)
+      return `<svg class="tycoon-avatar-svg role-quant" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="#eff6ff" stroke="#bfdbfe" stroke-width="2"/>
+        <path d="M24 88 C26 64 74 64 76 88 Z" fill="#1e3a8a"/>
+        <polygon points="44,64 50,86 56,64" fill="#ffffff"/>
+        <polygon points="48,66 50,84 52,66" fill="#2563eb"/>
+        <circle cx="50" cy="42" r="18" fill="#fde6ce"/>
+        <path d="M32 39 C33 22 67 22 68 39 C62 31 38 31 32 39 Z" fill="#334155"/>
+        <rect x="37" y="38" width="10" height="7" rx="2" fill="none" stroke="#1e293b" stroke-width="2"/>
+        <rect x="53" y="38" width="10" height="7" rx="2" fill="none" stroke="#1e293b" stroke-width="2"/>
+        <line x1="47" y1="41" x2="53" y2="41" stroke="#1e293b" stroke-width="2"/>
+        <circle cx="42" cy="41.5" r="2" fill="#0f172a"/>
+        <circle cx="58" cy="41.5" r="2" fill="#0f172a"/>
+        <path d="M45 50 Q50 54 55 50" fill="none" stroke="#9a3412" stroke-width="2" stroke-linecap="round"/>
+        <rect x="60" y="71" width="12" height="6" rx="2" fill="#f59e0b"/>
       </svg>`;
     }
-    if (r === 'DEALER') {
-      // ⚔️ 성기사 딜러 (Paladin Dealer - S&P 500 / 피터 린치)
-      return `<svg class="rpg-hero-svg role-dealer" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
-        <defs>
-          <radialGradient id="auraD" cx="50%" cy="55%" r="48%">
-            <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.55"/>
-            <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
-          </radialGradient>
-          <linearGradient id="armorD" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#2563eb"/>
-            <stop offset="100%" stop-color="#1d4ed8"/>
-          </linearGradient>
-        </defs>
-        <circle cx="50" cy="54" r="44" fill="url(#auraD)"/>
-        <ellipse cx="50" cy="88" rx="28" ry="6" fill="#1e3a8a" opacity="0.35"/>
-        <!-- 붉은 영웅 망토 -->
-        <path d="M24 83 L32 50 L68 50 L76 83 Z" fill="#dc2626"/>
-        <!-- 빛나는 엑스칼리버 검 -->
-        <path d="M81 16 L85 22 L79 62 L73 62 L77 22 Z" fill="#38bdf8" stroke="#fde047" stroke-width="2"/>
-        <rect x="69" y="60" width="16" height="4" rx="2" fill="#f59e0b"/>
-        <rect x="75" y="64" width="4" height="9" rx="1" fill="#b45309"/>
-        <!-- 성기사 갑옷 -->
-        <path d="M32 84 L37 52 L63 52 L68 84 Z" fill="url(#armorD)" stroke="#fbbf24" stroke-width="2"/>
-        <polygon points="50,57 55,66 50,75 45,66" fill="#fde047"/>
-        <!-- 얼굴 -->
-        <circle cx="50" cy="41" r="15" fill="#fde6ce" stroke="#475569" stroke-width="1.5"/>
-        <!-- 금빛 헤어 -->
-        <path d="M34 38 Q36 22 50 23 Q64 22 66 38 L62 32 L55 36 L50 30 L44 36 L38 32 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>
-        <!-- 초롱초롱한 눈 -->
-        <circle cx="43.5" cy="42" r="2.6" fill="#1e293b"/>
-        <circle cx="56.5" cy="42" r="2.6" fill="#1e293b"/>
-        <circle cx="44.3" cy="41" r="1" fill="#ffffff"/>
-        <circle cx="57.3" cy="41" r="1" fill="#ffffff"/>
-        <path d="M46 48 Q50 51.5 54 48" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
-        <!-- 성기사 날개 티아라 -->
-        <path d="M36 26 L50 18 L64 26 L60 30 L50 24 L40 30 Z" fill="#fde047" stroke="#d97706" stroke-width="1.2"/>
-        <circle cx="50" cy="23" r="3" fill="#ef4444"/>
+    if (r === 'GROWTH' || r === 'DEALER') {
+      // 🚀 글로벌 테크·성장주 수석 (토스 블루 재킷 + 트렌드 헤드셋)
+      return `<svg class="tycoon-avatar-svg role-growth" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="#eef2ff" stroke="#c7d2fe" stroke-width="2"/>
+        <path d="M24 88 C26 64 74 64 76 88 Z" fill="#2563eb"/>
+        <path d="M42 64 L50 82 L58 64 Z" fill="#f8fafc"/>
+        <circle cx="50" cy="42" r="18" fill="#fde6ce"/>
+        <path d="M31 38 C34 20 66 20 69 38 L64 31 L50 34 L36 31 Z" fill="#1e293b"/>
+        <path d="M30 42 A20 20 0 0 1 70 42" fill="none" stroke="#3b82f6" stroke-width="3.5"/>
+        <rect x="27" y="38" width="5" height="10" rx="2.5" fill="#1d4ed8"/>
+        <rect x="68" y="38" width="5" height="10" rx="2.5" fill="#1d4ed8"/>
+        <circle cx="43" cy="42" r="2.3" fill="#0f172a"/>
+        <circle cx="57" cy="42" r="2.3" fill="#0f172a"/>
+        <path d="M45 50 Q50 54.5 55 50" fill="none" stroke="#9a3412" stroke-width="2" stroke-linecap="round"/>
       </svg>`;
     }
-    if (r === 'TANKER') {
-      // 🛡️ 철벽 가디언 탱커 (Iron Tanker - 워런 버핏 / 단기국채)
-      return `<svg class="rpg-hero-svg role-tanker" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
-        <defs>
-          <radialGradient id="auraT" cx="50%" cy="55%" r="48%">
-            <stop offset="0%" stop-color="#34d399" stop-opacity="0.55"/>
-            <stop offset="100%" stop-color="#059669" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-        <circle cx="50" cy="54" r="44" fill="url(#auraT)"/>
-        <ellipse cx="50" cy="88" rx="28" ry="6" fill="#064e3b" opacity="0.35"/>
-        <!-- 에메랄드 중갑옷 -->
-        <path d="M29 84 L34 51 L66 51 L71 84 Z" fill="#059669" stroke="#fbbf24" stroke-width="2.5"/>
-        <rect x="30" y="50" width="11" height="10" rx="4" fill="#fbbf24"/>
-        <rect x="59" y="50" width="11" height="10" rx="4" fill="#fbbf24"/>
-        <!-- 얼굴 -->
-        <circle cx="50" cy="40" r="15" fill="#fde6ce" stroke="#475569" stroke-width="1.5"/>
-        <path d="M35 37 Q38 24 50 24 Q62 24 65 37" fill="#94a3b8"/>
-        <!-- 든든한 눈썹과 미소 -->
-        <line x1="40" y1="37" x2="47" y2="38" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="60" y1="37" x2="53" y2="38" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
-        <circle cx="43.5" cy="41.5" r="2.3" fill="#1e293b"/>
-        <circle cx="56.5" cy="41.5" r="2.3" fill="#1e293b"/>
-        <path d="M45 47 Q50 50.5 55 47" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round"/>
-        <!-- 황금 왕관 -->
-        <polygon points="36,27 39,15 45,22 50,13 55,22 61,15 64,27" fill="#fde047" stroke="#d97706" stroke-width="1.5"/>
-        <!-- 거대 황금 방패 -->
-        <path d="M62 48 L86 48 L86 66 Q74 84 62 66 Z" fill="#fbbf24" stroke="#b45309" stroke-width="2.5"/>
-        <path d="M66 52 L82 52 L82 64 Q74 77 66 64 Z" fill="#10b981"/>
-        <path d="M74 54 L74 71 M68 61 L80 61" stroke="#fde047" stroke-width="3" stroke-linecap="round"/>
+    if (r === 'MACRO' || r === 'TANKER') {
+      // 🛡️ 리스크·거시경제 방어 수석 (차콜 수트 + 에메랄드 타이)
+      return `<svg class="tycoon-avatar-svg role-macro" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="2"/>
+        <path d="M24 88 C26 64 74 64 76 88 Z" fill="#0f172a"/>
+        <polygon points="44,64 50,86 56,64" fill="#ffffff"/>
+        <polygon points="48,66 50,84 52,66" fill="#10b981"/>
+        <circle cx="50" cy="42" r="18" fill="#fde6ce"/>
+        <path d="M32 38 C35 22 65 22 68 38 C60 30 40 30 32 38 Z" fill="#64748b"/>
+        <circle cx="43" cy="42" r="2.2" fill="#0f172a"/>
+        <circle cx="57" cy="42" r="2.2" fill="#0f172a"/>
+        <path d="M45 50 Q50 53 55 50" fill="none" stroke="#9a3412" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="63" cy="73" r="4" fill="#10b981"/>
       </svg>`;
     }
-    if (r === 'BOSS') {
-      // 🐉 고금리 볼케이노 드래곤 (Raid Boss)
-      return `<svg class="rpg-hero-svg role-boss" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
-        <defs>
-          <radialGradient id="auraB" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#f97316" stop-opacity="0.65"/>
-            <stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-        <circle cx="50" cy="50" r="46" fill="url(#auraB)"/>
-        <!-- 드래곤 날개 -->
-        <path d="M45 52 L10 22 L18 46 L8 58 L28 62 Z" fill="#991b1b" stroke="#f97316" stroke-width="1.8"/>
-        <path d="M55 52 L90 22 L82 46 L92 58 L72 62 Z" fill="#991b1b" stroke="#f97316" stroke-width="1.8"/>
-        <!-- 드래곤 몸통 & 머리 -->
-        <path d="M34 86 L40 48 L60 48 L66 86 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/>
-        <path d="M42 52 L58 52 L56 84 L44 84 Z" fill="#fbbf24"/>
-        <!-- 뿔 -->
-        <path d="M38 28 L26 10 L44 24 Z" fill="#fde047" stroke="#b45309" stroke-width="1.5"/>
-        <path d="M62 28 L74 10 L56 24 Z" fill="#fde047" stroke="#b45309" stroke-width="1.5"/>
-        <rect x="34" y="22" width="32" height="28" rx="10" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/>
-        <!-- 빛나는 눈 & 화염 -->
-        <polygon points="39,32 47,35 39,38" fill="#fef08a"/>
-        <polygon points="61,32 53,35 61,38" fill="#fef08a"/>
-        <circle cx="22" cy="74" r="6" fill="#f97316"/>
-        <circle cx="78" cy="72" r="5" fill="#fbbf24"/>
-      </svg>`;
-    }
-    // 💖 대사제 힐러 / 버퍼 (High Priestess Healer - 배당 / 달러현금)
-    return `<svg class="rpg-hero-svg role-healer" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
-      <defs>
-        <radialGradient id="auraH" cx="50%" cy="55%" r="48%">
-          <stop offset="0%" stop-color="#f472b6" stop-opacity="0.55"/>
-          <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-      <circle cx="50" cy="54" r="44" fill="url(#auraH)"/>
-      <ellipse cx="50" cy="88" rx="28" ry="6" fill="#831843" opacity="0.28"/>
-      <!-- 천사 날개 -->
-      <path d="M36 56 Q14 42 18 64 Q24 72 36 68 Z" fill="#ffffff" stroke="#f9a8d4" stroke-width="1.5"/>
-      <path d="M64 56 Q86 42 82 64 Q76 72 64 68 Z" fill="#ffffff" stroke="#f9a8d4" stroke-width="1.5"/>
-      <!-- 성스러운 드레스 -->
-      <path d="M30 84 L37 52 L63 52 L70 84 Z" fill="#fdf2f8" stroke="#f472b6" stroke-width="2"/>
-      <path d="M46 52 L50 84 L54 52 Z" fill="#f472b6"/>
-      <!-- 치유 성배 지팡이 -->
-      <line x1="78" y1="30" x2="74" y2="84" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M78 22 C74 17 69 22 78 30 C87 22 82 17 78 22 Z" fill="#ec4899" stroke="#fde047" stroke-width="1.5"/>
-      <!-- 얼굴 & 핑크빛 헤어 -->
-      <circle cx="50" cy="41" r="15" fill="#fde6ce" stroke="#475569" stroke-width="1.5"/>
-      <path d="M34 42 Q34 23 50 23 Q66 23 66 42 L62 34 L50 31 L38 34 Z" fill="#f472b6"/>
-      <circle cx="43.5" cy="42" r="2.4" fill="#1e293b"/>
-      <circle cx="56.5" cy="42" r="2.4" fill="#1e293b"/>
-      <circle cx="44.3" cy="41.2" r="0.9" fill="#ffffff"/>
-      <circle cx="57.3" cy="41.2" r="0.9" fill="#ffffff"/>
-      <circle cx="39" cy="45" r="2.5" fill="#fb7185" opacity="0.45"/>
-      <circle cx="61" cy="45" r="2.5" fill="#fb7185" opacity="0.45"/>
-      <path d="M46 47.5 Q50 51 54 47.5" fill="none" stroke="#db2777" stroke-width="1.8" stroke-linecap="round"/>
-      <!-- 천사 헤일로(광배) -->
-      <ellipse cx="50" cy="17" rx="12" ry="3.5" fill="none" stroke="#fde047" stroke-width="2.5"/>
+    // 💰 배당·현금흐름 수석 (웜 세이지 가디건 + 골드 배지)
+    return `<svg class="tycoon-avatar-svg role-dividend" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="#fffbeb" stroke="#fde68a" stroke-width="2"/>
+      <path d="M24 88 C26 64 74 64 76 88 Z" fill="#047857"/>
+      <path d="M43 64 L50 80 L57 64 Z" fill="#fef3c7"/>
+      <circle cx="50" cy="42" r="18" fill="#fde6ce"/>
+      <path d="M32 40 C34 22 66 22 68 40 C61 31 39 31 32 40 Z" fill="#78350f"/>
+      <circle cx="43" cy="42" r="2.2" fill="#0f172a"/>
+      <circle cx="57" cy="42" r="2.2" fill="#0f172a"/>
+      <path d="M45 50 Q50 54 55 50" fill="none" stroke="#9a3412" stroke-width="2" stroke-linecap="round"/>
+      <rect x="59" y="71" width="11" height="6" rx="2" fill="#fbbf24"/>
     </svg>`;
   }
 
-  // 8비트 레트로 사운드 신시사이저 (Web Audio API - 무설치 즉시 재생)
-  function playRetroSound(type) {
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      if (ctx.state === 'suspended') ctx.resume();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      if (type === 'coin') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(987.77, ctx.currentTime);
-        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.11, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.35);
-      } else if (type === 'levelup') {
-        osc.type = 'triangle';
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((freq, idx) => {
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
-        });
-        gain.gain.setValueAtTime(0.14, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.45);
-      } else if (type === 'click') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(660, ctx.currentTime);
-        gain.gain.setValueAtTime(0.06, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.06);
-      }
-    } catch (_) {}
-  }
-
-  function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.className = 'rpg-toast-msg';
-    toast.textContent = msg;
-    document.body.append(toast);
-    setTimeout(() => toast.classList.add('show'), 10);
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  function spawnFloatingEffect(text, x, y) {
-    const el = document.createElement('div');
-    el.className = 'rpg-floating-pop';
-    el.textContent = text;
-    el.style.left = Math.max(20, Math.min((window.innerWidth || 360) - 160, (x || ((window.innerWidth || 360) / 2 - 40)))) + 'px';
-    el.style.top = Math.max(40, (y || ((window.innerHeight || 600) / 2 - 50))) + 'px';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1250);
-  }
-
-  // 수정 사유: 더보기(#more-menu)에서 '실시간 광장' 등을 클릭했을 때 로그인 팝업(#member-profile-dialog)이 자동으로 가로막지 않도록 제어하고 즉시 화면을 전환·스크롤 초기화하도록 개선
-  let explicitProfileRequest = false;
-
-  function suppressAutoProfileModal() {
-    if (explicitProfileRequest) return;
-    const profDialog = document.getElementById('member-profile-dialog');
-    if (profDialog && profDialog.open) {
-      try { profDialog.close(); } catch (_) {}
-    }
-  }
-
-  function goView(viewName) {
-    if (!viewName) return;
-    playRetroSound('click');
-    const menu = document.getElementById('more-menu');
-    if (menu?.open) {
-      try { menu.close(); } catch (_) {}
-      menu.removeAttribute('open');
-    }
-    if (window.ZERO?.navigate) {
-      window.ZERO.navigate(viewName);
-    } else {
-      window.location.hash = '#' + viewName;
-    }
-    if (viewName === 'plaza') {
-      suppressAutoProfileModal();
-      setTimeout(suppressAutoProfileModal, 25);
-      setTimeout(suppressAutoProfileModal, 120);
-    }
-    if (viewName === 'team') {
-      setTimeout(() => {
-        const officePanel = document.getElementById('office-panel');
-        if (officePanel) officePanel.classList.remove('viewport-page-away');
-        window.dispatchEvent(new Event('resize'));
-      }, 30);
-    }
-    const mainEl = document.getElementById('main');
-    if (mainEl && typeof mainEl.scrollTo === 'function') {
-      mainEl.scrollTo({ top: 0, behavior: 'auto' });
-    }
-  }
-
-  // 전역 클릭 위임: 더보기(#more-menu) 내부 모든 카드 버튼([data-view]) 클릭 시 100% 작동 보장
-  if (!window.__zeroRpgGlobalClickBound) {
-    window.__zeroRpgGlobalClickBound = true;
-    document.addEventListener('click', (e) => {
-      const target = e.target;
-      if (!target || typeof target.closest !== 'function') return;
-
-      const profileBtn = target.closest('#lobby-profile-btn, #member-entry, #open-member-profile, #lounge-open-profile, #rpg-plaza-login-btn');
-      if (profileBtn) {
-        explicitProfileRequest = true;
-        setTimeout(() => { explicitProfileRequest = false; }, 800);
-        return;
-      }
-
-      const moreViewBtn = target.closest('#more-menu [data-view]');
-      if (moreViewBtn) {
-        const targetView = moreViewBtn.getAttribute('data-view');
-        if (targetView) {
-          e.preventDefault();
-          e.stopPropagation();
-          goView(targetView);
-        }
-      }
-    }, true);
-  }
-
-  const RPG_PRESETS = [
+  // ── 3대 투자위원회 프리셋 데이터 (경제·주식을 몰라도 3초 만에 이해하는 구성) ──
+  const COMMITTEES = [
     {
-      id: 'thorp_balance',
-      name: '⚖️ 소프 황금 밸런스 파티',
-      badge: 'SSR ★★★★★ · 초보자 1위 추천',
-      cp: '148,500',
-      concept: '주식(공격 55.6%) + 단기국채(방어 29.4%) + 달러현금(치유 15.0%) 황금비율로 폭락장을 이기는 정석 파티',
-      target: '🎯 주식이 처음이거나 마음 편히 장기 복리를 누리고 싶은 모험가',
-      leader: {
-        key: 'leader',
-        name: '에드워드 소프',
-        title: '대마법사 · 확률의 지배자',
-        role: 'LEADER',
-        roleKorean: '👑 파티장 (마법사)',
-        rarity: 'SSR ★★★★★',
-        atk: 95, def: 95, rec: 90,
-        skill: '켈리의 황금 분할 마법',
-        quote: '“확률과 복리의 마법으로 계좌의 변동성을 절반으로 줄여드리겠습니다!”',
-        desc: '하락장 위험을 절반으로 줄이고, 세금·수수료보다 큰 기회가 올 때만 정밀 타격합니다.',
-        items: ['🪄 복리의 황금 지팡이 +12', '📘 켈리 공식 마도서 +10', '💍 절세의 에메랄드 반지 +9']
-      },
+      id: 'golden_balance',
+      name: '⚖️ 황금 균형 위원회',
+      tag: '초보자 1순위 추천',
+      summary: '미국 우량 성장주(64%)로 수익을 내고, 미국 단기국채(16%)와 한국 가치주(20%)로 하락장을 든든하게 방어하는 ZERO의 표준 전략팀이에요.',
+      allocation: [
+        { label: '미국 성장주', pct: 64, color: '#3182f6' },
+        { label: '안전 국채·현금', pct: 16, color: '#10b981' },
+        { label: '한국 저평가 가치주', pct: 20, color: '#f59e0b' }
+      ],
+      metrics: { growth: 86, defense: 92, cashflow: 84 },
       members: [
         {
-          key: 'dealer',
-          name: 'S&P 500 성기사',
-          title: '빛의 메인 딜러 · SPY',
-          role: 'DEALER',
-          roleKorean: '⚔️ 딜러 (공격)',
-          rarity: 'SSR ★★★★★',
-          atk: 92, def: 75, rec: 60,
-          skill: '500대 우량기업 연합 일격',
-          weight: '55.6%',
-          quote: '“미국 1등 기업들의 성장 화력으로 대표님의 자산을 우상향시키겠습니다!”',
-          desc: '애플·마이크로소프트·엔비디아 등 미국 500대 기업의 성장력을 담당하는 핵심 공격수입니다.',
-          items: ['⚔️ 우상향의 엑스칼리버 +11', '🛡️ 분산투자 성기사 갑옷 +9']
+          key: 'quant',
+          role: 'QUANT',
+          roleBadge: '⚖️ 위원장 · 퀀트 비중조율',
+          name: '에드워드 소프',
+          specialty: '켈리 공식 자산배분 수석',
+          weight: '포트폴리오 총괄',
+          easyDesc: '주식이 너무 많이 오르거나 떨어질 때만 리밸런싱해서 세금과 수수료 낭비를 막아줘요.',
+          quote: '“잦은 매매를 멈추고 확률이 유리할 때만 움직이는 것이 복리의 핵심입니다.”'
         },
         {
-          key: 'tanker',
-          name: '단기국채 가디언',
-          title: '철벽의 수호기사 · SHV/BIL',
-          role: 'TANKER',
-          roleKorean: '🛡️ 탱커 (방어)',
-          rarity: 'SSR ★★★★★',
-          atk: 35, def: 99, rec: 80,
-          skill: '미 재무부 절대 방패벽',
-          weight: '29.4%',
-          quote: '“어떤 폭락장 화염이 날아와도 제 방패 뒤에서는 원금이 100% 안전합니다!”',
-          desc: '미국 정부가 보증하는 단기국채 이자(연 4~5%대)를 받으며 폭락장 충격을 완벽히 흡수합니다.',
-          items: ['🛡️ 미 재무부 황금 방패 +13', '👑 무위험 이자의 왕관 +10']
+          key: 'growth',
+          role: 'GROWTH',
+          roleBadge: '🚀 미국 주식 64%',
+          name: '피터 린치',
+          specialty: '미국 S&P500 · 빅테크 성장 수석',
+          weight: '목표 비중 64%',
+          easyDesc: '우리가 매일 쓰는 애플·마이크로소프트·엔비디아 같은 미국 1등 기업으로 자산을 키워요.',
+          quote: '“일상에서 만나는 최고의 성장 기업을 꾸준히 보유하세요.”'
         },
         {
-          key: 'healer',
-          name: '달러 비상금 대사제',
-          title: '치유와 절세의 성녀 · CASH',
-          role: 'HEALER',
-          roleKorean: '💖 힐러 (회복)',
-          rarity: 'SSR ★★★★★',
-          atk: 25, def: 88, rec: 99,
-          skill: '바겐세일 긴급 치유 & 절세 장막',
-          weight: '15.0%',
-          quote: '“수수료와 세금 누수를 막아내고, 폭락장 바겐세일 때 즉시 출동해요!”',
-          desc: '잦은 매매로 인한 세금·수수료 손실을 치료하고 폭락 시 저가 매수 기회를 제공합니다.',
-          items: ['🏆 마르지 않는 배당 성배 +11', '✨ 비과세 천사 날개 +10']
+          key: 'macro',
+          role: 'MACRO',
+          roleBadge: '🛡️ 안전 채권 16%',
+          name: '워런 버핏',
+          specialty: '미국 단기국채 · 현금 방어 수석',
+          weight: '목표 비중 16%',
+          easyDesc: '주식 시장이 갑자기 폭락할 때 흔들리지 않도록 안전자산(달러 국채) 방파제를 지켜요.',
+          quote: '“제1원칙은 돈을 잃지 않는 것입니다. 현금성 국채는 폭락장의 가장 든든한 무기입니다.”'
+        },
+        {
+          key: 'dividend',
+          role: 'DIVIDEND',
+          roleBadge: '💰 한국 가치·배당 20%',
+          name: '레이 달리오',
+          specialty: '국내 우량주 · 배당 분산 수석',
+          weight: '목표 비중 20%',
+          easyDesc: '미국 주식과 다르게 움직이는 한국 핵심 수출·배당주로 환율과 시장 위험을 나눠요.',
+          quote: '“서로 다른 국가와 자산을 섞어두면 어떤 경제 계절이 와도 계좌가 편안합니다.”'
         }
       ]
     },
     {
-      id: 'defense_knight',
-      name: '🛡️ 워런 버핏 철벽 수비 파티',
-      badge: 'SSR ★★★★★ · 원금 보존 & 월배당',
-      cp: '136,200',
-      concept: '매달 들어오는 배당금(치유)과 채권 방패로 주가가 흔들려도 발 뻗고 자는 절대 수비형 파티',
-      target: '🎯 원금 손실이 가장 싫고 매달 따박따박 현금흐름(배당)을 받고 싶은 모험가',
-      leader: {
-        key: 'leader',
-        name: '워런 버핏',
-        title: '성기사단장 · 오마하의 현인',
-        role: 'TANKER',
-        roleKorean: '👑 파티장 (수호단장)',
-        rarity: 'SSR ★★★★★',
-        atk: 82, def: 99, rec: 96,
-        skill: '제1원칙: 원금 불패의 성역',
-        quote: '“투자의 제1원칙은 돈을 잃지 않는 것입니다. 제2원칙은 제1원칙을 잊지 않는 것입니다!”',
-        desc: '경제적 해자(독점 경쟁력)를 가진 우량 배당주와 국채로 어떤 위기에도 계좌를 지킵니다.',
-        items: ['🛡️ 오마하의 절대 방패 +15', '👑 복리 스노우볼 왕관 +12', '💍 가치투자 인내 반지 +10']
-      },
+      id: 'us_bigtech_growth',
+      name: '🚀 미국 빅테크 성장 위원회',
+      tag: '공격형 · 고성장 추구',
+      summary: 'AI·반도체·클라우드 산업을 이끄는 미국 핵심 기술주 비중을 높여 장기 자산 증식 속도를 극대화하는 팀이에요.',
+      allocation: [
+        { label: '미국 AI·빅테크', pct: 75, color: '#2563eb' },
+        { label: '안전 달러채권', pct: 15, color: '#10b981' },
+        { label: '글로벌 반도체', pct: 10, color: '#8b5cf6' }
+      ],
+      metrics: { growth: 96, defense: 74, cashflow: 70 },
       members: [
         {
-          key: 'healer',
-          name: '배당다우존스 대사제',
-          title: '월배당 치유사 · SCHD',
-          role: 'HEALER',
-          roleKorean: '💖 힐러 (배당회복)',
-          rarity: 'SSR ★★★★★',
-          atk: 78, def: 90, rec: 99,
-          skill: '마르지 않는 황금 배당샘',
-          weight: '40.0%',
-          quote: '“주가가 쉬어갈 때도 따스한 배당금으로 계좌 체력을 가득 채워드릴게요!”',
-          desc: '10년 연속 배당을 늘려온 초우량 가치주들로 꾸준한 현금 흐름을 만듭니다.',
-          items: ['🏆 황금 배당의 성배 +12', '🌸 복리 재투자 로브 +10']
+          key: 'growth',
+          role: 'GROWTH',
+          roleBadge: '🚀 위원장 · 초우량 기술주',
+          name: '필립 피셔',
+          specialty: '혁신 기술주 리서치 수석',
+          weight: '핵심 성장 45%',
+          easyDesc: '독보적인 기술력과 연구개발(R&D)을 가진 1등 테크 기업을 발굴해 장기 보유해요.',
+          quote: '“압도적인 기술 해자를 가진 기업은 시장 평균을 뛰어넘는 성장을 만듭니다.”'
         },
         {
-          key: 'tanker',
-          name: '국채 요새 골렘',
-          title: '강철 수호자 · IEF/SHV',
-          role: 'TANKER',
-          roleKorean: '🛡️ 탱커 (방어)',
-          rarity: 'SSR ★★★★★',
-          atk: 30, def: 99, rec: 85,
-          skill: '위기 반사 방어벽',
-          weight: '45.0%',
-          quote: '“주식 시장에 폭풍이 불면 제가 가장 단단한 성벽이 됩니다!”',
-          desc: '경제 위기 시 가치가 오르는 국채 비중을 높여 계좌 전체가 흔들리지 않게 고정합니다.',
-          items: ['🛡️ 다이아몬드 성벽 방패 +12', '⚓ 흔들리지 않는 갑옷 +11']
+          key: 'quant',
+          role: 'QUANT',
+          roleBadge: '⚖️ 데이터 퀀트 30%',
+          name: '짐 사이먼스',
+          specialty: '통계적 모멘텀 · 추세 수석',
+          weight: '추세 추종 30%',
+          easyDesc: '감정을 배제하고 거래대금과 실적 추세 데이터를 분석해 주도주 비중을 조절해요.',
+          quote: '“감이 아닌 검증된 가격·실적 데이터로만 비중을 판단합니다.”'
         },
         {
-          key: 'dealer',
-          name: '황금금고 수호성녀',
-          title: '안전 버퍼 · 달러예금',
-          role: 'HEALER',
-          roleKorean: '💖 버퍼 (안전망)',
-          rarity: 'SSR ★★★★★',
-          atk: 20, def: 95, rec: 98,
-          skill: '무결점 절세 보호막',
-          weight: '15.0%',
-          quote: '“비상금 15%가 있어야 어떤 순간에도 조급해지지 않아요!”',
-          desc: '심리적 안정감과 즉각적인 현금 유동성을 100% 보장합니다.',
-          items: ['🔑 황금 금고 열쇠 +10', '💍 평정심의 수호석 +10']
+          key: 'macro',
+          role: 'MACRO',
+          roleBadge: '🛡️ 매크로 방어 15%',
+          name: '스탠리 드러켄밀러',
+          specialty: '글로벌 유동성 · 금리 수석',
+          weight: '유동성 방어 15%',
+          easyDesc: '미국 연준(Fed)의 금리와 시장 유동성 변화를 읽어 기술주 과열 위험을 미리 경보해요.',
+          quote: '“기업 실적만큼 중요한 것이 중앙은행의 유동성 방향입니다.”'
+        },
+        {
+          key: 'dividend',
+          role: 'DIVIDEND',
+          roleBadge: '💰 배당 성장 10%',
+          name: '피터 린치',
+          specialty: '실적 기반 배당성장 수석',
+          weight: '배당성장 10%',
+          easyDesc: '이익이 매년 늘어나면서 배당도 함께 올려주는 알짜 성장주를 챙겨요.',
+          quote: '“이익이 늘어나는 기업의 주가는 결국 그 실적을 따라갑니다.”'
         }
       ]
     },
     {
-      id: 'tech_attack',
-      name: '🚀 피터 린치 테크 드래곤 파티',
-      badge: 'SSR ★★★★★ · AI 혁신 초고속 성장',
-      cp: '154,900',
-      concept: 'AI·반도체·글로벌 빅테크 혁신 기업에 화력을 집중해 폭발적인 자산 성장을 노리는 공격 파티',
-      target: '🎯 일상 속 혁신 기업을 좋아하고 5년 이상 장기 성장에 투자하는 모험가',
-      leader: {
-        key: 'leader',
-        name: '피터 린치',
-        title: '드래곤 마스터 · 월가의 전설',
-        role: 'DEALER',
-        roleKorean: '👑 파티장 (공격대장)',
-        rarity: 'SSR ★★★★★',
-        atk: 99, def: 72, rec: 75,
-        skill: '텐배거(10루타) 드래곤 스트라이크',
-        quote: '“우리가 매일 쓰는 제품과 AI 기술 속에 10배 오를 슈퍼스타가 숨어 있습니다!”',
-        desc: '실적이 폭발적으로 성장하는 1등 기술 기업들을 발굴해 공격력을 극대화합니다.',
-        items: ['⚔️ 텐배거 드래곤 슬레이어 +14', '🦅 천리안의 투구 +11', '🔥 성장 부스터 망토 +10']
-      },
+      id: 'dividend_peace',
+      name: '🛡️ 마음 편한 배당·안정 위원회',
+      tag: '안정형 · 현금흐름 중시',
+      summary: '주가 등락에 스트레스받지 않도록 우량 배당주와 안전 국채 비중을 높여 따박따박 현금흐름과 원금 방어를 챙기는 팀이에요.',
+      allocation: [
+        { label: '미국·한국 고배당주', pct: 50, color: '#059669' },
+        { label: '안전 국채·단기채', pct: 35, color: '#3182f6' },
+        { label: '저변동 우량주', pct: 15, color: '#f59e0b' }
+      ],
+      metrics: { growth: 72, defense: 97, cashflow: 96 },
       members: [
         {
-          key: 'dealer',
-          name: '나스닥 100 드래곤나이트',
-          title: '초신성 메인 딜러 · QQQ',
-          role: 'DEALER',
-          roleKorean: '⚔️ 딜러 (초공격)',
-          rarity: 'SSR ★★★★★',
-          atk: 99, def: 62, rec: 45,
-          skill: '빅테크 메테오 임팩트',
-          weight: '65.0%',
-          quote: '“글로벌 AI·클라우드 제국의 최전선에서 가장 강력한 수익 화력을 뿜어냅니다!”',
-          desc: '세계 혁신을 이끄는 나스닥 100대 기술 기업의 폭발적인 성장 에너지를 담았습니다.',
-          items: ['⚔️ AI 광선검 +13', '⚡ 초전도 윙 부츠 +11']
+          key: 'macro',
+          role: 'MACRO',
+          roleBadge: '🛡️ 위원장 · 안전마진 수호',
+          name: '벤저민 그레이엄',
+          specialty: '안전마진 · 원금방어 수석',
+          weight: '방어 총괄',
+          easyDesc: '기업의 실제 자산 가치보다 싸게 거래되는 안전한 종목만 골라 손실 위험을 낮춰요.',
+          quote: '“안전마진이 확보된 투자는 밤에 두 다리 뻗고 편히 잘 수 있게 해줍니다.”'
         },
         {
-          key: 'leader',
-          name: '반도체 아크위저드',
-          title: '광역 마법 딜러 · SOXX/NVDA',
-          role: 'LEADER',
-          roleKorean: '🧙‍♂️ 마법딜러 (혁신)',
-          rarity: 'SSR ★★★★★',
-          atk: 96, def: 65, rec: 50,
-          skill: '실리콘 웨이퍼 초신성',
-          weight: '20.0%',
-          quote: '“모든 AI 마법은 반도체 칩 위에서 탄생합니다!”',
-          desc: '미래 산업의 쌀인 반도체 핵심 장비·설계 기업으로 추가 공격력을 더합니다.',
-          items: ['🪄 나노 공정 크리스탈 스태프 +12', '🔮 데이터센터 오브 +10']
+          key: 'dividend',
+          role: 'DIVIDEND',
+          roleBadge: '💰 배당 현금흐름 50%',
+          name: '존 보글',
+          specialty: '저비용 인덱스 · 배당 수석',
+          weight: '배당·인덱스 50%',
+          easyDesc: '수수료가 낮고 꾸준히 배당금을 지급하는 우량 ETF와 배당주로 현금흐름을 만들어요.',
+          quote: '“비용을 아끼고 시장 전체의 배당과 성장을 통째로 소유하세요.”'
         },
         {
-          key: 'healer',
-          name: '스나이퍼 현금 사제',
-          title: '기회포착 힐러 · CASH',
-          role: 'HEALER',
-          roleKorean: '💖 힐러 (기회포착)',
-          rarity: 'SSR ★★★★★',
-          atk: 30, def: 88, rec: 96,
-          skill: '조정장 바겐세일 부활술',
-          weight: '15.0%',
-          quote: '“기술주가 일시적으로 흔들릴 때 가장 싸게 담을 수 있는 마법 물약이에요!”',
-          desc: '공격형 파티가 흔들릴 때 체력을 회복하고 저가 매수 찬스를 잡습니다.',
-          items: ['🧪 바겐세일 엘릭서 +11', '🛡️ 변동성 완충 로브 +10']
+          key: 'quant',
+          role: 'QUANT',
+          roleBadge: '⚖️ 사이클 방어 35%',
+          name: '하워드 막스',
+          specialty: '시장 사이클 · 채권 수석',
+          weight: '안전채권 35%',
+          easyDesc: '시장이 과열됐을 때 욕심을 줄이고 안전 채권 비중을 높여 계좌의 낙폭을 막아줘요.',
+          quote: '“지금이 공격할 때인지 수비할 때인지 아는 것이 가장 중요합니다.”'
+        },
+        {
+          key: 'growth',
+          role: 'GROWTH',
+          roleBadge: '🌱 물가 방어 15%',
+          name: '폴 볼커',
+          specialty: '금리 · 인플레이션 방어 수석',
+          weight: '물가방어 15%',
+          easyDesc: '물가 상승(인플레이션)에도 화폐 가치가 녹지 않도록 가격 결정력이 있는 우량주를 지켜요.',
+          quote: '“인플레이션을 이기는 실질 구매력 보존이 장기 투자의 목표입니다.”'
         }
       ]
     }
   ];
 
-  const CURRENT_BOSS = {
-    name: '🐉 고금리 볼케이노 드래곤',
-    title: '연준의 긴축 화염군주 (기준금리 4.75%)',
-    element: '🛡️ 단기국채 방패 & ⚖️ 소프 켈리 마법',
-    desc: '전 세계 시장을 뒤흔드는 고금리 화염을 내뿜습니다! 하지만 단기국채 탱커와 현금 힐러가 편성된 파티라면 화염 데미지를 100% 방어하고 오히려 이자 보상을 획득할 수 있습니다!'
-  };
-
-  // ── 영웅 상세 도감 & 장비 강화 모달 (Hero Character Sheet Modal) ──
-  function openHeroDetailModal(heroData) {
-    playRetroSound('click');
-    const state = getRpgState();
-    const hKey = heroData.key || 'leader';
-    const currentLv = state.heroLevels?.[hKey] || 12;
-
-    let dialog = document.getElementById('rpg-hero-detail-dialog');
-    if (!dialog) {
-      dialog = document.createElement('dialog');
-      dialog.id = 'rpg-hero-detail-dialog';
-      dialog.className = 'rpg-hero-modal';
-      document.body.appendChild(dialog);
-    }
-
-    function renderModalContent() {
-      const lv = state.heroLevels?.[hKey] || 12;
-      const bonusAtk = Math.min(100, (heroData.atk || 85) + (lv - 12));
-      const bonusDef = Math.min(100, (heroData.def || 85) + (lv - 12));
-      const bonusRec = Math.min(100, (heroData.rec || 85) + (lv - 12));
-
-      dialog.innerHTML = `
-        <div class="rpg-hero-modal-inner">
-          <div class="rpg-hero-modal-head">
-            <span class="rpg-ssr-pill">${heroData.rarity || 'SSR ★★★★★'}</span>
-            <button type="button" class="icon-button icon-close" id="rpg-hero-modal-close">닫기</button>
-          </div>
-          <div class="rpg-hero-modal-showcase">
-            <div class="rpg-hero-modal-avatar">
-              ${getHeroSvg(heroData.role, 118)}
-              <span class="rpg-hero-lv-chip">Lv.${lv}</span>
-            </div>
-            <div class="rpg-hero-modal-info">
-              <span class="rpg-hero-role-tag">${heroData.roleKorean || '👑 전설 영웅'}</span>
-              <h3>${heroData.name}</h3>
-              <p class="rpg-hero-sub">${heroData.title}</p>
-              <blockquote class="rpg-hero-quote">${heroData.quote || '“대표님의 자산을 끝까지 수호하겠습니다!”'}</blockquote>
-            </div>
-          </div>
-
-          <div class="rpg-hero-explain-box">
-            <strong>💡 쉬운 금융 해설: 이 영웅은 내 돈에 어떤 역할을 하나요?</strong>
-            <p>${heroData.desc}</p>
-          </div>
-
-          <div class="rpg-hero-stats-box">
-            <div class="rpg-stat-line">
-              <span>⚔️ 수익 공격력</span>
-              <div class="rpg-stat-bar-wrap"><div class="rpg-stat-bar-fill atk" style="width:${bonusAtk}%"></div></div>
-              <strong>${bonusAtk}</strong>
-            </div>
-            <div class="rpg-stat-line">
-              <span>🛡️ 폭락 방어력</span>
-              <div class="rpg-stat-bar-wrap"><div class="rpg-stat-bar-fill def" style="width:${bonusDef}%"></div></div>
-              <strong>${bonusDef}</strong>
-            </div>
-            <div class="rpg-stat-line">
-              <span>💖 배당·절세 회복력</span>
-              <div class="rpg-stat-bar-wrap"><div class="rpg-stat-bar-fill rec" style="width:${bonusRec}%"></div></div>
-              <strong>${bonusRec}</strong>
-            </div>
-          </div>
-
-          <div class="rpg-hero-equip-box">
-            <strong>🎒 장착 중인 전설 투자 아티팩트 (장비)</strong>
-            <div class="rpg-equip-list">
-              ${(heroData.items || ['🪄 복리의 지팡이 +10', '🛡️ 국채 방패 +10', '💍 절세의 반지 +10']).map(item => `
-                <span class="rpg-equip-chip">${item}</span>
-              `).join('')}
-            </div>
-          </div>
-
-          <div class="rpg-hero-modal-actions">
-            <button type="button" class="rpg-upgrade-hero-btn" id="btn-hero-levelup">
-              ⚡ 영웅 레벨업 & 장비 강화 (무료 훈련 +1 Lv)
-            </button>
-            <button type="button" class="rpg-talk-hero-btn" id="btn-hero-office-go">
-              🏰 내 사무실에서 함께 일하기
-            </button>
-          </div>
-        </div>
-      `;
-
-      dialog.querySelector('#rpg-hero-modal-close')?.addEventListener('click', () => dialog.close());
-      dialog.querySelector('#btn-hero-levelup')?.addEventListener('click', (e) => {
-        state.heroLevels = state.heroLevels || { leader: 15, dealer: 12, tanker: 14, healer: 13 };
-        state.heroLevels[hKey] = (state.heroLevels[hKey] || 12) + 1;
-        state.exp += 60;
-        if (state.exp >= state.maxExp) {
-          state.level += 1;
-          state.exp -= state.maxExp;
-        }
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect(`🎊 Lv.${state.heroLevels[hKey]} 강화 성공! 전 스탯 +1!`, e.clientX, e.clientY);
-        showToast(`🌟 [${heroData.name}] 영웅이 Lv.${state.heroLevels[hKey]}(으)로 승급했습니다! 전투력이 상승합니다!`);
-        renderModalContent();
-        checkAndInitViews();
-      });
-
-      dialog.querySelector('#btn-hero-office-go')?.addEventListener('click', () => {
-        dialog.close();
-        goView('lobby');
-      });
-    }
-
-    renderModalContent();
-    if (!dialog.open) dialog.showModal();
+  function getActiveCommittee(state) {
+    return COMMITTEES.find(c => c.id === state.activeCommitteeId) || COMMITTEES[0];
   }
 
-  // ── 0. 글로벌 5대 핵심 모드 원터치 바로가기 바 (초보자 3초 접근성 + 전체메뉴 + 다크모드 스위치) ──
-  // 수정 사유: 내 사무실·제로 팀(45인 광장)·실시간 광장·1억 모의투자·투자 홈·전체메뉴를 최상단 1줄에서 언제든 1초 만에 오갈 수 있도록 직관화
+  // ── 토스트 알림 ──
+  function showToast(msg) {
+    let t = document.getElementById('zero-tycoon-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'zero-tycoon-toast';
+      t.className = 'rpg-toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── 비로그인 상태에서 실시간 광장 진입 시 자동 프로필 모달이 화면을 가로막지 않도록 제어 ──
+  let allowExplicitProfileDialog = false;
+  function suppressAutoProfileModal() {
+    if (allowExplicitProfileDialog) return;
+    const dlg = document.getElementById('member-profile-dialog');
+    if (dlg && dlg.open) {
+      try { dlg.close(); } catch (_) {}
+      dlg.removeAttribute('open');
+    }
+  }
+
+  // ── 전역 화면 전환 헬퍼 (사무실·ZERO팀·광장·모의투자·홈 100% 작동 보장) ──
+  function navigateToView(targetView) {
+    if (!targetView) return;
+    const moreMenu = document.getElementById('more-menu');
+    if (moreMenu && moreMenu.open) {
+      try { moreMenu.close(); } catch (_) {}
+      moreMenu.removeAttribute('open');
+    }
+    if (targetView === 'plaza') {
+      allowExplicitProfileDialog = false;
+      setTimeout(suppressAutoProfileModal, 0);
+      setTimeout(suppressAutoProfileModal, 60);
+      setTimeout(suppressAutoProfileModal, 180);
+    }
+    if (targetView === 'team') {
+      const officePanel = document.getElementById('office-panel');
+      if (officePanel) officePanel.classList.remove('viewport-page-away');
+    }
+    const navBtn = document.querySelector(`.rail .nav-item[data-view="${targetView}"], .global-navigation [data-view="${targetView}"], .mts-subnav [data-view="${targetView}"], .mobile-tabbar [data-view="${targetView}"]`);
+    if (navBtn) navBtn.click();
+    if (window.location.hash !== `#${targetView}`) {
+      window.location.hash = `#${targetView}`;
+    } else {
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
+    setTimeout(() => {
+      if (targetView === 'plaza') suppressAutoProfileModal();
+      refreshAllTycoonUI();
+    }, 60);
+  }
+
+  window.ZERORpg = {
+    navigateToView,
+    openCeoPassModal,
+    openAnalystModal
+  };
+
+  // 전역 캡처 클릭 핸들러 (#more-menu 및 [data-rpg-goto] 즉시 반응)
+  if (!window.__zeroTycoonGlobalClickBound) {
+    window.__zeroTycoonGlobalClickBound = true;
+    document.addEventListener('click', (e) => {
+      const explicitProfileBtn = e.target.closest('#member-entry, #lobby-profile-btn, #lounge-open-profile, [data-open-profile]');
+      if (explicitProfileBtn) {
+        allowExplicitProfileDialog = true;
+        setTimeout(() => { allowExplicitProfileDialog = false; }, 1200);
+        return;
+      }
+      const moreItem = e.target.closest('#more-menu [data-view]');
+      if (moreItem) {
+        const v = moreItem.getAttribute('data-view');
+        if (v) {
+          e.preventDefault();
+          e.stopPropagation();
+          navigateToView(v);
+          return;
+        }
+      }
+      const gotoBtn = e.target.closest('[data-rpg-goto]');
+      if (gotoBtn) {
+        const v = gotoBtn.getAttribute('data-rpg-goto');
+        if (v) {
+          e.preventDefault();
+          navigateToView(v);
+        }
+      }
+    }, true);
+  }
+
+  // ── 1. 상단 원터치 캡슐 내비게이션 & 내 운용사 등급 배지 (#zero-easy-mode-bar) ──
   function setupGlobalEasyBar() {
-    const main = document.getElementById('main') || document.getElementById('main-content') || document.querySelector('main');
-    if (!main) return;
+    const mainEl = document.getElementById('main') || document.querySelector('main');
+    if (!mainEl) return;
 
     let bar = document.getElementById('zero-easy-mode-bar');
     if (!bar) {
-      bar = document.createElement('nav');
+      bar = document.createElement('div');
       bar.id = 'zero-easy-mode-bar';
       bar.className = 'zero-easy-mode-bar';
-      bar.setAttribute('aria-label', '초보자 핵심 메뉴 바로가기');
-      main.prepend(bar);
+      mainEl.prepend(bar);
     }
 
-    const current = document.documentElement.dataset.zeroView || 'home';
-    const isDark = document.documentElement.dataset.zeroTheme === 'dark' || document.documentElement.classList.contains('dark');
-    const modes = [
-      { view: 'lobby', icon: '🏰', title: '내 사무실' },
-      { view: 'team', icon: '⚔️', title: '제로 팀 (45인 광장)' },
-      { view: 'plaza', icon: '🐉', title: '실시간 광장' },
-      { view: 'portfolio', icon: '💰', title: '1억 모의투자' },
-      { view: 'home', icon: '🏠', title: '투자 홈' }
-    ];
+    const state = getTycoonState();
+    const tier = getTierForLevel(state.level);
+    const today = todayKey();
+    const doneCount = ['market', 'briefing', 'portfolio'].filter(k => state.dailyMissions?.[`${today}:${k}`]).length;
+    const isDark = document.documentElement.dataset.zeroTheme === 'dark';
+    const currentView = document.documentElement.dataset.zeroView || (window.location.hash || '#portfolio').replace('#', '') || 'portfolio';
 
     bar.innerHTML = `
       <div class="easy-bar-inner">
-        <div class="easy-bar-pills">
-          ${modes.map(m => `
-            <button type="button" class="easy-mode-pill ${current === m.view ? 'active' : ''}" data-easy-view="${m.view}">
-              <span class="easy-mode-icon">${m.icon}</span>
-              <span class="easy-mode-text"><strong>${m.title}</strong></span>
-            </button>
-          `).join('')}
-          <button type="button" class="easy-mode-pill easy-pill-menu" id="easy-open-more-btn" title="전체 메뉴 열기">
-            <span class="easy-mode-icon">☰</span>
-            <span class="easy-mode-text"><strong>전체메뉴</strong></span>
+        <div class="easy-bar-modes" role="navigation" aria-label="핵심 공간 빠른 이동">
+          <button type="button" class="easy-mode-btn ${currentView === 'lobby' ? 'active' : ''}" data-easy-view="lobby">
+            🏢 <span>내 사무실</span>
           </button>
-          <button type="button" class="easy-mode-pill easy-pill-theme" id="easy-toggle-theme-btn" title="다크모드 / 라이트모드 전환">
-            <span class="easy-mode-icon">${isDark ? '☀️' : '🌙'}</span>
-            <span class="easy-mode-text"><strong>${isDark ? '라이트' : '다크'}</strong></span>
+          <button type="button" class="easy-mode-btn ${currentView === 'team' ? 'active' : ''}" data-easy-view="team">
+            👥 <span>ZERO 45인 팀</span>
           </button>
+          <button type="button" class="easy-mode-btn ${currentView === 'plaza' ? 'active' : ''}" data-easy-view="plaza">
+            💬 <span>실시간 광장</span>
+          </button>
+          <button type="button" class="easy-mode-btn ${currentView === 'portfolio' ? 'active' : ''}" data-easy-view="portfolio">
+            💰 <span>1억 모의투자</span>
+          </button>
+          <button type="button" class="easy-mode-btn ${currentView === 'home' ? 'active' : ''}" data-easy-view="home">
+            🏠 <span>투자 홈</span>
+          </button>
+        </div>
+        <div class="easy-bar-actions">
+          <button type="button" class="tycoon-pass-pill" id="open-ceo-pass-btn" title="내 운용사 등급 및 오늘의 미션 보기">
+            <span class="pass-lv">Lv.${state.level}</span>
+            <strong class="pass-tier">${tier.badge}</strong>
+            <span class="pass-zp">${Number(state.zp || 0).toLocaleString()} ZP</span>
+            <span class="pass-mission-dot">미션 ${doneCount}/3</span>
+          </button>
+          <button type="button" class="easy-util-btn" id="easy-all-menu-btn">☰ 메뉴</button>
+          <button type="button" class="easy-util-btn" id="easy-theme-toggle-btn">${isDark ? '☀️ 라이트' : '🌙 다크'}</button>
         </div>
       </div>
     `;
 
     bar.querySelectorAll('[data-easy-view]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        goView(btn.dataset.easyView);
-      });
+      btn.addEventListener('click', () => navigateToView(btn.dataset.easyView));
     });
 
-    bar.querySelector('#easy-open-more-btn')?.addEventListener('click', () => {
-      playRetroSound('click');
-      const menu = document.getElementById('more-menu');
-      if (menu && !menu.open) menu.showModal?.();
+    bar.querySelector('#open-ceo-pass-btn')?.addEventListener('click', () => openCeoPassModal());
+
+    bar.querySelector('#easy-all-menu-btn')?.addEventListener('click', () => {
+      const moreMenu = document.getElementById('more-menu');
+      if (moreMenu && typeof moreMenu.showModal === 'function') moreMenu.showModal();
+      else document.querySelector('.menu-open')?.click();
     });
 
-    bar.querySelector('#easy-toggle-theme-btn')?.addEventListener('click', () => {
-      playRetroSound('click');
-      const root = document.documentElement;
-      const nowDark = root.dataset.zeroTheme === 'dark' || root.classList.contains('dark');
-      const nextTheme = nowDark ? 'light' : 'dark';
-      root.dataset.zeroTheme = nextTheme;
-      root.dataset.theme = nextTheme;
-      root.classList.toggle('dark', nextTheme === 'dark');
-      root.classList.toggle('light', nextTheme === 'light');
-      try { localStorage.setItem('zero-theme', nextTheme); } catch (_) {}
+    bar.querySelector('#easy-theme-toggle-btn')?.addEventListener('click', () => {
+      const next = document.documentElement.dataset.zeroTheme === 'dark' ? 'light' : 'dark';
+      if (window.ZERODarkTheme?.set) window.ZERODarkTheme.set(next);
+      else {
+        document.documentElement.dataset.zeroTheme = next;
+        document.documentElement.dataset.theme = next;
+        document.documentElement.classList.toggle('dark', next === 'dark');
+        try { localStorage.setItem('zero_theme', next); } catch (_) {}
+      }
       setupGlobalEasyBar();
     });
   }
 
-  // ── 1. 홈 화면 (Home / home-view) RPG 영웅 웰컴 라운지 & 3초 입문 가이드 ──
+  // ── 2. 투자 홈 (#home-view) 상단: 컴팩트한 '내 운용사 & AI 투자위원회 브리핑' 배너 (#home-rpg-gateway) ──
   function setupHomeRpgGateway() {
-    const homeView = document.getElementById('home-view');
-    if (!homeView) return;
+    const tossHome = document.getElementById('toss-home');
+    if (!tossHome) return;
 
-    const state = getRpgState();
-    const activePreset = RPG_PRESETS.find(p => p.id === state.activePartyId) || RPG_PRESETS[0];
-    const allHeroes = [activePreset.leader, ...activePreset.members];
-
-    let gateway = document.getElementById('home-rpg-gateway');
-    if (!gateway) {
-      gateway = document.createElement('section');
-      gateway.id = 'home-rpg-gateway';
-      gateway.className = 'home-rpg-gateway-card';
-      homeView.prepend(gateway);
+    let banner = document.getElementById('home-rpg-gateway');
+    if (!banner) {
+      banner = document.createElement('section');
+      banner.id = 'home-rpg-gateway';
+      banner.className = 'tycoon-home-banner';
+      tossHome.prepend(banner);
     }
 
-    gateway.innerHTML = `
-      <div class="rpg-gw-top">
-        <div class="rpg-gw-title-area">
-          <div class="rpg-gw-badges">
-            <span class="rpg-gw-pill-live">🎮 ZERO 투자 RPG 월드</span>
-            <span class="rpg-gw-pill-lv">👑 Lv.${state.level} ${state.title} · 전투력 ${activePreset.cp} CP</span>
+    const state = getTycoonState();
+    const tier = getTierForLevel(state.level);
+    const committee = getActiveCommittee(state);
+    const leader = committee.members[0];
+
+    banner.innerHTML = `
+      <div class="tycoon-home-left">
+        <div class="tycoon-home-avatar">${getAnalystSvg(leader.role, 56)}</div>
+        <div class="tycoon-home-copy">
+          <div class="tycoon-home-badges">
+            <span class="tycoon-pill-blue">Lv.${state.level} ${tier.badge}</span>
+            <span class="tycoon-pill-gray">가동 중: ${committee.name}</span>
           </div>
-          <h2 class="rpg-gw-headline">어려운 주식은 끝! 전설의 영웅들과 게임처럼 투자하세요</h2>
-          <p class="rpg-gw-subline">캐릭터를 터치하면 영웅의 장비와 쉬운 금융 마법을 확인하고 강화할 수 있어요.</p>
+          <strong class="tycoon-home-headline">${leader.name} 위원장: ${leader.quote}</strong>
+          <p class="tycoon-home-sub">${committee.summary}</p>
         </div>
-        <div class="rpg-gw-preset-switcher" role="group" aria-label="1초 파티 전환">
-          ${RPG_PRESETS.map(p => `
-            <button type="button" class="rpg-gw-preset-btn ${p.id === activePreset.id ? 'active' : ''}" data-home-preset="${p.id}">
-              ${p.name}
+      </div>
+      <div class="tycoon-home-actions">
+        <button type="button" class="tycoon-btn-primary" data-rpg-goto="lobby">🏢 내 사무실 데스크</button>
+        <button type="button" class="tycoon-btn-secondary" data-rpg-goto="team">👥 드림팀 변경</button>
+        <button type="button" class="tycoon-btn-secondary" data-rpg-goto="plaza">💬 오늘 증시 투표</button>
+      </div>
+    `;
+  }
+
+  // ── 3. 내 사무실 (#lobby-view): 캔버스 시야 방해 오버레이 완전 제거 + 하단 '내 운용사 데스크 & 데일리 3분 미션' 카드 ──
+  function setupOfficeRpg() {
+    const lobbyMain = document.querySelector('#lobby-view .lobby-main');
+    if (!lobbyMain) return;
+
+    // 기존에 캔버스 위를 가리던 판타지 오버레이와 슬림 바가 남아 있으면 즉시 제거
+    document.getElementById('office-map-rpg-overlay')?.remove();
+    document.getElementById('office-rpg-slim-bar')?.remove();
+
+    let deskCard = document.getElementById('office-rpg-hud');
+    if (!deskCard) {
+      deskCard = document.createElement('section');
+      deskCard.id = 'office-rpg-hud';
+      deskCard.className = 'tycoon-office-desk-card';
+    }
+    const scrollWrap = lobbyMain.querySelector('.lobby-scroll');
+    if (scrollWrap && scrollWrap.nextSibling) {
+      lobbyMain.insertBefore(deskCard, scrollWrap.nextSibling);
+    } else {
+      lobbyMain.appendChild(deskCard);
+    }
+
+    const state = getTycoonState();
+    const tier = getTierForLevel(state.level);
+    const committee = getActiveCommittee(state);
+    const today = todayKey();
+    const expPct = Math.min(100, Math.round(((state.exp || 0) / (state.maxExp || 300)) * 100));
+
+    const missions = [
+      {
+        id: 'market',
+        icon: '📊',
+        title: '오늘의 시장 전광판(지수·환율) 확인하기',
+        desc: '위쪽 전광판에서 코스피·나스닥·환율 흐름을 체크하세요',
+        reward: '+50 XP · +100 ZP',
+        done: !!state.dailyMissions?.[`${today}:market`]
+      },
+      {
+        id: 'briefing',
+        icon: '🎙️',
+        title: `${committee.members[0].name} 위원장 1분 브리핑 듣기`,
+        desc: '내 AI 투자위원회가 분석한 오늘의 핵심 대응 원칙 확인',
+        reward: '+50 XP · +100 ZP',
+        done: !!state.dailyMissions?.[`${today}:briefing`]
+      },
+      {
+        id: 'portfolio',
+        icon: '💼',
+        title: '내 1억 모의투자 자산 비율 점검하기',
+        desc: '목표 비중(미국·채권·한국)과 내 모의자산을 비교해 보세요',
+        reward: '+100 XP · +200 ZP',
+        done: !!state.dailyMissions?.[`${today}:portfolio`]
+      }
+    ];
+
+    const themes = [
+      { key: 'wallstreet', label: '🏛️ 월스트리트' },
+      { key: 'boutique', label: '☕ 부티크' },
+      { key: 'startup', label: '💻 스타트업' },
+      { key: 'night', label: '🌙 나이트 라운지' }
+    ];
+
+    deskCard.innerHTML = `
+      <div class="tycoon-desk-top">
+        <div class="tycoon-firm-status">
+          <div class="tycoon-firm-badge-row">
+            <span class="tycoon-lv-pill">Lv.${state.level}</span>
+            <strong class="tycoon-firm-name">${tier.badge} · ${tier.title}</strong>
+            <span class="tycoon-streak-pill">🔥 연속 출석 ${state.streak || 1}일째</span>
+            <span class="tycoon-zp-pill">💎 ${Number(state.zp || 0).toLocaleString()} ZP</span>
+          </div>
+          <div class="tycoon-xp-row">
+            <div class="tycoon-xp-bar-bg"><div class="tycoon-xp-bar-fill" style="width:${expPct}%"></div></div>
+            <small class="tycoon-xp-text">${state.exp} / ${state.maxExp} XP (${tier.nextGoal})</small>
+          </div>
+        </div>
+        <div class="tycoon-theme-switcher" role="group" aria-label="사무실 인테리어 분위기 변경">
+          <span class="tycoon-theme-lbl">인테리어:</span>
+          ${themes.map(t => `
+            <button type="button" class="tycoon-theme-btn ${state.officeTheme === t.key ? 'active' : ''}" data-office-theme="${t.key}">
+              ${t.label}
             </button>
           `).join('')}
         </div>
       </div>
 
-      <!-- 시각적 캐릭터 아바타 스테이지 (4인 영웅 일러스트 쇼케이스) -->
-      <div class="rpg-hero-stage-grid">
-        ${allHeroes.map((h, idx) => {
-          const lv = state.heroLevels?.[h.key || 'leader'] || (12 + idx);
-          return `
-            <article class="rpg-stage-hero-card" data-hero-idx="${idx}" tabindex="0" role="button" aria-label="${h.name} 상세 보기">
-              <div class="rpg-hero-speech">${h.quote}</div>
-              <div class="rpg-hero-Rarity-row">
-                <span class="rpg-ssr-mini">${h.rarity || 'SSR ★★★★★'}</span>
-                <span class="rpg-lv-mini">Lv.${lv}</span>
-              </div>
-              <div class="rpg-hero-art-wrap">
-                ${getHeroSvg(h.role, 86)}
-              </div>
-              <div class="rpg-hero-meta">
-                <span class="rpg-hero-class-badge">${h.roleKorean}</span>
-                <strong class="rpg-hero-name">${h.name}</strong>
-                <small class="rpg-hero-skill-tag">⚡ ${h.skill}</small>
-              </div>
-              <span class="rpg-hero-touch-hint">👆 터치하여 장비·강화 보기</span>
-            </article>
-          `;
-        }).join('')}
-      </div>
-
-      <!-- 초보자 3단계 원클릭 가이드 -->
-      <div class="rpg-easy-steps-bar">
-        <button type="button" class="rpg-step-card step-1" data-step-go="lobby">
-          <span class="step-num">STEP 1</span>
-          <div class="step-body">
-            <strong>🏰 내 RPG 사무실 출근하기</strong>
-            <small>캐릭터들과 대화하고 황금 금고에서 보상을 수확하세요</small>
+      <div class="tycoon-desk-grid">
+        <div class="tycoon-missions-box">
+          <div class="tycoon-box-head">
+            <strong>🎯 오늘의 3분 투자 루틴 (토스식 데일리 미션)</strong>
+            <small>누르면 바로 실행되고 운용사 경험치(XP)가 올라갑니다</small>
           </div>
-          <span class="step-arrow">입장 →</span>
-        </button>
-        <button type="button" class="rpg-step-card step-2" data-step-go="team">
-          <span class="step-num">STEP 2</span>
-          <div class="step-body">
-            <strong>⚔️ 45인 영웅 도감 & 덱 편성</strong>
-            <small>공격딜러·방어탱커·배당힐러 영웅을 내 취향대로 조합</small>
+          <div class="tycoon-mission-list">
+            ${missions.map(m => `
+              <button type="button" class="tycoon-mission-item ${m.done ? 'done' : ''}" data-mission-id="${m.id}">
+                <span class="tm-icon">${m.done ? '✅' : m.icon}</span>
+                <div class="tm-text">
+                  <strong>${m.title}</strong>
+                  <small>${m.desc}</small>
+                </div>
+                <span class="tm-reward">${m.done ? '달성 완료' : m.reward}</span>
+              </button>
+            `).join('')}
           </div>
-          <span class="step-arrow">편성 →</span>
-        </button>
-        <button type="button" class="rpg-step-card step-3" data-step-go="plaza">
-          <span class="step-num">STEP 3</span>
-          <div class="step-body">
-            <strong>🐉 고금리 드래곤 레이드 출격</strong>
-            <small>광장에서 보스를 토벌하고 1억 모의투자 랭킹에 도전!</small>
-          </div>
-          <span class="step-arrow">출격 →</span>
-        </button>
-      </div>
-    `;
-
-    gateway.querySelectorAll('[data-home-preset]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        playRetroSound('levelup');
-        state.activePartyId = e.currentTarget.dataset.homePreset;
-        saveRpgState(state);
-        const picked = RPG_PRESETS.find(p => p.id === state.activePartyId) || RPG_PRESETS[0];
-        spawnFloatingEffect(`⚔️ ${picked.name} 장착!`, e.clientX, e.clientY);
-        showToast(`🎉 [${picked.name}] 파티가 홈 스테이지에 소환되었습니다!`);
-        setupHomeRpgGateway();
-      });
-    });
-
-    gateway.querySelectorAll('.rpg-stage-hero-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const idx = Number(card.dataset.heroIdx) || 0;
-        openHeroDetailModal(allHeroes[idx]);
-      });
-    });
-
-    gateway.querySelectorAll('[data-step-go]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        goView(btn.dataset.stepGo);
-      });
-    });
-  }
-
-  // ── 2. 사무실 (Office / lobby-view) RPG 월드맵 오버레이 & 영웅 집무실 타이쿤 ──
-  // 수정 사유: 사무실 진입 시 게임 맵(#lobby-stage)이 최상단에 크게 보이도록 슬림 HUD와 맵 내부 인터랙티브 RPG 오브젝트(5대 성소·보물상자·마법진·모루·가마솥) 및 테마 스위치를 추가하고, 무거운 카드는 맵 아래로 배치하여 모바일 스크롤과 시인성을 동시에 해결
-  function setupOfficeRpg() {
-    const lobbyMain = document.querySelector('#lobby-view .lobby-main');
-    if (!lobbyMain) return;
-
-    const state = getRpgState();
-    const activePreset = RPG_PRESETS.find(p => p.id === state.activePartyId) || RPG_PRESETS[0];
-    const officeHeroes = [activePreset.leader, ...activePreset.members];
-    const stageWrap = document.querySelector('#lobby-view .zero-office-canvas-wrap');
-    const stage = document.getElementById('lobby-stage');
-
-    // (A) 맵 바로 위: 1줄 컴팩트 길드 상태 바 (맵을 가리지 않고 핵심 골드·레벨·출석보상만 표시)
-    let slimBar = document.getElementById('office-rpg-slim-bar');
-    if (!slimBar) {
-      slimBar = document.createElement('div');
-      slimBar.id = 'office-rpg-slim-bar';
-      slimBar.className = 'office-rpg-slim-bar';
-      if (stageWrap) {
-        stageWrap.parentNode.insertBefore(slimBar, stageWrap);
-      } else {
-        lobbyMain.prepend(slimBar);
-      }
-    }
-
-    function renderSlimBar() {
-      slimBar.innerHTML = `
-        <div class="slim-bar-left">
-          <span class="slim-guild-badge">🏰 Lv.${state.level} 길드 성소</span>
-          <span class="slim-stat gold">🪙 ${state.gold.toLocaleString()} G</span>
-          <span class="slim-stat exp">⭐ EXP ${state.exp}/${state.maxExp}</span>
-          <span class="slim-stat cp">⚔️ CP ${activePreset.cp}</span>
         </div>
-        <div class="slim-bar-right">
-          <button type="button" id="slim-warp-team" class="slim-action-btn warp">⚔️ 제로 팀(45인 광장)</button>
-          <button type="button" id="slim-warp-plaza" class="slim-action-btn warp">🐉 실시간 광장</button>
-          <button type="button" id="slim-vault-quick" class="slim-action-btn gold">💰 금고 +${(state.vaultGold || 1250).toLocaleString()}G 수확</button>
-          <button type="button" id="hud-box-btn" class="slim-action-btn gift">🎁 출석 보물상자</button>
-        </div>
-      `;
 
-      slimBar.querySelector('#slim-warp-team')?.addEventListener('click', () => goView('team'));
-      slimBar.querySelector('#slim-warp-plaza')?.addEventListener('click', () => goView('plaza'));
-
-      slimBar.querySelector('#hud-box-btn')?.addEventListener('click', (e) => {
-        const today = new Date().toDateString();
-        if (state.lastAttendanceDate === today) {
-          playRetroSound('click');
-          showToast('🎁 오늘의 출석 보물상자는 이미 열었습니다! 맵 위의 보물상자나 마법진을 눌러보세요.');
-          return;
-        }
-        state.lastAttendanceDate = today;
-        state.gold += 1500;
-        state.exp += 120;
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect('🎁 출석 대박! +1,500 G & +120 EXP!', e.clientX, e.clientY);
-        showToast('🎉 일일 출석 보물상자 오픈! 1,500 Gold와 120 EXP를 획득했습니다!');
-        renderSlimBar();
-        renderOfficeShowcase();
-      });
-
-      slimBar.querySelector('#slim-vault-quick')?.addEventListener('click', (e) => {
-        const harvest = state.vaultGold || 1250;
-        state.gold += harvest;
-        state.exp += 80;
-        state.vaultGold = 350;
-        if (state.exp >= state.maxExp) {
-          state.level += 1;
-          state.exp -= state.maxExp;
-        }
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect(`💰 +${harvest.toLocaleString()} G & +80 EXP 수확!`, e.clientX, e.clientY);
-        showToast(`💰 황금 금고에서 복리 보상 ${harvest.toLocaleString()} Gold와 80 EXP를 즉시 수확했습니다!`);
-        renderSlimBar();
-        renderOfficeShowcase();
-      });
-    }
-    renderSlimBar();
-
-    // (B) 사무실 맵(#lobby-stage) 내부 직접 게임화: RPG 월드맵 랜드마크 & 테마 스위치 + 광장 워프 포털 오버레이
-    if (stage) {
-      let mapOverlay = stage.querySelector('#office-map-rpg-overlay');
-      if (!mapOverlay) {
-        mapOverlay = document.createElement('div');
-        mapOverlay.id = 'office-map-rpg-overlay';
-        mapOverlay.className = 'office-map-rpg-overlay';
-        stage.appendChild(mapOverlay);
-
-        const currentTheme = stage.dataset.rpgMapTheme || 'sanctuary';
-        mapOverlay.innerHTML = `
-          <div class="rpg-map-top-hud">
-            <div class="rpg-map-zone-title">
-              <span class="rpg-compass-icon">🧭</span>
-              <strong>ZERO 황금 길드 성소 월드맵</strong>
-              <small>바닥 터치 이동 · 포털 클릭 시 광장 워프</small>
-            </div>
-            <div class="rpg-map-theme-pills" role="group" aria-label="사무실 맵 테마 변경">
-              <button type="button" class="rpg-map-theme-btn ${currentTheme === 'sanctuary' ? 'active' : ''}" data-map-theme="sanctuary" data-floor="wood">🏰 황금성소</button>
-              <button type="button" class="rpg-map-theme-btn ${currentTheme === 'dungeon' ? 'active' : ''}" data-map-theme="dungeon" data-floor="stone">🌙 암흑던전</button>
-              <button type="button" class="rpg-map-theme-btn ${currentTheme === 'forest' ? 'active' : ''}" data-map-theme="forest" data-floor="mint">🌲 엘프의숲</button>
-              <button type="button" class="rpg-map-theme-btn ${currentTheme === 'library' ? 'active' : ''}" data-map-theme="library" data-floor="sand">📜 대도서관</button>
-            </div>
-          </div>
-
-          <!-- 맵 내부 워프 게이트 2종 (제로 팀 45인 광장 & 실시간 광장) -->
-          <button type="button" class="rpg-map-node node-portal-team" style="left: 50%; top: 22%;" data-node-act="warp-team" title="제로 팀 45인 광장으로 워프">
-            <span class="node-quest-mark">WARP</span>
-            <span class="node-icon">⚔️</span>
-            <span class="node-label">제로 팀 광장</span>
-          </button>
-
-          <button type="button" class="rpg-map-node node-portal-plaza" style="left: 82%; top: 20%;" data-node-act="warp-plaza" title="실시간 보스 레이드 광장으로 워프">
-            <span class="node-quest-mark">LIVE</span>
-            <span class="node-icon">🐉</span>
-            <span class="node-label">실시간 광장</span>
-          </button>
-
-          <!-- 맵 내부 5대 인터랙티브 RPG 랜드마크 오브젝트 -->
-          <button type="button" class="rpg-map-node node-mage" style="left: 19%; top: 36%;" data-node-act="mage" title="마법 연구소 (소프 켈리 성소)">
-            <span class="node-quest-mark">🔮</span>
-            <span class="node-icon">🧙‍♂️</span>
-            <span class="node-label">켈리 마법성소</span>
-          </button>
-
-          <button type="button" class="rpg-map-node node-chest" style="left: 81%; top: 44%;" data-node-act="chest" title="황금 보물상자 열기">
-            <span class="node-quest-mark">❗</span>
-            <span class="node-icon">🎁</span>
-            <span class="node-label">황금 보물고</span>
-          </button>
-
-          <button type="button" class="rpg-map-node node-altar" style="left: 50%; top: 55%;" data-node-act="altar" title="중앙 황금 룬 마법진 소환">
-            <span class="node-quest-mark">✨</span>
-            <span class="node-icon">🔯</span>
-            <span class="node-label">중앙 룬 마법진</span>
-          </button>
-
-          <button type="button" class="rpg-map-node node-anvil" style="left: 19%; top: 76%;" data-node-act="anvil" title="수호자의 방패 대장간">
-            <span class="node-quest-mark">⚒️</span>
-            <span class="node-icon">🛡️</span>
-            <span class="node-label">수호자 대장간</span>
-          </button>
-
-          <button type="button" class="rpg-map-node node-cauldron" style="left: 81%; top: 76%;" data-node-act="cauldron" title="배당 엘릭서 연금술 정원">
-            <span class="node-quest-mark">💖</span>
-            <span class="node-icon">🧪</span>
-            <span class="node-label">연금술 포션샘</span>
-          </button>
-        `;
-
-        mapOverlay.querySelectorAll('[data-map-theme]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const theme = btn.dataset.mapTheme;
-            const floor = btn.dataset.floor || 'wood';
-            stage.dataset.rpgMapTheme = theme;
-            stage.dataset.floor = floor;
-            mapOverlay.querySelectorAll('[data-map-theme]').forEach(b => b.classList.toggle('active', b === btn));
-            playRetroSound('levelup');
-            spawnFloatingEffect(`🗺️ 맵 테마 변경! +30 EXP`, e.clientX, e.clientY);
-          });
-        });
-
-        mapOverlay.querySelectorAll('.rpg-map-node').forEach(nodeBtn => {
-          nodeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const act = nodeBtn.dataset.nodeAct;
-            if (act === 'warp-team') {
-              goView('team');
-              return;
-            } else if (act === 'warp-plaza') {
-              goView('plaza');
-              return;
-            } else if (act === 'chest') {
-              state.gold += 650;
-              state.exp += 60;
-              saveRpgState(state);
-              playRetroSound('levelup');
-              spawnFloatingEffect('🎁 보물상자 발견! +650 G & +60 EXP!', e.clientX, e.clientY);
-              showToast('🎁 맵 우측 [황금 보물고]에서 650 Gold와 60 EXP를 획득했습니다!');
-            } else if (act === 'mage') {
-              playRetroSound('coin');
-              spawnFloatingEffect('🔮 대마법사 소프 호출!', e.clientX, e.clientY);
-              openHeroDetailModal(activePreset.leader);
-            } else if (act === 'anvil') {
-              playRetroSound('coin');
-              spawnFloatingEffect('🛡️ 수호 탱커 장비 점검!', e.clientX, e.clientY);
-              openHeroDetailModal(officeHeroes[2] || activePreset.leader);
-            } else if (act === 'cauldron') {
-              state.gold += 400;
-              state.exp += 50;
-              saveRpgState(state);
-              playRetroSound('coin');
-              spawnFloatingEffect('🧪 배당 포션 회복! +400 G!', e.clientX, e.clientY);
-              showToast('🧪 [연금술 포션샘]에서 배당 회복 물약을 마셔 +400 Gold를 얻었습니다!');
-            } else if (act === 'altar') {
-              state.exp += 90;
-              if (state.exp >= state.maxExp) {
-                state.level += 1;
-                state.exp -= state.maxExp;
-              }
-              saveRpgState(state);
-              playRetroSound('levelup');
-              spawnFloatingEffect('✨ 마법진 공명! +90 EXP!', e.clientX, e.clientY);
-              showToast('✨ 중앙 황금 룬 마법진이 공명하며 파티 전원에게 복리 가속 버프를 부여합니다! (+90 EXP)');
-            }
-            renderSlimBar();
-            renderOfficeShowcase();
-          });
-        });
-      }
-
-      if (!stage.dataset.rpgReticleBound) {
-        stage.dataset.rpgReticleBound = 'true';
-        stage.addEventListener('pointerdown', (e) => {
-          if (e.target.closest('button, a')) return;
-          const rect = stage.getBoundingClientRect();
-          const marker = document.createElement('span');
-          marker.className = 'rpg-click-reticle';
-          marker.style.left = `${e.clientX - rect.left}px`;
-          marker.style.top = `${e.clientY - rect.top}px`;
-          stage.appendChild(marker);
-          setTimeout(() => marker.remove(), 700);
-        });
-      }
-    }
-
-    // (C) 맵 아래쪽: 오피스 타이쿤 황금 금고 & 4인 근무 영웅 쇼케이스 (스크롤하여 확인)
-    let hud = document.getElementById('office-rpg-hud');
-    if (!hud) {
-      hud = document.createElement('div');
-      hud.id = 'office-rpg-hud';
-      hud.className = 'office-tycoon-showcase';
-      if (stageWrap && stageWrap.nextSibling) {
-        stageWrap.parentNode.insertBefore(hud, stageWrap.nextSibling);
-      } else {
-        lobbyMain.append(hud);
-      }
-    }
-
-    function renderOfficeShowcase() {
-      const vaultAmt = state.vaultGold || 1250;
-      hud.innerHTML = `
-        <div class="office-tycoon-top">
-          <div class="office-tycoon-profile">
-            <span class="office-crown-badge">🏰 ZERO 길드 집무실 라운지</span>
+        <div class="tycoon-committee-mini">
+          <div class="tycoon-box-head">
             <div>
-              <strong>Lv.${state.level} ${state.title}의 투자 오피스</strong>
-              <small>영웅 카드를 터치해 장비를 강화하고 황금 금고 보상을 수확하세요</small>
+              <strong>🤝 내 운용사 주력 드림팀: ${committee.name}</strong>
+              <small>카드를 누르면 애널리스트 투자 철학과 리서치 레벨을 관리해요</small>
             </div>
+            <button type="button" class="tycoon-link-btn" data-rpg-goto="team">팀 교체 · 45인 보기 →</button>
           </div>
-        </div>
-
-        <!-- 황금 금고 타이쿤 & 영웅 4인 집무실 카드 -->
-        <div class="office-lounge-grid">
-          <div class="office-vault-card">
-            <div class="vault-icon-wrap">💰</div>
-            <div class="vault-info">
-              <span class="vault-tag">⚡ 실시간 복리 생산 타이쿤</span>
-              <strong>황금 금고: +${vaultAmt.toLocaleString()} G 누적됨</strong>
-              <small>45인 자문단과 영웅 파티가 연구 보상을 모았습니다!</small>
-            </div>
-            <button type="button" id="office-vault-harvest" class="vault-harvest-btn">
-              🪙 금고 수확하기
-            </button>
-          </div>
-
-          <div class="office-mini-heroes">
-            ${officeHeroes.map((h, i) => `
-              <button type="button" class="office-hero-avatar-btn" data-office-hero="${i}" title="${h.name} 클릭하여 대화 및 강화">
-                <div class="office-hero-svg-box">${getHeroSvg(h.role, 56)}</div>
-                <div class="office-hero-txt">
-                  <span class="office-hero-role">${h.roleKorean.split(' ')[0]}</span>
-                  <strong>${h.name}</strong>
-                  <small>Lv.${state.heroLevels?.[h.key || 'leader'] || 12} · 강화하기 ⚡</small>
-                </div>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `;
-
-      hud.querySelector('#office-vault-harvest')?.addEventListener('click', (e) => {
-        const harvest = state.vaultGold || 1250;
-        state.gold += harvest;
-        state.exp += 80;
-        state.vaultGold = 350;
-        if (state.exp >= state.maxExp) {
-          state.level += 1;
-          state.exp -= state.maxExp;
-        }
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect(`💰 +${harvest.toLocaleString()} G & +80 EXP 수확!`, e.clientX, e.clientY);
-        showToast(`💰 황금 금고에서 복리 보상 ${harvest.toLocaleString()} Gold와 80 EXP를 수확했습니다!`);
-        renderSlimBar();
-        renderOfficeShowcase();
-      });
-
-      hud.querySelectorAll('[data-office-hero]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.officeHero) || 0;
-          openHeroDetailModal(officeHeroes[idx]);
-        });
-      });
-    }
-    renderOfficeShowcase();
-
-    // (D) 사무실 4대 인터랙티브 미니게임 탐험 핫스팟 (hud 아래에 배치)
-    let hotspots = document.getElementById('office-rpg-hotspots');
-    if (!hotspots) {
-      hotspots = document.createElement('div');
-      hotspots.id = 'office-rpg-hotspots';
-      hotspots.className = 'office-hotspots-container';
-      if (hud && hud.nextSibling) {
-        hud.parentNode.insertBefore(hotspots, hud.nextSibling);
-      } else {
-        lobbyMain.append(hotspots);
-      }
-    }
-
-    hotspots.innerHTML = `
-      <div class="hotspots-header">
-        <span>🎮 사무실 4대 보물 & 미니게임 스팟</span>
-        <small>아래 시설을 터치하면 즉시 8비트 효과음과 함께 버프·골드를 획득합니다!</small>
-      </div>
-      <div class="hotspots-grid">
-        <button type="button" class="hotspot-card" id="spot-coffee">
-          <span class="spot-icon">☕</span>
-          <div class="spot-info">
-            <strong>탕비실 황금 에스프레소</strong>
-            <small>영웅 전원 사기 충전 · +200 G</small>
-          </div>
-        </button>
-        <button type="button" class="hotspot-card" id="spot-bull">
-          <span class="spot-icon">🐂</span>
-          <div class="spot-info">
-            <strong>월스트리트 황금 황소상</strong>
-            <small>뿔 쓰다듬기 · 오늘 운세 대길</small>
-          </div>
-        </button>
-        <button type="button" class="hotspot-card" id="spot-library">
-          <span class="spot-icon">📚</span>
-          <div class="spot-info">
-            <strong>소프 & 버핏 비밀 서고</strong>
-            <small>전설의 비급 열람 · +100 EXP</small>
-          </div>
-        </button>
-        <button type="button" class="hotspot-card" id="spot-roulette">
-          <span class="spot-icon">🎰</span>
-          <div class="spot-info">
-            <strong>무료 럭키 잭팟 룰렛</strong>
-            <small>최대 +1,000 G 행운 뽑기</small>
-          </div>
-        </button>
-      </div>
-    `;
-
-    hotspots.querySelector('#spot-coffee')?.addEventListener('click', (e) => {
-      state.gold += 200;
-      state.exp += 40;
-      saveRpgState(state);
-      playRetroSound('coin');
-      spawnFloatingEffect('☕ 에스프레소 파워! +200 G & +40 EXP!', e.clientX, e.clientY);
-      showToast('☕ 탕비실 에스프레소 추출 완료! 영웅들의 분석 속도가 2배 빨라집니다! (+200 G)');
-      renderOfficeShowcase();
-    });
-
-    hotspots.querySelector('#spot-bull')?.addEventListener('click', (e) => {
-      state.gold += 300;
-      saveRpgState(state);
-      playRetroSound('coin');
-      spawnFloatingEffect('🐂 황소의 축복! +300 Gold!', e.clientX, e.clientY);
-      showToast('🐂 월가 황금 황소상의 뿔을 쓰다듬었습니다! [오늘의 투자 운세: 대길(大吉)] +300 G 획득!');
-      renderOfficeShowcase();
-    });
-
-    hotspots.querySelector('#spot-library')?.addEventListener('click', (e) => {
-      state.exp += 100;
-      if (state.exp >= state.maxExp) {
-        state.level += 1;
-        state.exp -= state.maxExp;
-        playRetroSound('levelup');
-        showToast(`🎊 레벨 업! 오피스 사령부 Lv.${state.level} 달성!`);
-      } else {
-        playRetroSound('coin');
-        showToast('📚 에드워드 소프의 『복리 마법 비급서』를 읽었습니다! (+100 EXP 획득)');
-      }
-      saveRpgState(state);
-      spawnFloatingEffect('📚 지혜 상승! +100 EXP!', e.clientX, e.clientY);
-      renderOfficeShowcase();
-    });
-
-    hotspots.querySelector('#spot-roulette')?.addEventListener('click', (e) => {
-      const prizes = [
-        { msg: '🎰 잭팟 당첨! 황금 배당 보너스 +1,000 G!', gold: 1000, exp: 100 },
-        { msg: '🎰 럭키 스타! 켈리 마법 수정 +600 G & +120 EXP!', gold: 600, exp: 120 },
-        { msg: '🎰 슈퍼 세이브! 버핏의 방패 축복 +800 G!', gold: 800, exp: 90 }
-      ];
-      const pick = prizes[Math.floor(Math.random() * prizes.length)];
-      state.gold += pick.gold;
-      state.exp += pick.exp;
-      saveRpgState(state);
-      playRetroSound('levelup');
-      spawnFloatingEffect(pick.msg, e.clientX, e.clientY);
-      showToast(pick.msg);
-      renderOfficeShowcase();
-    });
-
-    // (C) 사이드바 일일 퀘스트 보드
-    const lobbySide = document.querySelector('#lobby-view .lobby-side');
-    if (lobbySide && !document.getElementById('office-rpg-deck')) {
-      const deck = document.createElement('section');
-      deck.id = 'office-rpg-deck';
-      deck.className = 'office-rpg-card';
-      deck.setAttribute('aria-label', '사무실 일일 퀘스트 보드');
-
-      function renderSideQuests() {
-        deck.innerHTML = `
-          <div class="office-rpg-head">
-            <div class="office-rpg-title-box">
-              <span class="office-rpg-badge">📜 길드 의뢰소</span>
-              <strong class="office-rpg-name">오늘의 초보자 3대 일일 퀘스트</strong>
-            </div>
-            <span class="office-rpg-cp">즉시 완료 가능</span>
-          </div>
-          <div class="office-quest-list">
-            <div class="office-quest-item ${state.completedQuests['q1'] ? 'done' : ''}">
-              <div class="office-quest-info">
-                <strong>[퀘스트 1] 영웅 4인의 아침 시장 브리핑 듣기</strong>
-                <small>보상: +100 EXP · +500 Gold</small>
-              </div>
-              <button type="button" class="office-quest-btn" data-qid="q1" ${state.completedQuests['q1'] ? 'disabled' : ''}>
-                ${state.completedQuests['q1'] ? '수령 완료 ✓' : '보상 받기'}
-              </button>
-            </div>
-            <div class="office-quest-item ${state.completedQuests['q2'] ? 'done' : ''}">
-              <div class="office-quest-info">
-                <strong>[퀘스트 2] 소프 켈리 방어선(단기국채 29.4%) 확인</strong>
-                <small>보상: +150 EXP · +1,000 Gold</small>
-              </div>
-              <button type="button" class="office-quest-btn" data-qid="q2" ${state.completedQuests['q2'] ? 'disabled' : ''}>
-                ${state.completedQuests['q2'] ? '수령 완료 ✓' : '보상 받기'}
-              </button>
-            </div>
-            <div class="office-quest-item ${state.completedQuests['q3'] ? 'done' : ''}">
-              <div class="office-quest-info">
-                <strong>[퀘스트 3] 워런 버핏의 원금 보존 원칙 서약</strong>
-                <small>보상: +200 EXP · 파티 방어력 +15% 버프</small>
-              </div>
-              <button type="button" class="office-quest-btn" data-qid="q3" ${state.completedQuests['q3'] ? 'disabled' : ''}>
-                ${state.completedQuests['q3'] ? '수령 완료 ✓' : '보상 받기'}
-              </button>
-            </div>
-          </div>
-        `;
-
-        deck.querySelectorAll('.office-quest-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const qid = e.currentTarget.dataset.qid;
-            if (state.completedQuests[qid]) return;
-            state.completedQuests[qid] = true;
-            state.exp += 150;
-            state.gold += 800;
-            if (state.exp >= state.maxExp) {
-              state.level += 1;
-              state.exp -= state.maxExp;
-            }
-            saveRpgState(state);
-            playRetroSound('levelup');
-            spawnFloatingEffect('📜 퀘스트 완료! +150 EXP & +800 G!', e.clientX, e.clientY);
-            showToast('🎉 일일 퀘스트 달성! 경험치와 골드 보상이 지급되었습니다!');
-            renderSideQuests();
-            renderOfficeShowcase();
-          });
-        });
-      }
-      renderSideQuests();
-      lobbySide.prepend(deck);
-    }
-
-    enhanceLobbyChatRpg();
-  }
-
-  function enhanceLobbyChatRpg() {
-    const chatDialog = document.getElementById('lobby-chat');
-    if (!chatDialog || chatDialog.dataset.rpgEnhanced) return;
-    chatDialog.dataset.rpgEnhanced = 'true';
-
-    const chatHead = chatDialog.querySelector('.chat-head');
-    if (chatHead) {
-      const affinityWrap = document.createElement('div');
-      affinityWrap.className = 'chat-affinity-box';
-      affinityWrap.innerHTML = `
-        <span class="affinity-heart">💖</span>
-        <div class="affinity-detail">
-          <span class="affinity-label">영웅 친밀도 Lv.4 (85/100)</span>
-          <div class="affinity-track"><div class="affinity-fill" style="width: 85%"></div></div>
-        </div>
-      `;
-      chatHead.appendChild(affinityWrap);
-    }
-
-    const chatForm = chatDialog.querySelector('.chat-form');
-    if (chatForm) {
-      const quickBar = document.createElement('div');
-      quickBar.className = 'chat-rpg-actions';
-      quickBar.innerHTML = `
-        <button type="button" class="chat-rpg-btn" id="chat-gift-coffee">☕ 커피 선물 (+15 친밀도)</button>
-        <button type="button" class="chat-rpg-btn" id="chat-stamp-praise">⭐ 칭찬 스탬프 (+80 EXP)</button>
-        <button type="button" class="chat-rpg-btn" id="chat-staff-quest">⚡ 영웅 버프 발동</button>
-      `;
-      chatForm.parentNode.insertBefore(quickBar, chatForm);
-
-      quickBar.querySelector('#chat-gift-coffee')?.addEventListener('click', (e) => {
-        playRetroSound('coin');
-        spawnFloatingEffect('💖 친밀도 UP! 시너지 +5%!', e.clientX, e.clientY);
-        showToast('☕ 영웅에게 커피를 선물했습니다! "대표님 감사합니다! 최고의 분석으로 보답할게요!"');
-      });
-
-      quickBar.querySelector('#chat-stamp-praise')?.addEventListener('click', (e) => {
-        const state = getRpgState();
-        state.exp += 80;
-        saveRpgState(state);
-        playRetroSound('coin');
-        spawnFloatingEffect('⭐ +80 EXP 획득!', e.clientX, e.clientY);
-        showToast('⭐ 칭찬 스탬프를 찍어주었습니다! 팀 사기가 최고조에 달합니다!');
-      });
-
-      quickBar.querySelector('#chat-staff-quest')?.addEventListener('click', (e) => {
-        playRetroSound('levelup');
-        spawnFloatingEffect('⚡ 고유 패시브 버프 발동!', e.clientX, e.clientY);
-        showToast('⚡ 영웅 고유 스킬 [리스크 반감 & 복리 가속] 버프가 계좌에 활성화되었습니다!');
-      });
-    }
-  }
-
-  // ── 3. 실시간 광장 (Plaza / plaza-view) 인터랙티브 RPG 광장 월드맵 & 드래곤 보스 레이드 ──
-  // 수정 사유: 로그인 전에도 즉시 캐릭터를 움직이고 말풍선 소통·보스 타격·분수대 수확·포털 워프를 즐길 수 있는 실시간 인터랙티브 광장 맵(#rpg-plaza-interactive-stage)을 최상단에 구현
-  function setupPlazaRpg() {
-    const plazaView = document.getElementById('plaza-view');
-    if (!plazaView) return;
-
-    const state = getRpgState();
-    const activePreset = RPG_PRESETS.find(p => p.id === state.activePartyId) || RPG_PRESETS[0];
-    let deck = document.getElementById('plaza-rpg-deck');
-    if (!deck) {
-      deck = document.createElement('div');
-      deck.id = 'plaza-rpg-deck';
-      deck.className = 'plaza-rpg-container';
-      plazaView.prepend(deck);
-    } else if (plazaView.firstElementChild !== deck) {
-      plazaView.prepend(deck);
-    }
-
-    let heroPos = { x: 50, y: 66 };
-    let heroSpeech = '“실시간 광장에 도착했습니다! 바닥을 터치해 이동해 보세요!”';
-    const npcList = [
-      { nick: '소프마법사_77', role: 'LEADER', x: 23, y: 42, msg: '“소프 황금 밸런스 파티 맞추니까 폭락장도 든든하네요!”' },
-      { nick: '국채탱커_민준', role: 'TANKER', x: 76, y: 62, msg: '“단기국채 29.4% 방패 덕분에 고금리 드래곤 브레스 노데미지!”' },
-      { nick: '배당힐러_지수', role: 'HEALER', x: 34, y: 72, msg: '“황금 분수대에 동전 던지고 +500 골드 받았어요 ⛲”' },
-      { nick: '린치드래곤_99', role: 'DEALER', x: 66, y: 38, msg: '“보스 레이드 같이 타격하실 분! 필살기 쿨타임 돌았습니다 ⚡”' }
-    ];
-
-    function renderPlazaBoss() {
-      const hpPct = Math.max(0, Math.min(100, (state.bossHp / state.bossMaxHp) * 100)).toFixed(1);
-      deck.innerHTML = `
-        <!-- (1) 최상단 실시간 인터랙티브 RPG 광장 월드맵 -->
-        <div class="rpg-plaza-world-card" id="rpg-plaza-interactive-stage">
-          <div class="rpg-plaza-world-topbar">
-            <div class="rpg-plaza-world-title">
-              <span class="plaza-live-dot">● LIVE</span>
-              <strong>🐉 ZERO 실시간 모험가 광장 월드맵</strong>
-              <small>바닥을 터치하거나 방향키로 내 영웅을 이동하세요!</small>
-            </div>
-            <div class="rpg-plaza-world-warps">
-              <button type="button" class="plaza-warp-pill" data-plaza-warp="lobby">🏰 내 사무실</button>
-              <button type="button" class="plaza-warp-pill" data-plaza-warp="team">⚔️ 제로 팀 (45인 광장)</button>
-              <button type="button" class="plaza-warp-pill" data-plaza-warp="portfolio">💰 1억 모의투자</button>
-            </div>
-          </div>
-
-          <div class="rpg-plaza-map-canvas" id="rpg-plaza-map-canvas" tabindex="0" aria-label="실시간 광장 인터랙티브 맵">
-            <!-- 상단 ZERO 거래소 전광판 -->
-            <div class="plaza-map-board">
-              <span class="board-badge">🏛️ ZERO 거래소 전광판</span>
-              <span class="board-ticker">S&amp;P 500 <strong>+1.42% ▲</strong> · 나스닥100 <strong>+1.85% ▲</strong> · 단기국채(SHV) <strong>연 4.8% 🛡️</strong> · 금리 드래곤 출현중!</span>
-            </div>
-
-            <!-- 중앙 바닥 황금 문양 -->
-            <div class="plaza-map-floor-emblem" aria-hidden="true">ZERO PLAZA</div>
-
-            <!-- 광장 3대 인터랙티브 오브젝트: 황금 분수대 / 드래곤 보스 / 제로 팀 광장 게이트 -->
-            <button type="button" class="plaza-map-spot spot-fountain" style="left: 24%; top: 48%;" id="map-spot-fountain" title="황금 분수대 동전 던지기 (+500G)">
-              <span class="spot-float-tag">+500 G</span>
-              <span class="spot-emoji">⛲</span>
-              <span class="spot-name">황금 복리 분수대</span>
-            </button>
-
-            <button type="button" class="plaza-map-spot spot-boss" style="left: 74%; top: 36%;" id="map-spot-boss" title="고금리 드래곤 보스 타격하기!">
-              <span class="spot-float-tag boss">HP ${hpPct}%</span>
-              <div class="spot-boss-svg">${getHeroSvg('BOSS', 68)}</div>
-              <span class="spot-name">🐉 고금리 드래곤 (터치 타격!)</span>
-            </button>
-
-            <!-- 하단 3대 포털 워프 게이트 -->
-            <button type="button" class="plaza-map-portal" style="left: 16%; top: 86%;" data-plaza-warp="lobby">
-              <span>🏰 내 사무실 포털</span>
-            </button>
-            <button type="button" class="plaza-map-portal highlight" style="left: 50%; top: 86%;" data-plaza-warp="team">
-              <span>⚔️ 제로 팀 45인 광장 포털</span>
-            </button>
-            <button type="button" class="plaza-map-portal" style="left: 84%; top: 86%;" data-plaza-warp="community">
-              <span>💬 커뮤니티 게시판</span>
-            </button>
-
-            <!-- 실시간 동료 모험가 NPC 4인 -->
-            ${npcList.map((npc, i) => `
-              <div class="plaza-map-npc" style="left: ${npc.x}%; top: ${npc.y}%;" data-npc-idx="${i}">
-                <div class="plaza-speech-bubble npc-bubble">${npc.msg}</div>
-                <div class="plaza-char-sprite">${getHeroSvg(npc.role, 50)}</div>
-                <span class="plaza-char-nick">${npc.nick}</span>
-              </div>
-            `).join('')}
-
-            <!-- 내 플레이어 영웅 캐릭터 (터치/방향키 이동) -->
-            <div class="plaza-map-player" id="rpg-plaza-my-hero" style="left: ${heroPos.x}%; top: ${heroPos.y}%;">
-              <div class="plaza-speech-bubble my-bubble" id="rpg-plaza-my-bubble">${heroSpeech}</div>
-              <div class="plaza-char-sprite my-sprite">${getHeroSvg(activePreset.leader.role, 60)}</div>
-              <span class="plaza-char-nick my-nick">👑 나 · ${activePreset.leader.name} (Lv.${state.level})</span>
-            </div>
-          </div>
-
-          <!-- 광장 하단 컨트롤 바: 방향키 패드 + 원클릭 말풍선 채팅 -->
-          <div class="rpg-plaza-controls-bar">
-            <div class="rpg-plaza-dpad" role="group" aria-label="광장 캐릭터 방향키 이동">
-              <button type="button" class="dpad-btn" data-move-dir="left" aria-label="왼쪽 이동">⬅️</button>
-              <button type="button" class="dpad-btn" data-move-dir="up" aria-label="위로 이동">⬆️</button>
-              <button type="button" class="dpad-btn" data-move-dir="down" aria-label="아래로 이동">⬇️</button>
-              <button type="button" class="dpad-btn" data-move-dir="right" aria-label="오른쪽 이동">➡️</button>
-            </div>
-            <div class="rpg-plaza-quick-chats">
-              <button type="button" class="quick-shout-btn" data-shout="🔥 드래곤 레이드 같이 토벌해요! 가즈아!">💬 "드래곤 토벌 가즈아!"</button>
-              <button type="button" class="quick-shout-btn" data-shout="⚖️ 소프 황금 밸런스 파티 맞추니 마음이 편해요!">💬 "소프 파티 추천!"</button>
-              <button type="button" class="quick-shout-btn" data-shout="⛲ 분수대 동전 던지고 500골드 받았어요!">💬 "분수대 500G 대박!"</button>
-            </div>
-            <form class="rpg-plaza-shout-form" id="rpg-plaza-shout-form">
-              <input type="text" id="rpg-plaza-shout-input" maxlength="80" placeholder="광장에 말풍선 외치기 (입력 후 엔터)" aria-label="광장 말풍선 대화 입력" />
-              <button type="submit" class="shout-submit-btn">말풍선 발사</button>
-            </form>
-          </div>
-        </div>
-
-        <!-- (2) 월드 보스 협동 레이드 & 황금 분수대 상세 카드 -->
-        <div class="plaza-boss-box">
-          <div class="plaza-boss-visual-row">
-            <div class="plaza-boss-svg-wrap">
-              ${getHeroSvg('BOSS', 104)}
-              <span class="boss-lv-tag">월드 보스 Lv.99</span>
-            </div>
-            <div class="plaza-boss-main-info">
-              <div class="plaza-boss-header">
-                <div>
-                  <span class="plaza-boss-tag">🔥 실시간 광장 협동 레이드</span>
-                  <h3 class="plaza-boss-name">${CURRENT_BOSS.name}</h3>
-                  <p class="plaza-boss-title">${CURRENT_BOSS.title}</p>
-                </div>
-                <button type="button" id="plaza-raid-btn" class="plaza-raid-action-btn">
-                  ⚔️ 내 영웅 파티로 보스 타격하기!
+          <div class="tycoon-mini-analysts">
+            ${committee.members.map((m, idx) => {
+              const lv = state.analystLevels?.[m.key] || 4;
+              return `
+                <button type="button" class="tycoon-mini-analyst-card" data-analyst-idx="${idx}">
+                  <div class="tma-avatar">${getAnalystSvg(m.role, 50)}</div>
+                  <div class="tma-info">
+                    <span class="tma-role">${m.roleBadge}</span>
+                    <strong class="tma-name">${m.name} <small>Lv.${lv}</small></strong>
+                    <span class="tma-desc">${m.specialty}</span>
+                  </div>
                 </button>
-              </div>
-              <div class="plaza-hp-container">
-                <div class="plaza-hp-labels">
-                  <span>🐉 드래곤 잔여 체력 (HP)</span>
-                  <strong id="plaza-boss-hp-text">${state.bossHp.toLocaleString()} / ${state.bossMaxHp.toLocaleString()} (${hpPct}%)</strong>
-                </div>
-                <div class="plaza-hp-track"><div class="plaza-hp-fill" style="width: ${hpPct}%"></div></div>
-              </div>
-              <p class="plaza-boss-desc">${CURRENT_BOSS.desc}</p>
-            </div>
+              `;
+            }).join('')}
           </div>
-        </div>
-
-        <div class="plaza-hub-grid">
-          <div class="plaza-fountain-card">
-            <h4>⛲ 광장 황금 분수대</h4>
-            <p>분수대에 행운의 동전을 던지면 즉시 +500 Gold와 복리 축복 버프를 받습니다.</p>
-            <button type="button" id="plaza-fountain-btn" class="plaza-fountain-btn">🪙 행운의 동전 던지기 (+500 G)</button>
-          </div>
-          <div class="plaza-hall-card">
-            <h4>🏆 실시간 레이드 공략 1위 파티</h4>
-            <ol class="plaza-hall-list">
-              <li>🥇 <strong>⚖️ 소프 황금 밸런스 파티</strong> (방어율 100% · CP 148,500)</li>
-              <li>🥈 <strong>🛡️ 워런 버핏 철벽 수비 파티</strong> (배당 치유 · CP 136,200)</li>
-              <li>🥉 <strong>🚀 피터 린치 테크 드래곤 파티</strong> (초고속 화력 · CP 154,900)</li>
-            </ol>
-          </div>
-        </div>
-      `;
-
-      const myHeroEl = deck.querySelector('#rpg-plaza-my-hero');
-      const myBubbleEl = deck.querySelector('#rpg-plaza-my-bubble');
-      const mapCanvas = deck.querySelector('#rpg-plaza-map-canvas');
-
-      function moveHeroTo(nx, ny, speechText) {
-        heroPos.x = Math.max(10, Math.min(90, nx));
-        heroPos.y = Math.max(22, Math.min(82, ny));
-        if (myHeroEl) {
-          myHeroEl.style.left = `${heroPos.x}%`;
-          myHeroEl.style.top = `${heroPos.y}%`;
-        }
-        if (speechText && myBubbleEl) {
-          heroSpeech = speechText;
-          myBubbleEl.textContent = speechText;
-        }
-      }
-
-      mapCanvas?.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('button')) return;
-        const rect = mapCanvas.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-        const nx = ((e.clientX - rect.left) / rect.width) * 100;
-        const ny = ((e.clientY - rect.top) / rect.height) * 100;
-        playRetroSound('click');
-        moveHeroTo(nx, ny);
-        const marker = document.createElement('span');
-        marker.className = 'rpg-click-reticle';
-        marker.style.left = `${e.clientX - rect.left}px`;
-        marker.style.top = `${e.clientY - rect.top}px`;
-        mapCanvas.appendChild(marker);
-        setTimeout(() => marker.remove(), 650);
-      });
-
-      deck.querySelectorAll('[data-move-dir]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          playRetroSound('click');
-          const dir = btn.dataset.moveDir;
-          const step = 8;
-          if (dir === 'left') moveHeroTo(heroPos.x - step, heroPos.y);
-          if (dir === 'right') moveHeroTo(heroPos.x + step, heroPos.y);
-          if (dir === 'up') moveHeroTo(heroPos.x, heroPos.y - step);
-          if (dir === 'down') moveHeroTo(heroPos.x, heroPos.y + step);
-        });
-      });
-
-      deck.querySelectorAll('[data-shout]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          playRetroSound('coin');
-          const msg = btn.dataset.shout;
-          moveHeroTo(heroPos.x, heroPos.y, `“${msg}”`);
-          state.exp += 20;
-          saveRpgState(state);
-          spawnFloatingEffect('💬 광장 외침! +20 EXP', e.clientX, e.clientY);
-        });
-      });
-
-      deck.querySelector('#rpg-plaza-shout-form')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const input = deck.querySelector('#rpg-plaza-shout-input');
-        const val = input?.value?.trim();
-        if (!val) return;
-        playRetroSound('coin');
-        moveHeroTo(heroPos.x, heroPos.y, `“${val}”`);
-        input.value = '';
-        state.exp += 30;
-        saveRpgState(state);
-        showToast(`💬 광장에 말풍선을 띄웠습니다: "${val}" (+30 EXP)`);
-      });
-
-      deck.querySelectorAll('[data-plaza-warp]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          goView(btn.dataset.plazaWarp);
-        });
-      });
-
-      deck.querySelector('#map-spot-fountain')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        moveHeroTo(28, 54, '“황금 분수대야, 복리 행운을 부탁해! 🪙”');
-        state.gold += 500;
-        state.exp += 80;
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect('⛲ 분수의 축복! +500 G & +80 EXP!', e.clientX, e.clientY);
-        showToast('⛲ 캐릭터가 황금 분수대에 동전을 던져 +500 Gold와 +80 EXP를 획득했습니다!');
-      });
-
-      deck.querySelector('#map-spot-boss')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        moveHeroTo(64, 44, '“받아라! 소프 켈리 황금 번개!! ⚡”');
-        state.bossHp = Math.max(0, state.bossHp - 1000);
-        if (state.bossHp === 0) state.bossHp = 10000;
-        state.gold += 400;
-        state.exp += 90;
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect('💥 드래곤 강타! -1,000 HP (+400 G)', e.clientX, e.clientY);
-        openPlazaRaidModal(renderPlazaBoss);
-      });
-
-      deck.querySelector('#plaza-raid-btn')?.addEventListener('click', () => {
-        openPlazaRaidModal(renderPlazaBoss);
-      });
-
-      deck.querySelector('#plaza-fountain-btn')?.addEventListener('click', (e) => {
-        state.gold += 500;
-        state.exp += 80;
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect('⛲ 분수의 축복! +500 G & +80 EXP!', e.clientX, e.clientY);
-        showToast('⛲ 황금 분수대가 빛나며 +500 Gold와 +80 EXP를 선물했습니다!');
-      });
-    }
-
-    renderPlazaBoss();
-  }
-
-  function openPlazaRaidModal(onUpdate) {
-    const state = getRpgState();
-    const activePreset = RPG_PRESETS.find(p => p.id === state.activePartyId) || RPG_PRESETS[0];
-    let dialog = document.getElementById('plaza-raid-dialog');
-    if (!dialog) {
-      dialog = document.createElement('dialog');
-      dialog.id = 'plaza-raid-dialog';
-      dialog.className = 'plaza-raid-modal';
-      document.body.appendChild(dialog);
-    }
-
-    dialog.innerHTML = `
-      <div class="raid-modal-head">
-        <div>
-          <h3>⚔️ 월드 보스 레이드: ${CURRENT_BOSS.name}</h3>
-          <p>출전 파티: <strong>${activePreset.name}</strong> (CP ${activePreset.cp})</p>
-        </div>
-        <button type="button" class="icon-button icon-close" id="raid-close">닫기</button>
-      </div>
-      <div class="raid-battle-ground">
-        <div class="raid-vs-arena">
-          <div class="raid-heroes-side">
-            ${getHeroSvg('LEADER', 64)}
-            ${getHeroSvg('DEALER', 64)}
-            ${getHeroSvg('TANKER', 64)}
-            ${getHeroSvg('HEALER', 64)}
-          </div>
-          <div class="raid-vs-badge">⚡ VS ⚡</div>
-          <div class="raid-boss-side" id="raid-boss-sprite">
-            ${getHeroSvg('BOSS', 96)}
-          </div>
-        </div>
-        <div class="raid-combat-log" id="raid-combat-log">
-          <p>📢 <strong>${CURRENT_BOSS.name}</strong>이(가) 고금리 화염 브레스(4.75%)를 발사합니다!</p>
-          <p>🛡️ <strong>단기국채 가디언</strong>이 황금 방패를 들어 화염 데미지를 0으로 무효화했습니다!</p>
-        </div>
-        <div class="raid-action-buttons">
-          <button type="button" class="raid-btn attack" data-act="attack">⚔️ S&P 500 엑스칼리버 베기 (-800 HP)</button>
-          <button type="button" class="raid-btn skill" data-act="skill">⚡ 에드워드 소프 필살기: 켈리 황금번개 (-1,500 HP)</button>
-          <button type="button" class="raid-btn shield" data-act="shield">💖 배당 성배 전체 치유 & +500 Gold 획득</button>
         </div>
       </div>
     `;
 
-    dialog.querySelector('#raid-close')?.addEventListener('click', () => dialog.close());
-    const log = dialog.querySelector('#raid-combat-log');
-    const bossSprite = dialog.querySelector('#raid-boss-sprite');
-
-    dialog.querySelectorAll('.raid-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const act = e.currentTarget.dataset.act;
-        if (bossSprite) {
-          bossSprite.classList.remove('boss-hit-shake');
-          void bossSprite.offsetWidth;
-          bossSprite.classList.add('boss-hit-shake');
+    // 인테리어 테마 변경 연결
+    deskCard.querySelectorAll('[data-office-theme]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const themeKey = btn.dataset.officeTheme;
+        state.officeTheme = themeKey;
+        saveTycoonState(state);
+        // 기존 오피스 에디터 테마 셀렉트가 있으면 동기화
+        const themeSelect = document.querySelector('#office-theme-select, [data-theme-select], select[name="theme"]');
+        if (themeSelect) {
+          themeSelect.value = themeKey;
+          themeSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        if (act === 'attack') {
-          playRetroSound('coin');
-          state.bossHp = Math.max(0, state.bossHp - 800);
-          state.gold += 200;
-          spawnFloatingEffect('💥 -800 HP! (+200 G)', e.clientX, e.clientY);
-          log.innerHTML += `<p class="log-hit">⚔️ <strong>S&P 500 성기사</strong>의 강타! 드래곤에게 800 데미지! (잔여 HP: ${state.bossHp.toLocaleString()})</p>`;
-        } else if (act === 'skill') {
-          playRetroSound('levelup');
-          state.bossHp = Math.max(0, state.bossHp - 1500);
-          state.gold += 500;
-          state.exp += 100;
-          spawnFloatingEffect('⚡ 치명타 -1,500 HP! (+500 G)', e.clientX, e.clientY);
-          log.innerHTML += `<p class="log-crit">⚡ <strong>에드워드 소프</strong>의 [켈리 황금번개] 작렬!! 1,500 치명타 데미지! (잔여 HP: ${state.bossHp.toLocaleString()})</p>`;
-        } else {
-          playRetroSound('coin');
-          state.gold += 500;
-          spawnFloatingEffect('💖 파티 치유 & +500 G!', e.clientX, e.clientY);
-          log.innerHTML += `<p class="log-guard">💖 <strong>달러 대사제</strong>의 배당 축복! 파티 체력 100% 회복 & +500 Gold 획득!</p>`;
-        }
-        if (state.bossHp === 0) {
-          state.bossHp = 10000;
-          state.gold += 3000;
-          log.innerHTML += `<p class="log-crit">🎊 <strong>드래곤 토벌 성공!!</strong> 보너스 보상 +3,000 Gold를 획득했습니다!!</p>`;
-        }
-        saveRpgState(state);
-        if (onUpdate) onUpdate();
-        log.scrollTop = log.scrollHeight;
+        const stage = document.getElementById('lobby-stage');
+        if (stage) stage.dataset.officeTheme = themeKey;
+        showToast(`🏢 사무실 인테리어를 [${btn.textContent.trim()}] 테마로 변경했습니다.`);
+        setupOfficeRpg();
       });
     });
 
-    dialog.showModal();
+    // 오늘의 미션 클릭 핸들러
+    deskCard.querySelectorAll('[data-mission-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mId = btn.dataset.missionId;
+        const key = `${today}:${mId}`;
+        const alreadyDone = !!state.dailyMissions?.[key];
+        if (!state.dailyMissions) state.dailyMissions = {};
+
+        if (mId === 'market') {
+          const board = document.getElementById('lobby-board');
+          if (board) board.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          if (!alreadyDone) {
+            state.dailyMissions[key] = true;
+            gainReward(state, 50, 100, '오늘의 시장 전광판 확인 미션 완료!');
+          } else {
+            showToast('📊 오늘의 시장 전광판을 이미 확인하셨습니다.');
+          }
+        } else if (mId === 'briefing') {
+          if (!alreadyDone) {
+            state.dailyMissions[key] = true;
+            gainReward(state, 50, 100, '수석 AI 위원장 브리핑 청취 완료!');
+          }
+          openAnalystModal(committee.members[0]);
+        } else if (mId === 'portfolio') {
+          if (!alreadyDone) {
+            state.dailyMissions[key] = true;
+            gainReward(state, 100, 200, '1억 모의투자 포트폴리오 점검 미션 완료!');
+          }
+          navigateToView('portfolio');
+        }
+      });
+    });
+
+    // 드림팀 애널리스트 클릭 시 상세 모달
+    deskCard.querySelectorAll('[data-analyst-idx]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.analystIdx) || 0;
+        openAnalystModal(committee.members[idx]);
+      });
+    });
   }
 
-  // ── 4. ZERO 팀 (Team / team-view) 45인 사무실·광장 월드맵 최상단 복원 & 1-Click RPG 영웅 도감 ──
-  // 수정 사유: viewport.js 페이지네이션으로 인해 #office-panel(45인 사무실 광장 맵)이 숨겨지거나 밀려나는 현상을 방지하기 위해 #office-panel을 최상단에 고정하고, 순간이동 컨트롤 바를 맵 바로 위에 장착하며, 4인 파티 덱 카드는 맵 바로 아래에 배치
+  // ── 4. ZERO 45인 팀 (#team-view): 45인 오피스 맵 최상단 보존 + '나만의 AI 투자위원회 (4인 드림팀 스카우트)' ──
   function setupTeamRpg() {
     const teamView = document.getElementById('team-view');
     if (!teamView) return;
 
-    // #team-view 내부의 모든 섹션에서 .viewport-page-away 클래스를 제거하여 45인 광장 맵(#office-panel)이 절대 사라지지 않도록 보장
-    teamView.querySelectorAll('.viewport-page-away').forEach(el => {
-      el.classList.remove('viewport-page-away');
-    });
-
     const officePanel = document.getElementById('office-panel');
-    const officeMap = document.getElementById('office-map');
-
-    // (A) 45인 사무실·광장 맵(#office-map) 바로 위에 1줄 순간이동 & 광장 워프 바 장착
     if (officePanel) {
       officePanel.classList.remove('viewport-page-away');
-      officePanel.hidden = false;
+      officePanel.removeAttribute('hidden');
+
       let quickTop = document.getElementById('team-rpg-quick-top');
       if (!quickTop) {
         quickTop = document.createElement('div');
         quickTop.id = 'team-rpg-quick-top';
-        quickTop.className = 'team-rpg-quick-top';
-        const mapFrame = officePanel.querySelector('.office-map-frame') || officeMap;
-        if (mapFrame && mapFrame.parentNode) {
-          mapFrame.parentNode.insertBefore(quickTop, mapFrame);
+        quickTop.className = 'tycoon-team-quickbar';
+        const sceneSurface = document.getElementById('office-scene-surface');
+        if (sceneSurface && sceneSurface.parentNode) {
+          sceneSurface.parentNode.insertBefore(quickTop, sceneSurface);
         } else {
           officePanel.prepend(quickTop);
         }
       }
 
-      if (!quickTop.dataset.bound) {
-        quickTop.dataset.bound = 'true';
-        quickTop.innerHTML = `
-          <div class="team-quick-top-row">
-            <span class="team-quick-badge">⚔️ ZERO 45인 길드 사무실 &amp; 중앙 광장 월드맵</span>
-            <div class="team-quick-warps">
-              <button type="button" class="team-teleport-btn active" data-dept="ALL">🗺️ 45인 전체 광장</button>
-              <button type="button" class="team-teleport-btn" data-dept="CHAIRPERSON">👑 ZERO 의장실</button>
-              <button type="button" class="team-teleport-btn" data-dept="MEETING">🏰 중앙 원탁광장</button>
-              <button type="button" class="team-teleport-btn" data-dept="THORP">🧙‍♂️ 소프 마법성소</button>
-              <button type="button" class="team-teleport-btn" data-dept="GREENBLATT">⚔️ 그린블라트 공방</button>
-              <button type="button" class="team-teleport-btn" data-dept="BOGLE">🛡️ 보글 수호요새</button>
-              <button type="button" class="team-teleport-btn" data-dept="QUANT_RESEARCH_CHIEF">🔮 퀀트 마탑</button>
-              <button type="button" class="team-warp-link" data-go-view="lobby">🏰 내 사무실로</button>
-              <button type="button" class="team-warp-link" data-go-view="plaza">🐉 실시간 광장으로</button>
-            </div>
-          </div>
-        `;
+      quickTop.innerHTML = `
+        <div class="ttq-left">
+          <span class="ttq-badge">🏢 ZERO 45인 전문가 딜링룸</span>
+          <button type="button" class="ttq-chip" data-dept="ALL">전체 사무실</button>
+          <button type="button" class="ttq-chip" data-dept="MEETING">중앙 회의실</button>
+          <button type="button" class="ttq-chip" data-dept="VALUE">가치·배당팀</button>
+          <button type="button" class="ttq-chip" data-dept="QUANT">퀀트·거시팀</button>
+          <button type="button" class="ttq-chip" data-dept="RISK">리스크관리팀</button>
+        </div>
+        <div class="ttq-right">
+          <button type="button" class="ttq-warp" data-rpg-goto="lobby">🏢 내 사무실</button>
+          <button type="button" class="ttq-warp" data-rpg-goto="plaza">💬 실시간 광장</button>
+        </div>
+      `;
 
-        quickTop.querySelectorAll('.team-teleport-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            playRetroSound('coin');
-            const dept = e.currentTarget.dataset.dept || 'ALL';
-            quickTop.querySelectorAll('.team-teleport-btn').forEach(b => b.classList.toggle('active', b === btn));
-            const deptSelect = document.getElementById('office-department');
-            if (deptSelect) {
-              deptSelect.value = dept;
-              deptSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      quickTop.querySelectorAll('[data-dept]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const dept = btn.dataset.dept;
+          if (dept === 'MEETING') {
+            document.getElementById('office-demo')?.click();
+            return;
+          }
+          if (dept === 'ALL') {
+            document.getElementById('office-zoom-reset')?.click();
+          }
+          const sel = document.getElementById('office-department');
+          if (sel) {
+            if (dept === 'ALL') sel.value = 'ALL';
+            else {
+              const kw = dept === 'VALUE' ? '가치' : dept === 'QUANT' ? '퀀트' : '리스크';
+              const opt = Array.from(sel.options).find(o => o.textContent.includes(kw));
+              if (opt) sel.value = opt.value;
             }
-            spawnFloatingEffect(`⚡ [${btn.textContent.trim()}] 이동!`, e.clientX, e.clientY);
-          });
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+          }
         });
-
-        quickTop.querySelectorAll('[data-go-view]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            goView(btn.dataset.goView);
-          });
-        });
-      }
+      });
     }
 
-    // (B) #office-panel(45인 사무실 광장 월드맵) 바로 아래에 4인 영웅 파티 덱 편성기 배치 (div 태그를 사용하여 viewport.js가 #office-panel을 숨기지 않게 함)
-    const state = getRpgState();
     let builder = document.getElementById('team-rpg-builder');
+    if (builder && builder.tagName.toLowerCase() === 'section') {
+      const replacement = document.createElement('div');
+      replacement.id = 'team-rpg-builder';
+      builder.replaceWith(replacement);
+      builder = replacement;
+    }
     if (!builder) {
       builder = document.createElement('div');
       builder.id = 'team-rpg-builder';
-      builder.className = 'team-rpg-container';
       if (officePanel && officePanel.nextSibling) {
         officePanel.parentNode.insertBefore(builder, officePanel.nextSibling);
-      } else if (officePanel && officePanel.parentNode) {
-        officePanel.parentNode.appendChild(builder);
       } else {
         teamView.appendChild(builder);
       }
-    } else if (officePanel && builder.previousElementSibling !== officePanel) {
-      officePanel.parentNode.insertBefore(builder, officePanel.nextSibling);
     }
+    builder.className = 'tycoon-committee-builder';
 
-    let selectedPresetId = state.activePartyId || 'thorp_balance';
+    const state = getTycoonState();
+    let selectedId = state.activeCommitteeId || 'golden_balance';
     let currentFilterRole = 'ALL';
 
-    function renderBuilder() {
-      const preset = RPG_PRESETS.find(p => p.id === selectedPresetId) || RPG_PRESETS[0];
-      const allCards = [preset.leader, ...preset.members];
+    function renderCommitteeBuilder() {
+      const committee = COMMITTEES.find(c => c.id === selectedId) || COMMITTEES[0];
+      const isEquipped = state.activeCommitteeId === committee.id;
 
       builder.innerHTML = `
-        <div class="team-rpg-header">
+        <div class="tcb-header">
           <div>
-            <span class="team-rpg-tag">⚔️ ZERO 영웅 도감 &amp; 1-Click 파티 편성소</span>
-            <h3 class="team-rpg-title">주식을 몰라도 1초 만에 완성하는 전설의 4인 영웅 파티</h3>
-            <p class="team-rpg-desc">위쪽 45인 광장 맵에서 팀원들을 만나고, 아래에서 대표님의 주력 4인 파티를 즉시 장착해 보세요.</p>
+            <span class="tcb-eyebrow">🤝 초보자 3초 완성 · AI 투자위원회 스카우트</span>
+            <h3 class="tcb-title">경제·주식을 몰라도 내 성향에 맞는 4인 드림팀을 골라보세요</h3>
+            <p class="tcb-sub">원하는 투자 스타일을 선택하면 45명의 ZERO 전문가 중 최적의 4인 수석 위원회가 구성됩니다.</p>
           </div>
-          <div class="team-rpg-tabs">
-            ${RPG_PRESETS.map(p => `
-              <button type="button" class="team-rpg-tab ${p.id === selectedPresetId ? 'active' : ''}" data-pid="${p.id}">
-                ${p.name}
+          <div class="tcb-preset-tabs" role="tablist">
+            ${COMMITTEES.map(c => `
+              <button type="button" class="tcb-preset-tab ${c.id === selectedId ? 'active' : ''}" data-cid="${c.id}">
+                <strong>${c.name}</strong>
+                <small>${c.tag}</small>
               </button>
             `).join('')}
           </div>
         </div>
 
-        <div class="team-rpg-banner">
-          <div class="team-banner-left">
-            <span class="rpg-ssr-pill">${preset.badge}</span>
-            <h4>${preset.name}</h4>
-            <p class="team-banner-concept">${preset.concept}</p>
-            <span class="team-target-badge">${preset.target}</span>
+        <div class="tcb-summary-banner">
+          <div class="tcb-summary-left">
+            <div class="tcb-summary-title-row">
+              <span class="tcb-tag-pill">${committee.tag}</span>
+              <h4>${committee.name}</h4>
+            </div>
+            <p class="tcb-summary-desc">${committee.summary}</p>
+            <div class="tcb-alloc-bar" aria-label="권장 자산 배분 비중">
+              ${committee.allocation.map(a => `
+                <div class="tcb-alloc-seg" style="width:${a.pct}%;background:${a.color}">
+                  <span>${a.label} ${a.pct}%</span>
+                </div>
+              `).join('')}
+            </div>
           </div>
-          <div class="team-banner-right">
-            <span class="team-cp-badge">파티 전투력 ${preset.cp} CP</span>
-            <button type="button" class="team-equip-btn" id="team-equip-action">
-              ⚡ 이 파티로 즉시 편성하기
+          <div class="tcb-summary-right">
+            <div class="tcb-metric-row"><span>🚀 수익 성장성</span><div class="tcb-mbar"><div style="width:${committee.metrics.growth}%;background:#3182f6"></div></div><b>${committee.metrics.growth}점</b></div>
+            <div class="tcb-metric-row"><span>🛡️ 하락장 방어력</span><div class="tcb-mbar"><div style="width:${committee.metrics.defense}%;background:#10b981"></div></div><b>${committee.metrics.defense}점</b></div>
+            <div class="tcb-metric-row"><span>💰 배당·현금흐름</span><div class="tcb-mbar"><div style="width:${committee.metrics.cashflow}%;background:#f59e0b"></div></div><b>${committee.metrics.cashflow}점</b></div>
+            <button type="button" class="tcb-equip-btn ${isEquipped ? 'equipped' : ''}" id="tcb-equip-btn">
+              ${isEquipped ? '✓ 현재 내 운용사 대표 위원회로 가동 중' : '⚡ 이 4인 위원회를 내 운용사 대표팀으로 지정 (+100 XP)'}
             </button>
           </div>
         </div>
 
-        <div class="th-rpg-cards-grid">
-          ${allCards.map((m, idx) => {
-            const lv = state.heroLevels?.[m.key || 'leader'] || (12 + idx);
+        <div class="tcb-cards-grid">
+          ${committee.members.map((m, idx) => {
+            const lv = state.analystLevels?.[m.key] || 4;
             return `
-              <div class="th-rpg-card ${idx === 0 ? 'leader-card' : 'member-card'}" data-team-hero="${idx}">
-                <div class="th-rpg-card-top">
-                  <span class="th-rpg-role-badge">${m.roleKorean}</span>
-                  <span class="th-rpg-cp-pill">Lv.${lv} · ${m.weight || '파티장'}</span>
+              <article class="tcb-analyst-card" data-c-idx="${idx}">
+                <div class="tcb-card-top">
+                  <span class="tcb-role-pill">${m.roleBadge}</span>
+                  <span class="tcb-lv-pill">리서치 Lv.${lv}</span>
                 </div>
-                <div class="th-rpg-avatar-center">
-                  ${getHeroSvg(m.role, 92)}
-                  <span class="th-rpg-rarity-stars">${m.rarity || 'SSR ★★★★★'}</span>
+                <div class="tcb-avatar-wrap">
+                  ${getAnalystSvg(m.role, 76)}
                 </div>
-                <strong class="th-rpg-card-name">${m.name}</strong>
-                <small class="th-rpg-card-title">${m.title}</small>
-                <div class="th-rpg-stat-bars">
-                  <div class="th-rpg-stat-row"><small>⚔️ 공격</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar atk" style="width: ${m.atk}%"></div></div></div>
-                  <div class="th-rpg-stat-row"><small>🛡️ 방어</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar def" style="width: ${m.def}%"></div></div></div>
-                  <div class="th-rpg-stat-row"><small>💖 회복</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar rec" style="width: ${m.rec}%"></div></div></div>
-                </div>
-                <div class="th-rpg-skill-box">
-                  <span class="th-rpg-skill-name">⚡ 고유 마법: ${m.skill}</span>
-                  <p class="th-rpg-skill-desc">${m.desc}</p>
-                </div>
-                <button type="button" class="th-rpg-card-upgrade-btn">🔍 장비 보기 &amp; 영웅 강화</button>
-              </div>
+                <strong class="tcb-analyst-name">${m.name}</strong>
+                <span class="tcb-analyst-spec">${m.specialty} · ${m.weight}</span>
+                <p class="tcb-analyst-easy">${m.easyDesc}</p>
+                <blockquote class="tcb-analyst-quote">${m.quote}</blockquote>
+                <button type="button" class="tcb-detail-btn">💡 투자 방식 자세히 보기 &amp; 역량 강화</button>
+              </article>
             `;
           }).join('')}
         </div>
 
-        <div class="team-rpg-filter-bar">
-          <span class="team-rpg-filter-lbl">📖 아래 45인 길드원 도감 클래스 필터:</span>
-          <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'ALL' ? 'active' : ''}" data-role="ALL">전체 길드원 (45인)</button>
-          <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'LEADER' ? 'active' : ''}" data-role="LEADER">👑 대마법사·팀장</button>
-          <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'DEALER' ? 'active' : ''}" data-role="DEALER">⚔️ 공격 딜러</button>
-          <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'TANKER' ? 'active' : ''}" data-role="TANKER">🛡️ 방어 탱커</button>
-          <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'HEALER' ? 'active' : ''}" data-role="HEALER">💖 배당·치유 힐러</button>
+        <div class="tcb-roster-filter">
+          <span>📋 아래 45인 전체 전문가 명부 직무별 필터:</span>
+          <button type="button" class="tcb-fbtn ${currentFilterRole === 'ALL' ? 'active' : ''}" data-frole="ALL">전체 45인</button>
+          <button type="button" class="tcb-fbtn ${currentFilterRole === 'QUANT' ? 'active' : ''}" data-frole="QUANT">⚖️ 퀀트·총괄</button>
+          <button type="button" class="tcb-fbtn ${currentFilterRole === 'GROWTH' ? 'active' : ''}" data-frole="GROWTH">🚀 성장·기업분석</button>
+          <button type="button" class="tcb-fbtn ${currentFilterRole === 'MACRO' ? 'active' : ''}" data-frole="MACRO">🛡️ 리스크·거시경제</button>
+          <button type="button" class="tcb-fbtn ${currentFilterRole === 'DIVIDEND' ? 'active' : ''}" data-frole="DIVIDEND">💰 배당·가치투자</button>
         </div>
       `;
 
-      builder.querySelectorAll('.team-rpg-tab').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          playRetroSound('click');
-          selectedPresetId = e.currentTarget.dataset.pid;
-          renderBuilder();
+      builder.querySelectorAll('[data-cid]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedId = btn.dataset.cid;
+          renderCommitteeBuilder();
         });
       });
 
-      builder.querySelector('#team-equip-action')?.addEventListener('click', (e) => {
-        state.activePartyId = selectedPresetId;
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect(`⚔️ ${preset.name} 출전 완료!`, e.clientX, e.clientY);
-        showToast(`🎉 [${preset.name}] 파티가 대표님의 메인 덱으로 장착되었습니다!`);
-        setupHomeRpgGateway();
+      builder.querySelector('#tcb-equip-btn')?.addEventListener('click', () => {
+        const firstTime = state.activeCommitteeId !== committee.id;
+        state.activeCommitteeId = committee.id;
+        saveTycoonState(state);
+        if (firstTime) {
+          gainReward(state, 100, 150, `[${committee.name}]가 대표님의 주력 투자위원회로 지정되었습니다!`);
+        } else {
+          showToast(`✅ 현재 [${committee.name}]가 대표님의 운용사를 이끌고 있습니다.`);
+        }
+        renderCommitteeBuilder();
       });
 
-      builder.querySelectorAll('[data-team-hero]').forEach(card => {
+      builder.querySelectorAll('[data-c-idx]').forEach(card => {
         card.addEventListener('click', () => {
-          const idx = Number(card.dataset.teamHero) || 0;
-          openHeroDetailModal(allCards[idx]);
+          const idx = Number(card.dataset.cIdx) || 0;
+          openAnalystModal(committee.members[idx]);
         });
       });
 
-      builder.querySelectorAll('.team-rpg-fbtn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          playRetroSound('click');
-          currentFilterRole = e.currentTarget.dataset.role;
-          builder.querySelectorAll('.team-rpg-fbtn').forEach(b => b.classList.toggle('active', b.dataset.role === currentFilterRole));
+      builder.querySelectorAll('[data-frole]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentFilterRole = btn.dataset.frole;
+          builder.querySelectorAll('[data-frole]').forEach(b => b.classList.toggle('active', b.dataset.frole === currentFilterRole));
           decorateAndFilterTeamCards(currentFilterRole);
         });
       });
     }
 
-    renderBuilder();
+    renderCommitteeBuilder();
     decorateAndFilterTeamCards(currentFilterRole);
   }
 
-  // 45인 직원 카드(`#team-grid .team-card`)에 귀여운 RPG 클래스 아바타와 등급 별표를 자동 주입
   function decorateAndFilterTeamCards(roleFilter = 'ALL') {
     const cards = document.querySelectorAll('#team-grid .team-card');
     cards.forEach((card, index) => {
       const text = card.textContent || '';
-      let role = 'DEALER';
-      let badgeLabel = '⚔️ 공격 딜러 · 성장 분석';
-      if (text.includes('책임자') || text.includes('총괄') || text.includes('팀장') || index === 0) {
-        role = 'LEADER';
-        badgeLabel = '👑 파티 리더 · 대마법사';
+      let role = 'GROWTH';
+      let badgeLabel = '🚀 기업·성장 리서치';
+      if (text.includes('책임자') || text.includes('총괄') || text.includes('팀장') || text.includes('퀀트') || index === 0) {
+        role = 'QUANT';
+        badgeLabel = '⚖️ 퀀트·총괄 수석';
       } else if (text.includes('리스크') || text.includes('거시') || text.includes('검증') || text.includes('방어') || text.includes('법무') || text.includes('감사')) {
-        role = 'TANKER';
-        badgeLabel = '🛡️ 철벽 탱커 · 리스크 수호';
+        role = 'MACRO';
+        badgeLabel = '🛡️ 리스크·거시 수석';
       } else if (text.includes('배당') || text.includes('가치') || text.includes('안정') || text.includes('운용') || text.includes('고객')) {
-        role = 'HEALER';
-        badgeLabel = '💖 치유 힐러 · 배당·안정';
+        role = 'DIVIDEND';
+        badgeLabel = '💰 가치·배당 수석';
       }
 
-      if (!card.querySelector('.team-card-rpg-header')) {
-        const header = document.createElement('div');
-        header.className = `team-card-rpg-header role-${role.toLowerCase()}`;
-        header.innerHTML = `
-          <div class="team-card-mini-svg">${getHeroSvg(role, 48)}</div>
-          <div class="team-card-rpg-meta">
-            <span class="team-card-class-pill">${badgeLabel}</span>
-            <span class="team-card-stars">SSR ★★★★★ · Lv.${10 + (index % 9)}</span>
-          </div>
-        `;
-        card.prepend(header);
-      }
+      const existing = card.querySelector('.team-card-rpg-header');
+      if (existing) existing.remove();
 
-      if (roleFilter === 'ALL') {
-        card.style.display = '';
-      } else {
-        card.style.display = (role === roleFilter) ? '' : 'none';
-      }
+      const header = document.createElement('div');
+      header.className = `team-card-rpg-header role-${role.toLowerCase()}`;
+      header.innerHTML = `
+        <div class="team-card-mini-svg">${getAnalystSvg(role, 44)}</div>
+        <div class="team-card-rpg-meta">
+          <span class="team-card-class-pill">${badgeLabel}</span>
+          <span class="team-card-stars">ZERO 수석 애널리스트 · Lv.${4 + (index % 5)}</span>
+        </div>
+      `;
+      card.prepend(header);
+
+      card.style.display = (roleFilter === 'ALL' || role === roleFilter) ? '' : 'none';
     });
+  }
+
+  // ── 5. 실시간 광장 (#plaza-view): 카카오페이증권 스타일 '실시간 투자 라운지 & 🐂강세 vs 🐻약세 예측 매치' ──
+  function setupPlazaRpg() {
+    const plazaView = document.getElementById('plaza-view');
+    if (!plazaView) return;
+
+    suppressAutoProfileModal();
+
+    // 이전 판타지 드래곤 레이드 요소가 남아 있으면 제거
+    document.getElementById('plaza-rpg-arena')?.remove();
+
+    let stage = document.getElementById('rpg-plaza-interactive-stage');
+    if (!stage) {
+      stage = document.createElement('div');
+      stage.id = 'rpg-plaza-interactive-stage';
+      stage.className = 'tycoon-plaza-stage';
+      plazaView.prepend(stage);
+    }
+
+    const state = getTycoonState();
+    const tier = getTierForLevel(state.level);
+    const today = todayKey();
+    const votedToday = state.marketVote?.date === today ? state.marketVote.side : null;
+    const totalVotes = Math.max(1, (state.bullVotes || 64) + (state.bearVotes || 36));
+    const bullPct = Math.round(((state.bullVotes || 64) / totalVotes) * 100);
+    const bearPct = 100 - bullPct;
+
+    stage.innerHTML = `
+      <div class="tp-header">
+        <div>
+          <span class="tp-badge">💬 실시간 투자자 광장 &amp; 데일리 시황 리그</span>
+          <h3 class="tp-title">ZERO 스트리트 광장 · 오늘 시장은 🐂강세장일까요, 🐻약세장일까요?</h3>
+          <p class="tp-sub">광장 바닥을 터치해 동료 투자자들과 대화하고, 오늘의 시장 방향에 투표해 운용 경험치(+100 XP)를 획득하세요.</p>
+        </div>
+        <div class="tp-nav-pills">
+          <button type="button" class="tp-pill-btn" data-rpg-goto="lobby">🏢 내 사무실</button>
+          <button type="button" class="tp-pill-btn" data-rpg-goto="team">👥 ZERO 45인 팀</button>
+          <button type="button" class="tp-pill-btn" data-rpg-goto="portfolio">💰 1억 모의투자</button>
+        </div>
+      </div>
+
+      <div class="tp-main-grid">
+        <!-- 좌측: 인터랙티브 투자자 라운지 맵 -->
+        <div class="tp-lounge-box">
+          <div class="tp-lounge-canvas" id="tp-lounge-canvas" tabindex="0" aria-label="실시간 투자자 광장 맵. 터치하여 이동합니다.">
+            <div class="tp-floor-grid"></div>
+            <div class="tp-center-board">
+              <span>📈 ZERO EXCHANGE PLAZA</span>
+              <strong>🐂 강세 ${bullPct}% : 🐻 약세 ${bearPct}%</strong>
+            </div>
+
+            <!-- 동료 투자자 NPC 4인 -->
+            <button type="button" class="tp-npc" style="left:18%;top:26%;" data-npc-msg="피터 린치 파인 저는 미국 빅테크 실적 발표 전까지 보유 유지합니다! 📈">
+              <span class="tp-bubble">“미국 빅테크 실적 기대 중!”</span>
+              <span class="tp-avatar">🧑‍💻</span>
+              <small>나스닥서퍼 (Lv.7)</small>
+            </button>
+            <button type="button" class="tp-npc" style="left:78%;top:26%;" data-npc-msg="환율이 높을 땐 미국 단기국채랑 국내 고배당주가 마음 편하더라고요 🛡️">
+              <span class="tp-bubble">“배당주·국채가 마음 편해요”</span>
+              <span class="tp-avatar">👩‍💼</span>
+              <small>배당왕김부장 (Lv.9)</small>
+            </button>
+            <button type="button" class="tp-npc" style="left:22%;top:74%;" data-npc-msg="소프 위원장 조언대로 이번 달은 불필요한 매매를 참았더니 수수료를 아꼈어요! ⚖️">
+              <span class="tp-bubble">“잦은 매매 참기 성공!”</span>
+              <span class="tp-avatar">🧔</span>
+              <small>퀀트연구원 (Lv.6)</small>
+            </button>
+            <button type="button" class="tp-npc" style="left:76%;top:74%;" data-npc-msg="오늘 입문 학교 퀴즈 풀고 루키 에셋에서 부티크 파트너스로 승격했어요! 🌱">
+              <span class="tp-bubble">“부티크 파트너스 승격!”</span>
+              <span class="tp-avatar">🙋‍♀️</span>
+              <small>적립식루키 (Lv.3)</small>
+            </button>
+
+            <!-- 내 대표 캐릭터 -->
+            <div class="tp-player" id="tp-player" style="left:50%;top:56%;">
+              <span class="tp-player-bubble" id="tp-player-bubble">반갑습니다! 👋</span>
+              <span class="tp-player-avatar">👔</span>
+              <small class="tp-player-tag">나 (Lv.${state.level} ${tier.badge})</small>
+            </div>
+          </div>
+
+          <div class="tp-lounge-controls">
+            <div class="tp-dpad" role="group" aria-label="광장 캐릭터 이동">
+              <button type="button" class="tp-pad-btn" data-move="-8,0">⬅️</button>
+              <button type="button" class="tp-pad-btn" data-move="0,-8">⬆️</button>
+              <button type="button" class="tp-pad-btn" data-move="0,8">⬇️</button>
+              <button type="button" class="tp-pad-btn" data-move="8,0">➡️</button>
+            </div>
+            <form class="tp-chat-form" id="tp-chat-form">
+              <input type="text" id="tp-chat-input" maxlength="60" placeholder="광장에 오늘 시황 한마디 외치기 (예: 오늘 반도체 힘내라!)" aria-label="광장 한마디 외치기">
+              <button type="submit" class="tycoon-btn-primary">💬 외치기</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 우측: 오늘의 🐂강세 vs 🐻약세 예측 매치 & 주간 수익률 리그 -->
+        <div class="tp-league-box">
+          <div class="tp-match-card">
+            <div class="tp-match-head">
+              <span class="tycoon-pill-blue">오늘의 시황 예측 매치</span>
+              <span class="tp-reward-tag">${votedToday ? '✅ 오늘 투표 참여 완료' : '🎁 투표 시 +100 XP · +150 ZP'}</span>
+            </div>
+            <h4>오늘 미국·한국 증시, 어디로 움직일까요?</h4>
+            <div class="tp-vote-gauge">
+              <div class="tp-gauge-bull" style="width:${bullPct}%">🐂 강세 ${bullPct}%</div>
+              <div class="tp-gauge-bear" style="width:${bearPct}%">🐻 약세 ${bearPct}%</div>
+            </div>
+            <div class="tp-vote-buttons">
+              <button type="button" class="tp-vote-btn bull ${votedToday === 'BULL' ? 'selected' : ''}" data-vote-side="BULL">
+                <strong>🐂 오늘 강세장 (Bull)</strong>
+                <small>실적·저가매수 유입 기대</small>
+              </button>
+              <button type="button" class="tp-vote-btn bear ${votedToday === 'BEAR' ? 'selected' : ''}" data-vote-side="BEAR">
+                <strong>🐻 오늘 약세장 (Bear)</strong>
+                <small>금리·환율 관망세 우세</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="tp-ranking-card">
+            <div class="tp-ranking-head">
+              <strong>🏆 이번 주 모의투자 운용사 리그 TOP 3</strong>
+              <button type="button" class="tycoon-link-btn" id="tp-open-full-ranking">전체 랭킹 보기 →</button>
+            </div>
+            <ol class="tp-ranking-list">
+              <li><span class="tp-medal">🥇</span><div><strong>켈리밸런스운용 (Lv.9)</strong><small>⚖️ 황금 균형 위원회 · 64/16/20 원칙 준수</small></div><b class="up">+8.42%</b></li>
+              <li><span class="tp-medal">🥈</span><div><strong>배당왕김부장 (Lv.9)</strong><small>🛡️ 배당·안정 위원회 · 단기채 방어</small></div><b class="up">+6.15%</b></li>
+              <li><span class="tp-medal">🥉</span><div><strong>대표님의 운용사 (Lv.${state.level})</strong><small>${getActiveCommittee(state).name} 가동 중</small></div><b class="mine">참여 중</b></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 광장 캐릭터 이동 로직
+    let px = 50;
+    let py = 56;
+    const playerEl = stage.querySelector('#tp-player');
+    const bubbleEl = stage.querySelector('#tp-player-bubble');
+    const canvasEl = stage.querySelector('#tp-lounge-canvas');
+
+    function movePlayerTo(nx, ny, msg) {
+      px = Math.max(10, Math.min(90, nx));
+      py = Math.max(16, Math.min(86, ny));
+      if (playerEl) {
+        playerEl.style.left = `${px}%`;
+        playerEl.style.top = `${py}%`;
+      }
+      if (msg && bubbleEl) {
+        bubbleEl.textContent = msg;
+      }
+    }
+
+    canvasEl?.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      const rect = canvasEl.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const nx = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+      const ny = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+      movePlayerTo(nx, ny);
+    });
+
+    stage.querySelectorAll('[data-move]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [dx, dy] = btn.dataset.move.split(',').map(Number);
+        movePlayerTo(px + dx, py + dy);
+      });
+    });
+
+    stage.querySelectorAll('[data-npc-msg]').forEach(npc => {
+      npc.addEventListener('click', () => {
+        showToast(`💬 ${npc.dataset.npcMsg}`);
+      });
+    });
+
+    stage.querySelector('#tp-chat-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = stage.querySelector('#tp-chat-input');
+      const text = (input?.value || '').trim();
+      if (!text) return;
+      if (bubbleEl) bubbleEl.textContent = text;
+      input.value = '';
+      showToast(`💬 광장에 외쳤습니다: “${text}”`);
+    });
+
+    // 강세 vs 약세 투표 이벤트
+    stage.querySelectorAll('[data-vote-side]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const side = btn.dataset.voteSide;
+        const firstToday = state.marketVote?.date !== today;
+        state.marketVote = { date: today, side };
+        if (side === 'BULL') state.bullVotes = (state.bullVotes || 64) + 1;
+        else state.bearVotes = (state.bearVotes || 36) + 1;
+        saveTycoonState(state);
+        movePlayerTo(50, 45, side === 'BULL' ? '오늘 강세장(Bull) 한 표! 🐂' : '오늘은 신중하게 약세장(Bear)! 🐻');
+        if (firstToday) {
+          gainReward(state, 100, 150, `오늘의 시황 예측(${side === 'BULL' ? '🐂 강세장' : '🐻 약세장'}) 투표 완료!`);
+        } else {
+          showToast(`✅ 예측을 [${side === 'BULL' ? '🐂 강세장' : '🐻 약세장'}]으로 변경했습니다.`);
+          setupPlazaRpg();
+        }
+      });
+    });
+
+    stage.querySelector('#tp-open-full-ranking')?.addEventListener('click', () => {
+      document.getElementById('lobby-ranking-open')?.click();
+    });
+  }
+
+  // ── 6. 모달 1: 내 운용사 패스 & 데일리 미션 모달 ──
+  function openCeoPassModal() {
+    let dlg = document.getElementById('rpg-hero-detail-dialog');
+    if (!dlg) {
+      dlg = document.createElement('dialog');
+      dlg.id = 'rpg-hero-detail-dialog';
+      dlg.className = 'tycoon-modal';
+      document.body.appendChild(dlg);
+    }
+
+    const state = getTycoonState();
+    const tier = getTierForLevel(state.level);
+    const committee = getActiveCommittee(state);
+    const expPct = Math.min(100, Math.round(((state.exp || 0) / (state.maxExp || 300)) * 100));
+
+    dlg.innerHTML = `
+      <div class="tycoon-modal-box">
+        <div class="tycoon-modal-head">
+          <div>
+            <span class="tycoon-pill-blue">ZERO 자산운용사 패스</span>
+            <h3>Lv.${state.level} ${tier.badge} · ${tier.title}</h3>
+          </div>
+          <button type="button" class="tycoon-modal-close" id="tycoon-modal-close">닫기</button>
+        </div>
+        <div class="tycoon-modal-body">
+          <div class="tm-tier-progress">
+            <div class="tm-xp-row">
+              <strong>운용사 경험치: ${state.exp} / ${state.maxExp} XP (${expPct}%)</strong>
+              <span>보유 포인트: 💎 ${Number(state.zp || 0).toLocaleString()} ZP</span>
+            </div>
+            <div class="tycoon-xp-bar-bg"><div class="tycoon-xp-bar-fill" style="width:${expPct}%"></div></div>
+            <p class="tm-next-goal">다음 목표: ${tier.nextGoal}</p>
+          </div>
+
+          <div class="tm-tier-roadmap">
+            ${FIRM_TIERS.map(t => `
+              <div class="tm-roadmap-step ${state.level >= t.minLv ? 'unlocked' : ''}">
+                <strong>Lv.${t.minLv}+ ${t.badge}</strong>
+                <small>${t.title}</small>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="tm-current-committee">
+            <strong>현재 가동 중인 AI 투자위원회: ${committee.name}</strong>
+            <p>${committee.summary}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    dlg.querySelector('#tycoon-modal-close')?.addEventListener('click', () => dlg.close());
+    if (!dlg.open) dlg.showModal();
+  }
+
+  // ── 7. 모달 2: 수석 AI 애널리스트 브리핑 & 리서치 레벨 강화 모달 ──
+  function openAnalystModal(member) {
+    if (!member) return;
+    let dlg = document.getElementById('rpg-hero-detail-dialog');
+    if (!dlg) {
+      dlg = document.createElement('dialog');
+      dlg.id = 'rpg-hero-detail-dialog';
+      dlg.className = 'tycoon-modal';
+      document.body.appendChild(dlg);
+    }
+
+    const state = getTycoonState();
+    const lv = state.analystLevels?.[member.key] || 4;
+    const cost = 200;
+
+    dlg.innerHTML = `
+      <div class="tycoon-modal-box">
+        <div class="tycoon-modal-head">
+          <div class="tm-analyst-head-left">
+            ${getAnalystSvg(member.role, 64)}
+            <div>
+              <span class="tycoon-pill-blue">${member.roleBadge} · 리서치 Lv.${lv}</span>
+              <h3>${member.name} (${member.specialty})</h3>
+            </div>
+          </div>
+          <button type="button" class="tycoon-modal-close" id="tycoon-modal-close">닫기</button>
+        </div>
+        <div class="tycoon-modal-body">
+          <div class="tm-quote-card">
+            <strong>🎙️ 오늘의 1분 투자 원칙 브리핑</strong>
+            <p class="tm-quote-main">${member.quote}</p>
+            <p class="tm-quote-easy">💡 <b>초보자 쉬운 설명:</b> ${member.easyDesc}</p>
+          </div>
+          <div class="tm-upgrade-row">
+            <div>
+              <strong>애널리스트 리서치 역량 강화 (현재 Lv.${lv})</strong>
+              <small>보유 포인트: 💎 ${Number(state.zp || 0).toLocaleString()} ZP (강화 비용: ${cost} ZP)</small>
+            </div>
+            <button type="button" class="tycoon-btn-primary" id="tm-upgrade-analyst-btn">
+              ⬆️ 리서치 레벨 업 (-${cost} ZP)
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    dlg.querySelector('#tycoon-modal-close')?.addEventListener('click', () => dlg.close());
+    dlg.querySelector('#tm-upgrade-analyst-btn')?.addEventListener('click', () => {
+      if ((state.zp || 0) < cost) {
+        showToast('💎 운용 포인트(ZP)가 부족합니다. 오늘의 3분 미션이나 광장 투표로 ZP를 모아보세요!');
+        return;
+      }
+      state.zp -= cost;
+      if (!state.analystLevels) state.analystLevels = {};
+      state.analystLevels[member.key] = lv + 1;
+      gainReward(state, 40, 0, `${member.name} 수석의 리서치 레벨이 Lv.${lv + 1}로 상승했습니다!`);
+      openAnalystModal(member);
+    });
+
+    if (!dlg.open) dlg.showModal();
+  }
+
+  function polishMoreMenuLabels() {
+    const teamCardSmall = document.querySelector('#more-menu [data-view="team"] small');
+    if (teamCardSmall) teamCardSmall.textContent = 'AI 투자위원회 & 45인 명부';
+    const plazaCardSmall = document.querySelector('#more-menu [data-view="plaza"] small');
+    if (plazaCardSmall) plazaCardSmall.textContent = '실시간 투자 라운지 & 예측 리그';
+  }
+
+  function refreshAllTycoonUI() {
+    polishMoreMenuLabels();
+    setupGlobalEasyBar();
+    setupHomeRpgGateway();
+    setupOfficeRpg();
+    setupPlazaRpg();
+    setupTeamRpg();
   }
 
   function checkAndInitViews(event) {
     const activeView = event?.detail?.view || document.documentElement.dataset.zeroView || '';
     if (activeView === 'plaza') {
       suppressAutoProfileModal();
-      setTimeout(suppressAutoProfileModal, 30);
+      setTimeout(suppressAutoProfileModal, 40);
     }
     if (activeView === 'team') {
       const officePanel = document.getElementById('office-panel');
       if (officePanel) officePanel.classList.remove('viewport-page-away');
     }
-    setupGlobalEasyBar();
-    setupHomeRpgGateway();
-    setupOfficeRpg();
-    setupPlazaRpg();
-    setupTeamRpg();
-    decorateAndFilterTeamCards('ALL');
+    refreshAllTycoonUI();
   }
 
   document.addEventListener('DOMContentLoaded', checkAndInitViews);
   document.addEventListener('zero-view-changed', checkAndInitViews);
-  setTimeout(checkAndInitViews, 350);
-  setTimeout(checkAndInitViews, 1100);
-  setTimeout(checkAndInitViews, 2500);
+  setTimeout(checkAndInitViews, 300);
+  setTimeout(checkAndInitViews, 1000);
 })();
