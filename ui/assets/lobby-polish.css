@@ -3251,3 +3251,254 @@ html[data-theme="dark"] .more-text-wrap strong,
 .dark .more-text-wrap strong {
   color: #f2f4f6 !important;
 }
+
+/* ── 오피스 RPG 상시 HUD 바 ── */
+.office-rpg-hud-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--sem-surface-subtle, #f2f4f6);
+  border: 1px solid var(--sem-border-subtle, rgba(0, 0, 0, 0.08));
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.hud-avatar, .hud-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.hud-text {
+  display: flex;
+  flex-direction: column;
+}
+.hud-title, .hud-val {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--sem-text-primary, #191f28);
+}
+.hud-label {
+  font-size: 10px;
+  color: var(--sem-text-muted, #8b95a1);
+}
+.hud-mini-bar {
+  width: 50px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+.hud-mini-fill {
+  height: 100%;
+  background: #3182f6;
+  border-radius: 2px;
+}
+.hud-gift-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #ff6b6b, #fa5252);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(250, 82, 82, 0.35);
+  animation: hudGiftBounce 2s infinite ease-in-out;
+  flex-shrink: 0;
+}
+@keyframes hudGiftBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px) scale(1.05); }
+}
+
+/* ── 사무실 4대 인터랙티브 탐험 핫스팟 ── */
+.office-hotspots-container {
+  margin-top: 10px;
+  margin-bottom: 12px;
+  background: var(--sem-surface-subtle, #f8f9fa);
+  border: 1px solid var(--sem-border-subtle, rgba(0, 0, 0, 0.06));
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.hotspots-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.hotspots-header span {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--sem-text-primary, #191f28);
+}
+.hotspots-header small {
+  font-size: 11px;
+  color: var(--sem-text-muted, #8b95a1);
+}
+.hotspots-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .hotspots-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.hotspot-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid var(--sem-border-subtle, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease-in-out;
+  min-height: 52px;
+}
+.hotspot-card:hover {
+  border-color: #3182f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(49, 130, 246, 0.12);
+}
+.hotspot-card:active {
+  transform: scale(0.97);
+}
+.spot-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+.spot-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.spot-info strong {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--sem-text-primary, #191f28);
+  white-space: nowrap;
+}
+.spot-info small {
+  font-size: 10px;
+  color: var(--sem-text-muted, #8b95a1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── 직원 대화창 호감도 및 퀵 RPG 액션 ── */
+.chat-affinity-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  border-radius: 16px;
+  padding: 4px 10px;
+  margin-top: 4px;
+}
+.affinity-heart {
+  font-size: 14px;
+}
+.affinity-detail {
+  display: flex;
+  flex-direction: column;
+}
+.affinity-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fa5252;
+}
+.affinity-track {
+  width: 60px;
+  height: 4px;
+  background: rgba(250, 82, 82, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.affinity-fill {
+  height: 100%;
+  background: #fa5252;
+  border-radius: 2px;
+}
+.chat-rpg-actions {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--sem-surface-subtle, #f8f9fa);
+  border-top: 1px solid var(--sem-border-subtle, rgba(0, 0, 0, 0.06));
+}
+.chat-rpg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid var(--sem-border-subtle, rgba(0, 0, 0, 0.12));
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sem-text-primary, #333d4b);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.chat-rpg-btn:hover {
+  background: #3182f6;
+  color: #fff;
+  border-color: #3182f6;
+}
+
+/* ── 플로팅 연출 팝업 애니메이션 ── */
+.rpg-floating-pop {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  font-size: 15px;
+  font-weight: 900;
+  color: #ff922b;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+  animation: floatPopUp 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+@keyframes floatPopUp {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  25% { transform: translateY(-15px) scale(1.15); opacity: 1; }
+  100% { transform: translateY(-45px) scale(1); opacity: 0; }
+}
+
+/* 다크 테마 대응 */
+html[data-zero-theme="dark"] .office-rpg-hud-bar,
+html[data-theme="dark"] .office-rpg-hud-bar,
+.dark .office-rpg-hud-bar {
+  background: #1e2630 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .hotspot-card,
+html[data-theme="dark"] .hotspot-card,
+.dark .hotspot-card {
+  background: #242d38 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .spot-info strong,
+html[data-theme="dark"] .spot-info strong,
+.dark .spot-info strong {
+  color: #f2f4f6 !important;
+}

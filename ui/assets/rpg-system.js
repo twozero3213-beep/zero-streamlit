@@ -4,7 +4,7 @@
   'use strict';
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const RPG_STORE_KEY = 'zero_rpg_state_v1';
+  const RPG_STORE_KEY = 'zero_rpg_state_v2';
   function getRpgState() {
     try {
       const raw = localStorage.getItem(RPG_STORE_KEY);
@@ -16,9 +16,24 @@
       exp: 420,
       maxExp: 1000,
       gold: 58400,
+      stamina: 100,
+      maxStamina: 100,
+      gems: 150,
+      affinity: {
+        'host': 65,
+        'thorp': 80,
+        'buffett': 90,
+        'lynch': 75
+      },
       completedQuests: {},
       lastFountainDate: null,
-      activePartyId: 'thorp_balance'
+      lastCoffeeDate: null,
+      lastBullDate: null,
+      lastBookDate: null,
+      lastRouletteDate: null,
+      lastAttendanceDate: null,
+      activePartyId: 'thorp_balance',
+      activeBuffs: ['절세 장막', '켈리 복리 부스터']
     };
   }
 
@@ -26,6 +41,69 @@
     try {
       localStorage.setItem(RPG_STORE_KEY, JSON.stringify(state));
     } catch (_) {}
+  }
+
+  // 8비트 레트로 레트로 사운드 신시사이저 (Web Audio API - 무설치 즉시 재생)
+  function playRetroSound(type) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === 'coin') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime);
+        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.35);
+      } else if (type === 'levelup') {
+        osc.type = 'triangle';
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+        });
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.45);
+      } else if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        gain.gain.setValueAtTime(0.06, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.06);
+      }
+    } catch (_) {}
+  }
+
+  function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'rpg-toast-msg';
+    toast.textContent = msg;
+    document.body.append(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 2800);
+  }
+
+  function spawnFloatingEffect(text, x, y) {
+    const el = document.createElement('div');
+    el.className = 'rpg-floating-pop';
+    el.textContent = text;
+    el.style.left = (x || (window.innerWidth / 2 - 40)) + 'px';
+    el.style.top = (y || (window.innerHeight / 2 - 50)) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
   }
 
   const RPG_PRESETS = [
@@ -82,108 +160,361 @@
     desc: '전 세계 시장을 공포에 떨게 하는 고금리 화염을 내뿜습니다. 단기국채 탱커와 현금 버퍼를 장착한 파티만이 데미지 없이 공략할 수 있습니다!'
   };
 
-  function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.className = 'rpg-toast-msg';
-    toast.textContent = msg;
-    document.body.append(toast);
-    setTimeout(() => toast.classList.add('show'), 10);
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, 2800);
-  }
-
-  // ── 1. 사무실 (Office / lobby-view) RPG 사령부 & 일일 퀘스트 ──
+  // ── 1. 사무실 (Office / lobby-view) 상단 상시 HUD & 4대 탐험 핫스팟 ──
   function setupOfficeRpg() {
-    const lobbySide = document.querySelector('#lobby-view .lobby-side');
-    if (!lobbySide || document.getElementById('office-rpg-deck')) return;
+    const lobbyMain = document.querySelector('#lobby-view .lobby-main');
+    if (!lobbyMain) return;
 
     const state = getRpgState();
-    const deck = document.createElement('section');
-    deck.id = 'office-rpg-deck';
-    deck.className = 'office-rpg-card';
-    deck.setAttribute('aria-label', '사무실 RPG 사령부');
 
-    function renderDeck() {
-      deck.innerHTML = `
-        <div class="office-rpg-head">
-          <div class="office-rpg-title-box">
-            <span class="office-rpg-badge">👑 오피스 사령부</span>
-            <strong class="office-rpg-name">Lv.${state.level} ${state.title}</strong>
-          </div>
-          <span class="office-rpg-cp">전투력 CP 148,500</span>
-        </div>
-        <div class="office-rpg-exp-bar">
-          <div class="office-rpg-exp-track"><div class="office-rpg-exp-fill" style="width: ${(state.exp / state.maxExp * 100).toFixed(1)}%"></div></div>
-          <div class="office-rpg-exp-meta">
-            <span>EXP ${state.exp} / ${state.maxExp}</span>
-            <span>🪙 ${state.gold.toLocaleString()} G</span>
-          </div>
-        </div>
-        <div class="office-rpg-quests-title">📜 사무실 일일 업무 퀘스트</div>
-        <div class="office-quest-list">
-          <div class="office-quest-item ${state.completedQuests['q1'] ? 'done' : ''}">
-            <div class="office-quest-info">
-              <strong>[모닝 브리핑] 45인 자문단 거시경제 브리핑 확인</strong>
-              <small>보상: +50 EXP · +500 Gold</small>
-            </div>
-            <button type="button" class="office-quest-btn" data-qid="q1" ${state.completedQuests['q1'] ? 'disabled' : ''}>
-              ${state.completedQuests['q1'] ? '완료됨 ✓' : '수행하기'}
-            </button>
-          </div>
-          <div class="office-quest-item ${state.completedQuests['q2'] ? 'done' : ''}">
-            <div class="office-quest-info">
-              <strong>[소프 켈리] 리밸런싱 세금·수수료 방어선 점검</strong>
-              <small>보상: +80 EXP · +1,200 Gold</small>
-            </div>
-            <button type="button" class="office-quest-btn" data-qid="q2" ${state.completedQuests['q2'] ? 'disabled' : ''}>
-              ${state.completedQuests['q2'] ? '완료됨 ✓' : '수행하기'}
-            </button>
-          </div>
-          <div class="office-quest-item ${state.completedQuests['q3'] ? 'done' : ''}">
-            <div class="office-quest-info">
-              <strong>[버핏 1원칙] 하락장 원금 방어율 확인</strong>
-              <small>보상: +100 EXP · 파티 방어력 +10% 버프</small>
-            </div>
-            <button type="button" class="office-quest-btn" data-qid="q3" ${state.completedQuests['q3'] ? 'disabled' : ''}>
-              ${state.completedQuests['q3'] ? '완료됨 ✓' : '수행하기'}
-            </button>
+    // (A) 상단 상시 헤드업 디스플레이 (HUD) 마운트
+    let hud = document.getElementById('office-rpg-hud');
+    if (!hud) {
+      hud = document.createElement('div');
+      hud.id = 'office-rpg-hud';
+      hud.className = 'office-rpg-hud-bar';
+      const stageWrap = document.querySelector('#lobby-view .zero-office-canvas-wrap');
+      if (stageWrap) {
+        stageWrap.parentNode.insertBefore(hud, stageWrap);
+      } else {
+        lobbyMain.prepend(hud);
+      }
+    }
+
+    function renderHud() {
+      hud.innerHTML = `
+        <div class="hud-item hud-char" title="내 캐릭터 정보">
+          <span class="hud-avatar">👑</span>
+          <div class="hud-text">
+            <span class="hud-title">Lv.${state.level} ${state.title}</span>
+            <div class="hud-mini-bar"><div class="hud-mini-fill" style="width: ${(state.exp / state.maxExp * 100).toFixed(0)}%"></div></div>
           </div>
         </div>
-        <div class="office-rpg-buffs">
-          <span class="office-buff-pill">✨ 절세 장막 (마찰비용 -20%)</span>
-          <span class="office-buff-pill">⚡ 켈리 복리 부스터 (변동성 50% 삭감)</span>
+        <div class="hud-item hud-cp" title="총 파티 전투력">
+          <span class="hud-icon">⚔️</span>
+          <div class="hud-text">
+            <span class="hud-label">전투력</span>
+            <strong class="hud-val">148,500 CP</strong>
+          </div>
+        </div>
+        <div class="hud-item hud-gold" title="보유 골드">
+          <span class="hud-icon">🪙</span>
+          <div class="hud-text">
+            <span class="hud-label">골드</span>
+            <strong class="hud-val">${state.gold.toLocaleString()} G</strong>
+          </div>
+        </div>
+        <div class="hud-item hud-stamina" title="사무실 활력">
+          <span class="hud-icon">☕</span>
+          <div class="hud-text">
+            <span class="hud-label">사무실 활력</span>
+            <strong class="hud-val">${state.stamina}/${state.maxStamina}</strong>
+          </div>
+        </div>
+        <button type="button" id="hud-box-btn" class="hud-gift-btn" title="일일 출석 보상 상자">
+          🎁 <span class="hud-gift-badge">출석</span>
+        </button>
+      `;
+
+      hud.querySelector('#hud-box-btn')?.addEventListener('click', (e) => {
+        playRetroSound('coin');
+        const today = new Date().toDateString();
+        if (state.lastAttendanceDate === today) {
+          showToast('🎁 오늘의 출석 보상은 이미 수령하셨습니다! 내일 또 오세요.');
+          return;
+        }
+        state.lastAttendanceDate = today;
+        state.gold += 1000;
+        state.exp += 100;
+        saveRpgState(state);
+        playRetroSound('levelup');
+        spawnFloatingEffect('+1,000 G & +100 EXP!', e.clientX, e.clientY);
+        showToast('🎉 일일 출석 완료! 1,000 Gold와 100 EXP를 획득했습니다!');
+        renderHud();
+      });
+    }
+    renderHud();
+
+    // (B) 사무실 4대 인터랙티브 탐험 핫스팟 마운트
+    let hotspots = document.getElementById('office-rpg-hotspots');
+    if (!hotspots) {
+      hotspots = document.createElement('div');
+      hotspots.id = 'office-rpg-hotspots';
+      hotspots.className = 'office-hotspots-container';
+      const stageWrap = document.querySelector('#lobby-view .zero-office-canvas-wrap');
+      if (stageWrap && stageWrap.nextSibling) {
+        stageWrap.parentNode.insertBefore(hotspots, stageWrap.nextSibling);
+      } else {
+        lobbyMain.append(hotspots);
+      }
+    }
+
+    function renderHotspots() {
+      hotspots.innerHTML = `
+        <div class="hotspots-header">
+          <span>🏰 사무실 탐험 인터랙션</span>
+          <small>오피스 오브젝트를 터치하여 버프와 재화를 획득하세요</small>
+        </div>
+        <div class="hotspots-grid">
+          <button type="button" class="hotspot-card" id="spot-coffee">
+            <span class="spot-icon">☕</span>
+            <div class="spot-info">
+              <strong>탕비실 에스프레소</strong>
+              <small>활력 +20 · AI 자문 가속</small>
+            </div>
+          </button>
+          <button type="button" class="hotspot-card" id="spot-bull">
+            <span class="spot-icon">🐂</span>
+            <div class="spot-info">
+              <strong>월가 황금 황소상</strong>
+              <small>투자 대길 · +150 Gold</small>
+            </div>
+          </button>
+          <button type="button" class="hotspot-card" id="spot-library">
+            <span class="spot-icon">📚</span>
+            <div class="spot-info">
+              <strong>거장의 비밀 서고</strong>
+              <small>소프 연구록 · +80 EXP</small>
+            </div>
+          </button>
+          <button type="button" class="hotspot-card" id="spot-roulette">
+            <span class="spot-icon">🎲</span>
+            <div class="spot-info">
+              <strong>일일 행운 룰렛</strong>
+              <small>100% 무료 게임 럭키 박스</small>
+            </div>
+          </button>
         </div>
       `;
 
-      deck.querySelectorAll('.office-quest-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const qid = e.currentTarget.dataset.qid;
-          if (state.completedQuests[qid]) return;
-          state.completedQuests[qid] = true;
-          const rewards = {
-            q1: { exp: 50, gold: 500, label: '아침 브리핑 완료! +50 EXP, +500 G 획득!' },
-            q2: { exp: 80, gold: 1200, label: '소프 켈리 방어선 점검 완료! +80 EXP, +1,200 G 획득!' },
-            q3: { exp: 100, gold: 0, label: '버핏 1원칙 완료! +100 EXP & 파티 방어 버프 획득!' }
-          }[qid];
-          state.exp += rewards.exp;
-          state.gold += rewards.gold;
-          if (state.exp >= state.maxExp) {
-            state.level += 1;
-            state.exp -= state.maxExp;
-            showToast(`🎊 레벨 업! 오피스 사령부 Lv.${state.level} 달성!`);
-          } else {
-            showToast(`⭐ ${rewards.label}`);
-          }
-          saveRpgState(state);
-          renderDeck();
-        });
+      hotspots.querySelector('#spot-coffee')?.addEventListener('click', (e) => {
+        playRetroSound('click');
+        const today = new Date().toDateString();
+        if (state.lastCoffeeDate === today) {
+          showToast('☕ 오늘은 이미 최고급 커피를 마셨습니다! 사원들이 활기차게 일하고 있어요.');
+          return;
+        }
+        state.lastCoffeeDate = today;
+        state.stamina = Math.min(state.maxStamina, state.stamina + 20);
+        state.activeBuffs = [...new Set([...state.activeBuffs, '카페인 부스터'])];
+        saveRpgState(state);
+        playRetroSound('coin');
+        spawnFloatingEffect('☕ 활력 +20 & 카페인 부스터!', e.clientX, e.clientY);
+        showToast('☕ 탕비실 최고급 에스프레소 완성! 활력 +20 & AI 자문 집중력 부스터 발동!');
+        renderHud();
+      });
+
+      hotspots.querySelector('#spot-bull')?.addEventListener('click', (e) => {
+        playRetroSound('coin');
+        const today = new Date().toDateString();
+        if (state.lastBullDate === today) {
+          showToast('🐂 황금 황소의 기운이 오늘도 대표님 계좌에 가득합니다!');
+          return;
+        }
+        state.lastBullDate = today;
+        state.gold += 150;
+        saveRpgState(state);
+        spawnFloatingEffect('+150 Gold!', e.clientX, e.clientY);
+        showToast('🐂 황금 황소의 뿔을 쓰다듬었습니다! [오늘의 시장 운세: 대길 大吉] +150 G 획득!');
+        renderHud();
+      });
+
+      hotspots.querySelector('#spot-library')?.addEventListener('click', (e) => {
+        playRetroSound('click');
+        const today = new Date().toDateString();
+        if (state.lastBookDate === today) {
+          showToast('📚 오늘의 거장 비밀 문헌을 이미 열람했습니다.');
+          return;
+        }
+        state.lastBookDate = today;
+        state.exp += 80;
+        if (state.exp >= state.maxExp) {
+          state.level += 1;
+          state.exp -= state.maxExp;
+          playRetroSound('levelup');
+          showToast(`🎊 레벨 업! 오피스 사령부 Lv.${state.level} 달성!`);
+        } else {
+          playRetroSound('coin');
+          showToast('📚 에드워드 소프의 『확률적 우위 전략』 열람 완료! +80 EXP 획득!');
+        }
+        saveRpgState(state);
+        spawnFloatingEffect('+80 EXP!', e.clientX, e.clientY);
+        renderHud();
+      });
+
+      hotspots.querySelector('#spot-roulette')?.addEventListener('click', (e) => {
+        playRetroSound('coin');
+        const today = new Date().toDateString();
+        if (state.lastRouletteDate === today) {
+          showToast('🎲 오늘의 행운 룰렛은 이미 돌리셨습니다! 내일 다시 도전하세요.');
+          return;
+        }
+        state.lastRouletteDate = today;
+        const rewards = [
+          { msg: '대박! 황금 배당 보너스 +500 G 당첨!', gold: 500, exp: 50 },
+          { msg: '축하합니다! 소프 켈리 마법서 (+150 EXP) 당첨!', gold: 100, exp: 150 },
+          { msg: '행운의 잭팟! 1,000 Gold 획득!', gold: 1000, exp: 100 }
+        ];
+        const picked = rewards[Math.floor(Math.random() * rewards.length)];
+        state.gold += picked.gold;
+        state.exp += picked.exp;
+        saveRpgState(state);
+        playRetroSound('levelup');
+        spawnFloatingEffect(`🎉 ${picked.msg}`, e.clientX, e.clientY);
+        showToast(`🎉 ${picked.msg}`);
+        renderHud();
       });
     }
+    renderHotspots();
 
-    renderDeck();
-    lobbySide.prepend(deck);
+    // (C) 사이드바 일일 퀘스트 카드
+    const lobbySide = document.querySelector('#lobby-view .lobby-side');
+    if (lobbySide && !document.getElementById('office-rpg-deck')) {
+      const deck = document.createElement('section');
+      deck.id = 'office-rpg-deck';
+      deck.className = 'office-rpg-card';
+      deck.setAttribute('aria-label', '사무실 RPG 사령부');
+
+      function renderSideDeck() {
+        deck.innerHTML = `
+          <div class="office-rpg-head">
+            <div class="office-rpg-title-box">
+              <span class="office-rpg-badge">👑 오피스 사령부</span>
+              <strong class="office-rpg-name">Lv.${state.level} ${state.title}</strong>
+            </div>
+            <span class="office-rpg-cp">전투력 CP 148,500</span>
+          </div>
+          <div class="office-rpg-exp-bar">
+            <div class="office-rpg-exp-track"><div class="office-rpg-exp-fill" style="width: ${(state.exp / state.maxExp * 100).toFixed(1)}%"></div></div>
+            <div class="office-rpg-exp-meta">
+              <span>EXP ${state.exp} / ${state.maxExp}</span>
+              <span>🪙 ${state.gold.toLocaleString()} G</span>
+            </div>
+          </div>
+          <div class="office-rpg-quests-title">📜 사무실 일일 업무 퀘스트</div>
+          <div class="office-quest-list">
+            <div class="office-quest-item ${state.completedQuests['q1'] ? 'done' : ''}">
+              <div class="office-quest-info">
+                <strong>[모닝 브리핑] 45인 자문단 거시경제 브리핑 확인</strong>
+                <small>보상: +50 EXP · +500 Gold</small>
+              </div>
+              <button type="button" class="office-quest-btn" data-qid="q1" ${state.completedQuests['q1'] ? 'disabled' : ''}>
+                ${state.completedQuests['q1'] ? '완료됨 ✓' : '수행하기'}
+              </button>
+            </div>
+            <div class="office-quest-item ${state.completedQuests['q2'] ? 'done' : ''}">
+              <div class="office-quest-info">
+                <strong>[소프 켈리] 리밸런싱 세금·수수료 방어선 점검</strong>
+                <small>보상: +80 EXP · +1,200 Gold</small>
+              </div>
+              <button type="button" class="office-quest-btn" data-qid="q2" ${state.completedQuests['q2'] ? 'disabled' : ''}>
+                ${state.completedQuests['q2'] ? '완료됨 ✓' : '수행하기'}
+              </button>
+            </div>
+            <div class="office-quest-item ${state.completedQuests['q3'] ? 'done' : ''}">
+              <div class="office-quest-info">
+                <strong>[버핏 1원칙] 하락장 원금 방어율 확인</strong>
+                <small>보상: +100 EXP · 파티 방어력 +10% 버프</small>
+              </div>
+              <button type="button" class="office-quest-btn" data-qid="q3" ${state.completedQuests['q3'] ? 'disabled' : ''}>
+                ${state.completedQuests['q3'] ? '완료됨 ✓' : '수행하기'}
+              </button>
+            </div>
+          </div>
+          <div class="office-rpg-buffs">
+            <span class="office-buff-pill">✨ 절세 장막 (마찰비용 -20%)</span>
+            <span class="office-buff-pill">⚡ 켈리 복리 부스터 (변동성 50% 삭감)</span>
+          </div>
+        `;
+
+        deck.querySelectorAll('.office-quest-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const qid = e.currentTarget.dataset.qid;
+            if (state.completedQuests[qid]) return;
+            state.completedQuests[qid] = true;
+            const rewards = {
+              q1: { exp: 50, gold: 500, label: '아침 브리핑 완료! +50 EXP, +500 G 획득!' },
+              q2: { exp: 80, gold: 1200, label: '소프 켈리 방어선 점검 완료! +80 EXP, +1,200 G 획득!' },
+              q3: { exp: 100, gold: 0, label: '버핏 1원칙 완료! +100 EXP & 파티 방어 버프 획득!' }
+            }[qid];
+            state.exp += rewards.exp;
+            state.gold += rewards.gold;
+            if (state.exp >= state.maxExp) {
+              state.level += 1;
+              state.exp -= state.maxExp;
+              playRetroSound('levelup');
+              showToast(`🎊 레벨 업! 오피스 사령부 Lv.${state.level} 달성!`);
+            } else {
+              playRetroSound('coin');
+              showToast(`⭐ ${rewards.label}`);
+            }
+            saveRpgState(state);
+            renderSideDeck();
+            renderHud();
+          });
+        });
+      }
+      renderSideDeck();
+      lobbySide.prepend(deck);
+    }
+
+    // (D) 직원 대화창(lobby-chat) 친밀도 게이지 & 3대 액션 바인딩
+    enhanceLobbyChatRpg();
+  }
+
+  // ── 직원 캐릭터 대화창 RPG 인터랙션 강화 ──
+  function enhanceLobbyChatRpg() {
+    const chatDialog = document.getElementById('lobby-chat');
+    if (!chatDialog || chatDialog.dataset.rpgEnhanced) return;
+    chatDialog.dataset.rpgEnhanced = 'true';
+
+    const chatHead = chatDialog.querySelector('.chat-head');
+    if (chatHead) {
+      const affinityWrap = document.createElement('div');
+      affinityWrap.className = 'chat-affinity-box';
+      affinityWrap.innerHTML = `
+        <span class="affinity-heart">💖</span>
+        <div class="affinity-detail">
+          <span class="affinity-label">호감도 Lv.3 (75/100)</span>
+          <div class="affinity-track"><div class="affinity-fill" style="width: 75%"></div></div>
+        </div>
+      `;
+      chatHead.appendChild(affinityWrap);
+    }
+
+    const chatForm = chatDialog.querySelector('.chat-form');
+    if (chatForm) {
+      const quickBar = document.createElement('div');
+      quickBar.className = 'chat-rpg-actions';
+      quickBar.innerHTML = `
+        <button type="button" class="chat-rpg-btn" id="chat-gift-coffee">☕ 커피 선물하기 (+15 호감도)</button>
+        <button type="button" class="chat-rpg-btn" id="chat-stamp-praise">⭐ 칭찬 스탬프 (+50 EXP)</button>
+        <button type="button" class="chat-rpg-btn" id="chat-staff-quest">📜 직원 미션 받기</button>
+      `;
+      chatForm.parentNode.insertBefore(quickBar, chatForm);
+
+      quickBar.querySelector('#chat-gift-coffee')?.addEventListener('click', (e) => {
+        const state = getRpgState();
+        playRetroSound('coin');
+        spawnFloatingEffect('💖 호감도 +15 & 파티 공격력 +5%!', e.clientX, e.clientY);
+        showToast('☕ 직원에게 따뜻한 커피를 선물했습니다! "대표님 최고입니다! 오늘 전략에 최선을 다할게요!" (호감도 +15 & 파티 공격력 +5% 버프 발동)');
+        saveRpgState(state);
+      });
+
+      quickBar.querySelector('#chat-stamp-praise')?.addEventListener('click', (e) => {
+        const state = getRpgState();
+        state.exp += 50;
+        playRetroSound('coin');
+        spawnFloatingEffect('+50 EXP!', e.clientX, e.clientY);
+        showToast('⭐ 직원을 칭찬하여 팀 사기가 올랐습니다! (+50 EXP 획득)');
+        saveRpgState(state);
+      });
+
+      quickBar.querySelector('#chat-staff-quest')?.addEventListener('click', () => {
+        playRetroSound('click');
+        showToast('📜 직원의 일일 미션: "오늘 장마감 전 나스닥-국채 상관계수 리포트를 확인해 주세요!" (+100 EXP 예정)');
+      });
+    }
   }
 
   // ── 2. 공용광장 (Plaza / plaza-view) 월드 보스 레이드 & 모험가 길드 ──
@@ -237,13 +568,11 @@
       </div>
     `;
 
-    // 레이드 모달 핸들러
-    deck.querySelector('#plaza-raid-btn').addEventListener('click', () => {
+    deck.querySelector('#plaza-raid-btn')?.addEventListener('click', () => {
       openPlazaRaidModal();
     });
 
-    // 분수대 동전 핸들러
-    deck.querySelector('#plaza-fountain-btn').addEventListener('click', () => {
+    deck.querySelector('#plaza-fountain-btn')?.addEventListener('click', (e) => {
       const state = getRpgState();
       const today = new Date().toDateString();
       if (state.lastFountainDate === today) {
@@ -251,132 +580,148 @@
         return;
       }
       state.lastFountainDate = today;
-      state.exp += 30;
+      state.gold += 300;
+      state.exp += 70;
       saveRpgState(state);
-      showToast('✨ 행운의 분수대 축복 획득! [오늘 시장 급락 시 채권 방패 100% 흡수] (+30 EXP)');
+      playRetroSound('levelup');
+      spawnFloatingEffect('⛲ 분수의 가호! +300 G & +70 EXP!', e.clientX, e.clientY);
+      showToast('⛲ 분수대에 동전을 던졌습니다! 맑은 물빛이 반짝이며 +300 Gold와 +70 EXP를 얻었습니다!');
     });
 
-    plazaView.append(deck);
+    plazaView.prepend(deck);
   }
 
   function openPlazaRaidModal() {
-    const overlay = document.createElement('div');
-    overlay.className = 'th-modal-overlay';
-    const dialog = document.createElement('div');
-    dialog.className = 'th-modal';
-    dialog.setAttribute('role', 'dialog');
-    dialog.setAttribute('aria-modal', 'true');
+    let dialog = document.getElementById('plaza-raid-dialog');
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.id = 'plaza-raid-dialog';
+      dialog.className = 'plaza-raid-modal';
+      document.body.appendChild(dialog);
+    }
 
     dialog.innerHTML = `
-      <div class="th-modal-header">
-        <h3 class="th-modal-title">⚔️ 광장 모험가 연합 레이드 전투 결과</h3>
-        <button type="button" class="th-modal-close">✕</button>
-      </div>
-      <div class="th-modal-body">
-        <p class="muted-note">[광장 모험가 연합] VS [고금리 볼케이노 드래곤] 3턴 전투 보고서</p>
-        <div class="th-raid-log-list">
-          <div class="th-raid-log-item">⚔️ 광장 모험가들이 [연준의 긴축 화염군주] 레이드 전장에 진입했습니다!</div>
-          <div class="th-raid-log-item">👑 파티장 [에드워드 소프]의 [켈리의 황금 분할] 발동! 파티 변동성 50% 삭감 장막 전개!</div>
-          <div class="th-raid-log-item">💥 [S&P 500 성기사]의 [복리 일격]! 보스에게 3,220 데미지 명중!</div>
-          <div class="th-raid-log-item">🔥 [고금리 볼케이노 드래곤]이(가) [금리 불꽃 브레스(1,200)] 시전!</div>
-          <div class="th-raid-log-item">🛡️ [단기국채 철벽 탱커]의 [금리 방패벽] 완벽 방어! 계좌 손실 0원 및 45,000원 세금 마찰 방어 성공!</div>
-          <div class="th-raid-log-item">✨ [달러 비상금 사제]의 [긴급 절세 면제] 발동! 배당금 12,500원 골드 회복 및 추가 2,375 데미지!</div>
-          <div class="th-raid-log-item">🎉 전투 승리! 고금리 볼케이노 드래곤을 격퇴하고 포트폴리오를 완벽하게 수호했습니다!</div>
+      <div class="raid-modal-head">
+        <div>
+          <h3>⚔️ 월드 보스 레이드: ${CURRENT_BOSS.name}</h3>
+          <p>내 파티의 공격력으로 고금리 드래곤을 타격하세요!</p>
         </div>
-        <div class="th-raid-rewards">
-          <div><div class="th-raid-reward-title">획득 경험치</div><div class="th-raid-reward-val">⭐ +85 EXP</div></div>
-          <div><div class="th-raid-reward-title">수호한 마찰비용</div><div class="th-raid-reward-val">🛡️ 45,000원 방어</div></div>
-          <div><div class="th-raid-reward-title">배당금 골드</div><div class="th-raid-reward-val">🪙 +12,500 G</div></div>
+        <button type="button" class="icon-button icon-close" id="raid-close">닫기</button>
+      </div>
+      <div class="raid-battle-ground">
+        <div class="raid-dragon-sprite">🐲 🔥 💥</div>
+        <div class="raid-combat-log" id="raid-combat-log">
+          <p>📢 고금리 볼케이노 드래곤이 긴축 화염(4.75%)을 뿜어냅니다!</p>
+          <p>🛡️ 에드워드 소프의 [켈리 황금 분할] 방어막이 활성화되었습니다!</p>
+        </div>
+        <div class="raid-action-buttons">
+          <button type="button" class="raid-btn attack" data-act="attack">⚔️ 파티 총공격 (단기국채 화력)</button>
+          <button type="button" class="raid-btn skill" data-act="skill">⚡ 필살기: 켈리 황금일격</button>
+          <button type="button" class="raid-btn shield" data-act="shield">🛡️ 철벽 가드 (손실 방어 100%)</button>
         </div>
       </div>
     `;
 
-    dialog.querySelector('.th-modal-close').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    overlay.append(dialog);
-    document.body.append(overlay);
+    dialog.querySelector('#raid-close')?.addEventListener('click', () => dialog.close());
 
-    const state = getRpgState();
-    state.exp += 85;
-    state.gold += 12500;
-    saveRpgState(state);
+    const log = dialog.querySelector('#raid-combat-log');
+    dialog.querySelectorAll('.raid-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const act = e.currentTarget.dataset.act;
+        playRetroSound(act === 'skill' ? 'levelup' : 'coin');
+        if (act === 'attack') {
+          log.innerHTML += '<p class="log-hit">💥 [일반 공격] S&P 500 성기사가 1,240의 유효 데미지를 입혔습니다!</p>';
+        } else if (act === 'skill') {
+          log.innerHTML += '<p class="log-crit">⚡ [필살기] 에드워드 소프의 켈리 복리 알고리즘이 폭발하여 3,580의 치명타를 입혔습니다!!</p>';
+        } else if (act === 'shield') {
+          log.innerHTML += '<p class="log-guard">🛡️ [철벽 방어] 단기국채 방패벽으로 금리 상승 화염을 100% 흡수 차단했습니다!</p>';
+        }
+        log.scrollTop = log.scrollHeight;
+      });
+    });
+
+    dialog.showModal();
   }
 
-  // ── 3. 제로팀 (Team / team-view) RPG 파티 덱 편성기 ──
+  // ── 3. ZERO 팀 (Team / team-view) 1-Click RPG 덱 편성기 ──
   function setupTeamRpg() {
     const teamView = document.getElementById('team-view');
     if (!teamView || document.getElementById('team-rpg-builder')) return;
 
+    const builder = document.createElement('section');
+    builder.id = 'team-rpg-builder';
+    builder.className = 'team-rpg-container';
+
     let selectedPresetId = 'thorp_balance';
     let currentFilterRole = 'ALL';
 
-    const builder = document.createElement('div');
-    builder.id = 'team-rpg-builder';
-    builder.className = 'team-rpg-builder-card';
-
     function renderBuilder() {
-      const currentPreset = RPG_PRESETS.find(p => p.id === selectedPresetId) || RPG_PRESETS[0];
+      const preset = RPG_PRESETS.find(p => p.id === selectedPresetId) || RPG_PRESETS[0];
 
       builder.innerHTML = `
-        <div class="team-rpg-head">
+        <div class="team-rpg-header">
           <div>
-            <span class="figma-pill badge-thorp-pill">ZERO 1-Click 파티</span>
-            <h2 class="team-rpg-title">⚔️ ZERO 45인 팀 RPG 파티 덱 편성기</h2>
-            <p class="muted-note">경제를 몰라도 걱정 마세요! 1초 만에 최적의 영웅 덱을 소환하고, 4대 클래스로 45인 팀원을 한눈에 파악해요.</p>
+            <span class="team-rpg-tag">⚔️ 1-Click 추천 모험 파티 덱</span>
+            <h3 class="team-rpg-title">누구나 1초 만에 완성하는 전설의 투자 파티</h3>
+            <p class="team-rpg-desc">어려운 경제 용어 대신, 검증된 거장들의 역할 분담 덱을 선택하세요.</p>
+          </div>
+          <div class="team-rpg-tabs">
+            ${RPG_PRESETS.map(p => `
+              <button type="button" class="team-rpg-tab ${p.id === selectedPresetId ? 'active' : ''}" data-pid="${p.id}">
+                ${p.name.split(' ')[0]} ${p.name.split(' ')[1]}
+              </button>
+            `).join('')}
           </div>
         </div>
 
-        <div class="team-rpg-tabs">
-          ${RPG_PRESETS.map(p => `
-            <button type="button" class="team-rpg-tab ${p.id === selectedPresetId ? 'active' : ''}" data-pid="${p.id}">
-              ${p.name}
+        <div class="team-rpg-banner">
+          <div class="team-banner-left">
+            <h4>${preset.name}</h4>
+            <p class="team-banner-concept">${preset.concept}</p>
+            <span class="team-target-badge">${preset.target}</span>
+          </div>
+          <div class="team-banner-right">
+            <span class="team-cp-badge">전투력 ${preset.cp} CP</span>
+            <button type="button" class="team-equip-btn" id="team-equip-action">
+              ⚡ 이 덱으로 파티 편성하기
             </button>
-          `).join('')}
-        </div>
-
-        <div class="team-rpg-concept-box">
-          <div class="team-rpg-concept-head">
-            <strong>${currentPreset.name} · ${currentPreset.badge}</strong>
-            <span class="team-rpg-cp">⚔️ 전투력 CP: ${currentPreset.cp}</span>
           </div>
-          <p class="team-rpg-concept-desc">${currentPreset.concept}</p>
-          <div class="team-rpg-concept-target">${currentPreset.target}</div>
         </div>
 
-        <div class="team-rpg-deck-grid">
-          <div class="th-rpg-card is-leader">
+        <div class="th-rpg-cards-grid">
+          <div class="th-rpg-card leader-card">
             <div class="th-rpg-card-top">
-              <span class="th-rpg-badge leader">👑 파티장</span>
-              <span class="th-rpg-weight-tag">전략 지휘</span>
+              <span class="th-rpg-role-badge">👑 파티장 (팀장)</span>
+              <span class="th-rpg-cp-pill">CP 98</span>
             </div>
-            <div class="th-rpg-name">${currentPreset.leader.name}</div>
-            <div class="th-rpg-asset">${currentPreset.leader.asset}</div>
+            <strong class="th-rpg-card-name">${preset.leader.name}</strong>
+            <small class="th-rpg-card-title">${preset.leader.title}</small>
             <div class="th-rpg-stat-bars">
-              <div class="th-rpg-stat-row"><span class="th-rpg-stat-lbl">공격</span><div class="th-rpg-stat-track"><div class="th-rpg-stat-fill atk" style="width: ${currentPreset.leader.atk}%"></div></div><span class="th-rpg-stat-val">${currentPreset.leader.atk}</span></div>
-              <div class="th-rpg-stat-row"><span class="th-rpg-stat-lbl">방어</span><div class="th-rpg-stat-track"><div class="th-rpg-stat-fill def" style="width: ${currentPreset.leader.def}%"></div></div><span class="th-rpg-stat-val">${currentPreset.leader.def}</span></div>
-              <div class="th-rpg-stat-row"><span class="th-rpg-stat-lbl">회복</span><div class="th-rpg-stat-track"><div class="th-rpg-stat-fill rec" style="width: ${currentPreset.leader.rec}%"></div></div><span class="th-rpg-stat-val">${currentPreset.leader.rec}</span></div>
+              <div class="th-rpg-stat-row"><small>공격</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar atk" style="width: ${preset.leader.atk}%"></div></div></div>
+              <div class="th-rpg-stat-row"><small>방어</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar def" style="width: ${preset.leader.def}%"></div></div></div>
+              <div class="th-rpg-stat-row"><small>회복</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar rec" style="width: ${preset.leader.rec}%"></div></div></div>
             </div>
-            <div class="th-rpg-skill">
-              <div class="th-rpg-skill-name">⚡ ${currentPreset.leader.skill}</div>
-              <p class="th-rpg-skill-desc">${currentPreset.leader.desc}</p>
+            <div class="th-rpg-skill-box">
+              <span class="th-rpg-skill-name">⚡ 고유스킬: ${preset.leader.skill}</span>
+              <p class="th-rpg-skill-desc">${preset.leader.desc}</p>
             </div>
           </div>
 
-          ${currentPreset.members.map(m => `
-            <div class="th-rpg-card">
+          ${preset.members.map(m => `
+            <div class="th-rpg-card member-card">
               <div class="th-rpg-card-top">
-                <span class="th-rpg-badge ${m.role.toLowerCase()}">${m.roleKorean}</span>
-                <span class="th-rpg-weight-tag">${m.weight}</span>
+                <span class="th-rpg-role-badge">${m.roleKorean}</span>
+                <span class="th-rpg-weight-pill">비중 ${m.weight}</span>
               </div>
-              <div class="th-rpg-name">${m.name}</div>
-              <div class="th-rpg-asset">담당 자산: ${m.weight} 배분</div>
+              <strong class="th-rpg-card-name">${m.name}</strong>
+              <small class="th-rpg-card-title">${m.role}</small>
               <div class="th-rpg-stat-bars">
-                <div class="th-rpg-stat-row"><span class="th-rpg-stat-lbl">공격</span><div class="th-rpg-stat-track"><div class="th-rpg-stat-fill atk" style="width: ${m.atk}%"></div></div><span class="th-rpg-stat-val">${m.atk}</span></div>
-                <div class="th-rpg-stat-row"><span class="th-rpg-stat-lbl">방어</span><div class="th-rpg-stat-track"><div class="th-rpg-stat-fill def" style="width: ${m.def}%"></div></div><span class="th-rpg-stat-val">${m.def}</span></div>
-                <div class="th-rpg-stat-row"><span class="th-rpg-stat-lbl">회복</span><div class="th-rpg-stat-track"><div class="th-rpg-stat-fill rec" style="width: ${m.rec}%"></div></div><span class="th-rpg-stat-val">${m.rec}</span></div>
+                <div class="th-rpg-stat-row"><small>공격</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar atk" style="width: ${m.atk}%"></div></div></div>
+                <div class="th-rpg-stat-row"><small>방어</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar def" style="width: ${m.def}%"></div></div></div>
+                <div class="th-rpg-stat-row"><small>회복</small><div class="th-rpg-stat-bg"><div class="th-rpg-stat-bar rec" style="width: ${m.rec}%"></div></div></div>
               </div>
-              <div class="th-rpg-skill">
-                <div class="th-rpg-skill-name">⚡ ${m.skill}</div>
+              <div class="th-rpg-skill-box">
+                <span class="th-rpg-skill-name">🛡️ 스킬: ${m.skill}</span>
                 <p class="th-rpg-skill-desc">${m.desc}</p>
               </div>
             </div>
@@ -395,13 +740,21 @@
 
       builder.querySelectorAll('.team-rpg-tab').forEach(btn => {
         btn.addEventListener('click', (e) => {
+          playRetroSound('click');
           selectedPresetId = e.currentTarget.dataset.pid;
           renderBuilder();
         });
       });
 
+      builder.querySelector('#team-equip-action')?.addEventListener('click', (e) => {
+        playRetroSound('levelup');
+        spawnFloatingEffect('⚔️ 파티 덱 편성 완료!', e.clientX, e.clientY);
+        showToast(`🎉 [${preset.name}] 파티가 활성화되었습니다! 전투력 CP ${preset.cp} 적용 완료!`);
+      });
+
       builder.querySelectorAll('.team-rpg-fbtn').forEach(btn => {
         btn.addEventListener('click', (e) => {
+          playRetroSound('click');
           currentFilterRole = e.currentTarget.dataset.role;
           builder.querySelectorAll('.team-rpg-fbtn').forEach(b => b.classList.toggle('active', b.dataset.role === currentFilterRole));
           applyClassFilter(currentFilterRole);
@@ -440,6 +793,7 @@
 
   document.addEventListener('DOMContentLoaded', checkAndInitViews);
   document.addEventListener('zero-view-changed', checkAndInitViews);
-  setTimeout(checkAndInitViews, 600);
-  setTimeout(checkAndInitViews, 2000);
+  setTimeout(checkAndInitViews, 400);
+  setTimeout(checkAndInitViews, 1200);
+  setTimeout(checkAndInitViews, 3000);
 })();

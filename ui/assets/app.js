@@ -251,7 +251,7 @@ async function runPeriodComparison() {
   button.disabled=true;result.replaceChildren(node('p','','공개 일별 종가를 불러오는 중입니다.'));
   try{
     const charts=await Promise.all(['SPY','TQQQ'].map(async symbol=>{
-      const identity='US:'+symbol,response=await fetch('api/chart?identity='+identity+'&range='+range,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+      const identity='US:'+symbol,response=await fetch('/api/chart?identity='+identity+'&range='+range,{cache:'no-store',signal:AbortSignal.timeout(15000)});
       const chart=response.ok?await response.json():null;
       if(!math.stockChartValid(chart,identity,range)||chart.status==='UNAVAILABLE')throw Error('CHART_UNAVAILABLE');
       return chart;
@@ -501,7 +501,7 @@ function loadLiveQuotes() {
   livePending = (async () => {
     liveCheckedAt = Date.now();
     try {
-      const response = await fetch('api/live-quotes', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
+      const response = await fetch('/api/live-quotes', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
       const live = response.ok ? await response.json() : null;
       state.live = live?.schema_version === 1 && live.state === 'AVAILABLE' && Array.isArray(live.quotes) ? live : null;
     } catch (_) { state.live = null; }
@@ -514,7 +514,7 @@ function loadLiveQuotes() {
 async function loadPortfolio() {
   if (state.demo) return;
   const request = ++portfolioRequest;
-  const response = await fetch('api/portfolio', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
+  const response = await fetch('/api/portfolio', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
   if (!response.ok) throw new Error('CACHE_UNAVAILABLE');
   const data = await response.json();
   if (state.demo || request !== portfolioRequest) return;
@@ -527,7 +527,7 @@ async function refresh() {
   const button = $('#refresh'); button.disabled = true; button.querySelector('span').textContent = hostedView ? '시세 확인 중' : '계좌 조회 중';
   try {
     // The hosted screen reprices saved quantities with public quotes; only the local app can query KIS.
-    const response = hostedView ? {ok: true, status: 200} : await fetch('api/refresh', {method: 'POST', cache: 'no-store'});
+    const response = hostedView ? {ok: true, status: 200} : await fetch('/api/refresh', {method: 'POST', cache: 'no-store'});
     const live = hostedView ? await loadLiveQuotes().catch(() => { state.live = null; return false; }) : true;
     await loadPortfolio();
     if (!live) notice('공개 시세를 모두 확인하지 못해 저장된 자료를 표시합니다. 잠시 뒤 다시 새로고침해 주세요.');
@@ -547,12 +547,12 @@ async function loadReferences() {
   if (referencesLoaded) return; referencesLoaded = true;
   const list = $('#research-references'), status = $('#references-status');
   try {
-    const response = await fetch('assets/research-references.json', {cache: 'no-store'});
+    const response = await fetch('/assets/research-references.json', {cache: 'no-store'});
     const rows = response.ok ? (await response.json())?.connections : null;
     if (!Array.isArray(rows) || !rows.length) throw new Error('REFERENCES_EMPTY');
     const names = {};
     try {
-      const team = await (await fetch('api/team', {cache: 'no-store'})).json();
+      const team = await (await fetch('/api/team', {cache: 'no-store'})).json();
       for (const role of Object.values(team?.roles || {})) for (const staff of role?.support_staff || []) if (staff?.id && staff?.name) names[staff.id] = staff.name;
     } catch (_) { /* Staff IDs remain readable without the roster. */ }
     list.replaceChildren(...rows.map((row) => {
@@ -582,7 +582,7 @@ async function runRisk() {
       const identity = market + ':' + symbol;
       if (loaded.has(identity)) return loaded.get(identity);
       for (let attempt = 0; attempt < 2; attempt++) {
-        const response = await fetch('api/chart?identity=' + identity + '&range=5Y', {cache: 'no-store'}).catch(() => null);
+        const response = await fetch('/api/chart?identity=' + identity + '&range=5Y', {cache: 'no-store'}).catch(() => null);
         const chart = response?.ok ? await response.json().catch(() => null) : null;
         if (math.stockChartValid(chart, identity, '5Y') && chart.status !== 'UNAVAILABLE') { loaded.set(identity, chart.bars); return chart.bars; }
         if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -849,7 +849,7 @@ async function loadTeam(event, force = false) {
   const selected = event || 'ONBOARDING';
   if (!force && teamLoaded === selected) return;
   try {
-    const response = await fetch('api/team' + (event ? '?event=' + encodeURIComponent(event) : ''), {cache: 'no-store'}); if (!response.ok) throw new Error();
+    const response = await fetch('/api/team' + (event ? '?event=' + encodeURIComponent(event) : ''), {cache: 'no-store'}); if (!response.ok) throw new Error();
     const data = await response.json();
     // Keep a slower prior event request from relabeling the selected work orders.
     if (request !== teamRequest) return;
@@ -1051,10 +1051,42 @@ function organizeNav(nav){
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.innerHTML=paths;button.prepend(svg);
   });
 }
-document.querySelectorAll?.('.rail nav, #more-menu nav').forEach(organizeNav);
-document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => {
-  navigate(button.dataset.view);
-}));
+// 레일 메뉴만 flow 순서 정렬; #more-menu는 마크업된 3대 그룹 카드 구조를 온전히 보존
+document.querySelectorAll?.('.rail nav').forEach(organizeNav);
+
+// 전역 클릭 이벤트 위임: 메뉴, 탭바, 모달 안의 모든 [data-view] 버튼 즉각 반응 보장
+document.addEventListener('click', (event) => {
+  const viewBtn = event.target.closest?.('[data-view]');
+  if (viewBtn) {
+    const targetView = viewBtn.dataset.view;
+    if (targetView && Object.hasOwn(views, targetView)) {
+      event.preventDefault();
+      navigate(targetView);
+      closeMenu();
+      return;
+    }
+  }
+  const openMenuBtn = event.target.closest?.('.menu-open');
+  if (openMenuBtn) {
+    event.preventDefault();
+    const menu = $('#more-menu');
+    if (!menu?.open) menu?.showModal();
+    document.querySelectorAll('.menu-open').forEach((item) => item.setAttribute('aria-expanded', 'true'));
+    return;
+  }
+  const closeMenuBtn = event.target.closest?.('#menu-close');
+  if (closeMenuBtn) {
+    event.preventDefault();
+    closeMenu();
+    return;
+  }
+  const academyBtn = event.target.closest?.('[data-open-academy]');
+  if (academyBtn) {
+    event.preventDefault();
+    window.ZEROAcademy?.open?.() || $('#academy')?.showModal?.();
+    return;
+  }
+});
 document.querySelectorAll('.menu-open').forEach((button) => {
   button.setAttribute('aria-expanded', 'false');
   button.addEventListener('click', () => {
