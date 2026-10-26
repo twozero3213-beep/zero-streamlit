@@ -621,10 +621,10 @@
   }
 
   // ── 0. 글로벌 5대 핵심 모드 원터치 바로가기 바 (초보자 3초 접근성) ──
+  // 수정 사유: 실제 DOM 구조(main#main)에 맞게 마운트하여 모든 화면 최상단에 초보자용 5대 게임 모드 바로가기 바가 표시되도록 수정
   function setupGlobalEasyBar() {
-    const main = document.getElementById('main-content');
-    const topbar = main?.querySelector('.topbar');
-    if (!main || !topbar) return;
+    const main = document.getElementById('main') || document.getElementById('main-content') || document.querySelector('main');
+    if (!main) return;
 
     let bar = document.getElementById('zero-easy-mode-bar');
     if (!bar) {
@@ -632,27 +632,33 @@
       bar.id = 'zero-easy-mode-bar';
       bar.className = 'zero-easy-mode-bar';
       bar.setAttribute('aria-label', '초보자 5대 핵심 모드 바로가기');
-      topbar.insertAdjacentElement('afterend', bar);
+      main.prepend(bar);
     }
 
-    const current = document.documentElement.dataset.zeroView || 'home';
+    const current = document.documentElement.dataset.zeroView || 'portfolio';
     const modes = [
-      { view: 'home', icon: '🏠', title: '1. RPG 홈 라운지', sub: '3초 시작 가이드' },
-      { view: 'lobby', icon: '🏰', title: '2. 내 사무실 (타이쿤)', sub: '금고 수확 · 캐릭터 대화' },
-      { view: 'team', icon: '⚔️', title: '3. 영웅 도감 · 팀편성', sub: '1-Click 덱 장착' },
-      { view: 'plaza', icon: '🐉', title: '4. 보스 레이드 광장', sub: '고금리 드래곤 토벌' },
+      { view: 'lobby', icon: '🏰', title: '1. 내 사무실 (RPG 맵)', sub: '맵 탐험 · 보물 수확' },
+      { view: 'team', icon: '⚔️', title: '2. 영웅 도감 · 팀편성', sub: '1-Click 덱 장착' },
+      { view: 'plaza', icon: '🐉', title: '3. 보스 레이드 광장', sub: '고금리 드래곤 토벌' },
+      { view: 'home', icon: '🏠', title: '4. RPG 홈 라운지', sub: '영웅 스테이지 · 일정' },
       { view: 'portfolio', icon: '💰', title: '5. 1억 모의투자', sub: '내 자산 · 실전 연습' }
     ];
 
-    bar.innerHTML = modes.map(m => `
-      <button type="button" class="easy-mode-pill ${current === m.view ? 'active' : ''}" data-easy-view="${m.view}">
-        <span class="easy-mode-icon">${m.icon}</span>
-        <span class="easy-mode-text">
-          <strong>${m.title}</strong>
-          <small>${m.sub}</small>
-        </span>
-      </button>
-    `).join('');
+    bar.innerHTML = `
+      <div class="easy-bar-inner">
+        <span class="easy-bar-label">🎮 초보자 1초 이동:</span>
+        <div class="easy-bar-pills">
+          ${modes.map(m => `
+            <button type="button" class="easy-mode-pill ${current === m.view ? 'active' : ''}" data-easy-view="${m.view}">
+              <span class="easy-mode-icon">${m.icon}</span>
+              <span class="easy-mode-text">
+                <strong>${m.title}</strong>
+              </span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
 
     bar.querySelectorAll('[data-easy-view]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -777,7 +783,8 @@
     });
   }
 
-  // ── 2. 사무실 (Office / lobby-view) 영웅 집무실 라운지 & 황금 금고 타이쿤 ──
+  // ── 2. 사무실 (Office / lobby-view) RPG 월드맵 오버레이 & 영웅 집무실 타이쿤 ──
+  // 수정 사유: 사무실 진입 시 게임 맵(#lobby-stage)이 최상단에 크게 보이도록 슬림 HUD와 맵 내부 인터랙티브 RPG 오브젝트(5대 성소·보물상자·마법진·모루·가마솥) 및 테마 스위치를 추가하고, 무거운 카드는 맵 아래로 배치하여 모바일 스크롤과 시인성을 동시에 해결
   function setupOfficeRpg() {
     const lobbyMain = document.querySelector('#lobby-view .lobby-main');
     if (!lobbyMain) return;
@@ -785,18 +792,211 @@
     const state = getRpgState();
     const activePreset = RPG_PRESETS.find(p => p.id === state.activePartyId) || RPG_PRESETS[0];
     const officeHeroes = [activePreset.leader, ...activePreset.members];
+    const stageWrap = document.querySelector('#lobby-view .zero-office-canvas-wrap');
+    const stage = document.getElementById('lobby-stage');
 
-    // (A) 상단 오피스 타이쿤 & 영웅 집무실 쇼케이스 마운트
+    // (A) 맵 바로 위: 1줄 컴팩트 길드 상태 바 (맵을 가리지 않고 핵심 골드·레벨·출석보상만 표시)
+    let slimBar = document.getElementById('office-rpg-slim-bar');
+    if (!slimBar) {
+      slimBar = document.createElement('div');
+      slimBar.id = 'office-rpg-slim-bar';
+      slimBar.className = 'office-rpg-slim-bar';
+      if (stageWrap) {
+        stageWrap.parentNode.insertBefore(slimBar, stageWrap);
+      } else {
+        lobbyMain.prepend(slimBar);
+      }
+    }
+
+    function renderSlimBar() {
+      slimBar.innerHTML = `
+        <div class="slim-bar-left">
+          <span class="slim-guild-badge">🏰 Lv.${state.level} 길드 성소</span>
+          <span class="slim-stat gold">🪙 ${state.gold.toLocaleString()} G</span>
+          <span class="slim-stat exp">⭐ EXP ${state.exp}/${state.maxExp}</span>
+          <span class="slim-stat cp">⚔️ CP ${activePreset.cp}</span>
+        </div>
+        <div class="slim-bar-right">
+          <button type="button" id="slim-vault-quick" class="slim-action-btn gold">💰 금고 +${(state.vaultGold || 1250).toLocaleString()}G 수확</button>
+          <button type="button" id="hud-box-btn" class="slim-action-btn gift">🎁 출석 보물상자</button>
+        </div>
+      `;
+
+      slimBar.querySelector('#hud-box-btn')?.addEventListener('click', (e) => {
+        const today = new Date().toDateString();
+        if (state.lastAttendanceDate === today) {
+          playRetroSound('click');
+          showToast('🎁 오늘의 출석 보물상자는 이미 열었습니다! 맵 위의 보물상자나 마법진을 눌러보세요.');
+          return;
+        }
+        state.lastAttendanceDate = today;
+        state.gold += 1500;
+        state.exp += 120;
+        saveRpgState(state);
+        playRetroSound('levelup');
+        spawnFloatingEffect('🎁 출석 대박! +1,500 G & +120 EXP!', e.clientX, e.clientY);
+        showToast('🎉 일일 출석 보물상자 오픈! 1,500 Gold와 120 EXP를 획득했습니다!');
+        renderSlimBar();
+        renderOfficeShowcase();
+      });
+
+      slimBar.querySelector('#slim-vault-quick')?.addEventListener('click', (e) => {
+        const harvest = state.vaultGold || 1250;
+        state.gold += harvest;
+        state.exp += 80;
+        state.vaultGold = 350;
+        if (state.exp >= state.maxExp) {
+          state.level += 1;
+          state.exp -= state.maxExp;
+        }
+        saveRpgState(state);
+        playRetroSound('levelup');
+        spawnFloatingEffect(`💰 +${harvest.toLocaleString()} G & +80 EXP 수확!`, e.clientX, e.clientY);
+        showToast(`💰 황금 금고에서 복리 보상 ${harvest.toLocaleString()} Gold와 80 EXP를 즉시 수확했습니다!`);
+        renderSlimBar();
+        renderOfficeShowcase();
+      });
+    }
+    renderSlimBar();
+
+    // (B) 사무실 맵(#lobby-stage) 내부 직접 게임화: RPG 월드맵 랜드마크 & 테마 스위치 오버레이
+    if (stage) {
+      let mapOverlay = stage.querySelector('#office-map-rpg-overlay');
+      if (!mapOverlay) {
+        mapOverlay = document.createElement('div');
+        mapOverlay.id = 'office-map-rpg-overlay';
+        mapOverlay.className = 'office-map-rpg-overlay';
+        stage.appendChild(mapOverlay);
+
+        const currentTheme = stage.dataset.rpgMapTheme || 'sanctuary';
+        mapOverlay.innerHTML = `
+          <div class="rpg-map-top-hud">
+            <div class="rpg-map-zone-title">
+              <span class="rpg-compass-icon">🧭</span>
+              <strong>ZERO 황금 길드 성소 월드맵</strong>
+              <small>바닥을 터치해 이동 · 성소 아이콘을 눌러 보물 수확</small>
+            </div>
+            <div class="rpg-map-theme- pills" role="group" aria-label="사무실 맵 테마 변경">
+              <button type="button" class="rpg-map-theme-btn ${currentTheme === 'sanctuary' ? 'active' : ''}" data-map-theme="sanctuary" data-floor="wood">🏰 황금성소</button>
+              <button type="button" class="rpg-map-theme-btn ${currentTheme === 'dungeon' ? 'active' : ''}" data-map-theme="dungeon" data-floor="stone">🌙 암흑던전</button>
+              <button type="button" class="rpg-map-theme-btn ${currentTheme === 'forest' ? 'active' : ''}" data-map-theme="forest" data-floor="mint">🌲 엘프의숲</button>
+              <button type="button" class="rpg-map-theme-btn ${currentTheme === 'library' ? 'active' : ''}" data-map-theme="library" data-floor="sand">📜 대도서관</button>
+            </div>
+          </div>
+
+          <!-- 맵 내부 5대 인터랙티브 RPG 랜드마크 오브젝트 -->
+          <button type="button" class="rpg-map-node node-mage" style="left: 19%; top: 34%;" data-node-act="mage" title="마법 연구소 (소프 켈리 성소)">
+            <span class="node-quest-mark">🔮</span>
+            <span class="node-icon">🧙‍♂️</span>
+            <span class="node-label">켈리 마법성소</span>
+          </button>
+
+          <button type="button" class="rpg-map-node node-chest" style="left: 81%; top: 34%;" data-node-act="chest" title="황금 보물상자 열기">
+            <span class="node-quest-mark">❗</span>
+            <span class="node-icon">🎁</span>
+            <span class="node-label">황금 보물고</span>
+          </button>
+
+          <button type="button" class="rpg-map-node node-altar" style="left: 50%; top: 53%;" data-node-act="altar" title="중앙 황금 룬 마법진 소환">
+            <span class="node-quest-mark">✨</span>
+            <span class="node-icon">🔯</span>
+            <span class="node-label">중앙 룬 마법진</span>
+          </button>
+
+          <button type="button" class="rpg-map-node node-anvil" style="left: 19%; top: 76%;" data-node-act="anvil" title="수호자의 방패 대장간">
+            <span class="node-quest-mark">⚒️</span>
+            <span class="node-icon">🛡️</span>
+            <span class="node-label">수호자 대장간</span>
+          </button>
+
+          <button type="button" class="rpg-map-node node-cauldron" style="left: 81%; top: 76%;" data-node-act="cauldron" title="배당 엘릭서 연금술 정원">
+            <span class="node-quest-mark">💖</span>
+            <span class="node-icon">🧪</span>
+            <span class="node-label">연금술 포션샘</span>
+          </button>
+        `;
+
+        mapOverlay.querySelectorAll('[data-map-theme]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const theme = btn.dataset.mapTheme;
+            const floor = btn.dataset.floor || 'wood';
+            stage.dataset.rpgMapTheme = theme;
+            stage.dataset.floor = floor;
+            mapOverlay.querySelectorAll('[data-map-theme]').forEach(b => b.classList.toggle('active', b === btn));
+            playRetroSound('levelup');
+            spawnFloatingEffect(`🗺️ 맵 테마 변경! +30 EXP`, e.clientX, e.clientY);
+          });
+        });
+
+        mapOverlay.querySelectorAll('.rpg-map-node').forEach(nodeBtn => {
+          nodeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const act = nodeBtn.dataset.nodeAct;
+            if (act === 'chest') {
+              state.gold += 650;
+              state.exp += 60;
+              saveRpgState(state);
+              playRetroSound('levelup');
+              spawnFloatingEffect('🎁 보물상자 발견! +650 G & +60 EXP!', e.clientX, e.clientY);
+              showToast('🎁 맵 우측 상단 [황금 보물고]에서 650 Gold와 60 EXP를 획득했습니다!');
+            } else if (act === 'mage') {
+              playRetroSound('coin');
+              spawnFloatingEffect('🔮 대마법사 소프 호출!', e.clientX, e.clientY);
+              openHeroDetailModal(activePreset.leader);
+            } else if (act === 'anvil') {
+              playRetroSound('coin');
+              spawnFloatingEffect('🛡️ 수호 탱커 장비 점검!', e.clientX, e.clientY);
+              openHeroDetailModal(officeHeroes[2] || activePreset.leader);
+            } else if (act === 'cauldron') {
+              state.gold += 400;
+              state.exp += 50;
+              saveRpgState(state);
+              playRetroSound('coin');
+              spawnFloatingEffect('🧪 배당 포션 회복! +400 G!', e.clientX, e.clientY);
+              showToast('🧪 [연금술 포션샘]에서 배당 회복 물약을 마셔 +400 Gold를 얻었습니다!');
+            } else if (act === 'altar') {
+              state.exp += 90;
+              if (state.exp >= state.maxExp) {
+                state.level += 1;
+                state.exp -= state.maxExp;
+              }
+              saveRpgState(state);
+              playRetroSound('levelup');
+              spawnFloatingEffect('✨ 마법진 공명! +90 EXP!', e.clientX, e.clientY);
+              showToast('✨ 중앙 황금 룬 마법진이 공명하며 파티 전원에게 복리 가속 버프를 부여합니다! (+90 EXP)');
+            }
+            renderSlimBar();
+            renderOfficeShowcase();
+          });
+        });
+      }
+
+      if (!stage.dataset.rpgReticleBound) {
+        stage.dataset.rpgReticleBound = 'true';
+        stage.addEventListener('pointerdown', (e) => {
+          if (e.target.closest('button, a')) return;
+          const rect = stage.getBoundingClientRect();
+          const marker = document.createElement('span');
+          marker.className = 'rpg-click-reticle';
+          marker.style.left = `${e.clientX - rect.left}px`;
+          marker.style.top = `${e.clientY - rect.top}px`;
+          stage.appendChild(marker);
+          setTimeout(() => marker.remove(), 700);
+        });
+      }
+    }
+
+    // (C) 맵 아래쪽: 오피스 타이쿤 황금 금고 & 4인 근무 영웅 쇼케이스 (스크롤하여 확인)
     let hud = document.getElementById('office-rpg-hud');
     if (!hud) {
       hud = document.createElement('div');
       hud.id = 'office-rpg-hud';
       hud.className = 'office-tycoon-showcase';
-      const stageWrap = document.querySelector('#lobby-view .zero-office-canvas-wrap');
-      if (stageWrap) {
-        stageWrap.parentNode.insertBefore(hud, stageWrap);
+      if (stageWrap && stageWrap.nextSibling) {
+        stageWrap.parentNode.insertBefore(hud, stageWrap.nextSibling);
       } else {
-        lobbyMain.prepend(hud);
+        lobbyMain.append(hud);
       }
     }
 
@@ -805,17 +1005,11 @@
       hud.innerHTML = `
         <div class="office-tycoon-top">
           <div class="office-tycoon-profile">
-            <span class="office-crown-badge">🏰 ZERO 길드 집무실</span>
+            <span class="office-crown-badge">🏰 ZERO 길드 집무실 라운지</span>
             <div>
               <strong>Lv.${state.level} ${state.title}의 투자 오피스</strong>
-              <small>영웅들이 실시간으로 시장을 분석하며 복리 골드를 생산하고 있습니다</small>
+              <small>영웅 카드를 터치해 장비를 강화하고 황금 금고 보상을 수확하세요</small>
             </div>
-          </div>
-          <div class="office-tycoon-currencies">
-            <span class="currency-chip gold">🪙 ${state.gold.toLocaleString()} G</span>
-            <span class="currency-chip exp">⭐ EXP ${state.exp}/${state.maxExp}</span>
-            <span class="currency-chip cp">⚔️ CP ${activePreset.cp}</span>
-            <button type="button" id="hud-box-btn" class="hud-gift-btn">🎁 일일 출석 보물상자</button>
           </div>
         </div>
 
@@ -840,7 +1034,7 @@
                 <div class="office-hero-txt">
                   <span class="office-hero-role">${h.roleKorean.split(' ')[0]}</span>
                   <strong>${h.name}</strong>
-                  <small>Lv.${state.heroLevels?.[h.key || 'leader'] || 12} · 근무중 💬</small>
+                  <small>Lv.${state.heroLevels?.[h.key || 'leader'] || 12} · 강화하기 ⚡</small>
                 </div>
               </button>
             `).join('')}
@@ -848,28 +1042,11 @@
         </div>
       `;
 
-      hud.querySelector('#hud-box-btn')?.addEventListener('click', (e) => {
-        const today = new Date().toDateString();
-        if (state.lastAttendanceDate === today) {
-          playRetroSound('click');
-          showToast('🎁 오늘의 출석 보물상자는 이미 열었습니다! 황금 금고나 탐험 스팟을 눌러보세요.');
-          return;
-        }
-        state.lastAttendanceDate = today;
-        state.gold += 1500;
-        state.exp += 120;
-        saveRpgState(state);
-        playRetroSound('levelup');
-        spawnFloatingEffect('🎁 출석 대박! +1,500 G & +120 EXP!', e.clientX, e.clientY);
-        showToast('🎉 일일 출석 보물상자 오픈! 1,500 Gold와 120 EXP를 획득했습니다!');
-        renderOfficeShowcase();
-      });
-
       hud.querySelector('#office-vault-harvest')?.addEventListener('click', (e) => {
         const harvest = state.vaultGold || 1250;
         state.gold += harvest;
         state.exp += 80;
-        state.vaultGold = 350; // 다음 수확 기본 시드
+        state.vaultGold = 350;
         if (state.exp >= state.maxExp) {
           state.level += 1;
           state.exp -= state.maxExp;
@@ -878,6 +1055,7 @@
         playRetroSound('levelup');
         spawnFloatingEffect(`💰 +${harvest.toLocaleString()} G & +80 EXP 수확!`, e.clientX, e.clientY);
         showToast(`💰 황금 금고에서 복리 보상 ${harvest.toLocaleString()} Gold와 80 EXP를 수확했습니다!`);
+        renderSlimBar();
         renderOfficeShowcase();
       });
 
@@ -890,15 +1068,14 @@
     }
     renderOfficeShowcase();
 
-    // (B) 사무실 4대 인터랙티브 미니게임 탐험 핫스팟
+    // (D) 사무실 4대 인터랙티브 미니게임 탐험 핫스팟 (hud 아래에 배치)
     let hotspots = document.getElementById('office-rpg-hotspots');
     if (!hotspots) {
       hotspots = document.createElement('div');
       hotspots.id = 'office-rpg-hotspots';
       hotspots.className = 'office-hotspots-container';
-      const stageWrap = document.querySelector('#lobby-view .zero-office-canvas-wrap');
-      if (stageWrap && stageWrap.nextSibling) {
-        stageWrap.parentNode.insertBefore(hotspots, stageWrap.nextSibling);
+      if (hud && hud.nextSibling) {
+        hud.parentNode.insertBefore(hotspots, hud.nextSibling);
       } else {
         lobbyMain.append(hotspots);
       }
@@ -1376,7 +1553,33 @@
           <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'TANKER' ? 'active' : ''}" data-role="TANKER">🛡️ 방어 탱커</button>
           <button type="button" class="team-rpg-fbtn ${currentFilterRole === 'HEALER' ? 'active' : ''}" data-role="HEALER">💖 배당·치유 힐러</button>
         </div>
+
+        <div class="team-rpg-teleport-bar">
+          <span class="team-rpg-filter-lbl">🗺️ 45인 사무실 월드맵 순간이동:</span>
+          <button type="button" class="team-teleport-btn" data-dept="ALL">🗺️ 전체 길드맵</button>
+          <button type="button" class="team-teleport-btn" data-dept="CHAIRPERSON">👑 ZERO 의장실</button>
+          <button type="button" class="team-teleport-btn" data-dept="MEETING">🏰 중앙 원탁회의실</button>
+          <button type="button" class="team-teleport-btn" data-dept="THORP">🧙‍♂️ 소프 켈리 마법성소</button>
+          <button type="button" class="team-teleport-btn" data-dept="GREENBLATT">⚔️ 그린블라트 가치공방</button>
+          <button type="button" class="team-teleport-btn" data-dept="BOGLE">🛡️ 보글 수호요새</button>
+          <button type="button" class="team-teleport-btn" data-dept="QUANT_RESEARCH_CHIEF">🔮 퀀트 마탑</button>
+        </div>
       `;
+
+      builder.querySelectorAll('.team-teleport-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          playRetroSound('coin');
+          const dept = e.currentTarget.dataset.dept || 'ALL';
+          const deptSelect = document.getElementById('office-department');
+          if (deptSelect) {
+            deptSelect.value = dept;
+            deptSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const mapEl = document.getElementById('office-map');
+          mapEl?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+          spawnFloatingEffect(`⚡ [${btn.textContent.trim()}] 순간이동!`, e.clientX, e.clientY);
+        });
+      });
 
       builder.querySelectorAll('.team-rpg-tab').forEach(btn => {
         btn.addEventListener('click', (e) => {

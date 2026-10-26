@@ -48,7 +48,21 @@ function floor(ctx,theme,w=160,h=100){
  for(let y=wallH,row=0;y<h;y+=3.2,row++){const offset=(row*7)%22;for(let x=-offset,i=0;x<w;x+=22,i++){rect(ctx,x,y,21.85,3.05,plank[(row*3+i)%4]);rect(ctx,x+21.85,y,.15,3.2,seam+'55');}rect(ctx,0,y+3.05,w,.15,seam+'55');}
  rect(ctx,0,0,w,wallH,t.wall);shade(ctx,()=>ctx.createLinearGradient(0,0,0,wallH),0,0,w,wallH,[[0,'#ffffff1f'],[1,'#00000026']]);
  for(let x=14;x<w-20;x+=34){rect(ctx,x,1.2,22,5,mix(t.wall,'#000000',.25));shade(ctx,()=>ctx.createLinearGradient(0,1.4,0,6),x+.5,1.6,21,4.2,dark?[[0,'#26335a'],[1,'#4a4f7c']]:[[0,'#cfe6f5'],[1,'#f3efe4']]);if(!ctx.createLinearGradient)rect(ctx,x+.5,1.6,21,4.2,dark?'#2f3a63':'#dcebf3');for(const [dx,bh] of [[2,2.2],[5,3.1],[9,1.8],[12,2.8],[16,2.4],[19,1.6]])rect(ctx,x+dx,5.8-bh,2.4,bh,dark?'#f5d27a55':'#9fb3c444');rect(ctx,x+10.8,1.6,.4,4.2,'#ffffffb0');}
- rect(ctx,0,wallH-1,w,1,mix(t.wood,'#000000',.2));rect(ctx,0,wallH,w,.4,'#ffffff55');
+ /* RPG 길드홀 성벽 배너(황금·루비·사파이어 깃발) 및 4대 속성 던전 카펫 + 중앙 황금 마법진 렌더링 */
+ for(const [bx,bcol] of [[6,'#ef4444'],[40,'#3b82f6'],[74,'#f59e0b'],[108,'#8b5cf6'],[142,'#10b981']]){rect(ctx,bx,0.8,4.2,6.2,bcol);rect(ctx,bx+.6,1.2,3,4.8,'#fde68a55');rect(ctx,bx,0.5,4.2,.7,'#fbbf24');}
+ rect(ctx,0,wallH-1,w,1,'#d97706');rect(ctx,0,wallH,w,.5,'#fde68a88');
+ /* 4대 RPG 길드 구역 카펫 (좌상: 마법성소, 좌하: 수호요새, 우상: 황금보물고, 우하: 연금술정원) */
+ for(const [zx,zy,zw,zh,zbg,zbd] of [[6,12,38,34,'#312e8122','#8b5cf666'],[6,54,38,36,'#1e3a8a22','#3b82f666'],[112,12,36,34,'#78350f24','#f59e0b88'],[112,54,36,36,'#064e3b22','#10b98166']]){rect(ctx,zx,zy,zw,zh,zbd);rect(ctx,zx+.8,zy+.8,zw-1.6,zh-1.6,zbg);rect(ctx,zx+1.6,zy+1.6,2.5,2.5,'#fbbf2488');rect(ctx,zx+zw-4.1,zy+1.6,2.5,2.5,'#fbbf2488');rect(ctx,zx+1.6,zy+zh-4.1,2.5,2.5,'#fbbf2488');rect(ctx,zx+zw-4.1,zy+zh-4.1,2.5,2.5,'#fbbf2488');}
+ /* 중앙 RPG 길드 황금 룬 마법진 & 마나 코어 */
+ rect(ctx,50,26,60,52,'#f59e0b44');rect(ctx,51.5,27.5,57,49,'#1e1b4b26');rect(ctx,54,30,52,44,'#fbbf2433');
+ if(ctx.beginPath&&ctx.arc){
+  ctx.save();
+  for(const [r,stroke,lw] of [[21,'#f59e0b88',.6],[16,'#38bdf888',.45],[10,'#a855f788',.4],[4.5,'#fde68acc',.5]]){ctx.beginPath();ctx.arc(80,52,r,0,Math.PI*2);ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}
+  ctx.beginPath();ctx.arc(80,52,3.2,0,Math.PI*2);ctx.fillStyle='#38bdf866';ctx.fill();
+  ctx.beginPath();ctx.arc(80,52,1.6,0,Math.PI*2);ctx.fillStyle='#fef08a';ctx.fill();
+  for(let a=0;a<8;a++){const rad=a*Math.PI/4,rx=80+Math.cos(rad)*18.5,ry=52+Math.sin(rad)*18.5;rect(ctx,rx-1,ry-1,2,2,'#fbbf24cc');}
+  ctx.restore();
+ }
  if(ctx.createRadialGradient)for(let x=25;x<w-20;x+=34){const g=ctx.createRadialGradient(x,wallH,1,x,wallH+14,30);g.addColorStop(0,dark?'#ffd9a022':'#ffffff3a');g.addColorStop(1,'#ffffff00');ctx.fillStyle=g;ctx.fillRect(x-32,wallH,64,44);}
  shade(ctx,()=>ctx.createLinearGradient(0,wallH,0,h),0,wallH,w,h-wallH,[[0,'#00000000'],[.8,'#00000000'],[1,'#0000001c']]);
  rect(ctx,0,h-1,w,1,'#25354130');

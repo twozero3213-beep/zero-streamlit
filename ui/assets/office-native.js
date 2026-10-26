@@ -160,6 +160,13 @@ function person(ctx,actor,time,animated){
   if(a.accessory==='cap'){ellipse(ctx,0,-9.6,2.3,.9,'#4f6b84');ellipse(ctx,profile?profile*1.1:.6,-9.1,1.8,.35,'#304b65');}
   if(a.accessory==='headphones'){ctx.beginPath();ctx.ellipse(0,-8.6,2.2,1.8,0,Math.PI,Math.PI*2);ctx.strokeStyle='#344960';ctx.lineWidth=.4;ctx.stroke();for(const x of [-2,2])rr(ctx,x-.3,-8.8,.6,1.2,.25,'#38536a','#a9bfcd');}
   if(actor.activity==='coffee'){rr(ctx,2,-4,1.2,1.3,.2,'#f6eddf');ellipse(ctx,2.6,-4,.6,.2,'#765f4c');}
+  /* RPG 영웅 무기·방패·왕관·체력바(HP Bar) 캔버스 렌더링 */
+  const rpgClass=seed%4;
+  if(rpgClass===0){line(ctx,[[2.6,-6.8],[2.6,-1.2]],'#f59e0b',.32);ellipse(ctx,2.6,-7.2,.55,.55,'#38bdf8');ellipse(ctx,0,-10.7,1.4,.45,'#7c3aed');}
+  else if(rpgClass===1){line(ctx,[[-2.6,-6.8],[-2.6,-2.2]],'#e2e8f0',.38);line(ctx,[[-3.2,-3.6],[-2,-3.6]],'#fbbf24',.32);rr(ctx,-1.1,-11,2.2,.75,.2,'#fbbf24');}
+  else if(rpgClass===2){rr(ctx,1.8,-5.8,1.6,2.2,.4,'#1d4ed8','#fbbf24');rr(ctx,-1,-10.9,2,.65,.2,'#38bdf8');}
+  else{line(ctx,[[2.5,-6.4],[2.5,-1.8]],'#fde047',.3);ellipse(ctx,2.5,-6.8,.5,.5,'#10b981');ellipse(ctx,0,-11,1.5,.35,'#fde047');}
+  rr(ctx,-2.2,-12.3,4.4,.68,.2,'#0f172acc');rr(ctx,-2,-12.12,3.9,.34,.15,actor.id==='player'?'#fbbf24':'#22c55e');
   for(const category of ['shoes','clothes','hair','accessories'])overlay(ctx,registeredFor(actor,category),-5,-11,10,12,facing);
   ctx.restore();
 }

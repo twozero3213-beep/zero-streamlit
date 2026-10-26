@@ -4178,3 +4178,372 @@ html[data-theme="dark"] .office-hero-name,
 .dark .office-hero-name {
   color: #f2f4f6;
 }
+
+
+/* ── RPG V4: MOBILE SCROLL UNLOCK & INTERACTIVE RPG OFFICE MAP OVERLAY ── */
+/* 수정 사유: viewport.css 및 office-wide.css의 overflow: hidden과 height: 0 잠금을 해제하여 모바일 터치 상하 스크롤을 100% 복구하고, 사무실 맵(#lobby-stage) 내부의 RPG 게임 오브젝트(성소·보물상자·마법진·대장간·포션샘) 및 테마 스위치를 렌더링 */
+
+html,
+body,
+.stApp {
+  touch-action: pan-y !important;
+}
+
+/* 메인 뷰포트 컨테이너 단일 상하 스크롤 통합 */
+html main,
+html #main,
+html[data-zero-view] main,
+html main.zero-main-viewport {
+  display: block !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+  height: calc(100dvh - var(--viewport-header-h, 52px) - var(--viewport-tab-h, 56px)) !important;
+  max-height: none !important;
+  padding-bottom: 96px !important;
+}
+
+@media (min-width: 768px) {
+  html main,
+  html #main,
+  html[data-zero-view] main,
+  html main.zero-main-viewport {
+    height: 100dvh !important;
+    padding-bottom: 48px !important;
+  }
+}
+
+/* 모든 개별 화면(.view) 및 내부 페이지 래퍼의 높이/오버플로우 잠금 완전 해제 */
+html main > .view:not([hidden]),
+html #lobby-view:not([hidden]),
+html #team-view:not([hidden]),
+html #plaza-view:not([hidden]),
+html #home-view:not([hidden]),
+html #portfolio-view:not([hidden]),
+html #community-view:not([hidden]),
+html main > .view.viewport-paged:not([hidden]),
+.viewport-pages-body,
+html #lobby-view > .lobby,
+html #lobby-view .lobby-layout,
+html #lobby-view .lobby-main {
+  display: block !important;
+  flex: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* 모바일에서 쪼개진 섹션 페이지(.viewport-page-away)도 한 번에 쭉 스크롤하며 볼 수 있도록 해제 */
+@media (max-width: 960px) {
+  .viewport-section-page,
+  .viewport-section-page.viewport-page-away {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin-bottom: 14px !important;
+  }
+}
+
+/* 사무실 맵(#lobby-stage)이 0px로 찌그러지지 않고 황금 액자 비율로 선명하게 표시되도록 고정 */
+html #lobby-view .zero-office-canvas-wrap {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  margin: 6px 0 12px !important;
+}
+
+html #lobby-view #lobby-stage.lobby-stage {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 1120px !important;
+  height: auto !important;
+  aspect-ratio: 16 / 10 !important;
+  min-height: 290px !important;
+  max-height: 560px !important;
+  flex: none !important;
+  margin: 0 auto !important;
+  border: 2.5px solid #f59e0b !important;
+  border-radius: 18px !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.25), inset 0 0 24px rgba(251, 191, 36, 0.22) !important;
+  overflow: hidden !important;
+  touch-action: pan-y !important;
+}
+
+@media (max-width: 600px) {
+  html #lobby-view #lobby-stage.lobby-stage {
+    min-height: 260px !important;
+    aspect-ratio: 16 / 11 !important;
+    border-radius: 14px !important;
+  }
+}
+
+/* 맵을 가리던 하단 절대위치 오버레이들을 맵 아래의 깔끔한 바 형태로 전환 */
+html #lobby-view .lobby-tools {
+  margin-top: 8px !important;
+}
+html #lobby-view .lobby-hero,
+html #lobby-view .lobby-meta {
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 6px 0 !important;
+  pointer-events: auto !important;
+  max-width: 100% !important;
+}
+
+/* 1. 사무실 맵 상단 1줄 슬림 길드 바 */
+.office-rpg-slim-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: linear-gradient(90deg, #1e1b4b 0%, #0f172a 100%);
+  border: 1.5px solid rgba(251, 191, 36, 0.5);
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin: 4px 0 8px;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+}
+.slim-bar-left,
+.slim-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.slim-guild-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  font-size: 11.5px;
+  font-weight: 900;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.slim-stat {
+  font-size: 11.5px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3px 8px;
+  border-radius: 8px;
+  color: #fde68a;
+}
+.slim-action-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.slim-action-btn.gold {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+.slim-action-btn.gift {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.4);
+}
+.slim-action-btn:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+
+/* 2. 사무실 맵(#lobby-stage) 내부 RPG 월드맵 오버레이 & 5대 랜드마크 오브젝트 */
+.office-map-rpg-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1650;
+  overflow: hidden;
+}
+.rpg-map-top-hud {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+  pointer-events: none;
+}
+.rpg-map-zone-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  color: #fde68a;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+}
+.rpg-map-zone-title strong {
+  color: #ffffff;
+  font-weight: 900;
+}
+.rpg-map-zone-title small {
+  color: #cbd5e1;
+  font-size: 10px;
+}
+@media (max-width: 640px) {
+  .rpg-map-zone-title small {
+    display: none;
+  }
+}
+.rpg-map-theme-btn {
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.rpg-map-theme-btn:hover,
+.rpg-map-theme-btn.active {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  border-color: #fde047;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.45);
+}
+
+/* 맵 위 5대 인터랙티브 RPG 오브젝트 마커 */
+.rpg-map-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.86);
+  border: 1.5px solid #fbbf24;
+  border-radius: 14px;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.38), 0 0 12px rgba(251, 191, 36, 0.35);
+  animation: rpgNodeFloat 2.6s ease-in-out infinite;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.rpg-map-node:hover {
+  transform: translate(-50%, -56%) scale(1.1);
+  border-color: #fde047;
+  background: rgba(30, 27, 75, 0.95);
+}
+.rpg-map-node .node-quest-mark {
+  position: absolute;
+  top: -11px;
+  right: -6px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 1px 4px;
+  border-radius: 999px;
+  border: 1px solid #fde047;
+}
+.rpg-map-node .node-icon {
+  font-size: 18px;
+  line-height: 1.1;
+}
+.rpg-map-node .node-label {
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #fde68a;
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .rpg-map-node {
+    padding: 3px 6px;
+    border-radius: 10px;
+  }
+  .rpg-map-node .node-icon {
+    font-size: 14px;
+  }
+  .rpg-map-node .node-label {
+    font-size: 8.5px;
+  }
+}
+@keyframes rpgNodeFloat {
+  0%, 100% { margin-top: 0px; }
+  50% { margin-top: -4px; }
+}
+
+/* 맵 테마별 분위기 필터 */
+#lobby-stage[data-rpg-map-theme="dungeon"] .office-sprites-canvas {
+  filter: hue-rotate(220deg) saturate(1.25) brightness(0.92);
+}
+#lobby-stage[data-rpg-map-theme="forest"] .office-sprites-canvas {
+  filter: hue-rotate(85deg) saturate(1.2) brightness(1.02);
+}
+#lobby-stage[data-rpg-map-theme="library"] .office-sprites-canvas {
+  filter: sepia(0.28) saturate(1.3) brightness(1.03);
+}
+
+/* 바닥 클릭 시 생성되는 RPG 이동 마법 타겟 링 */
+.rpg-click-reticle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  margin-top: -14px;
+  border: 2.5px solid #fde047;
+  border-radius: 50%;
+  box-shadow: 0 0 12px #f59e0b, inset 0 0 8px #f59e0b;
+  pointer-events: none;
+  z-index: 1700;
+  animation: rpgReticlePulse 0.65s ease-out forwards;
+}
+@keyframes rpgReticlePulse {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* 3. ZERO 팀 45인 월드맵 순간이동 바 & SVG 맵 RPG 액자화 */
+.team-rpg-teleport-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(245, 158, 11, 0.35);
+}
+.team-teleport-btn {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #fde68a;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.team-teleport-btn:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+html #team-view #office-map.office-map {
+  border: 2.5px solid #f59e0b !important;
+  border-radius: 18px !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18) !important;
+  min-height: 360px !important;
+  touch-action: pan-x pan-y !important;
+}
