@@ -3142,3 +3142,112 @@ html[data-zero-theme="dark"] .team-rpg-fbtn.active {
   background: #3182f6 !important;
   color: #ffffff !important;
 }
+
+
+/* ── 전체 더보기 메뉴 그룹화 및 카드 스타일 ── */
+.more-menu {
+  width: min(520px, calc(100vw - 24px)) !important;
+  max-height: 85vh !important;
+  border-radius: 24px !important;
+  padding: 24px !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+}
+.more-header-text h2 {
+  margin: 0 0 4px 0 !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+}
+.more-subtitle {
+  margin: 0 !important;
+  font-size: 13px !important;
+  color: var(--sem-text-muted, #8b95a1) !important;
+}
+.more-group {
+  margin-bottom: 20px !important;
+}
+.more-cat-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  color: var(--sem-text-primary, #191f28) !important;
+  margin: 14px 0 10px 0 !important;
+  padding-bottom: 6px !important;
+  border-bottom: 1px solid var(--sem-line-subtle, #f2f4f6) !important;
+}
+.more-cat-badge {
+  font-size: 16px !important;
+}
+.more-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+  gap: 8px !important;
+}
+.more-card-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  border-radius: 14px !important;
+  background: var(--sem-bg-surface-subtle, #f9fafb) !important;
+  border: 1px solid var(--sem-line-subtle, #e5e8eb) !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  min-height: 52px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.more-card-item:hover {
+  background: #f2f4f6 !important;
+  border-color: #3182f6 !important;
+  transform: translateY(-1px) !important;
+}
+.more-card-item.active {
+  background: rgba(49, 130, 246, 0.08) !important;
+  border-color: #3182f6 !important;
+}
+.more-card-item svg {
+  width: 20px !important;
+  height: 20px !important;
+  flex-shrink: 0 !important;
+  color: #3182f6 !important;
+}
+.more-text-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+.more-text-wrap strong {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: var(--sem-text-primary, #191f28) !important;
+}
+.more-text-wrap small {
+  font-size: 11px !important;
+  color: var(--sem-text-muted, #8b95a1) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+@media (max-width: 480px) {
+  .more-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+html[data-zero-theme="dark"] .more-card-item,
+html[data-theme="dark"] .more-card-item,
+.dark .more-card-item {
+  background: #1a222c !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .more-text-wrap strong,
+html[data-theme="dark"] .more-text-wrap strong,
+.dark .more-text-wrap strong {
+  color: #f2f4f6 !important;
+}

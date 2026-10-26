@@ -135,7 +135,7 @@
   status.prepend(privacyBar);
 
   // ── 층수 레이더 시그니처: 내 주식 몇 층이지? & 구조대 대시보드 ──
-  function paintFloorRadar(targetElement = floorRadar) {
+  function paintFloorRadar(targetElement = null) {
     if (!targetElement) return;
     targetElement.replaceChildren();
     const heading = make('div', 'th-card-heading');
@@ -143,7 +143,7 @@
       make('h2', '', '🏢 내 주식 몇 층이지? · 구조대 현황'),
       make('span', 'badge-kakao-floor', '층수 레이더')
     );
-    heading.id = targetElement === floorRadar ? 'th-floor-title' : 'portfolio-floor-title';
+    heading.id = targetElement?.id ? targetElement.id + '-title' : 'th-floor-title';
 
     const desc = make('p', 'muted-note', '내 평균 매수가와 현재가를 층수로 바꿔 보여줘요(국내 1,000원 · 미국 1달러가 1층). 카드를 누르면 종목 상세로 이동해요.');
     
@@ -215,7 +215,7 @@
 
 
   // ── 오늘의 1줄 행동 가이드 (초보자를 위한 명쾌한 신호등) ──
-  function paintActionGuide(targetElement = actionGuide) {
+  function paintActionGuide(targetElement = null) {
     if (!targetElement) return;
     targetElement.replaceChildren();
 
@@ -309,7 +309,7 @@
 
 
   // ── 에드워드 소프 켈리 리밸런싱 & 3대 마찰비용(수수료·세금·환율) 레이더 (쉬운 말 모드 완벽 지원) ──
-  function paintThorpRadar(targetElement = thorpRadar) {
+  function paintThorpRadar(targetElement = null) {
     if (!targetElement) return;
     targetElement.replaceChildren();
 
@@ -465,7 +465,7 @@
   ];
 
   // ── 배당금 캘린더 & 배당 파이프라인 (대표 ETF 5종 선택 및 실시간 연동) ──
-  function paintDividendCalendar(targetElement = dividendSec) {
+  function paintDividendCalendar(targetElement = null) {
     if (!targetElement) return;
     targetElement.replaceChildren();
     const heading = make('div', 'th-card-heading');
@@ -548,7 +548,7 @@
   }
 
   // ── 동전 모으기 · 잔돈 자동투자 저금통 (대표 ETF 5종 선택 및 실제 복리수익률 연동) ──
-  function paintCoinPiggy(targetElement = coinPiggySec) {
+  function paintCoinPiggy(targetElement = null) {
     if (!targetElement) return;
     targetElement.replaceChildren();
     const heading = make('div', 'th-card-heading');
@@ -1070,8 +1070,8 @@
   setInterval(() => { paintStatus(); loadRank(); if (!dock.hidden) paintWatchInto(dock, 'dock'); }, 120000);
   refresh();
   // 보유 원장과 실시간 시세는 홈보다 늦게 도착하므로, 도착 시점과 화면 전환 때 층수 카드를 다시 그린다.
-  document.addEventListener('zero-live-quotes', () => { paintFloorRadar(); const r = document.getElementById('portfolio-floor-radar'); if (r) paintFloorRadar(r); });
-  document.addEventListener('zero-ready', () => { paintFloorRadar(); const r = document.getElementById('portfolio-floor-radar'); if (r) paintFloorRadar(r); });
-  setTimeout(() => { paintFloorRadar(); const r = document.getElementById('portfolio-floor-radar'); if (r) paintFloorRadar(r); }, 2500);
+  document.addEventListener('zero-live-quotes', () => { paintSmartActionRadar(); const r = document.getElementById('portfolio-floor-radar'); if (r) paintFloorRadar(r); });
+  document.addEventListener('zero-ready', () => { paintSmartActionRadar(); const r = document.getElementById('portfolio-floor-radar'); if (r) paintFloorRadar(r); });
+  setTimeout(() => { paintSmartActionRadar(); const r = document.getElementById('portfolio-floor-radar'); if (r) paintFloorRadar(r); }, 2500);
   updateDock();
 })();
