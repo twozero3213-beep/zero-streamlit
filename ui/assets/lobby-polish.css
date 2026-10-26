@@ -2134,3 +2134,457 @@ html[data-theme="dark"] .th-glossary-a,
 .dark .th-glossary-a {
   color: #adb5bd !important;
 }
+
+
+/* ── ZERO RPG 투자 파티 편성 & 보스 레이드 스타일 ── */
+.th-rpg-party {
+  background: var(--sem-bg-surface, #ffffff);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease-in-out;
+}
+.th-rpg-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.th-rpg-tab {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--sem-line-subtle, #e5e8eb);
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sem-text-secondary, #4e5968);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.th-rpg-tab:hover {
+  border-color: #3182f6;
+  color: #3182f6;
+}
+.th-rpg-tab.active {
+  background: #3182f6;
+  border-color: #3182f6;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(49, 130, 246, 0.25);
+}
+.th-rpg-concept-box {
+  background: linear-gradient(135deg, rgba(49, 130, 246, 0.06) 0%, rgba(105, 155, 247, 0.04) 100%);
+  border: 1px solid rgba(49, 130, 246, 0.18);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.th-rpg-concept-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.th-rpg-concept-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--sem-text-primary, #191f28);
+}
+.th-rpg-cp-badge {
+  font-size: 13px;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+.th-rpg-concept-desc {
+  font-size: 13.5px;
+  color: var(--sem-text-secondary, #4e5968);
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+}
+.th-rpg-concept-target {
+  font-size: 12.5px;
+  color: #027a48;
+  font-weight: 700;
+}
+.th-rpg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.th-rpg-card {
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1.5px solid var(--sem-line-subtle, #e5e8eb);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.th-rpg-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+.th-rpg-card.is-leader {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--sem-bg-surface-subtle, #f9fafb) 100%);
+}
+.th-rpg-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.th-rpg-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.th-rpg-badge.leader { background: #fef3c7; color: #b45309; }
+.th-rpg-badge.dealer { background: #fee2e2; color: #b91c1c; }
+.th-rpg-badge.tanker { background: #e0f2fe; color: #0369a1; }
+.th-rpg-badge.healer { background: #ecfdf5; color: #047857; }
+.th-rpg-weight-tag {
+  font-size: 12px;
+  font-weight: 800;
+  color: #3182f6;
+}
+.th-rpg-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--sem-text-primary, #191f28);
+  margin-bottom: 4px;
+}
+.th-rpg-asset {
+  font-size: 12px;
+  color: var(--sem-text-muted, #8b95a1);
+  margin-bottom: 12px;
+}
+.th-rpg-stat-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  background: var(--sem-bg-surface, #ffffff);
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+}
+.th-rpg-stat-row {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  gap: 6px;
+}
+.th-rpg-stat-lbl {
+  width: 44px;
+  font-weight: 700;
+  color: var(--sem-text-secondary, #4e5968);
+}
+.th-rpg-stat-track {
+  flex: 1;
+  height: 6px;
+  background: #f2f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.th-rpg-stat-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+.th-rpg-stat-fill.atk { background: #ef4444; }
+.th-rpg-stat-fill.def { background: #3b82f6; }
+.th-rpg-stat-fill.rec { background: #10b981; }
+.th-rpg-stat-val {
+  width: 24px;
+  text-align: right;
+  font-weight: 800;
+  color: var(--sem-text-primary, #191f28);
+}
+.th-rpg-skill {
+  margin-top: auto;
+  border-top: 1px dashed var(--sem-line-subtle, #e5e8eb);
+  padding-top: 8px;
+}
+.th-rpg-skill-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6366f1;
+  margin-bottom: 2px;
+}
+.th-rpg-skill-desc {
+  font-size: 11.5px;
+  color: var(--sem-text-secondary, #4e5968);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* 보스 레이드 위젯 */
+.th-rpg-boss-box {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(185, 28, 28, 0.04) 100%);
+  border: 1.5px solid rgba(239, 68, 68, 0.25);
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+.th-rpg-boss-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.th-rpg-boss-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.th-rpg-boss-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #b91c1c;
+}
+.th-rpg-boss-title {
+  font-size: 12.5px;
+  color: var(--sem-text-secondary, #4e5968);
+}
+.th-rpg-hp-container {
+  margin-bottom: 14px;
+}
+.th-rpg-hp-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.th-rpg-hp-track {
+  height: 12px;
+  background: #fecaca;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.th-rpg-hp-fill {
+  width: 68%;
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+.th-rpg-boss-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.th-rpg-boss-weakness {
+  font-size: 12px;
+  color: var(--sem-text-secondary, #4e5968);
+}
+.th-rpg-boss-weakness strong {
+  color: #2563eb;
+}
+.th-rpg-raid-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.th-rpg-raid-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+/* 레이드 전투 모달 로그 */
+.th-raid-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.th-raid-log-item {
+  padding: 10px 14px;
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border-left: 4px solid #3182f6;
+  border-radius: 6px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--sem-text-primary, #191f28);
+}
+.th-raid-rewards {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  margin-top: 14px;
+}
+.th-raid-reward-title {
+  font-size: 11px;
+  color: #854d0e;
+  font-weight: 700;
+}
+.th-raid-reward-val {
+  font-size: 15px;
+  color: #a16207;
+  font-weight: 800;
+}
+
+/* ── 다크모드 대응 ── */
+html[data-zero-theme="dark"] .th-rpg-party,
+html[data-theme="dark"] .th-rpg-party,
+.dark .th-rpg-party {
+  background: #141b24 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+html[data-zero-theme="dark"] .th-rpg-tab,
+html[data-theme="dark"] .th-rpg-tab,
+.dark .th-rpg-tab {
+  background: #1a222c !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #adb5bd !important;
+}
+html[data-zero-theme="dark"] .th-rpg-tab.active,
+html[data-theme="dark"] .th-rpg-tab.active,
+.dark .th-rpg-tab.active {
+  background: #3182f6 !important;
+  border-color: #3182f6 !important;
+  color: #ffffff !important;
+}
+html[data-zero-theme="dark"] .th-rpg-concept-box,
+html[data-theme="dark"] .th-rpg-concept-box,
+.dark .th-rpg-concept-box {
+  background: rgba(49, 130, 246, 0.1) !important;
+  border-color: rgba(49, 130, 246, 0.3) !important;
+}
+html[data-zero-theme="dark"] .th-rpg-concept-title,
+html[data-theme="dark"] .th-rpg-concept-title,
+.dark .th-rpg-concept-title {
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-rpg-concept-desc,
+html[data-theme="dark"] .th-rpg-concept-desc,
+.dark .th-rpg-concept-desc {
+  color: #adb5bd !important;
+}
+html[data-zero-theme="dark"] .th-rpg-concept-target,
+html[data-theme="dark"] .th-rpg-concept-target,
+.dark .th-rpg-concept-target {
+  color: #3ccfbd !important;
+}
+html[data-zero-theme="dark"] .th-rpg-card,
+html[data-theme="dark"] .th-rpg-card,
+.dark .th-rpg-card {
+  background: #1a222c !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .th-rpg-name,
+html[data-theme="dark"] .th-rpg-name,
+.dark .th-rpg-name {
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-rpg-asset,
+html[data-theme="dark"] .th-rpg-asset,
+.dark .th-rpg-asset {
+  color: #8b95a1 !important;
+}
+html[data-zero-theme="dark"] .th-rpg-stat-bars,
+html[data-theme="dark"] .th-rpg-stat-bars,
+.dark .th-rpg-stat-bars {
+  background: #141b24 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .th-rpg-stat-lbl,
+html[data-theme="dark"] .th-rpg-stat-lbl,
+.dark .th-rpg-stat-lbl {
+  color: #adb5bd !important;
+}
+html[data-zero-theme="dark"] .th-rpg-stat-track,
+html[data-theme="dark"] .th-rpg-stat-track,
+.dark .th-rpg-stat-track {
+  background: #242e3b !important;
+}
+html[data-zero-theme="dark"] .th-rpg-stat-val,
+html[data-theme="dark"] .th-rpg-stat-val,
+.dark .th-rpg-stat-val {
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-rpg-skill,
+html[data-theme="dark"] .th-rpg-skill,
+.dark .th-rpg-skill {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .th-rpg-skill-desc,
+html[data-theme="dark"] .th-rpg-skill-desc,
+.dark .th-rpg-skill-desc {
+  color: #adb5bd !important;
+}
+html[data-zero-theme="dark"] .th-rpg-boss-box,
+html[data-theme="dark"] .th-rpg-boss-box,
+.dark .th-rpg-boss-box {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+html[data-zero-theme="dark"] .th-rpg-boss-name,
+html[data-theme="dark"] .th-rpg-boss-name,
+.dark .th-rpg-boss-name {
+  color: #ff7480 !important;
+}
+html[data-zero-theme="dark"] .th-rpg-boss-title,
+html[data-theme="dark"] .th-rpg-boss-title,
+.dark .th-rpg-boss-title {
+  color: #adb5bd !important;
+}
+html[data-zero-theme="dark"] .th-rpg-boss-weakness,
+html[data-theme="dark"] .th-rpg-boss-weakness,
+.dark .th-rpg-boss-weakness {
+  color: #adb5bd !important;
+}
+html[data-zero-theme="dark"] .th-rpg-hp-track,
+html[data-theme="dark"] .th-rpg-hp-track,
+.dark .th-rpg-hp-track {
+  background: #3b1e22 !important;
+}
+html[data-zero-theme="dark"] .th-raid-log-item,
+html[data-theme="dark"] .th-raid-log-item,
+.dark .th-raid-log-item {
+  background: #1a222c !important;
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-raid-rewards,
+html[data-theme="dark"] .th-raid-rewards,
+.dark .th-raid-rewards {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+html[data-zero-theme="dark"] .th-raid-reward-title,
+html[data-theme="dark"] .th-raid-reward-title,
+.dark .th-raid-reward-title {
+  color: #fcd34d !important;
+}
+html[data-zero-theme="dark"] .th-raid-reward-val,
+html[data-theme="dark"] .th-raid-reward-val,
+.dark .th-raid-reward-val {
+  color: #f59e0b !important;
+}
