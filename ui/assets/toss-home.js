@@ -86,23 +86,16 @@
   const open = (id) => { if (window.ZEROTossStock?.show) window.ZEROTossStock.show(id); else explore()?.openCompany?.(id); };
 
   // ── 뼈대 (개인정보보호 스위치, 배당금 캘린더, 잔돈 저금통 포함) ──
+  // ── 뼈대: 5대 핵심 컴팩트 섹션 (지수, 스마트 액션&층수 레이더, 주요 일정, 스마트 현금흐름 듀오, 차트) ──
   const status = make('div', 'th-status'), indices = make('div', 'th-indices'), schedule = make('section', 'th-card th-schedule'), chart = make('section', 'th-card th-chart'), watch = make('section', 'th-card th-watch');
-  const actionGuide = make('section', 'th-card th-action-guide');
-  const floorRadar = make('section', 'th-card th-floor-radar');
-  const rpgPartySec = make('section', 'th-card th-rpg-party');
-  const thorpRadar = make('section', 'th-card th-thorp-radar');
-  const dividendSec = make('section', 'th-card th-dividend');
-  const coinPiggySec = make('section', 'th-card th-coin-piggy');
-  actionGuide.setAttribute('aria-labelledby', 'th-action-title');
-  floorRadar.setAttribute('aria-labelledby', 'th-floor-title');
-  rpgPartySec.setAttribute('aria-labelledby', 'th-rpg-party-title');
-  thorpRadar.setAttribute('aria-labelledby', 'th-thorp-title');
+  const smartActionRadar = make('section', 'th-card th-smart-action-radar');
+  const cashflowCard = make('section', 'th-card th-cashflow-card');
+  smartActionRadar.setAttribute('aria-labelledby', 'th-smart-action-title');
+  cashflowCard.setAttribute('aria-labelledby', 'th-cashflow-title');
   schedule.setAttribute('aria-labelledby', 'th-schedule-title'); chart.setAttribute('aria-labelledby', 'th-chart-title'); watch.setAttribute('aria-labelledby', 'th-watch-title');
-  dividendSec.setAttribute('aria-labelledby', 'th-dividend-title');
-  coinPiggySec.setAttribute('aria-labelledby', 'th-piggy-title');
   const dock = make('aside', 'th-dock'); dock.hidden = true; dock.setAttribute('aria-label', '관심 종목'); document.body.append(dock);
   const main = make('div', 'th-main'), side = make('aside', 'th-side');
-  main.append(indices, actionGuide, floorRadar, rpgPartySec, thorpRadar, schedule, dividendSec, coinPiggySec, chart); side.append(watch); root.append(status, make('div', 'th-grid'));
+  main.append(indices, smartActionRadar, schedule, cashflowCard, chart); side.append(watch); root.append(status, make('div', 'th-grid'));
   root.querySelector('.th-grid').append(main, side);
 
   // ── 개인정보보호 (Privacy Guard): 잔고 마스킹 토글 바 ──
@@ -129,9 +122,8 @@
     easyBtn.innerHTML = isEasyMode
       ? '<span class="th-easy-icon">🌱</span> <span class="th-easy-label">쉬운 말 모드 ON</span>'
       : '<span class="th-easy-icon">📐</span> <span class="th-easy-label">전문가 모드 ON</span>';
-    paintActionGuide();
-    paintRpgParty();
-    paintThorpRadar();
+    paintSmartActionRadar();
+    paintCashflowCard();
   });
 
   const glossaryBtn = make('button', 'th-glossary-btn');
@@ -315,397 +307,6 @@
     document.body.append(overlay);
   }
 
-
-  // ── ZERO RPG 투자 파티 편성 & 보스 레이드 (초등학생도 이해하는 게임화 시스템) ──
-  let selectedRpgPartyId = 'thorp_balance';
-  const RPG_PARTIES = [
-    {
-      id: 'thorp_balance',
-      name: '⚖️ 소프 켈리 황금 밸런스 파티',
-      tabLabel: '⚖️ 황금 밸런스 (추천)',
-      type: 'BALANCE',
-      badge: '수학적 복리 정석',
-      cp: '148,500',
-      concept: '수학적으로 가장 완벽한 황금비율(주식 55.6% : 채권 29.4% : 비상금 15.0%)로 복리를 누리는 정석 파티예요.',
-      target: '🎯 경제를 전혀 모르는 초보자부터 장기 복리를 원하는 모든 모험가',
-      leader: {
-        id: 'thorp',
-        name: '에드워드 소프 (대마법사)',
-        role: 'LEADER',
-        roleKorean: '👑 파티장 (전략 총괄)',
-        asset: '확률 알고리즘 엔진',
-        weight: '전략 지휘',
-        atk: 95,
-        def: 95,
-        rec: 90,
-        skill: '켈리의 황금 분할',
-        desc: '파티 전체의 변동성을 50% 삭감하고 복리 성장을 극대화합니다.'
-      },
-      members: [
-        {
-          id: 'sp500',
-          name: 'S&P 500 (성기사)',
-          role: 'DEALER',
-          roleKorean: '⚔️ 딜러 (성장 공격)',
-          asset: '미국 500 우량주 ETF',
-          weight: '55.6%',
-          atk: 92,
-          def: 70,
-          rec: 40,
-          skill: '복리 일격',
-          desc: '미국 최강 500대 기업의 힘으로 시장을 정복합니다.'
-        },
-        {
-          id: 'treasury',
-          name: '단기국채 (철벽 탱커)',
-          role: 'TANKER',
-          roleKorean: '🛡️ 탱커 (원금 방어)',
-          asset: '미국 단기국채 (BIL/SGOV)',
-          weight: '29.4%',
-          atk: 30,
-          def: 98,
-          rec: 70,
-          skill: '금리 방패벽',
-          desc: '어떤 폭락장이 와도 자산을 100% 원금 방어합니다.'
-        },
-        {
-          id: 'cash',
-          name: '달러 비상금 (사제)',
-          role: 'HEALER',
-          roleKorean: '💖 힐러 (비상금 충전)',
-          asset: '현금 및 달러 버퍼',
-          weight: '15.0%',
-          atk: 10,
-          def: 85,
-          rec: 95,
-          skill: '긴급 통행료 면제',
-          desc: '세금과 수수료 마찰을 완충하고 위기 시 즉각 회복합니다.'
-        }
-      ]
-    },
-    {
-      id: 'defense_knight',
-      name: '🛡️ 철벽 방패 성기사 파티',
-      tabLabel: '🛡️ 철벽 수비 (원금 보존)',
-      type: 'DEFENSE',
-      badge: '원금 100% 보존형',
-      cp: '136,200',
-      concept: '배당금과 국채 이자로 계좌를 매달 치유하며, 주가가 떨어져도 마음 편히 잠들 수 있는 수비형 파티예요.',
-      target: '🎯 원금 손실이 두렵고 매달 월급처럼 배당금을 받고 싶은 모험가',
-      leader: {
-        id: 'buffett',
-        name: '워런 버핏 (성기사단장)',
-        role: 'LEADER',
-        roleKorean: '👑 파티장 (가치 수호)',
-        asset: '해자(Moat) 가치투자',
-        weight: '가치 지휘',
-        atk: 80,
-        def: 99,
-        rec: 95,
-        skill: '영구 보유의 축복',
-        desc: '원금을 잃지 않는 제1원칙으로 어떤 공황도 완벽 방어합니다.'
-      },
-      members: [
-        {
-          id: 'schd',
-          name: '배당다우존스 (성직자)',
-          role: 'HEALER',
-          roleKorean: '💖 힐러 (배당 회복)',
-          asset: 'SCHD 미국배당다우존스',
-          weight: '40.0%',
-          atk: 75,
-          def: 88,
-          rec: 98,
-          skill: '마르지 않는 배당샘',
-          desc: '매달 꾸준한 현금 배당으로 파티의 HP를 회복합니다.'
-        },
-        {
-          id: 'bond_shield',
-          name: '종합채권 (수호 골렘)',
-          role: 'TANKER',
-          roleKorean: '🛡️ 탱커 (철벽 방어)',
-          asset: '국채 및 우량 회사채',
-          weight: '45.0%',
-          atk: 25,
-          def: 99,
-          rec: 75,
-          skill: '성스러운 방어 진지',
-          desc: '주식 폭락 시 반대로 가격이 상승하여 계좌를 지킵니다.'
-        },
-        {
-          id: 'cash_safe',
-          name: '비상금 금고 (지원가)',
-          role: 'BUFFER',
-          roleKorean: '🛡️ 버퍼 (안전핀)',
-          asset: '초단기 MMF 및 예수금',
-          weight: '15.0%',
-          atk: 10,
-          def: 90,
-          rec: 99,
-          skill: '절세 장막',
-          desc: '모든 매매 수수료와 거래세를 최소화합니다.'
-        }
-      ]
-    },
-    {
-      id: 'tech_attack',
-      name: '🚀 질풍의 테크 드래곤 파티',
-      tabLabel: '🚀 테크 드래곤 (혁신 공격)',
-      type: 'ATTACK',
-      badge: '미래 혁신 공격형',
-      cp: '152,800',
-      concept: '인공지능과 혁신 기술주 중심으로 구성되어 폭발적인 자산 증식을 노리는 공격형 파티예요.',
-      target: '🎯 젊은 투자자 및 5년 이상 장기 투자로 큰 자산 형성을 꿈꾸는 모험가',
-      leader: {
-        id: 'lynch',
-        name: '피터 린치 (레인저 마스터)',
-        role: 'LEADER',
-        roleKorean: '👑 파티장 (성장 탐색)',
-        asset: '10루타 성장주 엔진',
-        weight: '성장 지휘',
-        atk: 99,
-        def: 65,
-        rec: 70,
-        skill: '텐배거의 화살',
-        desc: '세상을 바꾸는 1등 혁신 기업들을 찾아내어 화력을 집중합니다.'
-      },
-      members: [
-        {
-          id: 'qqq',
-          name: '나스닥 100 (드래곤 라이더)',
-          role: 'DEALER',
-          roleKorean: '⚔️ 딜러 (폭발적 화력)',
-          asset: 'QQQ 빅테크 100',
-          weight: '65.0%',
-          atk: 99,
-          def: 55,
-          rec: 30,
-          skill: 'AI 기가 임팩트',
-          desc: '글로벌 테크 대장주들의 혁신으로 가장 높은 수익률을 겨냥합니다.'
-        },
-        {
-          id: 'semi',
-          name: '반도체 챔피언 (마법사)',
-          role: 'DEALER',
-          roleKorean: '⚔️ 딜러 (치명타)',
-          asset: 'KODEX 200 / 반도체 ETF',
-          weight: '20.0%',
-          atk: 90,
-          def: 60,
-          rec: 40,
-          skill: '실리콘 블래스터',
-          desc: '인공지능 혁명의 필수 인프라에 집중 투자합니다.'
-        },
-        {
-          id: 'buffer_cash',
-          name: '지원 사제 (현금 버퍼)',
-          role: 'BUFFER',
-          roleKorean: '💖 버퍼 (기회 포착)',
-          asset: '달러 현금',
-          weight: '15.0%',
-          atk: 10,
-          def: 85,
-          rec: 95,
-          skill: '급락장 바겐세일',
-          desc: '단기 폭락 시 저평가된 우량주를 줍는 기회 포착 스킬을 발동합니다.'
-        }
-      ]
-    }
-  ];
-
-  const CURRENT_BOSS = {
-    id: 'fomc_rate_dragon',
-    name: '🐉 고금리 볼케이노 드래곤',
-    title: '연준의 긴축 화염군주 (기준금리 4.75%)',
-    maxHp: 10000,
-    currentHp: 6800,
-    element: '단기국채 방패 & 소프 켈리 허들',
-    desc: '전 세계 시장을 공포에 떨게 하는 고금리 화염을 내뿜습니다. 단기국채 탱커와 현금 버퍼를 장착한 파티만이 데미지 없이 공략할 수 있습니다!'
-  };
-
-  function openRpgRaidModal(party, boss) {
-    const overlay = make('div', 'th-modal-overlay');
-    const dialog = make('div', 'th-modal');
-    dialog.setAttribute('role', 'dialog');
-    dialog.setAttribute('aria-modal', 'true');
-
-    const header = make('div', 'th-modal-header');
-    header.append(make('h3', 'th-modal-title', '⚔️ 시장 보스 레이드 모의 전투 결과'));
-    const closeBtn = make('button', 'th-modal-close', '✕');
-    closeBtn.type = 'button';
-    closeBtn.addEventListener('click', () => overlay.remove());
-    header.append(closeBtn);
-
-    const body = make('div', 'th-modal-body');
-
-    const sub = make('p', 'muted-note', `[${party.name}] VS [${boss.name}] 전투 결과 보고서`);
-    const logList = make('div', 'th-raid-log-list');
-
-    const logs = [
-      `⚔️ [${party.name}]이(가) [${boss.title}] 레이드 던전에 진입했습니다!`,
-      `👑 파티장 [${party.leader.name}]이(가) [${party.leader.skill}] 발동! 전체 변동성 50% 삭감 장막 전개!`,
-      `💥 [${party.members[0].name}]의 [${party.members[0].skill}]! 보스에게 3,220 데미지 명중!`,
-      `🔥 [${boss.name}]이(가) [금리 불꽃 브레스(공격력 1,200)]를 시전!`,
-      `🛡️ [${party.members[1].name}]이(가) [${party.members[1].skill}]으로 완벽 방어! 계좌 손실 0원 및 45,000원 세금 마찰 방어 성공!`,
-      `✨ [${party.members[2].name}]의 [${party.members[2].skill}] 발동! 배당금 12,500원 골드 회복 및 추가 2,375 데미지!`,
-      `🎉 전투 승리! 보스를 격퇴하고 포트폴리오를 완벽하게 수호했습니다!`
-    ];
-
-    logs.forEach(log => {
-      const item = make('div', 'th-raid-log-item', log);
-      logList.append(item);
-    });
-
-    const rewards = make('div', 'th-raid-rewards');
-    rewards.innerHTML = `
-      <div>
-        <div class="th-raid-reward-title">획득 경험치</div>
-        <div class="th-raid-reward-val">⭐ +85 EXP</div>
-      </div>
-      <div>
-        <div class="th-raid-reward-title">수호한 마찰비용</div>
-        <div class="th-raid-reward-val">🛡️ 45,000원 방어</div>
-      </div>
-      <div>
-        <div class="th-raid-reward-title">배당금 골드</div>
-        <div class="th-raid-reward-val">🪙 +12,500G</div>
-      </div>
-    `;
-
-    body.append(sub, logList, rewards);
-    dialog.append(header, body);
-    overlay.append(dialog);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    document.body.append(overlay);
-  }
-
-  function paintRpgParty(targetElement = rpgPartySec) {
-    if (!targetElement) return;
-    targetElement.replaceChildren();
-
-    const currentParty = RPG_PARTIES.find(p => p.id === selectedRpgPartyId) || RPG_PARTIES[0];
-
-    // 헤더
-    const heading = make('div', 'th-card-heading');
-    heading.append(
-      make('h2', '', isEasyMode ? '⚔️ 초간단 RPG 영웅 파티 & 시장 보스 레이드' : '⚔️ RPG 투자 파티 편성 & 시장 보스 레이드'),
-      make('span', 'figma-pill badge-thorp-pill', 'ZERO 1-Click 파티')
-    );
-    heading.id = 'th-rpg-party-title';
-
-    const descText = isEasyMode
-      ? '경제·금융을 전혀 몰라도 걱정 없어요! 터치 한 번으로 검증된 영웅 팀장과 파티원을 소환하고, 시장의 위기(금리 인상 폭락)를 보스 레이드로 통쾌하게 물리쳐요.'
-      : '에드워드 소프 켈리 공식과 가치투자 철학을 RPG 캐릭터 클래스(딜러/탱커/힐러/버퍼)로 시각화하여 최적의 자산배분을 누구나 1초 만에 구성할 수 있습니다.';
-    const desc = make('p', 'muted-note', descText);
-
-    // 탭 버튼들
-    const tabs = make('div', 'th-rpg-tabs');
-    RPG_PARTIES.forEach(party => {
-      const tab = make('button', `th-rpg-tab ${party.id === selectedRpgPartyId ? 'active' : ''}`, party.tabLabel);
-      tab.type = 'button';
-      tab.addEventListener('click', () => {
-        selectedRpgPartyId = party.id;
-        paintRpgParty(targetElement);
-      });
-      tabs.append(tab);
-    });
-
-    // 파티 컨셉 및 설명 박스
-    const conceptBox = make('div', 'th-rpg-concept-box');
-    const conceptHeader = make('div', 'th-rpg-concept-header');
-    conceptHeader.append(
-      make('div', 'th-rpg-concept-title', `${currentParty.name} · ${currentParty.badge}`),
-      make('span', 'th-rpg-cp-badge', `⚔️ 전투력 CP: ${currentParty.cp}`)
-    );
-    conceptBox.append(
-      conceptHeader,
-      make('p', 'th-rpg-concept-desc', currentParty.concept),
-      make('div', 'th-rpg-concept-target', currentParty.target)
-    );
-
-    // 캐릭터 카드 그리드 (파티장 1인 + 파티원 3인 = 총 4인)
-    const grid = make('div', 'th-rpg-grid');
-    const allMembers = [
-      { ...currentParty.leader, isLeader: true },
-      ...currentParty.members
-    ];
-
-    allMembers.forEach(m => {
-      const card = make('div', `th-rpg-card ${m.isLeader ? 'is-leader' : ''}`);
-      const top = make('div', 'th-rpg-card-top');
-      const badgeClass = m.isLeader ? 'leader' : m.role.toLowerCase();
-      top.append(
-        make('span', `th-rpg-badge ${badgeClass}`, m.roleKorean),
-        make('span', 'th-rpg-weight-tag', m.weight)
-      );
-
-      const name = make('div', 'th-rpg-name', m.name);
-      const asset = make('div', 'th-rpg-asset', m.asset);
-
-      // 스탯 바 (공격력, 방어력, 회복력)
-      const stats = make('div', 'th-rpg-stat-bars');
-      stats.innerHTML = `
-        <div class="th-rpg-stat-row">
-          <span class="th-rpg-stat-lbl">공격(성장)</span>
-          <div class="th-rpg-stat-track"><div class="th-rpg-stat-fill atk" style="width: ${m.atk}%"></div></div>
-          <span class="th-rpg-stat-val">${m.atk}</span>
-        </div>
-        <div class="th-rpg-stat-row">
-          <span class="th-rpg-stat-lbl">방어(원금)</span>
-          <div class="th-rpg-stat-track"><div class="th-rpg-stat-fill def" style="width: ${m.def}%"></div></div>
-          <span class="th-rpg-stat-val">${m.def}</span>
-        </div>
-        <div class="th-rpg-stat-row">
-          <span class="th-rpg-stat-lbl">회복(배당)</span>
-          <div class="th-rpg-stat-track"><div class="th-rpg-stat-fill rec" style="width: ${m.rec}%"></div></div>
-          <span class="th-rpg-stat-val">${m.rec}</span>
-        </div>
-      `;
-
-      // 고유 스킬
-      const skillBox = make('div', 'th-rpg-skill');
-      skillBox.append(
-        make('div', 'th-rpg-skill-name', `⚡ ${m.skill}`),
-        make('p', 'th-rpg-skill-desc', m.desc)
-      );
-
-      card.append(top, name, asset, stats, skillBox);
-      grid.append(card);
-    });
-
-    // 시장 위기 보스 레이드 위젯
-    const bossBox = make('div', 'th-rpg-boss-box');
-    const bossHeader = make('div', 'th-rpg-boss-header');
-    const bossInfo = make('div', 'th-rpg-boss-info');
-    bossInfo.append(
-      make('span', 'th-rpg-boss-name', CURRENT_BOSS.name),
-      make('span', 'th-rpg-boss-title', CURRENT_BOSS.title)
-    );
-    bossHeader.append(bossInfo);
-
-    const hpContainer = make('div', 'th-rpg-hp-container');
-    const hpLabels = make('div', 'th-rpg-hp-labels');
-    hpLabels.append(
-      make('span', '', '보스 잔여 체력 HP'),
-      make('span', '', `${CURRENT_BOSS.currentHp.toLocaleString()} / ${CURRENT_BOSS.maxHp.toLocaleString()} (68%)`)
-    );
-    const hpTrack = make('div', 'th-rpg-hp-track');
-    hpTrack.innerHTML = '<div class="th-rpg-hp-fill"></div>';
-    hpContainer.append(hpLabels, hpTrack);
-
-    const bossMeta = make('div', 'th-rpg-boss-meta');
-    const weakness = make('div', 'th-rpg-boss-weakness');
-    weakness.innerHTML = `🛡️ 공략 약점: <strong>${CURRENT_BOSS.element}</strong> (장착 시 데미지 100% 흡수)`;
-
-    const raidBtn = make('button', 'th-rpg-raid-btn', '⚔️ 보스 레이드 모의 전투 (1-Click Raid)');
-    raidBtn.type = 'button';
-    raidBtn.addEventListener('click', () => openRpgRaidModal(currentParty, CURRENT_BOSS));
-
-    bossMeta.append(weakness, raidBtn);
-    bossBox.append(bossHeader, hpContainer, make('p', 'th-action-desc', CURRENT_BOSS.desc), bossMeta);
-
-    targetElement.append(heading, desc, tabs, conceptBox, grid, bossBox);
-  }
 
   // ── 에드워드 소프 켈리 리밸런싱 & 3대 마찰비용(수수료·세금·환율) 레이더 (쉬운 말 모드 완벽 지원) ──
   function paintThorpRadar(targetElement = thorpRadar) {
@@ -1160,6 +761,103 @@
     document.body.append(overlay);
   }
 
+
+  // ── [통합 컴팩트 1] 스마트 투자 액션 & 층수 레이더 (행동 가이드 + 층수 구조대 + 소프 켈리 절세 레이더) ──
+  let selectedActionTab = 'floor'; // 'floor' | 'thorp'
+  function paintSmartActionRadar(targetElement = smartActionRadar) {
+    if (!targetElement) return;
+    targetElement.replaceChildren();
+
+    // 1. 상단: 오늘의 1줄 신호등 행동 가이드
+    const actionBox = make('div', 'th-action-box');
+    const actionHeader = make('div', 'th-action-header');
+    actionHeader.append(
+      make('span', 'badge-action-pill', '🚦 오늘의 행동 가이드'),
+      make('span', 'th-action-time', '실시간 제로 AI 분석')
+    );
+    const titleText = isEasyMode
+      ? '🟢 오늘은 아무것도 안 하셔도 돼요! (편안히 일상을 즐기세요)'
+      : '🟢 HOLD & COMPOUND (비중 괴리 1.2%로 리밸런싱 유예 권고)';
+    const mainMsg = make('h3', 'th-action-msg', titleText);
+    mainMsg.id = 'th-smart-action-title';
+
+    const descText = isEasyMode
+      ? '자산 비율이 안전하게 유지되고 있어 불필요한 매매 수수료와 세금을 1원도 낭비하지 않도록 보호 중이에요.'
+      : '에드워드 소프 켈리 허들 검증 결과 괴리율 1.2%가 허들 3.5% 미만이므로 거래세 및 환율 마찰비용을 방어합니다.';
+    const subDesc = make('p', 'th-action-desc', descText);
+
+    const chipsRow = make('div', 'th-action-chips');
+    const chips = isEasyMode ? [
+      { icon: '💰', text: '절약한 세금·수수료: 약 45,000원' },
+      { icon: '🛡️', text: '하락장 방어력: 든든함' },
+      { icon: '🌱', text: '복리 자산: 안전 성장 중' }
+    ] : [
+      { icon: '⚖️', text: 'Drift 1.2% < Hurdle 3.5%' },
+      { icon: '📊', text: 'Sortino 4.52 / MDD -3.57%' },
+      { icon: '💵', text: '방어 마찰비용: 45,000원' }
+    ];
+    chips.forEach(c => chipsRow.append(make('span', 'th-action-chip', `${c.icon} ${c.text}`)));
+    actionBox.append(actionHeader, mainMsg, subDesc, chipsRow);
+
+    // 2. 중단: 서브 탭 스위처 (층수 구조대 vs 자산 황금비율)
+    const tabs = make('div', 'th-sub-tabs');
+    const btnFloor = make('button', `th-sub-tab ${selectedActionTab === 'floor' ? 'active' : ''}`, '🏢 내 주식 층수 & 구조대');
+    btnFloor.type = 'button';
+    btnFloor.addEventListener('click', () => { selectedActionTab = 'floor'; paintSmartActionRadar(targetElement); });
+
+    const btnThorp = make('button', `th-sub-tab ${selectedActionTab === 'thorp' ? 'active' : ''}`, '⚖️ 자산 황금비율 & 세금 방어');
+    btnThorp.type = 'button';
+    btnThorp.addEventListener('click', () => { selectedActionTab = 'thorp'; paintSmartActionRadar(targetElement); });
+
+    tabs.append(btnFloor, btnThorp);
+
+    // 3. 하단: 선택된 탭 컨텐츠 렌더링
+    const content = make('div', 'th-sub-content');
+    if (selectedActionTab === 'floor') {
+      paintFloorRadar(content);
+    } else {
+      paintThorpRadar(content);
+    }
+
+    targetElement.append(actionBox, tabs, content);
+  }
+
+  // ── [통합 컴팩트 2] 스마트 현금흐름 듀오 (배당금 캘린더 + 잔돈 저금통) ──
+  let selectedCashflowTab = 'dividend'; // 'dividend' | 'piggy'
+  function paintCashflowCard(targetElement = cashflowCard) {
+    if (!targetElement) return;
+    targetElement.replaceChildren();
+
+    const head = make('div', 'th-card-heading');
+    head.append(
+      make('h2', '', '💰 스마트 현금흐름 · 배당 & 잔돈저금통'),
+      make('span', 'figma-pill badge-dividend-pill', 'ZERO 현금흐름')
+    );
+    head.id = 'th-cashflow-title';
+
+    const desc = make('p', 'muted-note', '배당금으로 매달 커피값·통신비를 채우고, 잔돈을 모아 복리 자산을 불려가는 스마트 현금흐름 듀오예요.');
+
+    const tabs = make('div', 'th-sub-tabs');
+    const btnDiv = make('button', `th-sub-tab ${selectedCashflowTab === 'dividend' ? 'active' : ''}`, '📅 월별 예상 배당금 캘린더');
+    btnDiv.type = 'button';
+    btnDiv.addEventListener('click', () => { selectedCashflowTab = 'dividend'; paintCashflowCard(targetElement); });
+
+    const btnPiggy = make('button', `th-sub-tab ${selectedCashflowTab === 'piggy' ? 'active' : ''}`, '🪙 잔돈 자동투자 저금통');
+    btnPiggy.type = 'button';
+    btnPiggy.addEventListener('click', () => { selectedCashflowTab = 'piggy'; paintCashflowCard(targetElement); });
+
+    tabs.append(btnDiv, btnPiggy);
+
+    const content = make('div', 'th-sub-content');
+    if (selectedCashflowTab === 'dividend') {
+      paintDividendCalendar(content);
+    } else {
+      paintCoinPiggy(content);
+    }
+
+    targetElement.append(head, desc, tabs, content);
+  }
+
   // ── 주요 일정 렌더링 (미국 2개 + 한국 2개 총 4개 균형 배치 및 클릭 모달 연동) ──
   function paintSchedule() {
     const heading = make('h2', '', '🗓️ 글로벌 주요 경제 일정 (미국 · 한국 4선)');
@@ -1349,12 +1047,8 @@
 
   // ── 열릴 때마다 갱신 ──
   async function refresh() {
-    paintActionGuide();
-    paintFloorRadar();
-    paintRpgParty();
-    paintThorpRadar();
-    paintDividendCalendar(dividendSec);
-    paintCoinPiggy(coinPiggySec);
+    paintSmartActionRadar();
+    paintCashflowCard();
     const portRadar = document.getElementById('portfolio-floor-radar');
     if (portRadar) paintFloorRadar(portRadar);
     if (document.hidden || document.documentElement.dataset.zeroView !== 'home') return;
