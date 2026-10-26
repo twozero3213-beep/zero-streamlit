@@ -48,9 +48,7 @@ function floor(ctx,theme,w=160,h=100){
  for(let y=wallH,row=0;y<h;y+=3.2,row++){const offset=(row*7)%22;for(let x=-offset,i=0;x<w;x+=22,i++){rect(ctx,x,y,21.85,3.05,plank[(row*3+i)%4]);rect(ctx,x+21.85,y,.15,3.2,seam+'55');}rect(ctx,0,y+3.05,w,.15,seam+'55');}
  rect(ctx,0,0,w,wallH,t.wall);shade(ctx,()=>ctx.createLinearGradient(0,0,0,wallH),0,0,w,wallH,[[0,'#ffffff1f'],[1,'#00000026']]);
  for(let x=14;x<w-20;x+=34){rect(ctx,x,1.2,22,5,mix(t.wall,'#000000',.25));shade(ctx,()=>ctx.createLinearGradient(0,1.4,0,6),x+.5,1.6,21,4.2,dark?[[0,'#26335a'],[1,'#4a4f7c']]:[[0,'#cfe6f5'],[1,'#f3efe4']]);if(!ctx.createLinearGradient)rect(ctx,x+.5,1.6,21,4.2,dark?'#2f3a63':'#dcebf3');for(const [dx,bh] of [[2,2.2],[5,3.1],[9,1.8],[12,2.8],[16,2.4],[19,1.6]])rect(ctx,x+dx,5.8-bh,2.4,bh,dark?'#f5d27a55':'#9fb3c444');rect(ctx,x+10.8,1.6,.4,4.2,'#ffffffb0');}
- /* 모던 자산운용사 딜링룸 걸레받이 및 중앙 라운지 러그 렌더링 (중세 판타지 요소 제거) */
- rect(ctx,0,wallH-.8,w,.8,mix(t.wall,'#000000',.22));
- rect(ctx,52,32,56,42,mix(t.floor,t.wall,.12)+'44');rect(ctx,53.5,33.5,53,39,mix(t.floor,t.wood,.16)+'38');
+ rect(ctx,0,wallH-1,w,1,mix(t.wood,'#000000',.2));rect(ctx,0,wallH,w,.4,'#ffffff55');
  if(ctx.createRadialGradient)for(let x=25;x<w-20;x+=34){const g=ctx.createRadialGradient(x,wallH,1,x,wallH+14,30);g.addColorStop(0,dark?'#ffd9a022':'#ffffff3a');g.addColorStop(1,'#ffffff00');ctx.fillStyle=g;ctx.fillRect(x-32,wallH,64,44);}
  shade(ctx,()=>ctx.createLinearGradient(0,wallH,0,h),0,wallH,w,h-wallH,[[0,'#00000000'],[.8,'#00000000'],[1,'#0000001c']]);
  rect(ctx,0,h-1,w,1,'#25354130');
