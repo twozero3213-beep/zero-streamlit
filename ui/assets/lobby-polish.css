@@ -1968,3 +1968,169 @@ html[data-theme="dark"] .th-thorp-rl-sub,
   color: #adb5bd !important;
 }
 
+
+
+/* ── 쉬운 말 모드 버튼 & 초보자 용어 사전 버튼 스타일 ── */
+.th-privacy-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.th-easy-btn, .th-glossary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--figma-radius-full, 9999px);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  background: var(--sem-bg-surface, #ffffff);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sem-text-primary, #191f28);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.th-easy-btn.active {
+  background: rgba(32, 201, 151, 0.12);
+  border-color: rgba(32, 201, 151, 0.35);
+  color: #027a48;
+}
+.th-glossary-btn:hover, .th-easy-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* ── 오늘의 1줄 행동 가이드 카드 스타일 ── */
+.th-action-guide {
+  background: linear-gradient(135deg, rgba(32, 201, 151, 0.08) 0%, rgba(49, 130, 246, 0.06) 100%);
+  border: 1px solid rgba(32, 201, 151, 0.25);
+  border-radius: var(--figma-radius-xl, 20px);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.th-action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.badge-action-pill {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: #027a48;
+  color: #ffffff;
+}
+.th-action-time {
+  font-size: 11px;
+  color: var(--sem-text-muted, #8b95a1);
+}
+.th-action-msg {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--sem-text-primary, #191f28);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+.th-action-desc {
+  font-size: 13.5px;
+  color: var(--sem-text-secondary, #4e5968);
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+.th-action-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.th-action-chip {
+  padding: 6px 12px;
+  background: var(--sem-bg-surface, #ffffff);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--sem-text-primary, #191f28);
+}
+
+/* ── 초보자 용어 사전 모달 스타일 ── */
+.th-glossary-card {
+  padding: 16px;
+  background: var(--sem-bg-surface-subtle, #f9fafb);
+  border: 1px solid var(--sem-line-subtle, #e5e8eb);
+  border-radius: 14px;
+  margin-bottom: 12px;
+}
+.th-glossary-q {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1b64da;
+  margin: 0 0 8px 0;
+}
+.th-glossary-a {
+  font-size: 13.5px;
+  color: var(--sem-text-secondary, #4e5968);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── 다크모드 대응 (쉬운 말 모드 & 행동 가이드) ── */
+html[data-zero-theme="dark"] .th-easy-btn,
+html[data-theme="dark"] .th-easy-btn,
+.dark .th-easy-btn,
+html[data-zero-theme="dark"] .th-glossary-btn,
+html[data-theme="dark"] .th-glossary-btn,
+.dark .th-glossary-btn {
+  background: #1a222c !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-easy-btn.active,
+html[data-theme="dark"] .th-easy-btn.active,
+.dark .th-easy-btn.active {
+  background: rgba(32, 201, 151, 0.2) !important;
+  border-color: rgba(32, 201, 151, 0.5) !important;
+  color: #20c997 !important;
+}
+html[data-zero-theme="dark"] .th-action-guide,
+html[data-theme="dark"] .th-action-guide,
+.dark .th-action-guide {
+  background: linear-gradient(135deg, rgba(32, 201, 151, 0.1) 0%, rgba(49, 130, 246, 0.08) 100%) !important;
+  border-color: rgba(32, 201, 151, 0.3) !important;
+}
+html[data-zero-theme="dark"] .th-action-msg,
+html[data-theme="dark"] .th-action-msg,
+.dark .th-action-msg {
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-action-desc,
+html[data-theme="dark"] .th-action-desc,
+.dark .th-action-desc {
+  color: #adb5bd !important;
+}
+html[data-zero-theme="dark"] .th-action-chip,
+html[data-theme="dark"] .th-action-chip,
+.dark .th-action-chip {
+  background: #0f141a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f2f4f6 !important;
+}
+html[data-zero-theme="dark"] .th-glossary-card,
+html[data-theme="dark"] .th-glossary-card,
+.dark .th-glossary-card {
+  background: #141b24 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-zero-theme="dark"] .th-glossary-q,
+html[data-theme="dark"] .th-glossary-q,
+.dark .th-glossary-q {
+  color: #699bf7 !important;
+}
+html[data-zero-theme="dark"] .th-glossary-a,
+html[data-theme="dark"] .th-glossary-a,
+.dark .th-glossary-a {
+  color: #adb5bd !important;
+}

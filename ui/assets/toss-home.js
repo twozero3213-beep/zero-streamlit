@@ -87,10 +87,12 @@
 
   // ── 뼈대 (개인정보보호 스위치, 배당금 캘린더, 잔돈 저금통 포함) ──
   const status = make('div', 'th-status'), indices = make('div', 'th-indices'), schedule = make('section', 'th-card th-schedule'), chart = make('section', 'th-card th-chart'), watch = make('section', 'th-card th-watch');
+  const actionGuide = make('section', 'th-card th-action-guide');
   const floorRadar = make('section', 'th-card th-floor-radar');
   const thorpRadar = make('section', 'th-card th-thorp-radar');
   const dividendSec = make('section', 'th-card th-dividend');
   const coinPiggySec = make('section', 'th-card th-coin-piggy');
+  actionGuide.setAttribute('aria-labelledby', 'th-action-title');
   floorRadar.setAttribute('aria-labelledby', 'th-floor-title');
   thorpRadar.setAttribute('aria-labelledby', 'th-thorp-title');
   schedule.setAttribute('aria-labelledby', 'th-schedule-title'); chart.setAttribute('aria-labelledby', 'th-chart-title'); watch.setAttribute('aria-labelledby', 'th-watch-title');
@@ -98,7 +100,7 @@
   coinPiggySec.setAttribute('aria-labelledby', 'th-piggy-title');
   const dock = make('aside', 'th-dock'); dock.hidden = true; dock.setAttribute('aria-label', '관심 종목'); document.body.append(dock);
   const main = make('div', 'th-main'), side = make('aside', 'th-side');
-  main.append(indices, floorRadar, thorpRadar, schedule, dividendSec, coinPiggySec, chart); side.append(watch); root.append(status, make('div', 'th-grid'));
+  main.append(indices, actionGuide, floorRadar, thorpRadar, schedule, dividendSec, coinPiggySec, chart); side.append(watch); root.append(status, make('div', 'th-grid'));
   root.querySelector('.th-grid').append(main, side);
 
   // ── 개인정보보호 (Privacy Guard): 잔고 마스킹 토글 바 ──
@@ -114,7 +116,27 @@
       ? '<span class="th-privacy-icon">🔒</span> <span class="th-privacy-label">잔고 숨김 중 (보안 활성)</span>'
       : '<span class="th-privacy-icon">👁️</span> <span class="th-privacy-label">잔고 숨김 (프라이버시 모드)</span>';
   });
-  privacyBar.append(privacyBtn);
+  // ── 쉬운 말 모드 (Easy Mode) 토글 & 초보자 용어 가이드 버튼 ──
+  let isEasyMode = true; // 기본값: 초보자 친화 쉬운 말 모드 활성화!
+  const easyBtn = make('button', 'th-easy-btn active');
+  easyBtn.type = 'button';
+  easyBtn.innerHTML = '<span class="th-easy-icon">🌱</span> <span class="th-easy-label">쉬운 말 모드 ON</span>';
+  easyBtn.addEventListener('click', () => {
+    isEasyMode = !isEasyMode;
+    easyBtn.classList.toggle('active', isEasyMode);
+    easyBtn.innerHTML = isEasyMode
+      ? '<span class="th-easy-icon">🌱</span> <span class="th-easy-label">쉬운 말 모드 ON</span>'
+      : '<span class="th-easy-icon">📐</span> <span class="th-easy-label">전문가 모드 ON</span>';
+    paintActionGuide();
+    paintThorpRadar();
+  });
+
+  const glossaryBtn = make('button', 'th-glossary-btn');
+  glossaryBtn.type = 'button';
+  glossaryBtn.innerHTML = '<span class="th-glossary-icon">💡</span> <span class="th-glossary-label">초보자 용어 사전</span>';
+  glossaryBtn.addEventListener('click', () => openEasyGlossaryModal());
+
+  privacyBar.append(privacyBtn, easyBtn, glossaryBtn);
   status.prepend(privacyBar);
 
   // ── 층수 레이더 시그니처: 내 주식 몇 층이지? & 구조대 대시보드 ──
@@ -196,32 +218,148 @@
   }
   api.paintFloorRadar = paintFloorRadar;
 
-  // ── 에드워드 소프 켈리 리밸런싱 & 3대 마찰비용(수수료·세금·환율) 레이더 (UX/UI 정밀 개편) ──
+
+  // ── 오늘의 1줄 행동 가이드 (초보자를 위한 명쾌한 신호등) ──
+  function paintActionGuide(targetElement = actionGuide) {
+    if (!targetElement) return;
+    targetElement.replaceChildren();
+
+    const box = make('div', 'th-action-box');
+    const header = make('div', 'th-action-header');
+    header.append(
+      make('span', 'badge-action-pill', '🚦 오늘의 행동 가이드'),
+      make('span', 'th-action-time', '실시간 제로 AI 분석')
+    );
+
+    const titleText = isEasyMode
+      ? '🟢 오늘은 아무것도 안 하셔도 돼요! (편안히 일상을 즐기세요)'
+      : '🟢 HOLD & COMPOUND (비중 괴리 1.2%로 리밸런싱 유예 권고)';
+    const mainMsg = make('h3', 'th-action-msg', titleText);
+    mainMsg.id = 'th-action-title';
+
+    const descText = isEasyMode
+      ? '자산 비율이 아주 안전하게 잘 유지되고 있어요. 굳이 사고팔아서 세금과 수수료를 낭비할 필요가 없어요. 가만히 두시는 게 돈을 가장 많이 버는 비결이에요!'
+      : '에드워드 소프 켈리 허들 검증 결과, 현재 비중 괴리율(1.2%)이 허들 기준(3.5%) 미만이므로 불필요한 마찰비용(세금·수수료 45,000원)을 방어하기 위해 포지션을 유지합니다.';
+    const subDesc = make('p', 'th-action-desc', descText);
+
+    const chipsRow = make('div', 'th-action-chips');
+    const chips = isEasyMode ? [
+      { icon: '💰', text: '아낀 세금·수수료: 약 45,000원' },
+      { icon: '🛡️', text: '하락장 방어력: 든든함 (안전)' },
+      { icon: '🌱', text: '복리 자산: 쑥쑥 자라는 중' }
+    ] : [
+      { icon: '⚖️', text: 'Drift 1.2% < Hurdle 3.5%' },
+      { icon: '📊', text: 'Sortino 4.52 / MDD -3.57%' },
+      { icon: '💵', text: '절감 마찰비용: 45,000원' }
+    ];
+
+    chips.forEach(c => {
+      const chip = make('span', 'th-action-chip', `${c.icon} ${c.text}`);
+      chipsRow.append(chip);
+    });
+
+    box.append(header, mainMsg, subDesc, chipsRow);
+    targetElement.append(box);
+  }
+  api.paintActionGuide = paintActionGuide;
+
+  // ── 초보자 쉬운 용어 사전 모달 ──
+  function openEasyGlossaryModal() {
+    const overlay = make('div', 'th-modal-overlay');
+    const dialog = make('div', 'th-modal-dialog');
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+
+    const header = make('div', 'th-modal-header');
+    header.append(make('h3', 'th-modal-title', '💡 초등학생도 이해하는 쉬운 금융 용어 사전'));
+    const closeBtn = make('button', 'th-modal-close', '✕');
+    closeBtn.type = 'button';
+    closeBtn.addEventListener('click', () => overlay.remove());
+    header.append(closeBtn);
+
+    const body = make('div', 'th-modal-body');
+    const terms = [
+      {
+        q: '1. 리밸런싱(Rebalancing)이 뭔가요?',
+        a: '시소의 균형을 맞추는 거예요! 주식이 많이 올라서 너무 위험해지면 일부를 덜어내어 든든한 채권이나 현금으로 옮겨 담아, 폭락이 와도 안전하도록 균형을 되찾아주는 마법의 규칙이에요.'
+      },
+      {
+        q: '2. 에드워드 소프의 켈리 공식이 뭔가요?',
+        a: '카지노와 월스트리트를 수학으로 정복한 천재 수학자의 비법이에요. 한곳에 무리하게 몰빵하지 않고, "수익률 ÷ 위험도"를 계산해서 가장 안전하고 크게 불어나는 황금비율(주식 55.6% : 채권 29.4% : 비상금 15.0%)을 딱 정해줘요.'
+      },
+      {
+        q: '3. 마찰비용(Friction Cost)이 왜 중요한가요?',
+        a: '주식을 사고팔 때마다 떼어가는 "통행료와 세금(증권사 수수료, 거래세, 양도소득세, 환전비용)"이에요. 1~2% 올랐다고 신나서 자꾸 사고팔면 통행료로 돈이 줄줄 새요. 제로는 꼭 필요할 때만 매매해서 이 돈을 철통 방어해요!'
+      },
+      {
+        q: '4. 증류강화학습(Distillation RL)이 뭔가요?',
+        a: '슈퍼컴퓨터 선생님 로봇이 수십만 번의 시장 위기를 겪으며 배운 핵심 비법만을 쏙쏙 요약해서, 내 스마트폰의 작은 학생 로봇에게 가르쳐주는 공부법이에요. 덕분에 배터리도 안 쓰고 0.01초 만에 최적의 판단을 내려요.'
+      }
+    ];
+
+    terms.forEach(t => {
+      const card = make('div', 'th-glossary-card');
+      card.append(
+        make('h4', 'th-glossary-q', t.q),
+        make('p', 'th-glossary-a', t.a)
+      );
+      body.append(card);
+    });
+
+    dialog.append(header, body);
+    overlay.append(dialog);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.append(overlay);
+  }
+
+  // ── 에드워드 소프 켈리 리밸런싱 & 3대 마찰비용(수수료·세금·환율) 레이더 (쉬운 말 모드 완벽 지원) ──
   function paintThorpRadar(targetElement = thorpRadar) {
     if (!targetElement) return;
     targetElement.replaceChildren();
+
     const heading = make('div', 'th-card-heading');
+    const titleText = isEasyMode
+      ? '⚖️ 내 자산 안전 황금비율 & 지갑 지킴이'
+      : '⚖️ 에드워드 소프 켈리 리밸런싱 & 마찰비용 레이더';
+    const badgeText = isEasyMode ? 'ZERO 안전 운용' : 'ZERO 증류강화학습';
+
     heading.append(
-      make('h2', '', '⚖️ 에드워드 소프 켈리 리밸런싱 & 마찰비용 레이더'),
-      make('span', 'figma-pill badge-thorp-pill', 'ZERO 증류강화학습')
+      make('h2', '', titleText),
+      make('span', 'figma-pill badge-thorp-pill', badgeText)
     );
     heading.id = 'th-thorp-title';
-    const desc = make('p', 'muted-note', '가치투자 리밸런싱 시 세금(국내 0.18%, 미국 22%), 수수료, 환율 스프레드(0.20%)의 마찰비용을 정밀 계산하여 기대 효용이 마찰비용의 1.5배 이상이고 비중 괴리율이 3.5%를 초과할 때만 안전하게 실행해요.');
+
+    const descText = isEasyMode
+      ? '주식·채권·비상금을 알맞게 나누어 담고, 불필요한 매매 세금과 수수료를 1원도 낭비하지 않도록 인공지능이 24시간 안전하게 지켜줘요.'
+      : '가치투자 리밸런싱 시 세금(국내 0.18%, 미국 22%), 수수료, 환율 스프레드(0.20%)의 마찰비용을 정밀 계산하여 기대 효용이 마찰비용의 1.5배 이상이고 비중 괴리율이 3.5%를 초과할 때만 안전하게 실행해요.';
+    const desc = make('p', 'muted-note', descText);
 
     const grid = make('div', 'th-thorp-grid');
 
     // 1. 소프 프랙셔널 켈리 최적 비중 카드
     const kellyCard = make('div', 'th-thorp-card');
+    const card1Header = isEasyMode
+      ? '📐 안전 황금비율 (달걀 나누어 담기)'
+      : '📐 소프 프랙셔널 켈리 최적 비중 (c=0.5)';
+    const card1Sub = isEasyMode
+      ? '어느 한쪽에 쏠리지 않도록 가장 안전하고 성장이 빠른 비율을 지켜요.'
+      : '단위 위험당 초과수익(샤프지수)에 비례 배분하여 변동성을 50% 삭감하고 복리 성장을 극대화합니다.';
     kellyCard.append(
-      make('div', 'th-thorp-card-header', '📐 소프 프랙셔널 켈리 최적 비중 (c=0.5)'),
-      make('p', 'th-thorp-card-sub', '단위 위험당 초과수익(샤프지수)에 비례 배분하여 변동성을 50% 삭감하고 복리 성장을 극대화합니다.')
+      make('div', 'th-thorp-card-header', card1Header),
+      make('p', 'th-thorp-card-sub', card1Sub)
     );
+
     const weightBars = make('div', 'th-thorp-weights');
-    const items = [
+    const items = isEasyMode ? [
+      { name: '주식 (미래 성장 엔진)', pct: 55.6, color: '#3182f6', note: '장기적으로 내 자산을 쑥쑥 불려줘요' },
+      { name: '채권 (든든한 방패)', pct: 29.4, color: '#00c48c', note: '폭락 때 방어하고 매달 이자를 챙겨줘요' },
+      { name: '현금 (비상금 금고)', pct: 15.0, color: '#f59f00', note: '기회가 올 때 쓸 든든한 총알이에요' }
+    ] : [
       { name: '주식 (Equity)', pct: 55.6, color: '#3182f6', note: '샤프 0.472 · 장기 복리 성장 엔진' },
       { name: '채권 (Fixed Inc)', pct: 29.4, color: '#00c48c', note: '샤프 0.250 · 하방 방어 및 안정 쿠폰' },
       { name: '현금 (Liquidity)', pct: 15.0, color: '#f59f00', note: '마찰비용 완충 및 위기 대응 버퍼' }
     ];
+
     items.forEach(it => {
       const row = make('div', 'th-thorp-w-row');
       const top = make('div', 'th-thorp-w-top');
@@ -237,19 +375,32 @@
     });
     kellyCard.append(weightBars);
 
-    // 2. 3대 마찰비용 통제 & 허들 검증 카드 (상/하 2줄 구조로 가로 찌그러짐 원천 차단)
+    // 2. 3대 마찰비용 통제 & 허들 검증 카드
     const frictionCard = make('div', 'th-thorp-card');
+    const card2Header = isEasyMode
+      ? '🛡️ 세금·수수료 아끼기 (지갑 지킴이)'
+      : '🛡️ 3대 마찰비용 통제 & 허들 검증';
+    const card2Sub = isEasyMode
+      ? '자주 사고팔면 세금과 통행료로 돈이 줄줄 새요. 꼭 필요할 때만 움직여요.'
+      : '불필요한 잦은 매매로 인한 복리 자산 훼손(Tax Drag)을 원천 차단합니다.';
     frictionCard.append(
-      make('div', 'th-thorp-card-header', '🛡️ 3대 마찰비용 통제 & 허들 검증'),
-      make('p', 'th-thorp-card-sub', '불필요한 잦은 매매로 인한 복리 자산 훼손(Tax Drag)을 원천 차단합니다.')
+      make('div', 'th-thorp-card-header', card2Header),
+      make('p', 'th-thorp-card-sub', card2Sub)
     );
+
     const fList = make('div', 'th-thorp-flist');
-    const fRows = [
+    const fRows = isEasyMode ? [
+      { icon: '🏷️', label: '증권사 거래 수수료', val: '최저 수수료 혜택 적용 중', tag: '최저율 유지' },
+      { icon: '🏛️', label: '거래세 및 양도소득세', val: '250만 원까지 세금 0원 (절세 우선)', tag: '절세 우선' },
+      { icon: '💱', label: '원/달러 환전 통행료', val: '환전 우대 혜택 적용 중 (비용 절약)', tag: '환전 방어' },
+      { icon: '🚦', label: 'AI 매매 판단', val: '지금은 가만히 두는 게 이득이에요!', tag: '가만히 두기' }
+    ] : [
       { icon: '🏷️', label: '증권 거래 수수료', val: '국내 0.015% · 미국 0.07%', tag: '최저율 유지' },
       { icon: '🏛️', label: '거래세 및 양도소득세', val: '국내 0.18% · 미국 22% (250만 공제)', tag: '절세 우선' },
       { icon: '💱', label: '원/달러 환전 스프레드', val: '우대 스프레드 편도 0.20%', tag: '환마찰 방어' },
       { icon: '🚦', label: '소프 리밸런싱 판정', val: '효용/비용 허들 1.5배 & 괴리율 3.5%', tag: '보수적 승인' }
     ];
+
     fRows.forEach(fr => {
       const fItem = make('div', 'th-thorp-fitem');
       const itemTop = make('div', 'th-thorp-fitem-top');
@@ -268,17 +419,30 @@
 
     // 3. 증류강화학습 (Distillation RL) 정책 상태 카드
     const rlCard = make('div', 'th-thorp-card');
+    const card3Header = isEasyMode
+      ? '🧠 똑똑한 AI 로봇의 안전 성적표'
+      : '🧠 증류강화학습(Distillation RL) 현황';
+    const card3Sub = isEasyMode
+      ? '수십만 번의 폭락장 가상 훈련을 거쳐 가장 안전한 길을 안내해요.'
+      : 'Teacher(FinRL/PPO 다목적 모델)의 지식을 초경량화하여 실시간 최적화합니다.';
     rlCard.append(
-      make('div', 'th-thorp-card-header', '🧠 증류강화학습(Distillation RL) 현황'),
-      make('p', 'th-thorp-card-sub', 'Teacher(FinRL/PPO 다목적 모델)의 지식을 초경량화하여 실시간 최적화합니다.')
+      make('div', 'th-thorp-card-header', card3Header),
+      make('p', 'th-thorp-card-sub', card3Sub)
     );
+
     const rlStats = make('div', 'th-thorp-rl-stats');
-    const metrics = [
+    const metrics = isEasyMode ? [
+      { label: '하락장 방어력', val: '🏆 최우수', sub: '폭락 때도 덜 아파요' },
+      { label: '최악의 순간 예상손실', val: '🛡️ -2.7% 이내', sub: '철저한 손실 통제' },
+      { label: '역대 최대 하락폭', val: '🔒 -3.5% 방어', sub: '위기 때도 철벽 방어' },
+      { label: '오늘 나의 행동', val: '🎯 가만히 두기', sub: '복리로 돈이 일하는 중' }
+    ] : [
       { label: 'Sortino Ratio', val: '4.52', sub: '하방 위험 대비 우수' },
       { label: 'CVaR 95%', val: '-2.77%', sub: '꼬리 위험 극소화' },
       { label: 'Max Drawdown', val: '-3.57%', sub: '철저한 손실 통제' },
       { label: '현재 권고', val: 'HOLD & COMPOUND', sub: '괴리율 1.2% (비용 절감 중)' }
     ];
+
     metrics.forEach(m => {
       const box = make('div', 'th-thorp-rl-box');
       box.append(
@@ -790,6 +954,7 @@
 
   // ── 열릴 때마다 갱신 ──
   async function refresh() {
+    paintActionGuide();
     paintFloorRadar();
   paintThorpRadar();
     paintDividendCalendar(dividendSec);
