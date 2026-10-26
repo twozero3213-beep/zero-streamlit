@@ -1,0 +1,1969 @@
+{
+  "schema_version": 1,
+  "total_count": 100,
+  "categories": {
+    "VALUE": {
+      "name_kr": "가치투자",
+      "count": 22
+    },
+    "QUANT": {
+      "name_kr": "계량·퀀트",
+      "count": 20
+    },
+    "MACRO": {
+      "name_kr": "글로벌 매크로",
+      "count": 20
+    },
+    "GROWTH_VC": {
+      "name_kr": "성장주 & VC",
+      "count": 18
+    },
+    "INDEX_ALLOC": {
+      "name_kr": "인덱스 & 자산배분",
+      "count": 10
+    },
+    "CONTRARIAN_GLOBAL": {
+      "name_kr": "글로벌 역발상",
+      "count": 10
+    }
+  },
+  "investors": [
+    {
+      "id": "WARREN_BUFFETT",
+      "name": "Warren Buffett",
+      "name_kr": "워런 버핏",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "버크셔 해서웨이 (Berkshire Hathaway)",
+      "era": "1930 ~ 현재",
+      "philosophy": "독점적 경제적 해자(Economic Moat)와 탁월한 경영진, 충분한 안전마진을 갖춘 우량 기업을 합리적 가격에 매수하여 영구 보유한다.",
+      "key_metrics": [
+        "ROE",
+        "영업이익률",
+        "FCF(잉여현금흐름)",
+        "부채비율",
+        "경제적해자"
+      ],
+      "famous_quote": "가격은 당신이 지불하는 것이고, 가치는 당신이 얻는 것이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.025,
+      "avatar_badge": "버크셔"
+    },
+    {
+      "id": "CHARLIE_MUNGER",
+      "name": "Charlie Munger",
+      "name_kr": "찰리 멍거",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "버크셔 해서웨이 / 웨스코 파이낸셜",
+      "era": "1924 ~ 2023",
+      "philosophy": "다학제적 격자틀 정신 모형(Latticework)과 역발상 반전 사고(Invert, always invert)로 어리석음을 피하고 위대한 기업에 집중한다.",
+      "key_metrics": [
+        "ROIC(투하자본이익률)",
+        "정직한 경영진",
+        "가격결정력",
+        "자본배분"
+      ],
+      "famous_quote": "뒤집어라, 항상 뒤집어 생각하라.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.022,
+      "avatar_badge": "격자틀"
+    },
+    {
+      "id": "BENJAMIN_GRAHAM",
+      "name": "Benjamin Graham",
+      "name_kr": "벤저민 그레이엄",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "그레이엄-뉴먼 코퍼레이션 / 컬럼비아대",
+      "era": "1894 ~ 1976",
+      "philosophy": "철저한 증권분석을 통해 원금을 보전하고 만족할 만한 수익을 추구하며, 미스터 마켓의 감정에 휘둘리지 않고 안전마진(Margin of Safety)을 확보한다.",
+      "key_metrics": [
+        "NCAV(순유동자산)",
+        "PBR",
+        "PER",
+        "유동비율",
+        "부채비율"
+      ],
+      "famous_quote": "투자의 핵심 비밀을 단 한 단어로 요약하자면 바로 '안전마진'이다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.02,
+      "avatar_badge": "안전마진"
+    },
+    {
+      "id": "DAVID_DODD",
+      "name": "David Dodd",
+      "name_kr": "데이비드 도드",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "컬럼비아 비즈니스 스쿨 (증권분석 공저)",
+      "era": "1895 ~ 1988",
+      "philosophy": "재무제표의 회계적 실체를 엄밀히 검증하고, 기업의 청산가치와 실현 가능한 주당순이익에 기반한 보수적 평가를 고수한다.",
+      "key_metrics": [
+        "장부가치",
+        "고정비보상비율",
+        "영업현금흐름",
+        "안정적배당"
+      ],
+      "famous_quote": "증권분석의 주된 목적은 기대가 아닌 검증된 사실에 가치를 두는 것이다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.012,
+      "avatar_badge": "증권분석"
+    },
+    {
+      "id": "PETER_LYNCH",
+      "name": "Peter Lynch",
+      "name_kr": "피터 린치",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "피델리티 마젤란 펀드 (13년 연평균 29.2%)",
+      "era": "1944 ~ 현재",
+      "philosophy": "일상 속 소비 경험과 생활 관찰을 통해 10루타(Ten-bagger) 기업을 발굴하며, PEG 지표를 활용해 성장에 합리적인 가격을 지불한다.",
+      "key_metrics": [
+        "PEG",
+        "이익성장률",
+        "재고증가율대비매출",
+        "순현금"
+      ],
+      "famous_quote": "당신이 이해하지 못하는 사업에는 절대로 투자하지 마라.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.02,
+      "avatar_badge": "10루타"
+    },
+    {
+      "id": "JOHN_NEFF",
+      "name": "John Neff",
+      "name_kr": "존 네프",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "뱅가드 윈저 펀드 (31년 운용)",
+      "era": "1931 ~ 2019",
+      "philosophy": "시장에서 소외된 저PER 우량주와 고배당주에 집중 투자하여 강력한 총수익률(Total Return)을 달성하는 저PER 가치투자.",
+      "key_metrics": [
+        "저PER",
+        "배당수익률",
+        "이익성장성",
+        "총수익률비율"
+      ],
+      "famous_quote": "저평가된 좋은 주식을 사서 시장이 제 가치를 알아줄 때까지 인내하라.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.014,
+      "avatar_badge": "저PER"
+    },
+    {
+      "id": "SETH_KLARMAN",
+      "name": "Seth Klarman",
+      "name_kr": "세스 클라만",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "바우포스트 그룹 (Baupost Group)",
+      "era": "1957 ~ 현재",
+      "philosophy": "하방 리스크 관리를 최우선으로 두며, 기회가 없을 때는 막대한 현금 비중을 유지하다 복잡하고 소외된 자산에서 극단적 할인을 취한다.",
+      "key_metrics": [
+        "현금보유비율",
+        "부실채권할인율",
+        "하방안전마진",
+        "촉매(Catalyst)"
+      ],
+      "famous_quote": "투자는 상방을 쫓는 게임이 아니라 하방 손실을 철저히 막는 예술이다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.018,
+      "avatar_badge": "바우포스트"
+    },
+    {
+      "id": "HOWARD_MARKS",
+      "name": "Howard Marks",
+      "name_kr": "하워드 막스",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "오크트리 캐피털 (Oaktree Capital)",
+      "era": "1946 ~ 현재",
+      "philosophy": "시장의 시계추(Pendulum)와 사이클을 파악하고, 대중과 반대로 사고하는 2차적 사고(Second-Level Thinking)를 통해 리스크를 제어한다.",
+      "key_metrics": [
+        "신용스프레드",
+        "투자자심리사이클",
+        "부도율추이",
+        "기대수익률"
+      ],
+      "famous_quote": "남들과 다른 결과를 원한다면 남들과 다르게 생각해야 하고, 그 생각이 맞아야 한다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.018,
+      "avatar_badge": "2차사고"
+    },
+    {
+      "id": "MOHNISH_PABRAI",
+      "name": "Mohnish Pabrai",
+      "name_kr": "모니시 파브라이",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "파브라이 인베스트먼트 펀드",
+      "era": "1964 ~ 현재",
+      "philosophy": "단도(Dhandho) 투자: '앞면이 나오면 큰돈을 벌고, 뒷면이 나와도 거의 잃지 않는(Heads I win, tails I don't lose much)' 비대칭적 저위험 고수익 베팅.",
+      "key_metrics": [
+        "비대칭베팅비율",
+        "단도체크리스트",
+        "FCF수익률",
+        "경영진자본배분"
+      ],
+      "famous_quote": "앞면이 나오면 내가 크게 이기고, 뒷면이 나와도 별로 잃지 않는다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.012,
+      "avatar_badge": "단도투자"
+    },
+    {
+      "id": "GUY_SPIER",
+      "name": "Guy Spier",
+      "name_kr": "가이 스피어",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "아쿠아마린 펀드 (Aquamarine Fund)",
+      "era": "1966 ~ 현재",
+      "philosophy": "탐욕스러운 월가 환경에서 벗어나 스위스 취리히에서 체크리스트 기반의 윤리적이고 독립적인 장기 복리 투자를 실행한다.",
+      "key_metrics": [
+        "투자체크리스트",
+        "기업윤리",
+        "경쟁우위지속성",
+        "장기복리"
+      ],
+      "famous_quote": "최고의 투자 환경은 불필요한 시장 소음과 유혹을 물리적으로 차단하는 것이다.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.01,
+      "avatar_badge": "체크리스트"
+    },
+    {
+      "id": "JOEL_GREENBLATT",
+      "name": "Joel Greenblatt",
+      "name_kr": "조엘 그린블라트",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "고담 에셋 매니지먼트 (Gotham Asset)",
+      "era": "1957 ~ 현재",
+      "philosophy": "자본수익률(ROC)이 높은 좋은 기업을 이익수익률(Earnings Yield)이 높은 싼 가격에 매수하는 정량적 '마법공식' 투자.",
+      "key_metrics": [
+        "ROC(EBIT/(순운전자본+순고정자산))",
+        "Earnings Yield(EBIT/EV)",
+        "순위종합"
+      ],
+      "famous_quote": "좋은 기업을 싼 가격에 사는 시스템을 꾸준히 밀고 나가면 시장을 이긴다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.016,
+      "avatar_badge": "마법공식"
+    },
+    {
+      "id": "BILL_MILLER",
+      "name": "Bill Miller",
+      "name_kr": "빌 밀러",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "밀러 밸류 파트너스 / 前 레그 메이슨",
+      "era": "1950 ~ 현재",
+      "philosophy": "전통적 회계 장부가를 넘어 미래 잉여현금흐름(FCF)의 현재가치를 기준으로 기술 혁신 기업까지 아우르는 유연한 현대적 가치평가.",
+      "key_metrics": [
+        "DCF(할인현금흐름)",
+        "자본비용대비수익률",
+        "경영진전략",
+        "장기성장잠재력"
+      ],
+      "famous_quote": "가치투자는 낮은 PER 주식을 사는 것이 아니라 미래 현금흐름보다 싼 자산을 사는 것이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "현대적가치"
+    },
+    {
+      "id": "CHRISTOPHER_BROWNE",
+      "name": "Christopher Browne",
+      "name_kr": "크리스토퍼 브라운",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "트위디 브라운 (Tweedy, Browne)",
+      "era": "1946 ~ 2009",
+      "philosophy": "전 세계를 무대로 장부가치 이하이거나 현금 흐름 대비 극단적으로 할인된 안전한 글로벌 자산주를 선별하는 정통 가치투자.",
+      "key_metrics": [
+        "글로벌PBR",
+        "순운전자본할인",
+        "내재가치안전마진",
+        "환헤지"
+      ],
+      "famous_quote": "가치투자는 세일 기간에 최고급 물건을 절반 가격에 사는 것과 같다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.01,
+      "avatar_badge": "글로벌가치"
+    },
+    {
+      "id": "WALTER_SCHLOSS",
+      "name": "Walter Schloss",
+      "name_kr": "월터 슐로스",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "월터 & 에드윈 슐로스 어소시에이츠 (47년 연평균 21%)",
+      "era": "1916 ~ 2012",
+      "philosophy": "월가의 컴퓨터도 사무실도 없이 오직 종이 보고서로 순자산가치(Book Value) 이하의 무차입 넷넷(Net-Net) 종목을 수백 개 분산 매수.",
+      "key_metrics": [
+        "장부가치이하매수",
+        "무차입/저부채",
+        "수백종목고른분산",
+        "장기보유"
+      ],
+      "famous_quote": "기업을 너무 복잡하게 분석하려 들지 마라. 자산보다 싸게 사면 결국 오른다.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.014,
+      "avatar_badge": "순자산"
+    },
+    {
+      "id": "IRVING_KAHN",
+      "name": "Irving Kahn",
+      "name_kr": "어빙 칸",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "칸 브라더스 그룹 (109세까지 현역 운용)",
+      "era": "1905 ~ 2015",
+      "philosophy": "1929년 대공황을 직접 겪으며 체득한 극단적 보수주의. 부채가 없고 안전마진이 탄탄한 기업만을 사서 수십 년간 묻어둔다.",
+      "key_metrics": [
+        "초저부채",
+        "현금성자산보유고",
+        "역사적저점밸류",
+        "무한인내"
+      ],
+      "famous_quote": "수익보다 중요한 것은 원금을 영구히 잃지 않는 것이다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.01,
+      "avatar_badge": "100년투자"
+    },
+    {
+      "id": "TOM_RUSSO",
+      "name": "Tom Russo",
+      "name_kr": "톰 루소",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "가드너 루소 & 퀸 (Gardner Russo & Quinn)",
+      "era": "1955 ~ 현재",
+      "philosophy": "'재투자할 수 있는 능력(Capacity to Reinvest)'과 단기 이익 희생을 감수하는 '고통을 견디는 능력(Capacity to Suffer)'을 갖춘 글로벌 프랜차이즈 기업 투자.",
+      "key_metrics": [
+        "브랜드해자",
+        "재투자수익률",
+        "경영진장기시계",
+        "글로벌침투율"
+      ],
+      "famous_quote": "위대한 기업은 미래 성장을 위해 기꺼이 현재의 단기 이익 희생을 견뎌낸다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.01,
+      "avatar_badge": "재투자능력"
+    },
+    {
+      "id": "MASON_HAWKINS",
+      "name": "Mason Hawkins",
+      "name_kr": "메이슨 호킨스",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "사우스이스턴 자산운용 (롱런 펀드)",
+      "era": "1948 ~ 현재",
+      "philosophy": "우량한 사업, 뛰어난 인재, 60% 이하의 매력적인 할인 가격(Good Business, Good People, Good Price) 3박자를 충족하는 집중 포트폴리오.",
+      "key_metrics": [
+        "내재가치대비할인율(40%이상)",
+        "경영진지분율",
+        "자본효율성"
+      ],
+      "famous_quote": "우리는 가치의 60센트 이하에서만 매수하며, 1달러에 도달하면 미련 없이 매도한다.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.01,
+      "avatar_badge": "60센트"
+    },
+    {
+      "id": "FRANCIS_CHOU",
+      "name": "Francis Chou",
+      "name_kr": "프랜시스 추아",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "추 어소시에이츠 (Chou Associates)",
+      "era": "1954 ~ 현재",
+      "philosophy": "시장 참가자들이 비관론에 사로잡혀 투매할 때 나타나는 염가 판매 주식 및 부실 기업의 선순위 채권을 집중 분석하는 깊은 가치(Deep Value).",
+      "key_metrics": [
+        "청산가치",
+        "선순위담보비율",
+        "비관론지수",
+        "역발상진입"
+      ],
+      "famous_quote": "모두가 도망칠 때 냉정하게 숫자를 계산하는 사람만이 진정한 기회를 잡는다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.01,
+      "avatar_badge": "딥밸류"
+    },
+    {
+      "id": "JEAN_MARIE_EVEILLARD",
+      "name": "Jean-Marie Eveillard",
+      "name_kr": "장마리 에베이야르",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "퍼스트 이글 글로벌 펀드 (First Eagle)",
+      "era": "1940 ~ 현재",
+      "philosophy": "닷컴 버블 당시 기술주 광풍을 거부하고 고객 해지 사태를 견디며 안전자산과 저평가 가치주를 지켜낸 글로벌 방어적 가치투자의 거장.",
+      "key_metrics": [
+        "금(Gold)보유비중",
+        "거시하방쿠션",
+        "국가별자산분산",
+        "회계보수성"
+      ],
+      "famous_quote": "현명하게 잃는 것이 멍청하게 버는 것보다 길게 보면 훨씬 낫다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.012,
+      "avatar_badge": "원칙고수"
+    },
+    {
+      "id": "MARTIN_WHITMAN",
+      "name": "Martin Whitman",
+      "name_kr": "마틴 휘트먼",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "써드 애비뉴 밸류 펀드 (Third Avenue)",
+      "era": "1924 ~ 2018",
+      "philosophy": "'안전하고 싼 주식(Safe and Cheap)' 원칙 하에 재무상태표의 강건함과 회생 가능한 부실 기업의 구조조정 가치를 꿰뚫어보는 현대적 기업분석.",
+      "key_metrics": [
+        "순자산가치(NAV)",
+        "차입구조만기",
+        "유동성여력",
+        "자본재편가능성"
+      ],
+      "famous_quote": "월가의 단기 손익계산서 예측에 속지 말고 탄탄한 재무상태표를 보라.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.01,
+      "avatar_badge": "재무제표"
+    },
+    {
+      "id": "MICHAEL_BURRY",
+      "name": "Michael Burry",
+      "name_kr": "마이클 버리",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "사이언 캐피털 (Scion Asset Management)",
+      "era": "1971 ~ 현재",
+      "philosophy": "남들이 보지 않는 수천 페이지의 원천 공시와 계약서를 철저히 해부하여 비대칭적 하방 리스크와 거대한 버블 붕괴를 포착하는 하이퍼 딥밸류.",
+      "key_metrics": [
+        "서브프라임부실률",
+        "원천데이터대조",
+        "극단적저PBR",
+        "비대칭풋옵션"
+      ],
+      "famous_quote": "모두가 거짓에 취해 있을 때 오직 차가운 진실의 데이터만을 신뢰한다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.014,
+      "avatar_badge": "빅쇼트"
+    },
+    {
+      "id": "LI_LU",
+      "name": "Li Lu",
+      "name_kr": "리루",
+      "category": "VALUE",
+      "category_kr": "가치투자",
+      "organization": "히말라야 캐피털 (Himalaya Capital)",
+      "era": "1966 ~ 현재",
+      "philosophy": "아시아 및 글로벌 경제의 구조적 현대화 속에서 수십 년간 지속될 진정한 경제적 해자를 지닌 소수 독점 기업에 집중하는 현대적 롱텀 가치투자.",
+      "key_metrics": [
+        "장기ROIC",
+        "문명적성장추세",
+        "창업자기업가정신",
+        "압도적해자"
+      ],
+      "famous_quote": "진정한 가치투자는 지식의 복리를 쌓아 기업의 본질적 성장과 함께 늙어가는 것이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "히말라야"
+    },
+    {
+      "id": "EDWARD_THORP",
+      "name": "Edward O. Thorp",
+      "name_kr": "에드워드 소프",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "프린스턴 뉴포트 파트너스 (PNP, 연평균 20% 무손실)",
+      "era": "1932 ~ 현재",
+      "philosophy": "프랙셔널 켈리 공식(Fractional Kelly Criterion)을 통한 파산 확률 통제, 워런트 차익거래 및 통계적 차익거래의 수학적 창시자.",
+      "key_metrics": [
+        "켈리비중(f*)",
+        "기하평균성장률(g)",
+        "마찰비용허들",
+        "최대낙폭(MDD)"
+      ],
+      "famous_quote": "카지노든 주식시장이든 수학적 우위와 철저한 자금 관리가 결합되면 패배하지 않는다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.025,
+      "avatar_badge": "켈리공식"
+    },
+    {
+      "id": "JIM_SIMONS",
+      "name": "Jim Simons",
+      "name_kr": "짐 사이먼스",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "르네상스 테크놀로지스 메달리온 펀드 (수수료 차감 후 30년 연 39%)",
+      "era": "1938 ~ 2024",
+      "philosophy": "수학, 물리학, 신호 처리 알고리즘과 방대한 비정형 데이터 분석을 통해 시장 미세구조의 미세한 통계적 비효율성을 초단타 반복 차익거래.",
+      "key_metrics": [
+        "신호잡음비(SNR)",
+        "통계적유의성(p-value)",
+        "포트폴리오회전율",
+        "초단기예측력"
+      ],
+      "famous_quote": "우리는 인간의 예측을 믿지 않는다. 오직 엄밀하게 검증된 수학과 데이터만을 따른다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.025,
+      "avatar_badge": "메달리온"
+    },
+    {
+      "id": "DAVID_SHAW",
+      "name": "David E. Shaw",
+      "name_kr": "데이비드 쇼",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "D. E. Shaw & Co. (고성능 컴퓨팅 퀀트 펀드)",
+      "era": "1951 ~ 현재",
+      "philosophy": "컴퓨터 과학과 초고성능 분산 병렬 연산을 금융 시장에 접목하여 전 세계 유동성 자산의 복합 차익거래를 자동화.",
+      "key_metrics": [
+        "초고속알고리즘체결속도",
+        "다자산차익스프레드",
+        "시스템리스크제어"
+      ],
+      "famous_quote": "금융은 가장 정교한 알고리즘과 계산 과학이 실시간으로 검증되는 경기장이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.016,
+      "avatar_badge": "컴퓨팅퀀트"
+    },
+    {
+      "id": "CLIFF_ASNESS",
+      "name": "Cliff Asness",
+      "name_kr": "클리프 애스니스",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "AQR 캐피털 매니지먼트 (Applied Quantitative Research)",
+      "era": "1966 ~ 현재",
+      "philosophy": "가치(Value)와 모멘텀(Momentum)의 음의 상관관계를 이용한 롱숏 결합 및 멀티 팩터(퀄리티, 캐리, 저변동성) 체계적 자산배분.",
+      "key_metrics": [
+        "팩터익스포저",
+        "가치-모멘텀상관도",
+        "시장중립롱숏",
+        "추적오차"
+      ],
+      "famous_quote": "가치와 모멘텀은 서로의 최악의 순간을 완벽하게 치유해 주는 최고의 부부다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.016,
+      "avatar_badge": "AQR팩터"
+    },
+    {
+      "id": "ROBERT_MERTON",
+      "name": "Robert C. Merton",
+      "name_kr": "로버트 머튼",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "하버드 비즈니스 스쿨 / 노벨 경제학상 수상자",
+      "era": "1944 ~ 현재",
+      "philosophy": "연속시간 금융수학(Continuous-Time Finance)을 바탕으로 한 파생상품 가격 결정과 구조적 기업 부도 위험 모형(Merton Model).",
+      "key_metrics": [
+        "부도거리(Distance to Default)",
+        "델타헤지비율",
+        "연속시간변동성"
+      ],
+      "famous_quote": "금융 공학의 본질은 위험을 제거하는 것이 아니라 위험을 올바르게 측정하고 배분하는 것이다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.012,
+      "avatar_badge": "연속시간금융"
+    },
+    {
+      "id": "MYRON_SCHOLES",
+      "name": "Myron Scholes",
+      "name_kr": "마이런 숄즈",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "스탠퍼드 대학교 / 노벨 경제학상 수상자",
+      "era": "1941 ~ 현재",
+      "philosophy": "블랙-숄즈 옵션 가격 결정 모형의 공저자. 동적 복제(Dynamic Replication)를 통한 무위험 포트폴리오 구성의 이론적 토대 마련.",
+      "key_metrics": [
+        "내재변동성(IV)",
+        "옵션그릭스(Delta, Gamma, Vega)",
+        "동적복제오차"
+      ],
+      "famous_quote": "가격 결정 모델은 불확실성을 계량화하여 시장에 유동성을 부여한다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "블랙숄즈"
+    },
+    {
+      "id": "HARRY_MARKOWITZ",
+      "name": "Harry Markowitz",
+      "name_kr": "해리 마코위츠",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "현대 포트폴리오 이론(MPT)의 창시자 / 노벨 경제학상",
+      "era": "1927 ~ 2023",
+      "philosophy": "평균-분산 최적화(Mean-Variance Optimization)를 통해 자산 간 상관계수를 낮추어 동일 위험 대비 최대 기대수익을 제공하는 효율적 투자선(Efficient Frontier).",
+      "key_metrics": [
+        "공분산행렬",
+        "효율적투자선",
+        "분산투자효과",
+        "포트폴리오분산"
+      ],
+      "famous_quote": "분산투자는 금융 시장에서 공짜로 얻을 수 있는 유일한 점심이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.02,
+      "avatar_badge": "MPT창시"
+    },
+    {
+      "id": "WILLIAM_SHARPE",
+      "name": "William Sharpe",
+      "name_kr": "윌리엄 샤프",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "스탠퍼드 대학교 / 자본자산가격결정모형(CAPM) 창시자",
+      "era": "1934 ~ 현재",
+      "philosophy": "단위 위험(총변동성)당 초과수익을 측정하는 샤프 지수(Sharpe Ratio) 창안 및 시장 베타(Beta)와 체계적 위험의 분리.",
+      "key_metrics": [
+        "샤프지수(Sharpe)",
+        "시장베타(Beta)",
+        "자본자산선(CML)",
+        "체계적위험"
+      ],
+      "famous_quote": "모든 투자 성과는 수반된 위험의 크기로 조정되어야만 온전히 평가받을 수 있다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.018,
+      "avatar_badge": "샤프지수"
+    },
+    {
+      "id": "KEN_GRIFFIN",
+      "name": "Ken Griffin",
+      "name_kr": "켄 그리핀",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "시타델 LLC (Citadel & Citadel Securities)",
+      "era": "1968 ~ 현재",
+      "philosophy": "하버드 기숙사에서 시작하여 세계 최고의 멀티 스트래티지 헤지펀드와 유동성 공급 마켓 메이킹 인프라를 구축한 정밀 리스크 관리.",
+      "key_metrics": [
+        "시장중립유동성",
+        "스트레스테스트",
+        "VaR한도통제",
+        "멀티스트래티지"
+      ],
+      "famous_quote": "자본 배분과 인재 영입, 기술 투자에 있어 타협 없는 완벽함을 추구한다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.016,
+      "avatar_badge": "시타델"
+    },
+    {
+      "id": "JOHN_OVERDECK",
+      "name": "John Overdeck",
+      "name_kr": "존 오버덱",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "투 시그마 (Two Sigma Investments)",
+      "era": "1969 ~ 현재",
+      "philosophy": "수학 올림피아드 챔피언 출신으로 머신러닝, AI, 빅데이터 분석을 결합하여 시장 예측 모델을 과학적 방법론으로 설계.",
+      "key_metrics": [
+        "머신러닝예측정확도",
+        "빅데이터피처엔지니어링",
+        "알고리즘검증"
+      ],
+      "famous_quote": "투자란 데이터 사이언스를 통해 세상의 불확실성을 하나씩 해결해 나가는 과정이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "투시그마"
+    },
+    {
+      "id": "DAVID_SIEGEL",
+      "name": "David Siegel",
+      "name_kr": "데이비드 시겔",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "투 시그마 (Two Sigma) 공동 창업자 / MIT 컴퓨터과학 박사",
+      "era": "1961 ~ 현재",
+      "philosophy": "방대한 대체 데이터(Alternative Data)와 인공지능 신경망을 활용한 과학적 자산 운용 체계 구축.",
+      "key_metrics": [
+        "대체데이터알파",
+        "신경망학습수렴도",
+        "정량적리스크예측"
+      ],
+      "famous_quote": "세상의 모든 데이터는 미래를 가리키는 지문과 같다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "인공지능퀀트"
+    },
+    {
+      "id": "MARK_CARHART",
+      "name": "Mark Carhart",
+      "name_kr": "마크 카하트",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "케플러 파트너스 (Kepos Capital) / 4요인 모형 창시자",
+      "era": "1966 ~ 현재",
+      "philosophy": "파마-프렌치 3요인에 모멘텀(Momentum, WML) 팩터를 결합한 '카하트 4요인 모형'으로 뮤추얼 펀드의 초과수익 원천을 규명.",
+      "key_metrics": [
+        "모멘텀팩터(WML)",
+        "카하트4요인알파",
+        "지속가능수익분해"
+      ],
+      "famous_quote": "과거 1년간 강했던 주식은 단기적으로 지속되며, 이를 통제해야 진정한 매니저 알파가 보인다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.01,
+      "avatar_badge": "4요인모형"
+    },
+    {
+      "id": "FISCHER_BLACK",
+      "name": "Fischer Black",
+      "name_kr": "피셔 블랙",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "골드만삭스 퀀트 수석 / 블랙-리터만 모형 창시자",
+      "era": "1938 ~ 1995",
+      "philosophy": "시장 균형 수익률과 투자자의 주관적 전망을 베이지안(Bayesian) 통계로 최적 결합하는 블랙-리터만 포트폴리오 최적화 모형 구축.",
+      "key_metrics": [
+        "블랙-리터만사후기대수익",
+        "시장균형사전수익",
+        "베이지안신뢰도"
+      ],
+      "famous_quote": "노이즈(Noise)가 금융 거래를 가능하게 만들지만, 과학은 그 속에서 신호를 찾는다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.014,
+      "avatar_badge": "블랙리터만"
+    },
+    {
+      "id": "EUGENE_FAMA",
+      "name": "Eugene Fama",
+      "name_kr": "유진 파마",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "시카고 대학교 부스 경영대학원 / 노벨 경제학상 수상자",
+      "era": "1939 ~ 현재",
+      "philosophy": "효율적 시장 가설(EMH)과 소형주(SMB), 가치주(HML), 수익성(RMW), 투자성향(CMA)을 증명한 파마-프렌치 팩터 자산가격 모형.",
+      "key_metrics": [
+        "SMB(소형주)",
+        "HML(가치주)",
+        "RMW(수익성)",
+        "CMA(보수적투자)"
+      ],
+      "famous_quote": "시장은 대부분의 경우 가격에 이용 가능한 모든 정보를 반영할 정도로 놀랍도록 효율적이다.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.016,
+      "avatar_badge": "효율적시장"
+    },
+    {
+      "id": "MARCOS_LOPEZ_DE_PRADO",
+      "name": "Marcos López de Prado",
+      "name_kr": "마르코스 로페즈 데 프라도",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "ADIA(아부다비투자청) 퀀트 총괄 / 코넬대 교수",
+      "era": "1970 ~ 현재",
+      "philosophy": "백테스팅 과최적화 위조(Backtest Overfitting)를 막는 다중가설 검정, 계층적 위험 패리티(HRP) 머신러닝 자산배분.",
+      "key_metrics": [
+        "HRP(계층적리스크패리티)",
+        "디플레이션샤프지수",
+        "클러스터링분산"
+      ],
+      "famous_quote": "금융 머신러닝 연구의 90% 이상은 백테스트 과최적화라는 신기루에 속고 있다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "HRP머신러닝"
+    },
+    {
+      "id": "NEIL_SHEN",
+      "name": "Neil Shen",
+      "name_kr": "닐 셴",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "홍샨 (前 세쿼이아 캐피털 차이나)",
+      "era": "1967 ~ 현재",
+      "philosophy": "알고리즘적 데이터 분석과 테크 생태계 매핑을 통해 혁신 기업의 기하급수적 성장 곡선을 수학적으로 포착.",
+      "key_metrics": [
+        "성장곡선변곡점",
+        "네트워크효과지수",
+        "기술데이터매핑"
+      ],
+      "famous_quote": "최고의 투자는 숫자가 말해주는 기술 혁신의 복리 효과에 장기 베팅하는 것이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.01,
+      "avatar_badge": "테크계량"
+    },
+    {
+      "id": "RICHARD_DENNIS",
+      "name": "Richard Dennis",
+      "name_kr": "리처드 데니스",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "터틀 트레이더스 창시자 ($400를 2억 달러로 성장)",
+      "era": "1949 ~ 현재",
+      "philosophy": "기계적 돈치안 채널 브레이크아웃과 평균진폭(ATR) 기반의 포지션 사이징으로 인간의 심리를 배제한 엄격한 추세추종 시스템 트레이딩.",
+      "key_metrics": [
+        "돈치안20일돌파",
+        "N(ATR변동성)",
+        "피라미딩유닛",
+        "손절2N"
+      ],
+      "famous_quote": "우리는 규칙을 신문에 공개해도 좋다. 대부분의 사람들은 감정 때문에 규칙을 지키지 못한다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.012,
+      "avatar_badge": "터틀추세"
+    },
+    {
+      "id": "ED_SEYKOTA",
+      "name": "Ed Seykota",
+      "name_kr": "에드 세이코타",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "컴퓨터 기반 시스템 트레이딩 선구자 (16년간 수천 배 복리)",
+      "era": "1946 ~ 현재",
+      "philosophy": "지수이동평균(EMA) 알고리즘과 피드백 제어 공학을 접목한 절대적 리스크 한도 통제 및 추세 추종.",
+      "key_metrics": [
+        "지수이동평균(EMA)",
+        "계좌당최대리스크(1%)",
+        "손절매엄수"
+      ],
+      "famous_quote": "모든 사람은 시장에서 자신이 진정으로 원하는 것을 얻어 간다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.012,
+      "avatar_badge": "시스템매매"
+    },
+    {
+      "id": "LARRY_HITE",
+      "name": "Larry Hite",
+      "name_kr": "래리 하이트",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "민트 인베스트먼트 (세계 최초 자산 10억 달러 퀀트 헤지펀드)",
+      "era": "1941 ~ 현재",
+      "philosophy": "어떤 단일 거래에서도 전체 자산의 1% 이상을 결코 잃지 않는 비대칭적 위험 관리 통계 모델.",
+      "key_metrics": [
+        "1%위험룰",
+        "확률적우위검증",
+        "장기생존확률"
+      ],
+      "famous_quote": "내가 부자가 된 비밀은 간단하다. 게임에서 퇴출당하지만 않으면 이길 확률이 온다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.01,
+      "avatar_badge": "리스크제어"
+    },
+    {
+      "id": "MICHAEL_MARCUS",
+      "name": "Michael Marcus",
+      "name_kr": "마이클 마커스",
+      "category": "QUANT",
+      "category_kr": "계량·퀀트",
+      "organization": "커머디티 코퍼레이션 (3만 달러를 8천만 달러로 성장)",
+      "era": "1948 ~ 2023",
+      "philosophy": "기본적 거시 수급 불균형과 수학적 가격 차트의 돌파 시점이 일치할 때만 포지션을 대규모로 확대하는 퀀트-매크로 결합.",
+      "key_metrics": [
+        "수급불균형모멘텀",
+        "수익포지션확대",
+        "엄격한손절"
+      ],
+      "famous_quote": "틀렸다는 신호가 오면 즉시 빠져나와라. 계좌를 살려두어야 다음 큰 기회를 잡는다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.01,
+      "avatar_badge": "수급돌파"
+    },
+    {
+      "id": "GEORGE_SOROS",
+      "name": "George Soros",
+      "name_kr": "조지 소로스",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "소로스 펀드 매니지먼트 / 퀀텀 펀드 (연 30% 이상 성장)",
+      "era": "1930 ~ 현재",
+      "philosophy": "시장은 결코 균형 상태에 있지 않다는 재귀성 이론(Theory of Reflexivity). 가격의 편향이 펀더멘털을 바꾸고 버블이 터지는 변곡점에 집중 베팅.",
+      "key_metrics": [
+        "재귀적피드백루프",
+        "외환보유액괴리",
+        "정책불일치",
+        "불균형심리"
+      ],
+      "famous_quote": "옳고 그른지가 중요한 것이 아니다. 옳을 때 얼마를 벌고 틀릴 때 얼마를 잃는가가 중요하다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.022,
+      "avatar_badge": "재귀성"
+    },
+    {
+      "id": "RAY_DALIO",
+      "name": "Ray Dalio",
+      "name_kr": "레이 달리오",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "브릿지워터 어소시에이츠 (세계 최대 헤지펀드)",
+      "era": "1949 ~ 현재",
+      "philosophy": "경제 기계의 작동 원리(Economic Machine), 성장률과 인플레이션의 4계절을 리스크 패리티로 방어하는 전천후(All-Weather) 전략과 원칙(Principles).",
+      "key_metrics": [
+        "인플레이션서프라이즈",
+        "경제성장률모멘텀",
+        "부채사이클단계",
+        "리스크패리티"
+      ],
+      "famous_quote": "고통 더하기 성찰은 진보다(Pain + Reflection = Progress).",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.024,
+      "avatar_badge": "올웨더"
+    },
+    {
+      "id": "STANLEY_DRUCKENMILLER",
+      "name": "Stanley Druckenmiller",
+      "name_kr": "스탠리 드러켄밀러",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "듀케인 패밀리 오피스 (30년간 연평균 30% 단 한 해도 마이너스 없음)",
+      "era": "1953 ~ 현재",
+      "philosophy": "주가를 움직이는 것은 이익이 아니라 중앙은행의 유동성이다. 확신이 들 때 모든 자금을 집중 베팅하고, 틀렸을 땐 1초 만에 포지션을 청산한다.",
+      "key_metrics": [
+        "연준유동성지표",
+        "자금흐름스프레드",
+        "주도섹터모멘텀",
+        "거시변곡점"
+      ],
+      "famous_quote": "수익을 내는 핵심은 분산이 아니라 계란을 한 바구니에 담고 그 바구니를 극도로 주시하는 것이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.022,
+      "avatar_badge": "유동성매크로"
+    },
+    {
+      "id": "PAUL_TUDOR_JONES",
+      "name": "Paul Tudor Jones",
+      "name_kr": "폴 튜더 존스",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "튜더 인베스트먼트 코퍼레이션 (1987 블랙 먼데이 대폭락 예측 적중)",
+      "era": "1954 ~ 현재",
+      "philosophy": "항상 수비(하방 방어)를 먼저 생각하라. 200일 이동평균선 아래에 있는 자산은 절대 보유하지 않으며 비대칭 위험보상비(5:1)를 추구한다.",
+      "key_metrics": [
+        "200일이동평균",
+        "5:1위험보상비율",
+        "시장극단심리지수"
+      ],
+      "famous_quote": "내 최고의 원칙은 매일 아침 내가 가진 모든 포지션이 틀렸다고 가정하고 방어하는 것이다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.018,
+      "avatar_badge": "블랙먼데이"
+    },
+    {
+      "id": "JULIAN_ROBERTSON",
+      "name": "Julian Robertson",
+      "name_kr": "줄리안 로버트슨",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "타이거 매니지먼트 (타이거 컵스 수많은 거물 양성)",
+      "era": "1932 ~ 2022",
+      "philosophy": "업계 최고의 최고의 기업을 롱(매수)하고, 최악의 최악 기업을 숏(공매도)하는 스마트 롱숏 롱텀 펀더멘털 리서치.",
+      "key_metrics": [
+        "업종1위경쟁력",
+        "한계기업부실징후",
+        "롱숏스프레드"
+      ],
+      "famous_quote": "최고를 사고 최악을 팔아라. 시장의 잡음 속에서도 펀더멘털은 결국 승리한다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.016,
+      "avatar_badge": "타이거롱숏"
+    },
+    {
+      "id": "JOHN_PAULSON",
+      "name": "John Paulson",
+      "name_kr": "존 폴슨",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "폴슨 앤 코 (Paulson & Co., 2007년 역사상 단일 최대 200억 달러 수익)",
+      "era": "1955 ~ 현재",
+      "philosophy": "서브프라임 모기지 CDO의 내재된 부실과 신용평가 오류를 집요하게 계산하여 CDS(신용부도스와프) 비대칭 하방 베팅.",
+      "key_metrics": [
+        "주택압류율",
+        "CDS프리미엄",
+        "담보인정비율(LTV)",
+        "신용등급왜곡"
+      ],
+      "famous_quote": "모두가 낙관할 때 금융 구조의 근본적인 결함을 정량적으로 증명하면 역사가 된다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.016,
+      "avatar_badge": "서브프라임숏"
+    },
+    {
+      "id": "LOUIS_BACON",
+      "name": "Louis Bacon",
+      "name_kr": "루이스 베이컨",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "무어 캐피털 매니지먼트 (Moore Capital)",
+      "era": "1956 ~ 현재",
+      "philosophy": "지정학적 충격과 통화 정책 전환기에 탁월한 직관과 통계 분석으로 외환, 금리, 원자재 시장에서 엄격한 자본 보존을 실현.",
+      "key_metrics": [
+        "지정학적리스크지수",
+        "금리스와프곡선",
+        "통화변동성"
+      ],
+      "famous_quote": "돈을 벌기 전에 생존부터 하라. 리스크 관리는 성공한 트레이더의 모든 것이다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.012,
+      "avatar_badge": "자본보존"
+    },
+    {
+      "id": "DAVID_TEPPER",
+      "name": "David Tepper",
+      "name_kr": "데이비드 테퍼",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "아팔루사 매니지먼트 (Appaloosa Management)",
+      "era": "1957 ~ 현재",
+      "philosophy": "위기 상황에서 정부와 중앙은행이 반드시 구제금융이나 완화책을 쓸 수밖에 없다는 거시적 논리로 2009년 금융주 바닥 집중 매수.",
+      "key_metrics": [
+        "중앙은행개입확률",
+        "부실자산청산가치",
+        "시스템중요은행위험"
+      ],
+      "famous_quote": "정부가 시스템 붕괴를 막기 위해 돈을 쏟아붓고 있다면, 그 맞은편에 서지 마라.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.016,
+      "avatar_badge": "바닥매수"
+    },
+    {
+      "id": "BILL_ACKMAN",
+      "name": "Bill Ackman",
+      "name_kr": "빌 애크먼",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "퍼싱 스퀘어 캐피털 매니지먼트 (Pershing Square)",
+      "era": "1966 ~ 현재",
+      "philosophy": "소수의 단순하고 예측 가능한 현금흐름 창출 기업에 대한 행동주의 투자 및 팬데믹 CDS 신용 헤지 등 파격적인 매크로 비대칭 헷징.",
+      "key_metrics": [
+        "기업지배구조개선잠재력",
+        "불가항력헤지비대칭성",
+        "FCF창출력"
+      ],
+      "famous_quote": "모두가 지옥이 열렸다고 비명을 지를 때, 세상이 정상으로 돌아올 것에 조용히 베팅하라.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.014,
+      "avatar_badge": "행동주의"
+    },
+    {
+      "id": "DANIEL_LOEB",
+      "name": "Daniel Loeb",
+      "name_kr": "대니얼 로브",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "써드 포인트 (Third Point LLC)",
+      "era": "1961 ~ 현재",
+      "philosophy": "날카로운 공개 주주 서한과 이벤트 드리븐(Event-Driven) 전략으로 비효율적인 경영진을 교체하고 숨겨진 기업 가치를 촉발.",
+      "key_metrics": [
+        "이벤트촉매(Catalyst)",
+        "경영진성과인센티브",
+        "자사주매입여력"
+      ],
+      "famous_quote": "자본주의에서 무능한 경영진에게 온건한 태도를 보이는 것은 주주에 대한 배임이다.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.012,
+      "avatar_badge": "이벤트드리븐"
+    },
+    {
+      "id": "CARL_ICAHN",
+      "name": "Carl Icahn",
+      "name_kr": "칼 아이칸",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "아이칸 엔터프라이즈 (기업 사냥꾼에서 행동주의 대부로)",
+      "era": "1936 ~ 현재",
+      "philosophy": "저평가된 거대 기업의 지분을 확보한 뒤 이사회 진입, 비주력 사업 분할, 자사주 매입, 배당 확대를 관철시켜 주주가치를 극대화.",
+      "key_metrics": [
+        "순현금보유액",
+        "사업부분할가치(SOTP)",
+        "의결권지분율"
+      ],
+      "famous_quote": "월가에서 친구를 원한다면 차라리 개를 한 마리 키워라.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.014,
+      "avatar_badge": "기업사냥"
+    },
+    {
+      "id": "NELSON_PELTZ",
+      "name": "Nelson Peltz",
+      "name_kr": "넬슨 펠츠",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "트라이언 파트너스 (Trian Partners)",
+      "era": "1942 ~ 현재",
+      "philosophy": "프록터앤갬블(P&G), 웬디스 등 전통 소비재 및 산업재 공룡 기업들의 관료주의 비용을 삭감하고 운영 효율을 혁신하는 협력적 행동주의.",
+      "key_metrics": [
+        "판매관리비율",
+        "운영마진개선여력",
+        "자본지출효율성"
+      ],
+      "famous_quote": "우리는 회사를 해체하러 온 것이 아니다. 회사가 더 잘 달리도록 군살을 빼러 왔다.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.01,
+      "avatar_badge": "운영혁신"
+    },
+    {
+      "id": "FELIX_ZULAUF",
+      "name": "Felix Zulauf",
+      "name_kr": "펠릭스 주라프",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "주라프 컨설팅 / 배런스 라운드테이블 30년 패널",
+      "era": "1950 ~ 현재",
+      "philosophy": "스위스 정통 매크로 분석가. 글로벌 유동성 사이클, 부채 만기 구조, 통화 정책 역풍을 꿰뚫어보는 거시 자산배분의 전설.",
+      "key_metrics": [
+        "글로벌M2유동성",
+        "수익률곡선역전",
+        "달러인덱스사이클"
+      ],
+      "famous_quote": "사이클은 인간의 본성이 변하지 않는 한 영원히 반복된다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.01,
+      "avatar_badge": "스위스매크로"
+    },
+    {
+      "id": "JIM_CHANOS",
+      "name": "Jim Chanos",
+      "name_kr": "짐 차노스",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "키니코스 어소시에이츠 (세계 최고의 숏 전문 펀드, 엔론 사태 적발)",
+      "era": "1957 ~ 현재",
+      "philosophy": "분식회계, 부실한 자본 배분, 지속 불가능한 비즈니스 모델을 파헤치는 공매도의 전설. 화려한 과대광고 이면의 현금흐름 결손을 추적.",
+      "key_metrics": [
+        "수익대비현금흐름괴리",
+        "공격적수익인식",
+        "경영진비정상매도"
+      ],
+      "famous_quote": "사람들은 듣고 싶은 것만 믿지만, 감사 보고서의 각주는 거짓말을 하지 않는다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.014,
+      "avatar_badge": "엔론숏"
+    },
+    {
+      "id": "BRUCE_KOVNER",
+      "name": "Bruce Kovner",
+      "name_kr": "브루스 코브너",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "카스톤 캐피털 (Caxton Associates)",
+      "era": "1945 ~ 현재",
+      "philosophy": "글로벌 통화 및 채권 시장에서 수급 불일치와 정책 착오를 포착하고, 손실을 보았을 때 감정을 완벽히 배제하는 기계적 훈련.",
+      "key_metrics": [
+        "기술적브레이크아웃",
+        "거시펀더멘털일치도",
+        "포지션사이즈통제"
+      ],
+      "famous_quote": "훌륭한 트레이더는 강인하지만 결코 고집스럽지 않다. 틀렸을 땐 즉각 유연해진다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.012,
+      "avatar_badge": "카스톤"
+    },
+    {
+      "id": "MICHAEL_STEINHARDT",
+      "name": "Michael Steinhardt",
+      "name_kr": "마이클 스타인하트",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "스타인하트 파트너스 (28년간 연 24.5%)",
+      "era": "1940 ~ 현재",
+      "philosophy": "시장 참가자들의 합의된 통념과 반대로 베팅하는 '변형된 인식(Variant Perception)'. 통념과 실체의 격차를 포착.",
+      "key_metrics": [
+        "컨센서스왜곡도",
+        "정보비대칭스프레드",
+        "단기심리과열"
+      ],
+      "famous_quote": "누구나 아는 사실에 기반한 투자는 한 푼의 가치도 없다. 다르게 보고 증명하라.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "변형적인식"
+    },
+    {
+      "id": "LEON_COOPERMAN",
+      "name": "Leon Cooperman",
+      "name_kr": "레온 쿠퍼맨",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "오메가 어드바이저스 (Omega Advisors) / 골드만삭스 자산운용 CEO",
+      "era": "1943 ~ 현재",
+      "philosophy": "철저한 가치 기반의 매크로 롱숏. 밸류에이션이 매력적이면서 배당과 자사주 매입으로 주주에게 실질 현금을 환원하는 기업 선별.",
+      "key_metrics": [
+        "주주환원수익률",
+        "EBITDA마진",
+        "내재현금흐름할인율"
+      ],
+      "famous_quote": "나는 언제나 열심히 일하고 가치를 계산하는 상식적인 원칙을 믿는다.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.01,
+      "avatar_badge": "상식투자"
+    },
+    {
+      "id": "CHASE_COLEMAN",
+      "name": "Chase Coleman",
+      "name_kr": "체이스 콜먼",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "타이거 글로벌 매니지먼트 (Tiger Global)",
+      "era": "1975 ~ 현재",
+      "philosophy": "줄리안 로버트슨의 수제자로 글로벌 인터넷, 소프트웨어, 테크 혁신 기업의 초기 비상장부터 상장 시장까지 전 방위적 공격 베팅.",
+      "key_metrics": [
+        "글로벌테크성장률",
+        "클라우드ARR지속성",
+        "인터넷침투율"
+      ],
+      "famous_quote": "세상을 근본적으로 바꾸는 인터넷과 기술의 거대한 물결에 몸을 실어라.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "타이거글로벌"
+    },
+    {
+      "id": "PHILIPPE_LAFFONT",
+      "name": "Philippe Laffont",
+      "name_kr": "필립 라퐁",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "코트 매니지먼트 (Coatue Management)",
+      "era": "1967 ~ 현재",
+      "philosophy": "기술 혁신 주기(Tech Supercycle)와 반도체, AI, 컴퓨팅 하드웨어 수급 변곡점을 집요하게 추적하는 TMT 롱숏 헤지펀드.",
+      "key_metrics": [
+        "반도체사이클",
+        "AI인프라자본지출(Capex)",
+        "테크모멘텀"
+      ],
+      "famous_quote": "기술 혁명의 승자는 가장 뛰어난 연산 능력과 데이터를 쥔 기업이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "코트TMT"
+    },
+    {
+      "id": "STEVE_COHEN",
+      "name": "Steve Cohen",
+      "name_kr": "스티브 코헨",
+      "category": "MACRO",
+      "category_kr": "글로벌 매크로",
+      "organization": "포인트72 (Point72 Asset Management) / 前 SAC Capital",
+      "era": "1956 ~ 현재",
+      "philosophy": "수백 개의 독립된 투자 포드(Pod)를 운영하며 매일 시장의 실시간 가격 변동과 실적 서프라이즈를 추적하는 멀티 매니저 플랫폼.",
+      "key_metrics": [
+        "어닝서프라이즈모멘텀",
+        "포드별엄격한손절한도",
+        "시장중립알파"
+      ],
+      "famous_quote": "시장은 매일 새로운 정보를 쏟아낸다. 속도와 기율이 곧 경쟁력이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.014,
+      "avatar_badge": "포인트72"
+    },
+    {
+      "id": "PHILIP_FISHER",
+      "name": "Philip Fisher",
+      "name_kr": "필립 피셔",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "피셔 앤드 컴퍼니 (성장주 투자의 개척자)",
+      "era": "1907 ~ 2004",
+      "philosophy": "15가지 사실 수집 포인트(Scuttlebutt)를 통해 탁월한 R&D 역량과 뛰어난 마케팅, 정직한 경영진을 갖춘 위대한 성장 기업을 발굴.",
+      "key_metrics": [
+        "연구개발비율",
+        "매출성장률",
+        "사실수집(Scuttlebutt)",
+        "영업이익마진"
+      ],
+      "famous_quote": "주식을 매수할 때 올바르게 골랐다면 매도할 시점은 거의 영원히 오지 않는다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.02,
+      "avatar_badge": "성장주창시"
+    },
+    {
+      "id": "THOMAS_ROWE_PRICE",
+      "name": "Thomas Rowe Price Jr.",
+      "name_kr": "토마스 로 프라이스",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "T. 로 프라이스 (T. Rowe Price 창립자)",
+      "era": "1898 ~ 1983",
+      "philosophy": "산업과 기업의 수명 주기(Life Cycle)를 분석하여 경기 변동과 무관하게 이익을 늘려나가는 성장 산업의 초기 성숙기 기업을 선점.",
+      "key_metrics": [
+        "수명주기단계",
+        "주당순이익(EPS)성장",
+        "배당성장성"
+      ],
+      "famous_quote": "변화는 투자자에게 가장 지속적인 현실이자 가장 위대한 기회의 원천이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.016,
+      "avatar_badge": "수명주기"
+    },
+    {
+      "id": "PETER_THIEL",
+      "name": "Peter Thiel",
+      "name_kr": "피터 틸",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "파운더스 펀드 / 페이팔 마피아의 대부 (Zero to One)",
+      "era": "1967 ~ 현재",
+      "philosophy": "경쟁하지 말고 독점하라(Zero to One). 숨겨진 비밀(Secrets)을 발견하고 독점적 네트워크 효과와 규모의 경제를 지닌 기술 기업을 창조.",
+      "key_metrics": [
+        "독점력지수",
+        "기술우위배수(10배이상)",
+        "네트워크효과",
+        "비밀(Secrets)"
+      ],
+      "famous_quote": "경쟁은 패배자들의 것이다. 진정한 가치는 창조적 독점에서 나온다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.018,
+      "avatar_badge": "제로투원"
+    },
+    {
+      "id": "MARC_ANDREESSEN",
+      "name": "Marc Andreessen",
+      "name_kr": "마크 앤드리슨",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "앤드리슨 호로위츠 (a16z) / 넷스케이프 창업자",
+      "era": "1971 ~ 현재",
+      "philosophy": "'소프트웨어가 세상을 집어삼키고 있다(Software is eating the world)'. 모든 산업이 코드로 재정의되는 거대한 전환기에 과감한 벤처 베팅.",
+      "key_metrics": [
+        "소프트웨어마진율",
+        "디지털전환속도",
+        "기술침투율"
+      ],
+      "famous_quote": "소프트웨어가 전 세계의 모든 산업을 삼켜버릴 것이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.014,
+      "avatar_badge": "a16z"
+    },
+    {
+      "id": "BEN_HOROWITZ",
+      "name": "Ben Horowitz",
+      "name_kr": "벤 호로위츠",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "앤드리슨 호로위츠 (a16z, The Hard Thing About Hard Things 저자)",
+      "era": "1966 ~ 현재",
+      "philosophy": "위기 상황에서 난관을 돌파할 수 있는 창업자의 리더십과 기업 문화, 전시 CEO(Wartime CEO)의 실행력을 심층 평가.",
+      "key_metrics": [
+        "전시CEO역량",
+        "기업문화밀도",
+        "생존런웨이(Runway)"
+      ],
+      "famous_quote": "힘든 일에서 쉬운 길이란 없다. 오직 정면으로 부딪쳐 헤쳐 나가는 것뿐이다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.012,
+      "avatar_badge": "하드씽"
+    },
+    {
+      "id": "DON_VALENTINE",
+      "name": "Don Valentine",
+      "name_kr": "돈 밸런타인",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "세쿼이아 캐피털 창업자 (애플, 시스코, 오라클 초기 투자)",
+      "era": "1932 ~ 2019",
+      "philosophy": "'거대한 시장에 투자하라'. 뛰어난 사람보다 거대하고 폭발적인 시장 규모가 평범한 실수를 덮고 위대한 성장을 견인한다.",
+      "key_metrics": [
+        "TAM(총유효시장규모)",
+        "시장폭발성",
+        "기술필수성"
+      ],
+      "famous_quote": "위대한 시장을 찾아라. 거대한 시장이 결국 위대한 기업을 만든다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.016,
+      "avatar_badge": "세쿼이아"
+    },
+    {
+      "id": "JOHN_DOERR",
+      "name": "John Doerr",
+      "name_kr": "존 도어",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "클라이너 퍼킨스 (KPCB, 구글 및 아마존 초기 투자)",
+      "era": "1951 ~ 현재",
+      "philosophy": "목표와 핵심 결과(OKR, Objectives and Key Results) 기반의 집요한 실행력과 인류의 큰 문제를 해결하는 기술에 투자.",
+      "key_metrics": [
+        "OKR달성률",
+        "조직실행속도",
+        "기후및그린테크임팩트"
+      ],
+      "famous_quote": "아이디어는 쉽다. 중요한 것은 실행이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.016,
+      "avatar_badge": "OKR"
+    },
+    {
+      "id": "MICHAEL_MORITZ",
+      "name": "Michael Moritz",
+      "name_kr": "마이클 모리츠",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "세쿼이아 캐피털 (구글, 야후, 페이팔)",
+      "era": "1954 ~ 현재",
+      "philosophy": "저널리스트 출신의 날카로운 통찰로 인간의 결핍과 욕망을 가장 우아하게 해결하는 디지털 플랫폼을 조기 발견.",
+      "key_metrics": [
+        "고객유지율(Retention)",
+        "유기적바이럴계수",
+        "제품단순성"
+      ],
+      "famous_quote": "최고의 창업자는 유행을 따르지 않고 자신이 겪은 절실한 결핍을 해결한다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "플랫폼본질"
+    },
+    {
+      "id": "ARTHUR_ROCK",
+      "name": "Arthur Rock",
+      "name_kr": "아서 록",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "벤처캐피털(VC)이라는 개념을 최초로 만든 실리콘밸리의 아버지 (인텔, 애플 창업 자금 지원)",
+      "era": "1926 ~ 현재",
+      "philosophy": "아이디어보다 창업자의 정직함과 도덕성, 불굴의 인성을 신뢰하며 기술의 미래를 열어젖히는 헌신적인 파트너십.",
+      "key_metrics": [
+        "창업자인성평가",
+        "도덕적책임감",
+        "지적성실성"
+      ],
+      "famous_quote": "좋은 아이디어를 가진 평범한 사람보다, 평범한 아이디어를 실현하는 뛰어난 사람에게 투자하라.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.014,
+      "avatar_badge": "VC창시"
+    },
+    {
+      "id": "DOUG_LEONE",
+      "name": "Doug Leone",
+      "name_kr": "더그 레오네",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "세쿼이아 캐피털 글로벌 총괄",
+      "era": "1957 ~ 현재",
+      "philosophy": "어제 이룬 승리에 도취되지 않는 편집증적 절박함과 글로벌 확장성(Global Scalability)을 강조하는 냉혹한 성공 기율.",
+      "key_metrics": [
+        "글로벌확장속도",
+        "기업영업(B2B)LTV/CAC",
+        "생존절박함"
+      ],
+      "famous_quote": "우리는 결코 뒤를 돌아보지 않는다. 다음 세대의 위대한 기업만을 응시한다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.01,
+      "avatar_badge": "글로벌스케일"
+    },
+    {
+      "id": "MASAYOSHI_SON",
+      "name": "Masayoshi Son",
+      "name_kr": "손정의",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "소프트뱅크 그룹 / 비전 펀드 (1,000억 달러 초대형 펀드)",
+      "era": "1957 ~ 현재",
+      "philosophy": "인공지능과 초지능(ASI)이 인류의 모든 패러다임을 바꾼다는 300년 비전 하에 압도적 자본으로 시장을 독점시키는 스케일업 베팅.",
+      "key_metrics": [
+        "AI혁신파괴력",
+        "자본우위선점력",
+        "압도적비전"
+      ],
+      "famous_quote": "눈앞의 이익이 아니라 300년 후 인류의 미래를 바꾸는 기술에 모든 것을 건다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.014,
+      "avatar_badge": "초지능비전"
+    },
+    {
+      "id": "RON_CONWAY",
+      "name": "Ron Conway",
+      "name_kr": "론 콘웨이",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "SV 엔젤 (실리콘밸리의 대부, 에어비앤비, 트위터 초기 투자)",
+      "era": "1951 ~ 현재",
+      "philosophy": "엔젤 투자의 핵심은 창업자에 대한 조건 없는 신뢰와 창업자 커뮤니티 네트워크의 선한 영향력 연결.",
+      "key_metrics": [
+        "창업자네트워크평판",
+        "초기제품PMF",
+        "진정성"
+      ],
+      "famous_quote": "창업자를 진심으로 돕는 사람만이 다음 세대의 전설적인 기업을 만날 자격을 얻는다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.01,
+      "avatar_badge": "SV엔젤"
+    },
+    {
+      "id": "VINOD_KHOSLA",
+      "name": "Vinod Khosla",
+      "name_kr": "비노드 코슬라",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "코슬라 벤처스 (선마이크로시스템즈 공동창업자)",
+      "era": "1955 ~ 현재",
+      "philosophy": "성공 확률은 10%에 불과하지만 성공 시 세상을 1,000배 바꿀 수 있는 딥테크, 청정에너지, 생성형 AI에 대한 대담한 과학 베팅.",
+      "key_metrics": [
+        "과학적한계돌파",
+        "1000배잠재수익률",
+        "기후임팩트"
+      ],
+      "famous_quote": "실패할 확률을 두려워하지 마라. 성공했을 때 세상이 바뀔 크기만을 보라.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "딥테크"
+    },
+    {
+      "id": "ROELOF_BOTHA",
+      "name": "Roelof Botha",
+      "name_kr": "룰로프 보타",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "세쿼이아 캐피털 수석 파트너 (유튜브, 스퀘어, 몽고DB)",
+      "era": "1973 ~ 현재",
+      "philosophy": "페이팔 CFO 출신으로 탄탄한 단위 경제학(Unit Economics)과 데이터 기반의 현금흐름 규율을 혁신 기업에 심는 정밀한 성장 전략.",
+      "key_metrics": [
+        "단위경제학(Unit Economics)",
+        "고객획득비용회수기간",
+        "총마진율"
+      ],
+      "famous_quote": "성장은 아름답지만 통제되지 않는 단위 경제학은 파멸을 부른다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.01,
+      "avatar_badge": "단위경제"
+    },
+    {
+      "id": "REID_HOFFMAN",
+      "name": "Reid Hoffman",
+      "name_kr": "리드 호프먼",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "그레이록 파트너스 / 링크드인 창업자 (블리츠스케일링 저자)",
+      "era": "1967 ~ 현재",
+      "philosophy": "불확실한 상황에서도 효율보다 속도를 최우선으로 두어 시장을 번개처럼 독점하는 블리츠스케일링(Blitzscaling) 전략.",
+      "key_metrics": [
+        "블리츠스케일속도",
+        "네트워크효과임계점",
+        "플랫폼지배력"
+      ],
+      "famous_quote": "절벽에서 뛰어내리며 비행기를 조립하는 것, 그것이 스타트업이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "블리츠스케일"
+    },
+    {
+      "id": "PAUL_GRAHAM",
+      "name": "Paul Graham",
+      "name_kr": "폴 그레이엄",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "와이 콤비네이터 (Y Combinator) 창업자",
+      "era": "1964 ~ 현재",
+      "philosophy": "'사람들이 진정으로 원하는 것을 만들어라(Make something people want)'. 소수의 열광적인 초기 고객을 확보하고 기하급수적으로 성장.",
+      "key_metrics": [
+        "주간성장률(5-7%)",
+        "고객열광도(NPS)",
+        "제품반복속도"
+      ],
+      "famous_quote": "많은 사람이 적당히 좋아하는 것보다, 100명이 미치도록 사랑하는 것을 만들어라.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.014,
+      "avatar_badge": "YC창시"
+    },
+    {
+      "id": "FRED_WILSON",
+      "name": "Fred Wilson",
+      "name_kr": "프레드 윌슨",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "유니온 스퀘어 벤처스 (USV, 트위터, 코인베이스, 엣시)",
+      "era": "1961 ~ 현재",
+      "philosophy": "사용자가 참여할수록 가치가 기하급수적으로 폭증하는 개방형 프로토콜 및 대규모 네트워크 효과 기반 서비스에 집중.",
+      "key_metrics": [
+        "프로토콜활성사용자",
+        "네트워크효과밀도",
+        "분산원장혁신"
+      ],
+      "famous_quote": "최고의 벤처는 단순한 기업이 아니라 사람들을 연결하는 거대한 사회적 네트워크다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.01,
+      "avatar_badge": "네트워크효과"
+    },
+    {
+      "id": "BILL_GURLEY",
+      "name": "Bill Gurley",
+      "name_kr": "빌 걸리",
+      "category": "GROWTH_VC",
+      "category_kr": "성장주 & VC",
+      "organization": "벤치마크 캐피털 (Benchmark, 우버 초기 리드 투자)",
+      "era": "1966 ~ 현재",
+      "philosophy": "양면 시장(Two-Sided Market) 플랫폼의 유동성 선순환과 가격 결정력, 지속 가능한 현금흐름 전환 구조를 철저히 검증.",
+      "key_metrics": [
+        "양면네트워크유동성",
+        "테이크레이트(Take Rate)",
+        "자본효율성"
+      ],
+      "famous_quote": "돈을 태워 만드는 성장은 가짜다. 자립적이고 지속 가능한 네트워크만이 진짜다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "플랫폼경제"
+    },
+    {
+      "id": "JOHN_BOGLE",
+      "name": "John C. Bogle",
+      "name_kr": "존 보글",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "뱅가드 그룹 창립자 (인덱스 펀드의 아버지)",
+      "era": "1929 ~ 2019",
+      "philosophy": "건초더미에서 바늘을 찾으려 애쓰지 말고 건초더미 전체(광범위 시장 지수)를 통째로 사라. 불필요한 수수료, 세금, 매매 회전율을 극소화.",
+      "key_metrics": [
+        "운용보수비용(TER)",
+        "포트폴리오회전율",
+        "세금효율성",
+        "시장전체분산"
+      ],
+      "famous_quote": "투자에서 당신은 지불하지 않은 것만큼 보상받는다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.025,
+      "avatar_badge": "인덱스창시"
+    },
+    {
+      "id": "BURTON_MALKIEL",
+      "name": "Burton Malkiel",
+      "name_kr": "버튼 말킬",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "프린스턴 대학교 (A Random Walk Down Wall Street 저자)",
+      "era": "1932 ~ 현재",
+      "philosophy": "단기 주가 변동은 무작위 행보(Random Walk)에 가까우므로 액티브 펀드 매니저의 예측을 맹신하지 말고 시장 전체를 보유하며 리밸런싱하라.",
+      "key_metrics": [
+        "무작위행보가설",
+        "장기시장보유수익",
+        "주기적리밸런싱"
+      ],
+      "famous_quote": "눈을 가린 원숭이가 신문의 주식 면에 다트를 던져도 액티브 전문가들을 이긴다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.016,
+      "avatar_badge": "랜덤워크"
+    },
+    {
+      "id": "CHARLES_ELLIS",
+      "name": "Charles Ellis",
+      "name_kr": "찰스 엘리스",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "그리니치 어소시에이츠 창립자 (패자의 게임 저자)",
+      "era": "1937 ~ 현재",
+      "philosophy": "투자는 프로 테니스가 아니라 실수를 적게 하는 사람이 이기는 '패자의 게임(The Loser's Game)'. 불필요한 실수를 줄이고 원칙을 지키는 자산배분이 승리.",
+      "key_metrics": [
+        "실수비용통제",
+        "장기정책자산배분",
+        "감정적매매배제"
+      ],
+      "famous_quote": "투자는 훌륭한 샷을 치는 게임이 아니라 범실을 피하는 게임이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.014,
+      "avatar_badge": "패자의게임"
+    },
+    {
+      "id": "DAVID_SWENSEN",
+      "name": "David Swensen",
+      "name_kr": "데이비드 스웬슨",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "예일대학교 기금 최고투자책임자 (Yale Model 창시자)",
+      "era": "1954 ~ 2021",
+      "philosophy": "전통 채권을 줄이고 사모펀드, 벤처캐피털, 부동산, 절대수익 헤지펀드 등 비유동성 자산의 프리미엄을 장기적으로 수취하는 예일 기금 모델.",
+      "key_metrics": [
+        "비유동성프리미엄",
+        "대체자산다변화",
+        "장기기금시계"
+      ],
+      "famous_quote": "진정한 다각화는 상관관계가 없는 독립적인 고수익 자산들을 결합하는 것이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.02,
+      "avatar_badge": "예일모델"
+    },
+    {
+      "id": "WILLIAM_BERNSTEIN",
+      "name": "William Bernstein",
+      "name_kr": "윌리엄 번스타인",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "신경과 전문의 출신 자산배분가 (투자 포트폴리오의 네 기둥)",
+      "era": "1948 ~ 현재",
+      "philosophy": "이론, 역사, 심리, 비즈니스의 4대 기둥을 바탕으로 개인 투자자가 평생 실천할 수 있는 단순하고 견고한 인덱스 자산배분 구축.",
+      "key_metrics": [
+        "국내외자산비중",
+        "단기안전자산완충재",
+        "리밸런싱보너스"
+      ],
+      "famous_quote": "시장이 폭락할 때 침착하게 리밸런싱할 수 있는 안전자산 쿠션을 항상 마련해 두어라.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "4기둥배분"
+    },
+    {
+      "id": "ROBERT_SHILLER",
+      "name": "Robert Shiller",
+      "name_kr": "로버트 실러",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "예일 대학교 교수 / 노벨 경제학상 수상자 (CAPE 비율 창안)",
+      "era": "1946 ~ 현재",
+      "philosophy": "인플레이션을 조정한 10년 평균 이익 기반의 경기조정주가수익비율(CAPE Ratio)을 통해 장기 주식 시장의 고평가와 저평가 버블을 진단.",
+      "key_metrics": [
+        "CAPE(경기조정PER)",
+        "내러티브경제학",
+        "장기실질수익률"
+      ],
+      "famous_quote": "시장은 비이성적 과열(Irrational Exuberance)에 빠지며, 이는 내러티브를 타고 전염된다.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.016,
+      "avatar_badge": "CAPE실러"
+    },
+    {
+      "id": "RICHARD_THALER",
+      "name": "Richard Thaler",
+      "name_kr": "리처드 세일러",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "시카고 대학교 교수 / 노벨 경제학상 (행동경제학 & 넛지의 창시자)",
+      "era": "1945 ~ 현재",
+      "philosophy": "손실 회피(Loss Aversion), 심적 회계(Mental Accounting) 등 인간의 인지적 편향을 역이용하여 자동 저축과 자동 리밸런싱 시스템을 설계.",
+      "key_metrics": [
+        "행동편향교정",
+        "자동리밸런싱넛지",
+        "손실회피계수"
+      ],
+      "famous_quote": "사람들이 실수를 덜 하도록 시스템의 기본값(Default)을 올바르게 설계하라.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.014,
+      "avatar_badge": "넛지경제학"
+    },
+    {
+      "id": "JEREMY_SIEGEL",
+      "name": "Jeremy Siegel",
+      "name_kr": "제레미 시겔",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "와튼 스쿨 명예교수 (Stocks for the Long Run 저자)",
+      "era": "1945 ~ 현재",
+      "philosophy": "지난 200년간의 데이터를 통해 주식이 금, 달러, 채권보다 압도적으로 인플레이션을 방어하고 실질 6.7%의 복리 성장을 입증했음을 설파.",
+      "key_metrics": [
+        "200년실질수익률",
+        "배당재투자복리효과",
+        "인플레이션헤지"
+      ],
+      "famous_quote": "장기적으로 주식은 채권보다 덜 위험하며 인플레이션을 완벽히 이기는 유일한 자산이다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.016,
+      "avatar_badge": "장기투자"
+    },
+    {
+      "id": "ROGER_IBBOTSON",
+      "name": "Roger Ibbotson",
+      "name_kr": "로저 이봇슨",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "예일대 교수 / 이봇슨 어소시에이츠 창립자",
+      "era": "1943 ~ 현재",
+      "philosophy": "포트폴리오 수익률 변동의 90% 이상은 종목 선정이나 타이밍이 아니라 '자산배분 정책(Asset Allocation Policy)'에서 비롯됨을 실증 규명.",
+      "key_metrics": [
+        "자산배분기여도(90%이상)",
+        "자산군역사적리스크프리미엄",
+        "장기분산"
+      ],
+      "famous_quote": "어떤 종목을 사고팔지가 아니라 어떤 자산군을 얼마의 비율로 가질지가 모든 것을 결정한다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "배분기여도"
+    },
+    {
+      "id": "NASSIM_TALEB",
+      "name": "Nassim Nicholas Taleb",
+      "name_kr": "나심 니콜라스 탈렙",
+      "category": "INDEX_ALLOC",
+      "category_kr": "인덱스 & 자산배분",
+      "organization": "블랙 스완 & 안티프래질 (Antifragile) 창시자",
+      "era": "1960 ~ 현재",
+      "philosophy": "정규분포를 맹신하는 월가를 비판하며 극단적 위험(Tail Risk)에 대비하고, 혼란과 충격 속에서 오히려 더 강해지는 바벨 전략(Barbell Strategy) 구축.",
+      "key_metrics": [
+        "꼬리위험(Tail Risk)",
+        "바벨전략(초안전자산90%+초고위험옵션10%)",
+        "볼록성"
+      ],
+      "famous_quote": "바람은 촛불을 꺼뜨리지만 장작불은 활활 타오르게 만든다. 충격을 양분 삼는 불이 되어라.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.018,
+      "avatar_badge": "안티프래질"
+    },
+    {
+      "id": "JOHN_TEMPLETON",
+      "name": "Sir John Templeton",
+      "name_kr": "존 템플턴 경",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "템플턴 그로스 펀드 (글로벌 투자의 선구자)",
+      "era": "1912 ~ 2008",
+      "philosophy": "비관론이 극에 달했을 때가 바로 매수의 최적기(Maximum Pessimism). 전 세계에서 가장 절망적인 시장을 찾아 과감하게 씨앗을 뿌린다.",
+      "key_metrics": [
+        "최대비관론지수",
+        "글로벌가치스프레드",
+        "장기인내지수"
+      ],
+      "famous_quote": "가장 위험한 말은 '이번에는 다르다(This time is different)'는 말이다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.022,
+      "avatar_badge": "최대비관론"
+    },
+    {
+      "id": "MARK_MOBIUS",
+      "name": "Mark Mobius",
+      "name_kr": "마크 모비우스",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "모비우스 캐피털 파트너스 / 前 템플턴 이머징 마켓",
+      "era": "1936 ~ 현재",
+      "philosophy": "신흥국(Emerging Markets) 현장을 직접 발로 뛰며 정치적 불안과 위기 속에서 저평가된 제조 및 소비재 기업을 발굴.",
+      "key_metrics": [
+        "신흥국할인율",
+        "현장탐방팩트체크",
+        "지배구조개선"
+      ],
+      "famous_quote": "모두가 위기 때문에 도망칠 때 비행기 표를 끊고 그 나라로 날아가라.",
+      "ideal_regime": "SIDEWAYS",
+      "weight_in_council": 0.012,
+      "avatar_badge": "신흥국개척"
+    },
+    {
+      "id": "JIM_ROGERS",
+      "name": "Jim Rogers",
+      "name_kr": "짐 로저스",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "퀀텀 펀드 공동 창업자 / 원자재 지수 창안",
+      "era": "1942 ~ 현재",
+      "philosophy": "오토바이를 타고 전 세계를 여행하며 실물 경제와 원자재(Commodities), 농산물, 화폐 수급의 슈퍼사이클을 몸으로 체득.",
+      "key_metrics": [
+        "원자재슈퍼사이클",
+        "실물자산수급",
+        "글로벌화폐가치"
+      ],
+      "famous_quote": "변화의 바람이 불어오는 길목에 서서 물건이 저렴할 때 사서 기다려라.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "원자재매크로"
+    },
+    {
+      "id": "ANTHONY_BOLTON",
+      "name": "Anthony Bolton",
+      "name_kr": "앤서니 볼턴",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "피델리티 스페셜 시추에이션스 (28년간 연 19.5% 유럽 역발상 전설)",
+      "era": "1950 ~ 현재",
+      "philosophy": "악재로 인해 바닥에 내팽개쳐진 턴어라운드(Turnaround) 후보와 M&A 잠재력이 있는 기업을 조기에 선취매하는 정밀한 역발상 기법.",
+      "key_metrics": [
+        "턴어라운드가능성",
+        "내부자매수시그널",
+        "차트바닥다지기"
+      ],
+      "famous_quote": "최고의 기회는 시장에서 가장 미움받고 외면당한 주식 속에 숨어 있다.",
+      "ideal_regime": "BEAR",
+      "weight_in_council": 0.012,
+      "avatar_badge": "턴어라운드"
+    },
+    {
+      "id": "NICK_SLEEP",
+      "name": "Nick Sleep",
+      "name_kr": "닉 슬립",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "노마드 인베스트먼트 파트너십 (Nomad, 코스트코와 아마존에 전 재산 집중)",
+      "era": "1960 ~ 현재",
+      "philosophy": "비용 절감분을 고객에게 저렴한 가격으로 환원하여 고객 충성도와 규모의 경제를 무한 복리화하는 '규모의 경제 공유(Scale Economics Shared)'.",
+      "key_metrics": [
+        "규모의경제공유(SES)",
+        "고객환원잉여가치",
+        "장기집중지속성"
+      ],
+      "famous_quote": "기업이 만든 가치를 고객에게 돌려주는 기업은 영원히 망하지 않는 복리를 얻는다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.014,
+      "avatar_badge": "규모의경제"
+    },
+    {
+      "id": "SHELBY_DAVIS",
+      "name": "Shelby Davis",
+      "name_kr": "셸비 데이비스",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "데이비스 뉴욕 벤처 펀드 ($50,000를 9억 달러로 성장)",
+      "era": "1909 ~ 1994",
+      "philosophy": "이익이 성장하는 동시에 PER 배수도 함께 확장되는 '데이비스 더블 플레이(Davis Double Play)' 효과로 주가 폭발을 향유.",
+      "key_metrics": [
+        "PER멀티플확장",
+        "이익성장률",
+        "보험사플로트(Float)수익"
+      ],
+      "famous_quote": "저평가된 주식이 이익 성장과 밸류에이션 확장을 동시에 맞이할 때 기적이 일어난다.",
+      "ideal_regime": "BULL",
+      "weight_in_council": 0.012,
+      "avatar_badge": "더블플레이"
+    },
+    {
+      "id": "BERNARD_BARUCH",
+      "name": "Bernard Baruch",
+      "name_kr": "버나드 바루크",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "월가의 고독한 늑대이자 미국 대통령들의 금융 고문",
+      "era": "1870 ~ 1965",
+      "philosophy": "대중의 광기와 공포 심리를 냉정히 관찰하고, 항상 바닥에서 사서 꼭대기에서 팔려는 욕심을 버리고 중간의 안전한 마디를 취함.",
+      "key_metrics": [
+        "군중심리관찰",
+        "중간마디수익취득",
+        "유동성현금확보"
+      ],
+      "famous_quote": "나는 바닥에서 사서 꼭대기에서 판 적이 없다. 항상 너무 일찍 팔아서 큰 부자가 되었다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.012,
+      "avatar_badge": "군중심리"
+    },
+    {
+      "id": "JESSE_LIVERMORE",
+      "name": "Jesse Livermore",
+      "name_kr": "제시 리버모어",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "월가의 전설적인 개인 추세 트레이더",
+      "era": "1877 ~ 1940",
+      "philosophy": "시장의 최소 저항선(Line of Least Resistance)을 파악하고, 전환점(Pivot Point)에서 추세에 순응하며 수익이 나는 포지션을 지키는 피라미딩.",
+      "key_metrics": [
+        "전환점(Pivot)",
+        "최소저항선",
+        "피라미딩추세추종"
+      ],
+      "famous_quote": "월가에는 새로운 것이 없다. 인간의 본성이 변하지 않기에 역사는 반복된다.",
+      "ideal_regime": "VOLATILE",
+      "weight_in_council": 0.014,
+      "avatar_badge": "최소저항선"
+    },
+    {
+      "id": "JOHN_MAYNARD_KEYNES",
+      "name": "John Maynard Keynes",
+      "name_kr": "존 메이너드 케인스",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "케임브리지 킹스 칼리지 기금 최고운용자 (대공황 속에서도 12배 수익)",
+      "era": "1883 ~ 1946",
+      "philosophy": "미인대회 이론(Beauty Contest)으로 시장 심리를 꿰뚫고, 매크로 타이밍을 버리고 소수의 뛰어난 내재가치 기업에 집중 투자.",
+      "key_metrics": [
+        "미인대회심리",
+        "소수기업집중보유",
+        "경기순환독립성"
+      ],
+      "famous_quote": "시장은 당신이 파산하지 않고 버틸 수 있는 시간보다 훨씬 오랫동안 비이성적일 수 있다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.016,
+      "avatar_badge": "미인대회"
+    },
+    {
+      "id": "ANDRE_KOSTOLANY",
+      "name": "André Kostolany",
+      "name_kr": "앙드레 코스톨라니",
+      "category": "CONTRARIAN_GLOBAL",
+      "category_kr": "글로벌 역발상",
+      "organization": "유럽 증권계의 대부이자 투자의 철학자",
+      "era": "1906 ~ 1999",
+      "philosophy": "코스톨라니의 달걀 모델(Kostolany Egg)과 산책하는 개와 주인의 비유. 돈과 심리의 결합(돈 + 심리 = 추세)을 통한 순환 사이클 포착.",
+      "key_metrics": [
+        "코스톨라니달걀사이클",
+        "금리추세",
+        "소신파vs부화뇌동파"
+      ],
+      "famous_quote": "우량주식을 산 뒤 수면제를 먹고 몇 년 동안 푹 자라. 깨어나면 부자가 되어 있을 것이다.",
+      "ideal_regime": "ALL_REGIMES",
+      "weight_in_council": 0.018,
+      "avatar_badge": "달걀모델"
+    }
+  ]
+}

@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "current_checkpoint": {
-    "version": "2.2.27-Thorp",
-    "iteration": 27,
-    "trained_at": "2026-10-26T00:58:46.162180+00:00",
-    "teacher_kl_divergence": 0.0247,
-    "student_sharpe": 4.32,
-    "student_sortino": 5.64,
-    "student_mdd": 2.57,
-    "student_cvar_95": 2.17,
+    "version": "2.2.31-Thorp",
+    "iteration": 31,
+    "trained_at": "2026-10-26T14:51:20.493743+00:00",
+    "teacher_kl_divergence": 0.0286,
+    "student_sharpe": 4.8,
+    "student_sortino": 6.32,
+    "student_mdd": 2.5,
+    "student_cvar_95": 2.0,
     "ethics_compliance_rate": 100.0,
     "policy_weights": {
       "stock_weight": 0.6,
@@ -17,7 +17,7 @@
       "volatility_sensitivity": 0.75,
       "drift_tolerance_band": 2.5,
       "downside_aversion": 1.275,
-      "friction_hurdle_ratio": 1.8485879105211702
+      "friction_hurdle_ratio": 1.923647992525851
     }
   },
   "training_history": [
@@ -198,6 +198,34 @@
       "avg_kl": 0.0618,
       "sortino": 5.64,
       "updated_at": "2026-10-26T00:58:46.162180+00:00"
+    },
+    {
+      "iteration": 27,
+      "avg_reward": 2.4257,
+      "avg_kl": 0.0714,
+      "sortino": 5.81,
+      "updated_at": "2026-10-26T14:48:14.201858+00:00"
+    },
+    {
+      "iteration": 28,
+      "avg_reward": 2.4257,
+      "avg_kl": 0.0714,
+      "sortino": 5.98,
+      "updated_at": "2026-10-26T14:48:53.317509+00:00"
+    },
+    {
+      "iteration": 29,
+      "avg_reward": 2.4257,
+      "avg_kl": 0.0714,
+      "sortino": 6.15,
+      "updated_at": "2026-10-26T14:49:44.327422+00:00"
+    },
+    {
+      "iteration": 30,
+      "avg_reward": 2.4257,
+      "avg_kl": 0.0714,
+      "sortino": 6.32,
+      "updated_at": "2026-10-26T14:51:20.493743+00:00"
     }
   ]
 }

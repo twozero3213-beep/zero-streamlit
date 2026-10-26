@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="assets/lobby.css">
   <link rel="stylesheet" href="assets/social.css"><link rel="stylesheet" href="assets/company.css">
   <link rel="stylesheet" href="assets/lobby-polish.css">
+  <link rel="stylesheet" href="assets/research-center.css">
   <link rel="stylesheet" href="assets/viewport.css">
   <link rel="stylesheet" href="assets/office-sprites.css">
   <link rel="stylesheet" href="assets/office-native.css">
@@ -67,6 +68,7 @@
   <script src="assets/lobby-world.js" defer></script>
   <script src="assets/lobby-logic.js" defer></script>
   <script src="assets/lobby.js" defer></script>
+  <script src="assets/research-center.js" defer></script>
   <script src="assets/academy-logic.js" defer></script>
   <script src="assets/academy.js" defer></script>
   <link rel="stylesheet" href="assets/member-onboarding.css">
@@ -227,7 +229,67 @@
           <p class="lobby-hint">방향키·WASD로 걷고, 바닥을 누르면 그곳으로 가요. 직원을 누르면 대화해요. 직원은 가상 인물이며 연결된 AI와 대화해요. 사무실 말풍선은 연출 대사예요. 투자 권유는 하지 않아요.</p>
         </div>
       </div>
+      <!-- 100 World-Famous Legendary Investors Council & DRL Engine -->
+      <section class="research-council-section" id="research-council-section" aria-label="100인 전설적 투자자 리서치 센터">
+        <div class="council-header-wrap">
+          <div class="council-title-row">
+            <h3>🏛️ 전 세계 100인 전설적 투자자 리서치 센터 <span class="council-badge-pill">글로벌 100인 위원회</span></h3>
+            <button type="button" id="drl-train-btn" class="drl-train-btn">⚡ 자가 증류강화학습 1회 실행</button>
+          </div>
+          <div class="council-summary-grid">
+            <div class="council-summary-card">
+              <div class="summary-card-title">
+                <span>100인 위원회 실시간 합의 권고 비중</span>
+                <span id="council-sentiment-display">합의 심리: 계산 중…</span>
+              </div>
+              <div class="summary-consensus-weights" id="council-weights-display">
+                <span class="weight-item-stock">주식 계산 중</span> · 
+                <span class="weight-item-bond">채권 계산 중</span> · 
+                <span class="weight-item-cash">현금 계산 중</span>
+              </div>
+            </div>
+            <div class="council-summary-card">
+              <div class="summary-card-title">
+                <span>증류강화학습 (DRL) 자가 진화 모델</span>
+                <span style="color: #38bdf8; font-weight: 600;">PPO + Fractional Kelly</span>
+              </div>
+              <div class="drl-metric-line" id="drl-metrics-display">
+                <span class="drl-metric-tag">DRL v2.2-Thorp</span>
+                <span class="drl-metric-tag">자가 학습 활성화</span>
+                <span class="drl-metric-tag">Sortino 2.65</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="council-controls-row">
+          <div class="council-category-tabs" role="tablist">
+            <button type="button" class="active" data-category="ALL">전체 100인</button>
+            <button type="button" data-category="VALUE">가치투자 22인</button>
+            <button type="button" data-category="QUANT">계량·퀀트 20인</button>
+            <button type="button" data-category="MACRO">글로벌 매크로 20인</button>
+            <button type="button" data-category="GROWTH_VC">성장주 & VC 18인</button>
+            <button type="button" data-category="INDEX_ALLOC">인덱스 & 자산배분 10인</button>
+            <button type="button" data-category="CONTRARIAN_GLOBAL">글로벌 역발상 10인</button>
+          </div>
+          <input type="search" id="investor-search-input" class="council-search-input" placeholder="투자자 이름, 소속 펀드, 핵심 철학 검색 (예: 워런 버핏, 에드워드 소프, 레이 달리오, 켈리 공식, 인덱스)..." aria-label="투자자 검색">
+        </div>
+
+        <div class="investor-cards-grid" id="investor-cards-grid" role="region" aria-label="100인 투자자 목록"></div>
+      </section>
     </section>
+    <dialog id="investor-dialog" class="investor-dialog" aria-labelledby="dialog-inv-name">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div>
+          <h3 id="dialog-inv-name">투자자 정보</h3>
+          <p id="dialog-inv-weights" style="margin: 0; font-size: 12px; color: #38bdf8; font-weight: 600;"></p>
+        </div>
+        <button type="button" id="investor-dialog-close" class="icon-button icon-close" aria-label="닫기">닫기</button>
+      </div>
+      <div class="dialog-quote-box" id="dialog-inv-quote"></div>
+      <p id="dialog-inv-philo" style="font-size: 12px; color: #94a3b8; margin: 6px 0 12px;"></p>
+      <div class="dialog-reply-box" id="dialog-inv-reply"></div>
+    </dialog>
     <dialog id="lobby-chat" class="lobby-chat" aria-labelledby="lobby-chat-title"><div class="chat-head"><div><h2 id="lobby-chat-title"></h2><p id="lobby-chat-role"></p></div><button id="lobby-chat-close" class="icon-button icon-close" type="button" aria-label="대화 닫기" title="닫기">닫기</button></div>
       <div id="lobby-chat-log" class="chat-log" aria-live="polite"></div><div id="lobby-chat-topics" class="chat-topics"></div>
       <form id="lobby-chat-form" class="chat-form"><input id="lobby-chat-input" type="text" maxlength="600" placeholder="직원에게 자유롭게 물어보세요" aria-label="질문" aria-describedby="lobby-chat-disclosure"><button id="lobby-chat-send" class="primary-button" type="submit">보내기</button></form>

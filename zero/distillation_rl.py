@@ -142,15 +142,26 @@ class DistillationRLEngine:
         return ModelCheckpoint(**cp)
 
     def evaluate_teacher_policy(self, state: MarketState) -> Dict[str, float]:
-        """45인 전문가 앙상블 리서치(Teacher)의 거시 국면별 기준 최적 비중 산출"""
-        if state.regime == "BEAR":
-            return {"stock": 0.30, "bond": 0.45, "cash": 0.25}
-        elif state.regime == "BULL":
-            return {"stock": 0.75, "bond": 0.15, "cash": 0.10}
-        elif state.regime == "VOLATILE":
-            return {"stock": 0.45, "bond": 0.35, "cash": 0.20}
-        else:
-            return {"stock": 0.55, "bond": 0.30, "cash": 0.15}
+        """100인 전설적 투자자 위원회(Teacher)의 실시간 앙상블 합의 최적 비중 산출"""
+        try:
+            from zero.investors_100 import calculate_100_investors_consensus
+            consensus = calculate_100_investors_consensus(
+                regime=state.regime,
+                volatility_ann_pct=state.volatility_ann_pct,
+                mdd_pct=state.mdd_current_pct,
+                cvar_95_pct=state.cvar_95_pct,
+                usd_krw_rate=state.usd_krw_rate
+            )
+            return consensus.consensus_weights
+        except Exception:
+            if state.regime == "BEAR":
+                return {"stock": 0.30, "bond": 0.45, "cash": 0.25}
+            elif state.regime == "BULL":
+                return {"stock": 0.75, "bond": 0.15, "cash": 0.10}
+            elif state.regime == "VOLATILE":
+                return {"stock": 0.45, "bond": 0.35, "cash": 0.20}
+            else:
+                return {"stock": 0.55, "bond": 0.30, "cash": 0.15}
 
     def infer_student_action(self, state: MarketState) -> AllocationAction:
         """소프의 프랙셔널 켈리 & 마찰비용 허들을 결합한 학생 에이전트 추론"""
@@ -213,8 +224,12 @@ class DistillationRLEngine:
 
     def run_self_improving_cycle(
         self,
-        market_episodes: List[Dict[str, Any]]
+        market_episodes: Optional[List[Dict[str, Any]]] = None
     ) -> ModelCheckpoint:
+        if not market_episodes:
+            from zero.research_center import BENCHMARK_MARKET_EPISODES
+            market_episodes = BENCHMARK_MARKET_EPISODES
+
         curr = self.load_checkpoint()
         total_reward = 0.0
         total_kl = 0.0
