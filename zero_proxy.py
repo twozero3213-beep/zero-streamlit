@@ -261,6 +261,15 @@ async def api(request):
         elif path == '/api/market/recommendations':
             from zero.market_intelligence import get_daily_25_recommendations
             return JSONResponse(get_daily_25_recommendations())
+        elif path == '/api/market/quote':
+            from zero.realtime_stock_quote import get_quote_response
+            full_path = path + ('?' + request.url.query if request.url.query else '')
+            status_code, body = await run_in_threadpool(get_quote_response, full_path)
+            return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=15'})
+        elif path == '/api/live-quotes':
+            from zero.realtime_stock_quote import get_live_quotes_endpoint
+            status_code, body = await run_in_threadpool(get_live_quotes_endpoint, None)
+            return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=15'})
         else:
             body = await run_in_threadpool(get_public, path, query)
     except Unavailable as error:
