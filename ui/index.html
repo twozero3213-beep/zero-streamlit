@@ -246,6 +246,9 @@
               <span class="signal-text">적극 매수 (BUY) 결단</span>
               <small>보류(HOLD) 배제 · 단호한 확률 결단</small>
             </div>
+            <button type="button" id="open-morning-report-btn" class="secondary-button" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #fff; border: none; border-radius: 10px; padding: 8px 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);">
+              <span>☀️ 모닝 리포트 (Figma 뷰)</span>
+            </button>
           </div>
 
           <div class="director-verdict-grid">
@@ -696,6 +699,21 @@
 </div></div>
 </nav><p class="muted-note">자료 조회와 시뮬레이션을 위한 화면입니다. 실제 계좌 매매를 실행하지 않습니다.</p></dialog>
 <dialog id="company-dialog" aria-labelledby="company-title"><header class="company-dialog-header"><h2 id="company-title">종목 설명</h2><button id="company-close" class="icon-button icon-close" autofocus aria-label="종목 설명 닫기" title="닫기">닫기</button></header><div id="company-content"></div></dialog>
+  <dialog id="morning-report-dialog" class="morning-report-dialog" aria-labelledby="morning-report-title" style="max-width: 960px; width: 95vw; max-height: 90vh; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.15); background: #0b0f19; color: #f8fafc; padding: 0; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); overflow: hidden;">
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: rgba(22, 30, 49, 0.9);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">☀️</span>
+        <h3 id="morning-report-title" style="margin: 0; font-size: 18px; font-weight: 800;">ZERO 프리미엄 모닝 인텔리전스 (피그마 에디션)</h3>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" id="morning-report-refresh" class="secondary-button" style="padding: 6px 12px; font-size: 12px;">새로고침</button>
+        <button type="button" id="morning-report-close" class="icon-button icon-close" aria-label="보고서 닫기" style="cursor: pointer;">닫기</button>
+      </div>
+    </header>
+    <div id="morning-report-body" style="padding: 24px; overflow-y: auto; max-height: calc(90vh - 70px);">
+      <p style="color: #94a3b8; text-align: center; padding: 40px 0;">실시간 모닝 리포트를 생성하고 있습니다...</p>
+    </div>
+  </dialog>
   <script src="assets/headlines.js" defer></script>
   <script src="assets/install.js" defer></script>
 </body>

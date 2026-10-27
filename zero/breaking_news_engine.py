@@ -8,6 +8,8 @@ from datetime import datetime
 import re
 from typing import Dict, List, Optional, Set
 
+from zero.language_filter import sanitize_text
+
 
 @dataclass
 class NewsItem:
@@ -123,12 +125,12 @@ class BreakingNewsEngine:
         return 50  # 미등록 언론사 기본값
 
     def process_raw_item(self, raw_item: Dict[str, str]) -> NewsItem:
-        """원시 뉴스 데이터를 NewsItem으로 파싱 및 속보·단독·공신력 평가"""
-        title = str(raw_item.get("title") or "")
-        publisher = str(raw_item.get("publisher") or "일반")
+        """원시 뉴스 데이터를 NewsItem으로 파싱 및 속보·단독·공신력 평가 (언어 정제 및 오탈자 교정 포함)"""
+        title = sanitize_text(str(raw_item.get("title") or ""))
+        publisher = sanitize_text(str(raw_item.get("publisher") or "일반"))
         url = str(raw_item.get("url") or "")
         published_at = str(raw_item.get("published_at") or datetime.now().isoformat())
-        summary = str(raw_item.get("summary") or "")
+        summary = sanitize_text(str(raw_item.get("summary") or ""))
 
         is_breaking = bool(BREAKING_PATTERN.search(title))
         is_exclusive = bool(EXCLUSIVE_PATTERN.search(title))

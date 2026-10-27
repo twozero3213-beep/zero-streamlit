@@ -20,6 +20,50 @@
     fetchCouncilData();
     fetchInvestors();
     bindEvents();
+    bindMorningReportEvents();
+  }
+
+  function bindMorningReportEvents() {
+    const openBtn = document.getElementById('open-morning-report-btn');
+    const dialog = document.getElementById('morning-report-dialog');
+    const closeBtn = document.getElementById('morning-report-close');
+    const refreshBtn = document.getElementById('morning-report-refresh');
+    const body = document.getElementById('morning-report-body');
+
+    if (openBtn && dialog) {
+      openBtn.addEventListener('click', () => {
+        dialog.showModal();
+        loadMorningReport();
+      });
+    }
+
+    if (closeBtn && dialog) {
+      closeBtn.addEventListener('click', () => dialog.close());
+    }
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => loadMorningReport());
+    }
+
+    async function loadMorningReport() {
+      if (!body) return;
+      body.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 40px 0;">실시간 글로벌 지수, 환율, 속보 및 40년차 월가 결단을 통합 분석 중입니다...</p>';
+      try {
+        const res = await fetch('api/market/morning-report?format=html').catch(() => fetch('api/market/morning-report?format=html'));
+        if (res && res.ok) {
+          const htmlText = await res.text();
+          // Extract container content or render directly inside shadow/iframe or innerHTML
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlText, 'text/html');
+          const container = doc.querySelector('.container') || doc.body;
+          body.innerHTML = container.innerHTML;
+        } else {
+          body.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 40px 0;">모닝 리포트를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>';
+        }
+      } catch (err) {
+        body.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 40px 0;">모닝 리포트 조회 중 오류가 발생했습니다.</p>';
+      }
+    }
   }
 
   // 1. 월가 40년차 총괄 디렉터 결단 조회
