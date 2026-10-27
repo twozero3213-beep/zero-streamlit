@@ -43,6 +43,17 @@ class ModernMorningReportBuilder:
         indices = custom_indices or pulse["indices"]
         fx_rates = custom_fx or pulse["fx_rates"]
 
+        # 1-1. 실시간 주요 종목 시세 (토스·한투·네이버 연동)
+        stock_quotes = []
+        try:
+            from zero.realtime_stock_quote import fetch_multiple_quotes
+            raw_quotes = fetch_multiple_quotes(["005930", "000660", "NVDA", "SPY"])
+            for sym in ["005930", "000660", "NVDA", "SPY"]:
+                if sym in raw_quotes:
+                    stock_quotes.append(raw_quotes[sym])
+        except Exception:
+            pass
+
         # 2. 긴급/속보/단독 뉴스 정제 및 무료 범용 AI 요약
         engine = BreakingNewsEngine(max_output_items=10)
         raw_news = news_items or [
@@ -104,6 +115,7 @@ class ModernMorningReportBuilder:
             "date_str": f"{self.at:%Y년 %m월 %d일}({WEEKDAYS[self.at.weekday()]}) {self.at:%H:%M} KST",
             "indices": indices,
             "fx_rates": fx_rates,
+            "stock_quotes": stock_quotes,
             "news": processed_news,
             "verdict": verdict,
             "recommendations": rec_data,
@@ -138,6 +150,20 @@ class ModernMorningReportBuilder:
             status = "🟢 상승" if fx["change"] > 0 else "🔴 하락" if fx["change"] < 0 else "⚪ 보합"
             lines.append(f"| {sanitize_text(fx['name'])} | {fx['rate']:,.2f}원 | {sign}{fx['change']:,.2f} | {sign}{fx['change_percent']:.2f}% | {status} |")
         lines.append("")
+
+        if d.get("stock_quotes"):
+            lines.append("## 💎 2-1. 실시간 핵심 종목 시세 (토스·한투·네이버 실시간 피드)")
+            lines.append("| 종목명 (티커) | 현재가 | 전일 대비 | 등락률 | 수신 출처 |")
+            lines.append("|---|---|---|---|---|")
+            for stk in d["stock_quotes"]:
+                chg = stk.get("change", 0.0)
+                rate = stk.get("change_percent", 0.0)
+                sign = "+" if chg > 0 else ""
+                curr_symbol = "원" if stk.get("currency") == "KRW" else "$"
+                status = "🟢 상승" if chg > 0 else "🔴 하락" if chg < 0 else "⚪ 보합"
+                src = stk.get("source", "LIVE")
+                lines.append(f"| {sanitize_text(stk['name'])} ({stk['symbol']}) | {stk['current_price']:,.2f}{curr_symbol} | {sign}{chg:,.2f} | {sign}{rate:.2f}% | {src} ({status}) |")
+            lines.append("")
 
         # 3. 긴급 · 속보 · 단독 하이라이트
         lines.append("## ⚡ 3. 긴급 · 속보 · 단독 인텔리전스 (오탈자/언어 정제 완료)")
@@ -202,6 +228,17 @@ class ModernMorningReportBuilder:
                 </div>
             </div>
         """ for fx in d["fx_rates"])
+
+        stocks_html = "".join(f"""
+            <div class="matrix-card">
+                <div class="card-label">{html.escape(sanitize_text(stk['name']))} <span class="curr">({stk['symbol']})</span></div>
+                <div class="card-val">{stk['current_price']:,.2f} <span class="curr">{stk['currency']}</span></div>
+                <div class="card-delta {'up' if stk.get('change', 0) > 0 else 'down' if stk.get('change', 0) < 0 else 'flat'}">
+                    {'+' if stk.get('change', 0) > 0 else ''}{stk.get('change', 0):,.2f} ({'+' if stk.get('change_percent', 0) > 0 else ''}{stk.get('change_percent', 0):.2f}%)
+                </div>
+                <div class="card-sub">{stk.get('source', 'LIVE')}</div>
+            </div>
+        """ for stk in d.get("stock_quotes", []))
 
         news_html = "".join(f"""
             <div class="news-item-card">
@@ -478,6 +515,10 @@ body {{
     <div>
         <div class="section-title">💱 실시간 주요 환율 매트릭스</div>
         <div class="matrix-grid">{fx_html}</div>
+    </div>
+    <div>
+        <div class="section-title">💎 실시간 핵심 종목 시세 (토스·한투·네이버 실시간 피드)</div>
+        <div class="matrix-grid">{stocks_html}</div>
     </div>
 
     <!-- Flash Breaking & Exclusive News -->

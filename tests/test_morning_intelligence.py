@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 # -*- coding: utf-8 -*-
 """모던 아침 보고서, 언어 필터, 실시간 지수/환율 및 무료 범용 AI 툴 종합 테스트."""
 from datetime import datetime, timezone, timedelta
