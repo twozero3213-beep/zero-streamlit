@@ -220,6 +220,18 @@ def get_trends():
 
 async def api(request):
     path = '/api/' + request.path_params['path']
+    if path == '/api/research/consult-asset' and request.method == 'POST':
+        try:
+            from zero.market_intelligence import consult_investor_on_specific_asset
+            body = await request.json()
+            inv_id = body.get('investor_id', 'WARREN_BUFFETT')
+            asset = body.get('asset', 'NVDA')
+            q = body.get('question', '')
+            res = consult_investor_on_specific_asset(inv_id, asset, q)
+            return JSONResponse(res, headers={'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff'})
+        except Exception as e:
+            return JSONResponse({'error': 'CONSULT_ASSET_FAILED', 'detail': type(e).__name__}, status_code=500)
+
     if request.method != 'GET':
         # Account refresh and office requests run only on the owner's PC.
         return JSONResponse({'error': 'OWNER_PC_ONLY'}, status_code=403)
@@ -237,6 +249,18 @@ async def api(request):
             body = await run_in_threadpool(get_stock_news, query['code'])
         elif path == '/api/market-rank' and not query:
             body = await run_in_threadpool(get_rankings)
+        elif path == '/api/macro':
+            from zero.macro_indicators import get_macro_indicators
+            return JSONResponse({'macro': get_macro_indicators(search=query.get('q'), country=query.get('country', 'ALL'), category=query.get('category', 'ALL'))})
+        elif path == '/api/market/chief-verdict':
+            from zero.market_intelligence import get_chief_director_verdict
+            return JSONResponse(get_chief_director_verdict(query.get('target', 'MARKET_OVERALL')).to_dict())
+        elif path == '/api/market/debate':
+            from zero.market_intelligence import generate_daily_council_debate
+            return JSONResponse(generate_daily_council_debate(query.get('date')).to_dict())
+        elif path == '/api/market/recommendations':
+            from zero.market_intelligence import get_daily_25_recommendations
+            return JSONResponse(get_daily_25_recommendations())
         else:
             body = await run_in_threadpool(get_public, path, query)
     except Unavailable as error:

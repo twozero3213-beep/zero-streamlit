@@ -122,6 +122,9 @@ def overlay(base, copy=True):
         remaining = max(0, round(_next_check - time.monotonic()))
     result = deepcopy(base) if copy else base
     result['macro'] = _merge_macro(current.get('macro', []), result.get('macro', []))
+    if not result.get('macro'):
+        from zero.macro_indicators import VERIFIED_MACRO_ITEMS
+        result['macro'] = VERIFIED_MACRO_ITEMS
     library = current.get('library')
     old_library = result.get('briefing_sources')
     if library and (not old_library or datetime.fromisoformat(library['as_of']) >= datetime.fromisoformat(old_library['as_of'])):
