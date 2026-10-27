@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "policy": "ZERO calls only the hosts listed here. No host is an AI provider except Cloudflare Workers AI, which runs through the zero-lobby Worker binding under a daily cap below the free allocation (see zero/web/office-dialogue.mjs). A new host needs an entry with its cost class before it can ship; tests/test_external_sources.py enforces this.",
+  "cost_classes": {
+    "FREE_NO_KEY": "public endpoint, no credential",
+    "FREE_TIER_KEY": "free tier behind the owner's own key, which is read by a loader and never printed",
+    "MOCK_ONLY": "broker mock environment, no real account or order",
+    "BROKER_DOCS": "published API description only, read for contract checks",
+    "OWN_SERVICE": "ZERO's own deployment",
+    "LOCAL": "this PC or a synthetic test name",
+    "REFERENCE_LINK": "page a person opens in a browser, not called by code",
+    "NAMESPACE_OR_LICENSE": "XML namespace, license or citation URL, never fetched"
+  },
+  "ai_provider_hosts_forbidden": [
+    "api.openai.com",
+    "api.anthropic.com",
+    "generativelanguage.googleapis.com",
+    "integrate.api.nvidia.com",
+    "api.x.ai",
+    "api.mistral.ai",
+    "api.deepseek.com",
+    "api.moonshot.ai",
+    "openrouter.ai",
+    "api.groq.com",
+    "api.together.xyz",
+    "api.cohere.com"
+  ],
+  "hosts": {
+    "query1.finance.yahoo.com": [
+      "FREE_NO_KEY",
+      "delayed public quotes and charts"
+    ],
+    "query2.finance.yahoo.com": [
+      "FREE_NO_KEY",
+      "delayed public quotes and charts"
+    ],
+    "feeds.finance.yahoo.com": [
+      "FREE_NO_KEY",
+      "market headlines feed"
+    ],
+    "finance.yahoo.com": [
+      "REFERENCE_LINK",
+      "quote page link"
+    ],
+    "news.google.com": [
+      "FREE_NO_KEY",
+      "headline RSS"
+    ],
+    "open.er-api.com": [
+      "FREE_NO_KEY",
+      "exchange rates"
+    ],
+    "api.open-meteo.com": [
+      "FREE_NO_KEY",
+      "Seoul weather in the office"
+    ],
+    "date.nager.at": [
+      "FREE_NO_KEY",
+      "Korean public holidays in the office"
+    ],
+    "fred.stlouisfed.org": [
+      "FREE_NO_KEY",
+      "macro series CSV"
+    ],
+    "api.stlouisfed.org": [
+      "FREE_TIER_KEY",
+      "FRED API"
+    ],
+    "api.bls.gov": [
+      "FREE_TIER_KEY",
+      "US labor statistics"
+    ],
+    "www.bls.gov": [
+      "FREE_NO_KEY",
+      "US labor statistics pages"
+    ],
+    "data.sec.gov": [
+      "FREE_NO_KEY",
+      "SEC filings data"
+    ],
+    "www.sec.gov": [
+      "FREE_NO_KEY",
+      "SEC filings and 13F"
+    ],
+    "www.federalreserve.gov": [
+      "FREE_NO_KEY",
+      "Fed releases"
+    ],
+    "ecos.bok.or.kr": [
+      "FREE_TIER_KEY",
+      "Bank of Korea statistics"
+    ],
+    "ecos": [
+      "NAMESPACE_OR_LICENSE",
+      "short name inside a path, not a host"
+    ],
+    "kosis.kr": [
+      "FREE_TIER_KEY",
+      "Korean statistics"
+    ],
+    "opendart.fss.or.kr": [
+      "FREE_TIER_KEY",
+      "Korean disclosures"
+    ],
+    "api.odcloud.kr": [
+      "FREE_TIER_KEY",
+      "public data portal, pension holdings"
+    ],
+    "fund.nps.or.kr": [
+      "FREE_NO_KEY",
+      "National Pension Service holdings"
+    ],
+    "mods.go.kr": [
+      "REFERENCE_LINK",
+      "ministry page"
+    ],
+    "finnhub.io": [
+      "FREE_TIER_KEY",
+      "free-tier market data connector"
+    ],
+    "stockanalysis.com": [
+      "FREE_NO_KEY",
+      "public ETF holdings pages"
+    ],
+    "stock.naver.com": [
+      "FREE_NO_KEY",
+      "public Korean stock pages"
+    ],
+    "m.stock.naver.com": [
+      "FREE_NO_KEY",
+      "public Korean stock facts and daily investor net buying (read-only, undocumented pages)"
+    ],
+    "n.news.naver.com": [
+      "REFERENCE_LINK",
+      "news article pages the reader opens in a browser, never fetched by code"
+    ],
+    "navercomp.wisereport.co.kr": [
+      "FREE_NO_KEY",
+      "public Korean company pages"
+    ],
+    "wts-info-api.tossinvest.com": [
+      "FREE_NO_KEY",
+      "Toss public company information"
+    ],
+    "openapi.tossinvest.com": [
+      "BROKER_DOCS",
+      "Toss open API contract; account calls stay disabled"
+    ],
+    "openapivts.koreainvestment.com": [
+      "MOCK_ONLY",
+      "KIS mock environment"
+    ],
+    "www.ssga.com": [
+      "FREE_NO_KEY",
+      "ETF issuer holdings"
+    ],
+    "www.ishares.com": [
+      "FREE_NO_KEY",
+      "ETF issuer holdings"
+    ],
+    "advisors.vanguard.com": [
+      "FREE_NO_KEY",
+      "ETF issuer holdings"
+    ],
+    "www.schwabassetmanagement.com": [
+      "FREE_NO_KEY",
+      "ETF issuer holdings"
+    ],
+    "www.schwab.com": [
+      "REFERENCE_LINK",
+      "issuer page"
+    ],
+    "www.proshares.com": [
+      "FREE_NO_KEY",
+      "ETF issuer holdings"
+    ],
+    "www.invesco.com": [
+      "FREE_NO_KEY",
+      "ETF issuer holdings"
+    ],
+    "dng-api.invesco.com": [
+      "FREE_NO_KEY",
+      "ETF issuer holdings"
+    ],
+    "am.jpmorgan.com": [
+      "FREE_NO_KEY",
+      "ETF issuer holdings"
+    ],
+    "www.fidelity.com": [
+      "REFERENCE_LINK",
+      "issuer page"
+    ],
+    "www.riseetf.co.kr": [
+      "FREE_NO_KEY",
+      "Korean ETF issuer"
+    ],
+    "kbam.co.kr": [
+      "FREE_NO_KEY",
+      "Korean ETF issuer"
+    ],
+    "api.spdrgoldshares.com": [
+      "FREE_NO_KEY",
+      "gold trust data"
+    ],
+    "www.nasdaq.com": [
+      "REFERENCE_LINK",
+      "exchange page"
+    ],
+    "www.cmegroup.com": [
+      "REFERENCE_LINK",
+      "exchange page"
+    ],
+    "www.cboe.com": [
+      "REFERENCE_LINK",
+      "VIX explanation link"
+    ],
+    "www.investor.gov": [
+      "REFERENCE_LINK",
+      "SEC investor education link"
+    ],
+    "www.tradingview.com": [
+      "REFERENCE_LINK",
+      "chart link"
+    ],
+    "api.cloudflare.com": [
+      "OWN_SERVICE",
+      "Cloudflare account API used by the owner's publisher and the dialogue comparison script"
+    ],
+    "developers.cloudflare.com": [
+      "REFERENCE_LINK",
+      "documentation link"
+    ],
+    "supabase.com": [
+      "REFERENCE_LINK",
+      "documentation link for member sign-in"
+    ],
+    "github.com": [
+      "REFERENCE_LINK",
+      "repository links"
+    ],
+    "api.github.com": [
+      "FREE_NO_KEY",
+      "repository metadata"
+    ],
+    "raw.githubusercontent.com": [
+      "FREE_NO_KEY",
+      "public raw files"
+    ],
+    "pypi.org": [
+      "REFERENCE_LINK",
+      "package metadata"
+    ],
+    "zero-lobby.zero-cloudflare.workers.dev": [
+      "OWN_SERVICE",
+      "account and dialogue Worker"
+    ],
+    "zero-portfolio.zero-cloudflare.workers.dev": [
+      "OWN_SERVICE",
+      "owner-private site"
+    ],
+    "zero-portfolio.twozero3213.chatgpt.site": [
+      "OWN_SERVICE",
+      "owner-private site"
+    ],
+    "zero0-app-cetbxbxq3xmjpxotbyabfw.streamlit.app": [
+      "OWN_SERVICE",
+      "public viewer"
+    ],
+    "127.0.0.1": [
+      "LOCAL",
+      "loopback dashboard"
+    ],
+    "zero.local": [
+      "LOCAL",
+      "synthetic name"
+    ],
+    "quant.internal": [
+      "LOCAL",
+      "synthetic name"
+    ],
+    "www": [
+      "NAMESPACE_OR_LICENSE",
+      "fragment of a pattern, not a host"
+    ],
+    "query1": [
+      "NAMESPACE_OR_LICENSE",
+      "fragment of a pattern, not a host"
+    ],
+    "query2": [
+      "NAMESPACE_OR_LICENSE",
+      "fragment of a pattern, not a host"
+    ],
+    "www.w3.org": [
+      "NAMESPACE_OR_LICENSE",
+      "XML or SVG namespace"
+    ],
+    "schemas.openxmlformats.org": [
+      "NAMESPACE_OR_LICENSE",
+      "document namespace"
+    ],
+    "purl.org": [
+      "NAMESPACE_OR_LICENSE",
+      "document namespace"
+    ],
+    "www.apache.org": [
+      "NAMESPACE_OR_LICENSE",
+      "license"
+    ],
+    "creativecommons.org": [
+      "NAMESPACE_OR_LICENSE",
+      "license"
+    ],
+    "kenney.nl": [
+      "REFERENCE_LINK",
+      "asset credit"
+    ],
+    "opengameart.org": [
+      "REFERENCE_LINK",
+      "asset credit"
+    ],
+    "eloquentjavascript.net": [
+      "REFERENCE_LINK",
+      "credit in the vendored path-finding file"
+    ],
+    "theory.stanford.edu": [
+      "REFERENCE_LINK",
+      "credit in the vendored path-finding file"
+    ],
+    "finance.naver.com": [
+      "FREE_NO_KEY",
+      "public Korean stock indices and FX rates"
+    ],
+    "www.bok.or.kr": [
+      "FREE_NO_KEY",
+      "Bank of Korea public policy releases and indicators"
+    ],
+    "www.treasury.gov": [
+      "FREE_NO_KEY",
+      "US Treasury interest rate yield curves"
+    ],
+    "www.eia.gov": [
+      "FREE_NO_KEY",
+      "US Energy Information Administration crude oil indicators"
+    ]
+  }
+}

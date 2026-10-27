@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "current_checkpoint": {
-    "version": "2.2.39-Thorp",
-    "iteration": 39,
-    "trained_at": "2026-10-27T02:06:44.765455+00:00",
+    "version": "2.2.48-Thorp",
+    "iteration": 48,
+    "trained_at": "2026-10-27T08:38:52.383549+00:00",
     "teacher_kl_divergence": 0.0286,
-    "student_sharpe": 5.78,
-    "student_sortino": 7.71,
+    "student_sharpe": 6.8,
+    "student_sortino": 9.15,
     "student_mdd": 2.5,
     "student_cvar_95": 2.0,
     "ethics_compliance_rate": 100.0,
@@ -264,24 +264,87 @@
     },
     {
       "iteration": 36,
-      "avg_reward": 2.4257,
-      "avg_kl": 0.0714,
-      "sortino": 7.37,
-      "updated_at": "2026-10-27T02:03:26.336654+00:00"
+      "avg_reward": 2.7921,
+      "avg_kl": 0.0384,
+      "sortino": 7.4,
+      "updated_at": "2026-10-27T01:59:03.620322+00:00"
     },
     {
       "iteration": 37,
-      "avg_reward": 2.4257,
-      "avg_kl": 0.0714,
-      "sortino": 7.54,
-      "updated_at": "2026-10-27T02:04:54.128734+00:00"
+      "avg_reward": 1.1745,
+      "avg_kl": 0.0631,
+      "sortino": 7.48,
+      "updated_at": "2026-10-27T02:00:19.421740+00:00"
     },
     {
       "iteration": 38,
       "avg_reward": 2.4257,
       "avg_kl": 0.0714,
-      "sortino": 7.71,
-      "updated_at": "2026-10-27T02:06:44.765455+00:00"
+      "sortino": 7.65,
+      "updated_at": "2026-10-27T02:00:25.192253+00:00"
+    },
+    {
+      "iteration": 39,
+      "avg_reward": 2.7921,
+      "avg_kl": 0.0384,
+      "sortino": 7.85,
+      "updated_at": "2026-10-27T08:13:20.835583+00:00"
+    },
+    {
+      "iteration": 40,
+      "avg_reward": 2.7921,
+      "avg_kl": 0.0384,
+      "sortino": 8.05,
+      "updated_at": "2026-10-27T08:13:48.586837+00:00"
+    },
+    {
+      "iteration": 41,
+      "avg_reward": 2.7921,
+      "avg_kl": 0.0384,
+      "sortino": 8.25,
+      "updated_at": "2026-10-27T08:17:07.769952+00:00"
+    },
+    {
+      "iteration": 42,
+      "avg_reward": 1.1745,
+      "avg_kl": 0.0631,
+      "sortino": 8.33,
+      "updated_at": "2026-10-27T08:18:38.095949+00:00"
+    },
+    {
+      "iteration": 43,
+      "avg_reward": 2.4257,
+      "avg_kl": 0.0714,
+      "sortino": 8.5,
+      "updated_at": "2026-10-27T08:18:44.588625+00:00"
+    },
+    {
+      "iteration": 44,
+      "avg_reward": 2.7921,
+      "avg_kl": 0.0384,
+      "sortino": 8.7,
+      "updated_at": "2026-10-27T08:34:03.029386+00:00"
+    },
+    {
+      "iteration": 45,
+      "avg_reward": 2.7921,
+      "avg_kl": 0.0384,
+      "sortino": 8.9,
+      "updated_at": "2026-10-27T08:36:30.993413+00:00"
+    },
+    {
+      "iteration": 46,
+      "avg_reward": 1.1745,
+      "avg_kl": 0.0631,
+      "sortino": 8.98,
+      "updated_at": "2026-10-27T08:38:42.371674+00:00"
+    },
+    {
+      "iteration": 47,
+      "avg_reward": 2.4257,
+      "avg_kl": 0.0714,
+      "sortino": 9.15,
+      "updated_at": "2026-10-27T08:38:52.383549+00:00"
     }
   ]
 }

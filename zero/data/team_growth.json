@@ -1,0 +1,501 @@
+{
+  "schema_version": 1,
+  "last_updated": "2026-10-27T08:36:30.921827+00:00",
+  "team_members": {
+    "GREENBLATT": {
+      "name": "GREENBLATT 수석자문",
+      "owner": "GREENBLATT",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "THORP": {
+      "name": "THORP 수석자문",
+      "owner": "THORP",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "BOGLE": {
+      "name": "BOGLE 수석자문",
+      "owner": "BOGLE",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "WALL_STREET_CHIEF_ANALYST": {
+      "name": "WALL_STREET_CHIEF_ANALYST 수석자문",
+      "owner": "WALL_STREET_CHIEF_ANALYST",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "QUANT_RESEARCH_CHIEF": {
+      "name": "QUANT_RESEARCH_CHIEF 수석자문",
+      "owner": "QUANT_RESEARCH_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "GLOBAL_MACRO_CHIEF": {
+      "name": "GLOBAL_MACRO_CHIEF 수석자문",
+      "owner": "GLOBAL_MACRO_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "PORTFOLIO_CONSTRUCTION_CHIEF": {
+      "name": "PORTFOLIO_CONSTRUCTION_CHIEF 수석자문",
+      "owner": "PORTFOLIO_CONSTRUCTION_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "EXECUTION_OPERATIONS_CHIEF": {
+      "name": "EXECUTION_OPERATIONS_CHIEF 수석자문",
+      "owner": "EXECUTION_OPERATIONS_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "DATA_ENGINEERING_CHIEF": {
+      "name": "DATA_ENGINEERING_CHIEF 수석자문",
+      "owner": "DATA_ENGINEERING_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "MODEL_VALIDATION_CHIEF": {
+      "name": "MODEL_VALIDATION_CHIEF 수석자문",
+      "owner": "MODEL_VALIDATION_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "PIT_FINANCIAL_ENGINEER": {
+      "name": "공개시점 재무 데이터 담당",
+      "owner": "DATA_ENGINEERING_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "ACCOUNTING_FORMULA_REVIEWER": {
+      "name": "회계·EBIT/EV·ROC 검증 담당",
+      "owner": "GREENBLATT",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "CORPORATE_ACTIONS_RECONCILER": {
+      "name": "기업행사·배당 데이터 대조 담당",
+      "owner": "DATA_ENGINEERING_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "TRANSACTION_COST_ANALYST": {
+      "name": "거래비용 근거 검증 담당",
+      "owner": "BOGLE",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "PERSONAL_TAX_REVIEWER": {
+      "name": "개인 세무 프로필 대조 담당",
+      "owner": "BOGLE",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "CASH_NAV_RECONCILER": {
+      "name": "현금·NAV 대조 담당",
+      "owner": "EXECUTION_OPERATIONS_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "FILL_LEDGER_RECONCILER": {
+      "name": "체결·원장 대조 담당",
+      "owner": "EXECUTION_OPERATIONS_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "INCIDENT_OPERATIONS_REVIEWER": {
+      "name": "운영 장애·불확실 상태 검토 담당",
+      "owner": "EXECUTION_OPERATIONS_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "TOTAL_RETURN_BENCHMARK_ANALYST": {
+      "name": "순수익·지수 비교 검증 담당",
+      "owner": "QUANT_RESEARCH_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "EXPOSURE_STRESS_ANALYST": {
+      "name": "노출·스트레스 근거 검증 담당",
+      "owner": "THORP",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "LOW_TURNOVER_PORTFOLIO_ANALYST": {
+      "name": "저회전 포트폴리오 구현 검토 담당",
+      "owner": "PORTFOLIO_CONSTRUCTION_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "INDEPENDENT_MODEL_GOVERNANCE_REVIEWER": {
+      "name": "독립 검증·모형 변화 관리 담당",
+      "owner": "MODEL_VALIDATION_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "PIT_MACRO_LIQUIDITY_ANALYST": {
+      "name": "공개시점 거시·유동성 근거 담당",
+      "owner": "GLOBAL_MACRO_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "BUSINESS_QUALITY_ANALYST": {
+      "name": "기업 해자·성장 근거 담당",
+      "owner": "WALL_STREET_CHIEF_ANALYST",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "SETTLEMENT_FX_RECONCILER": {
+      "name": "결제·양방향 환전 대조 담당",
+      "owner": "EXECUTION_OPERATIONS_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "HISTORICAL_UNIVERSE_CONTRACT_ENGINEER": {
+      "name": "역사 투자대상·입력 계약 담당",
+      "owner": "DATA_ENGINEERING_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "RESEARCH_STATISTICS_ENGINEER": {
+      "name": "실험 이력·통계 구현 담당",
+      "owner": "QUANT_RESEARCH_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "STATISTICAL_INFERENCE_VALIDATOR": {
+      "name": "독립 통계 추론 검증 담당",
+      "owner": "MODEL_VALIDATION_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "PUBLIC_SERVICE_SECURITY_REVIEWER": {
+      "name": "외부 서비스 보안·개인정보 담당",
+      "owner": "DATA_ENGINEERING_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "DEPLOYMENT_RECOVERY_ENGINEER": {
+      "name": "배포·서비스 복구 담당",
+      "owner": "EXECUTION_OPERATIONS_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "MARKET_REFERENCE_COVERAGE_ANALYST": {
+      "name": "시장 명부·시가총액 범위 담당",
+      "owner": "DATA_ENGINEERING_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "INDUSTRY_PEER_CLASSIFICATION_ANALYST": {
+      "name": "산업 분류·비교 기업 근거 담당",
+      "owner": "WALL_STREET_CHIEF_ANALYST",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "FINANCIAL_PEER_COMPARABILITY_REVIEWER": {
+      "name": "연차 매출·영업이익 비교 검수 담당",
+      "owner": "GREENBLATT",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "RISK_LIMIT_DESIGN_ANALYST": {
+      "name": "손실 한도·낙폭 기준 설계 담당",
+      "owner": "THORP",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "OWNER_DECISION_LIAISON": {
+      "name": "오너 의사결정 지원 담당",
+      "owner": "PORTFOLIO_CONSTRUCTION_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "KOREA_MARKET_STRUCTURE_ANALYST": {
+      "name": "한국 시장 수급·제도 담당",
+      "owner": "GLOBAL_MACRO_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "ETF_HOLDINGS_FLOW_ANALYST": {
+      "name": "ETF·기관 보유 변화 분석 담당",
+      "owner": "BOGLE",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "NEWS_SENTIMENT_ANALYST": {
+      "name": "뉴스·시장 심리 분석 담당",
+      "owner": "WALL_STREET_CHIEF_ANALYST",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "LLM_RESEARCH_AGENT_ENGINEER": {
+      "name": "AI 리서치 에이전트 엔지니어",
+      "owner": "QUANT_RESEARCH_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "COMPLIANCE_TERMS_REVIEWER": {
+      "name": "컴플라이언스·자료 이용조건 담당",
+      "owner": "MODEL_VALIDATION_CHIEF",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "UX_UI_CHIEF": {
+      "name": "UX·UI 수석",
+      "owner": "PRODUCT_QUALITY_TEAM",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "INVESTMENT_VISUALIZATION": {
+      "name": "투자정보·데이터 시각화",
+      "owner": "PRODUCT_QUALITY_TEAM",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "FRONTEND_ACCESSIBILITY": {
+      "name": "프런트엔드·접근성",
+      "owner": "PRODUCT_QUALITY_TEAM",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "USABILITY_VALIDATION": {
+      "name": "사용성 검증",
+      "owner": "PRODUCT_QUALITY_TEAM",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    },
+    "ZERO_FINAL_MANAGER": {
+      "name": "포트폴리오 총괄 자문",
+      "owner": "EXECUTIVE",
+      "level": 7,
+      "exp": 1800,
+      "learned_count": 18,
+      "specialty_topics": [
+        "글로벌 중립금리(R*) 추정과 환율 변동성 하에서의 자산배분 전략",
+        "글로벌 외환 보유고와 환헤지 비용 최적화"
+      ]
+    }
+  }
+}

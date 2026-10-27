@@ -1,0 +1,1755 @@
+{
+  "schema_version": 1,
+  "hired_staff": [
+    {
+      "id": "STAFF_C11EA7BE",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T15:34:03.326375+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_D35C4843",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T15:34:03.327865+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_1A0FB3",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_1A0FB3",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T15:34:03.344829+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_1A0FB3_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_1A0FB3",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:34:03.344829+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_1A0FB3_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_1A0FB3",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:34:03.344829+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_1A0FB3_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_1A0FB3",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:34:03.344829+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_42568365",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T15:34:11.189622+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_F26A3980",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T15:34:11.191266+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_1703F9",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_1703F9",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T15:34:11.204262+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_1703F9_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_1703F9",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:34:11.204262+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_1703F9_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_1703F9",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:34:11.204262+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_1703F9_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_1703F9",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:34:11.204262+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_22FE7A4B",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T15:36:21.990089+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_4926697C",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T15:36:21.994945+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_4843C6",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_4843C6",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T15:36:22.010877+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_4843C6_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_4843C6",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:36:22.010877+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_4843C6_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_4843C6",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:36:22.010877+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_4843C6_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_4843C6",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:36:22.010877+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_FC93CDA6",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T15:37:20.781364+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_0EA1DC01",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T15:37:20.783356+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_D3B659",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_D3B659",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T15:37:20.797361+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_D3B659_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_D3B659",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:37:20.797361+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_D3B659_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_D3B659",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:37:20.797361+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_D3B659_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_D3B659",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:37:20.797361+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_62D504C4",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T15:41:59.144285+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_F7F547F7",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T15:41:59.146374+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_6447CC",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_6447CC",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T15:41:59.163290+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_6447CC_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_6447CC",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:41:59.163290+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_6447CC_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_6447CC",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:41:59.163290+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_6447CC_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_6447CC",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:41:59.163290+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_4A7393BF",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T15:54:32.363543+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_2EAE543A",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T15:54:32.365420+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_CBD50C",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_CBD50C",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T15:54:32.375064+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_CBD50C_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_CBD50C",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:54:32.375064+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_CBD50C_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_CBD50C",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:54:32.375064+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_CBD50C_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_CBD50C",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T15:54:32.375064+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_F7382E9D",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T16:35:58.347880+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_7C7830F1",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T16:35:58.351438+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_ADD9CF",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_ADD9CF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T16:35:58.365151+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_ADD9CF_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_ADD9CF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:35:58.365151+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_ADD9CF_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_ADD9CF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:35:58.365151+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_ADD9CF_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_ADD9CF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:35:58.365151+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_0C0A8D9C",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T16:55:47.610299+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_CF5B7E5E",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T16:55:47.613344+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_049F62",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_049F62",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T16:55:47.628725+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_049F62_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_049F62",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:55:47.628725+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_049F62_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_049F62",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:55:47.628725+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_049F62_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_049F62",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:55:47.628725+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_0AD7A28C",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-24T16:58:33.305813+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_BF1A4BB7",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-24T16:58:33.309513+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_74D2F1",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_74D2F1",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-24T16:58:33.325159+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_74D2F1_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_74D2F1",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:58:33.325159+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_74D2F1_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_74D2F1",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:58:33.325159+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_74D2F1_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_74D2F1",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-24T16:58:33.325159+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_98BFB7A8",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-26T01:17:05.586546+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_224E6DCE",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-26T01:17:05.604788+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_30D01A",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_30D01A",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-26T01:17:05.624376+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_30D01A_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_30D01A",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-26T01:17:05.624376+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_30D01A_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_30D01A",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-26T01:17:05.624376+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_30D01A_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_30D01A",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-26T01:17:05.624376+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_963A5C28",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-27T01:59:03.493270+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_6F38A671",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-27T01:59:03.506066+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_9F4834",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_9F4834",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-27T01:59:03.521947+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_9F4834_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_9F4834",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T01:59:03.521947+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_9F4834_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_9F4834",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T01:59:03.521947+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_9F4834_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_9F4834",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T01:59:03.521947+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_F2A5B746",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-27T08:13:20.651491+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_9226EEAD",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-27T08:13:20.675775+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_841637",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_841637",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-27T08:13:20.693733+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_841637_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_841637",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:13:20.693733+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_841637_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_841637",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:13:20.693733+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_841637_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_841637",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:13:20.693733+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_C1D37A8E",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-27T08:13:48.421903+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_59259044",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-27T08:13:48.425490+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_68A8E9",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_68A8E9",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-27T08:13:48.451200+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_68A8E9_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_68A8E9",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:13:48.451200+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_68A8E9_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_68A8E9",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:13:48.451200+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_68A8E9_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_68A8E9",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:13:48.451200+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_8B2DD1ED",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-27T08:17:07.672313+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_A5D26410",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-27T08:17:07.676700+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_6C19FB",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_6C19FB",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-27T08:17:07.691289+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_6C19FB_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_6C19FB",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:17:07.691289+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_6C19FB_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_6C19FB",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:17:07.691289+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_6C19FB_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_6C19FB",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:17:07.691289+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_B0A4262B",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-27T08:34:02.907421+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_BC50EB10",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-27T08:34:02.911290+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_D1974A",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_D1974A",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-27T08:34:02.927109+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_D1974A_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_D1974A",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:34:02.927109+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_D1974A_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_D1974A",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:34:02.927109+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_D1974A_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_D1974A",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:34:02.927109+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_C6B87E5A",
+      "name": "글로벌 통화정책 전문 연구원",
+      "owner_head": "GLOBAL_MACRO_CHIEF",
+      "hiring_path": "TEAM_LEAD_HIRED",
+      "mandate": "팀원 의견(2건) 취합 기반 글로벌 중앙은행 점도표 추적 전문 업무 전담",
+      "specialty": "글로벌 중앙은행 점도표 추적",
+      "hired_at": "2026-10-27T08:36:30.815345+00:00",
+      "approved_by": "GLOBAL_MACRO_CHIEF"
+    },
+    {
+      "id": "STAFF_EXEC_2DEB7FDA",
+      "name": "AI 거버넌스 수석 감사관",
+      "owner_head": "QUANT_RESEARCH_CHIEF",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "총괄 관리자 특별 임명: 지식 증류 모델의 환각 및 편향 실시간 차단",
+      "specialty": "AI 모델 편향 및 거버넌스 감사",
+      "hired_at": "2026-10-27T08:36:30.821758+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "LEAD_TEAM_2FE854",
+      "name": "박지정학 (팀장)",
+      "owner_head": "TEAM_2FE854",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "글로벌 지정학 AI 리서치팀 총괄 및 증류 학습 리드",
+      "specialty": "팀 총괄 및 의사결정",
+      "hired_at": "2026-10-27T08:36:30.843502+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_2FE854_1",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 1",
+      "owner_head": "TEAM_2FE854",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:36:30.843502+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_2FE854_2",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 2",
+      "owner_head": "TEAM_2FE854",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:36:30.843502+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    },
+    {
+      "id": "STAFF_TEAM_2FE854_3",
+      "name": "글로벌 지정학 AI 리서치팀 연구원 3",
+      "owner_head": "TEAM_2FE854",
+      "hiring_path": "MANAGER_DIRECT_HIRED",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립 세부 분석 및 상호 되묻기 증류 학습",
+      "specialty": "국제 보고서 심층 분석",
+      "hired_at": "2026-10-27T08:36:30.843502+00:00",
+      "approved_by": "ZERO_FINAL_MANAGER"
+    }
+  ],
+  "created_teams": [
+    {
+      "team_id": "TEAM_1A0FB3",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_1A0FB3",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_1A0FB3",
+      "created_at": "2026-10-24T15:34:03.344829+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_1703F9",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_1703F9",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_1703F9",
+      "created_at": "2026-10-24T15:34:11.204262+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_4843C6",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_4843C6",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_4843C6",
+      "created_at": "2026-10-24T15:36:22.010877+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_D3B659",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_D3B659",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_D3B659",
+      "created_at": "2026-10-24T15:37:20.797361+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_6447CC",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_6447CC",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_6447CC",
+      "created_at": "2026-10-24T15:41:59.163290+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_CBD50C",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_CBD50C",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_CBD50C",
+      "created_at": "2026-10-24T15:54:32.375064+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_ADD9CF",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_ADD9CF",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_ADD9CF",
+      "created_at": "2026-10-24T16:35:58.365151+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_049F62",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_049F62",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_049F62",
+      "created_at": "2026-10-24T16:55:47.628725+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_74D2F1",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_74D2F1",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_74D2F1",
+      "created_at": "2026-10-24T16:58:33.325159+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_30D01A",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_30D01A",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_30D01A",
+      "created_at": "2026-10-26T01:17:05.624376+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_9F4834",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_9F4834",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_9F4834",
+      "created_at": "2026-10-27T01:59:03.521947+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_841637",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_841637",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_841637",
+      "created_at": "2026-10-27T08:13:20.693733+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_68A8E9",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_68A8E9",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_68A8E9",
+      "created_at": "2026-10-27T08:13:48.451200+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_6C19FB",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_6C19FB",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_6C19FB",
+      "created_at": "2026-10-27T08:17:07.691289+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_D1974A",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_D1974A",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_D1974A",
+      "created_at": "2026-10-27T08:34:02.927109+00:00",
+      "staff_count": 3
+    },
+    {
+      "team_id": "TEAM_2FE854",
+      "team_name_ko": "글로벌 지정학 AI 리서치팀",
+      "team_lead_id": "LEAD_TEAM_2FE854",
+      "mandate": "국제 정세 및 원자재 공급망 충격 대응 헷지 전략 수립",
+      "office_room_id": "ROOM_TEAM_2FE854",
+      "created_at": "2026-10-27T08:36:30.843502+00:00",
+      "staff_count": 3
+    }
+  ],
+  "created_offices": [
+    {
+      "room_id": "ROOM_TEAM_1A0FB3",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T15:34:03.344829+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_1703F9",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T15:34:11.204262+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_4843C6",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T15:36:22.010877+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_D3B659",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T15:37:20.797361+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_6447CC",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T15:41:59.163290+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_CBD50C",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T15:54:32.375064+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_ADD9CF",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T16:35:58.365151+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_049F62",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T16:55:47.628725+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_74D2F1",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-24T16:58:33.325159+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_30D01A",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-26T01:17:05.624376+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_9F4834",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-27T01:59:03.521947+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_841637",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-27T08:13:20.693733+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_68A8E9",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-27T08:13:48.451200+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_6C19FB",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-27T08:17:07.691289+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_D1974A",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-27T08:34:02.927109+00:00"
+    },
+    {
+      "room_id": "ROOM_TEAM_2FE854",
+      "room_name_ko": "글로벌 지정학 AI 리서치팀 전용 연구실",
+      "theme": "boutique",
+      "capacity": 4,
+      "furniture": [
+        "desk",
+        "meeting",
+        "server",
+        "coffee",
+        "bookshelf",
+        "whiteboard"
+      ],
+      "created_at": "2026-10-27T08:36:30.843502+00:00"
+    }
+  ],
+  "hiring_history": [
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_C11EA7BE",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T15:34:03.326375+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_D35C4843",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T15:34:03.327865+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_1A0FB3",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_1A0FB3",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T15:34:03.344829+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_42568365",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T15:34:11.189622+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_F26A3980",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T15:34:11.191266+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_1703F9",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_1703F9",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T15:34:11.204262+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_22FE7A4B",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T15:36:21.990089+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_4926697C",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T15:36:21.994945+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_4843C6",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_4843C6",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T15:36:22.010877+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_FC93CDA6",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T15:37:20.781364+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_0EA1DC01",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T15:37:20.783356+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_D3B659",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_D3B659",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T15:37:20.797361+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_62D504C4",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T15:41:59.144285+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_F7F547F7",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T15:41:59.146374+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_6447CC",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_6447CC",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T15:41:59.163290+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_4A7393BF",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T15:54:32.363543+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_2EAE543A",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T15:54:32.365420+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_CBD50C",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_CBD50C",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T15:54:32.375064+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_F7382E9D",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T16:35:58.347880+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_7C7830F1",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T16:35:58.351438+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_ADD9CF",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_ADD9CF",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T16:35:58.365151+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_0C0A8D9C",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T16:55:47.610299+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_CF5B7E5E",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T16:55:47.613344+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_049F62",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_049F62",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T16:55:47.628725+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_0AD7A28C",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-24T16:58:33.305813+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_BF1A4BB7",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-24T16:58:33.309513+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_74D2F1",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_74D2F1",
+      "total_hired": 4,
+      "timestamp": "2026-10-24T16:58:33.325159+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_98BFB7A8",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-26T01:17:05.586546+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_224E6DCE",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-26T01:17:05.604788+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_30D01A",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_30D01A",
+      "total_hired": 4,
+      "timestamp": "2026-10-26T01:17:05.624376+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_963A5C28",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-27T01:59:03.493270+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_6F38A671",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-27T01:59:03.506066+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_9F4834",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_9F4834",
+      "total_hired": 4,
+      "timestamp": "2026-10-27T01:59:03.521947+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_F2A5B746",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-27T08:13:20.651491+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_9226EEAD",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-27T08:13:20.675775+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_841637",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_841637",
+      "total_hired": 4,
+      "timestamp": "2026-10-27T08:13:20.693733+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_C1D37A8E",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-27T08:13:48.421903+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_59259044",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-27T08:13:48.425490+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_68A8E9",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_68A8E9",
+      "total_hired": 4,
+      "timestamp": "2026-10-27T08:13:48.451200+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_8B2DD1ED",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-27T08:17:07.672313+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_A5D26410",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-27T08:17:07.676700+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_6C19FB",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_6C19FB",
+      "total_hired": 4,
+      "timestamp": "2026-10-27T08:17:07.691289+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_B0A4262B",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-27T08:34:02.907421+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_BC50EB10",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-27T08:34:02.911290+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_D1974A",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_D1974A",
+      "total_hired": 4,
+      "timestamp": "2026-10-27T08:34:02.927109+00:00"
+    },
+    {
+      "event": "TEAM_LEAD_HIRED",
+      "staff_id": "STAFF_C6B87E5A",
+      "name": "글로벌 통화정책 전문 연구원",
+      "head_id": "GLOBAL_MACRO_CHIEF",
+      "reason": "팀원들의 지속적 증류 학습 및 업무 부하 분담 요구 수렴 (Fed 및 ECB 금리 결정 모니터링 부담, 글로벌 인플레이션 데이터 갭 발생)",
+      "timestamp": "2026-10-27T08:36:30.815345+00:00"
+    },
+    {
+      "event": "MANAGER_DIRECT_HIRED",
+      "staff_id": "STAFF_EXEC_2DEB7FDA",
+      "name": "AI 거버넌스 수석 감사관",
+      "requested_by": "QUANT_RESEARCH_CHIEF",
+      "approved_by": "ZERO_FINAL_MANAGER",
+      "justification": "지식 증류 모델의 환각 및 편향 실시간 차단",
+      "timestamp": "2026-10-27T08:36:30.821758+00:00"
+    },
+    {
+      "event": "NEW_TEAM_AND_OFFICE_CREATED",
+      "team_id": "TEAM_2FE854",
+      "team_name": "글로벌 지정학 AI 리서치팀",
+      "office_room_id": "ROOM_TEAM_2FE854",
+      "total_hired": 4,
+      "timestamp": "2026-10-27T08:36:30.843502+00:00"
+    }
+  ]
+}

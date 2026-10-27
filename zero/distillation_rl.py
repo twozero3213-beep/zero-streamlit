@@ -304,5 +304,7 @@ class DistillationRLEngine:
             "sortino": new_checkpoint.student_sortino,
             "updated_at": new_checkpoint.trained_at
         })
+        # DRL 히스토리 메모리/파일 누수 방지 (최근 200회 제한)
+        data["training_history"] = data["training_history"][-200:]
         DRL_MODEL_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         return new_checkpoint
