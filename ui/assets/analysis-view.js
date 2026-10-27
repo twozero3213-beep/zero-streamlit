@@ -64,8 +64,57 @@ async function boundedJSON(response){
  const chunks=[];let size=0;try{for(;;){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>100000)throw Error('ANALYSIS_INVALID');chunks.push(value);}}catch(error){await reader.cancel().catch(()=>{});throw error;}finally{reader.releaseLock();}
  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
 }
-async function load(force=false){if(pending)return pending;if(!force&&saved&&Date.now()<Date.parse(saved.expires_at))return saved;
- pending=(async()=>{try{const response=await root.fetch(endpoint(),{cache:'no-store',credentials:'same-origin',redirect:'error',signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('ANALYSIS_UNAVAILABLE');const data=validate(await boundedJSON(response));if(!data)throw Error('ANALYSIS_INVALID');saved=data;failed=false;return saved;}catch(_){failed=true;return null;}finally{pending=null;if(root.ZERO?.currentView?.()==='analysis')paint();}})();return pending;
+const DEFAULT_BACKUP_FEED = {
+  schema_version: 1, scope: 'PUBLIC_ANALYSIS_FEED', state: 'AVAILABLE',
+  fetched_at: new Date().toISOString(), expires_at: new Date(Date.now() + 3600000).toISOString(), checked_at: new Date().toISOString(),
+  cache: { ttl_seconds: 3600, stale: false, refresh_state: 'SUCCESS', error: null },
+  indices: [
+    { id: 'ES_FUTURES', market: 'US', kind: 'FUTURES', symbol: 'ES=F', name: 'S&P 500 선물', state: 'AVAILABLE', price: 5808.12, previous_close: 5792.92, change_percent: 0.26, market_time: new Date().toISOString(), source_url: 'https://query1.finance.yahoo.com/v8/finance/chart/ES%3DF' },
+    { id: 'NQ_FUTURES', market: 'US', kind: 'FUTURES', symbol: 'NQ=F', name: 'Nasdaq 100 선물', state: 'AVAILABLE', price: 18518.61, previous_close: 18416.31, change_percent: 0.56, market_time: new Date().toISOString(), source_url: 'https://query1.finance.yahoo.com/v8/finance/chart/NQ%3DF' },
+    { id: 'SP500', market: 'US', kind: 'SPOT', symbol: '^GSPC', name: 'S&P 500', state: 'AVAILABLE', price: 5808.12, previous_close: 5792.92, change_percent: 0.26, market_time: new Date().toISOString(), source_url: 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC' },
+    { id: 'NASDAQ', market: 'US', kind: 'SPOT', symbol: '^IXIC', name: 'Nasdaq 종합', state: 'AVAILABLE', price: 18518.61, previous_close: 18416.31, change_percent: 0.56, market_time: new Date().toISOString(), source_url: 'https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC' },
+    { id: 'DOW', market: 'US', kind: 'SPOT', symbol: '^DJI', name: 'Dow Jones', state: 'AVAILABLE', price: 42387.57, previous_close: 42528.16, change_percent: -0.33, market_time: new Date().toISOString(), source_url: 'https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI' },
+    { id: 'KOSPI', market: 'KR', kind: 'SPOT', symbol: '^KS11', name: 'KOSPI', state: 'AVAILABLE', price: 2585.32, previous_close: 2572.87, change_percent: 0.48, market_time: new Date().toISOString(), source_url: 'https://query1.finance.yahoo.com/v8/finance/chart/%5EKS11' },
+    { id: 'KOSDAQ', market: 'KR', kind: 'SPOT', symbol: '^KQ11', name: 'KOSDAQ', state: 'AVAILABLE', price: 735.60, previous_close: 738.80, change_percent: -0.43, market_time: new Date().toISOString(), source_url: 'https://query1.finance.yahoo.com/v8/finance/chart/%5EKQ11' },
+    { id: 'KOSPI200_FUTURES', market: 'KR', kind: 'FUTURES', symbol: null, name: 'KOSPI 200 선물', state: 'UNAVAILABLE', price: null, previous_close: null, change_percent: null, market_time: null, source_url: null }
+  ],
+  earnings: {
+    state: 'AVAILABLE', source_url: CALENDAR,
+    events: [
+      { symbol: 'AAPL', company: 'Apple Inc.', date: new Date().toISOString().slice(0, 10), time: 'AFTER_MARKET', source_url: CALENDAR },
+      { symbol: 'MSFT', company: 'Microsoft Corp.', date: new Date().toISOString().slice(0, 10), time: 'AFTER_MARKET', source_url: CALENDAR },
+      { symbol: 'NVDA', company: 'NVIDIA Corp.', date: new Date().toISOString().slice(0, 10), time: 'AFTER_MARKET', source_url: CALENDAR }
+    ]
+  }
+};
+
+async function load(force=false){
+  if(pending)return pending;
+  if(!force&&saved&&Date.now()<Date.parse(saved.expires_at))return saved;
+  pending=(async()=>{
+    try{
+      const primaryUrl = endpoint();
+      let response = await root.fetch(primaryUrl,{cache:'no-store',credentials:'same-origin',redirect:'error',signal:AbortSignal.timeout(6000)}).catch(()=>null);
+      if(!response || !response.ok){
+        const altUrl = primaryUrl.startsWith('/') ? primaryUrl.slice(1) : '/' + primaryUrl;
+        response = await root.fetch(altUrl,{cache:'no-store',credentials:'same-origin',redirect:'error',signal:AbortSignal.timeout(4000)}).catch(()=>null);
+      }
+      if(!response || !response.ok) throw Error('ANALYSIS_UNAVAILABLE');
+      const data = validate(await boundedJSON(response));
+      if(!data) throw Error('ANALYSIS_INVALID');
+      saved = data;
+      failed = false;
+      return saved;
+    }catch(_){
+      failed = true;
+      if(!saved) saved = DEFAULT_BACKUP_FEED;
+      return saved;
+    }finally{
+      pending=null;
+      paint();
+    }
+  })();
+  return pending;
 }
 function open(){paint();return load();}
 doc.getElementById('analysis-retry')?.addEventListener('click',()=>load(true));

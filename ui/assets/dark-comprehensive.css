@@ -1,0 +1,176 @@
+/* ============================================================
+   ZERO Comprehensive Dark Mode Stylesheet
+   다크모드 상태에서 하얀색 배경 및 텍스트 누락을 원천 차단하고
+   완벽한 글래스모피즘 딥 다크 테마를 일괄 강제 적용합니다.
+   ============================================================ */
+
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) {
+  --bg-primary: #0b0f19;
+  --bg-surface: #161e31;
+  --bg-card: rgba(22, 30, 49, 0.95);
+  --bg-card-hover: rgba(30, 41, 59, 0.95);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --input-bg: rgba(15, 23, 42, 0.85);
+  --accent-color: #38bdf8;
+}
+
+/* 1. 기본 브라우저 및 컨테이너 배경 강제 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) body,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) main,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .stApp {
+  background-color: var(--bg-primary, #0b0f19) !important;
+  color: var(--text-main, #f8fafc) !important;
+}
+
+/* 2. 모든 다이얼로그 및 팝업 모달 하얀색 원천 차단 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) dialog,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .dialog,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) [role="dialog"],
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #company-dialog,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .company-dialog-header,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-source-dialog,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .technical-chart-dialog,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .cosmetic-catalogue,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .desktop-shortcuts-dialog,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .desktop-evidence-tooltip,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .notice-detail-dialog,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #more-menu {
+  background: var(--bg-surface, #161e31) !important;
+  color: var(--text-main, #f8fafc) !important;
+  border-color: var(--border-color, rgba(255, 255, 255, 0.12)) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* 다이얼로그 백드롭 어둡게 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) dialog::backdrop {
+  background: rgba(5, 8, 16, 0.75) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* 3. 종목 설명 팝업 및 헤더 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #company-dialog {
+  background-color: #161e31 !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .company-dialog-header {
+  background-color: #161e31 !important;
+  color: #f8fafc !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #company-dialog h2,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #company-dialog h3,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #company-dialog strong {
+  color: #f8fafc !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #company-dialog p,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #company-dialog span,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #company-dialog small {
+  color: #94a3b8 !important;
+}
+
+/* 4. 워크벤치, 지표, 뉴스 등 하얀색 누출 판넬 완벽 교정 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) #stock-workbench,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .desk-indicators,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .desk-news-list,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .desk-report-head,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .team-card,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .panel,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .th-card,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .ts-facts,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .school-card,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .lobby-own,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .community-post {
+  background: var(--bg-surface, #161e31) !important;
+  color: var(--text-main, #f8fafc) !important;
+  border-color: var(--border-color, rgba(255, 255, 255, 0.08)) !important;
+}
+
+/* 5. 오늘의 시장 (Analysis View) 다크 스타일링 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-panel {
+  background: var(--bg-surface, #161e31) !important;
+  color: var(--text-main, #f8fafc) !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-quote {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-quote > span {
+  color: #94a3b8 !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-quote > strong {
+  color: #f8fafc !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-card {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-card h3 {
+  color: #f8fafc !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-card .analysis-trend,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-card .analysis-event,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-card .muted-note {
+  color: #94a3b8 !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-source-dialog {
+  background: #161e31 !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-source-dialog p {
+  color: #cbd5e1 !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-source-dialog a {
+  color: #38bdf8 !important;
+}
+
+/* 6. 버튼류 하얀색 오버라이드 교정 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .secondary-button,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .peer-button,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-source,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .icon-button:not(.primary-button) {
+  background: rgba(30, 41, 59, 0.75) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .secondary-button:hover,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .peer-button:hover,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .analysis-source:hover {
+  background: rgba(51, 65, 85, 0.9) !important;
+  color: #38bdf8 !important;
+}
+
+/* 7. 입력 필드 (Input, Select, Textarea) 하얀색 차단 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) input,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) select,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) textarea {
+  background: rgba(15, 23, 42, 0.85) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) select option {
+  background: #161e31 !important;
+  color: #f8fafc !important;
+}
+
+/* 8. 투자 공부 계산기 및 카드 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .calc-card,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .study-card,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .calc-box,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) .calc-result-box {
+  background: #161e31 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 9. 테이블 테두리 및 텍스트 */
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) table,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) th,
+:is(html[data-zero-theme="dark"], html[data-theme="dark"], html.dark) td {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+}
