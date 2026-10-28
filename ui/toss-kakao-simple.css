@@ -1,0 +1,300 @@
+/* ==========================================================================
+   ZERO Toss & Kakao Securities Ultra-Simple UX/UI System
+   토스증권 & 카카오증권 스타일 전수 단순화 및 유저 편의성 극대화
+   ========================================================================== */
+
+:root {
+  --tk-kakao-yellow: #fee500;
+  --tk-kakao-brown: #371d1e;
+  --tk-toss-blue: #3182f6;
+  --tk-toss-blue-light: #e8f3ff;
+  --tk-toss-dark-bg: #101317;
+  --tk-toss-surface: #191f28;
+  --tk-toss-card-bg: rgba(255, 255, 255, 0.05);
+  --tk-toss-card-border: rgba(255, 255, 255, 0.08);
+  --tk-gain: #f04452; /* 토스 한국식 상승 빨강 */
+  --tk-loss: #3182f6; /* 토스 한국식 하락 파랑 */
+  --tk-text-main: #f9fafb;
+  --tk-text-sub: #8b95a1;
+  --tk-radius-lg: 20px;
+  --tk-radius-md: 14px;
+}
+
+/* 1. 카카오증권 스타일 친근한 상단 요약 배너 */
+.kakao-welcome-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, #fee500 0%, #ffd600 100%);
+  color: #191f28;
+  padding: 16px 20px;
+  border-radius: var(--tk-radius-lg);
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(254, 229, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.kakao-welcome-card:active {
+  transform: scale(0.99);
+}
+.kakao-welcome-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.kakao-welcome-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.kakao-welcome-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1.35;
+}
+.kakao-welcome-sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(25, 31, 40, 0.8);
+  margin-top: 2px;
+}
+.kakao-welcome-badge {
+  background: #191f28;
+  color: #fee500;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+/* 2. 토스증권 스타일 큼직한 메인 자산 히어로 카드 */
+.toss-hero-asset-card {
+  background: var(--tk-toss-surface);
+  border: 1px solid var(--tk-toss-card-border);
+  border-radius: var(--tk-radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.toss-asset-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.toss-asset-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tk-text-sub);
+}
+.toss-broker-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(49, 130, 246, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+.toss-asset-amount {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  color: var(--tk-text-main);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.toss-asset-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.toss-asset-return.gain {
+  color: var(--tk-gain);
+}
+.toss-asset-return.loss {
+  color: var(--tk-loss);
+}
+
+/* 3. 토스증권 스타일 1-터치 빠른 행동 버튼 바 */
+.toss-action-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.toss-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--tk-radius-md);
+  color: var(--tk-text-main);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.toss-action-btn:hover,
+.toss-action-btn:active {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+.toss-action-btn.primary {
+  background: #3182f6;
+  border-color: #3182f6;
+  color: #ffffff;
+}
+
+/* 4. 실시간 주식 카드 (삼성전자, SK하이닉스 등 토스 스타일) */
+.toss-stock-simple-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.toss-stock-card {
+  background: var(--tk-toss-surface);
+  border: 1px solid var(--tk-toss-card-border);
+  border-radius: var(--tk-radius-md);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.toss-stock-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+.toss-stock-card:active {
+  transform: scale(0.99);
+}
+.toss-stock-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.toss-stock-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--tk-text-main);
+}
+.toss-stock-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tk-text-main);
+  line-height: 1.25;
+}
+.toss-stock-code {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tk-text-sub);
+  margin-top: 2px;
+}
+.toss-stock-right {
+  text-align: right;
+}
+.toss-stock-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--tk-text-main);
+}
+.toss-stock-chg {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.toss-stock-chg.gain {
+  color: var(--tk-gain);
+}
+.toss-stock-chg.loss {
+  color: var(--tk-loss);
+}
+
+/* 5. 네비게이션 극단적 단순화 (4대 핵심 탭) */
+.simple-main-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(16, 19, 23, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+.simple-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--tk-text-sub);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.simple-nav-tab:hover {
+  color: var(--tk-text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+.simple-nav-tab.active {
+  background: #3182f6;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(49, 130, 246, 0.35);
+}
+
+/* 6. 모바일 화면 최적화 (하단 4탭 전용) */
+@media (max-width: 768px) {
+  .toss-hero-asset-card {
+    padding: 18px;
+    border-radius: 16px;
+  }
+  .toss-asset-amount {
+    font-size: 26px;
+  }
+  .kakao-welcome-card {
+    padding: 14px 16px;
+    border-radius: 16px;
+  }
+  .kakao-welcome-title {
+    font-size: 14px;
+  }
+  .toss-action-bar {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .toss-action-btn {
+    min-height: 42px;
+    font-size: 12px;
+  }
+}
