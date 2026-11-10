@@ -160,66 +160,6 @@ class HeadlineLanguageTests(unittest.TestCase):
         self.assertFalse(headlines._collect_lock.locked())
         self.assertEqual(json.dumps(value, ensure_ascii=False), before)
 
-    def test_browser_hides_legacy_untranslated_or_foreign_rows_and_formats_translation(self):
-        program = r"""
-const fs = require('node:fs'), vm = require('node:vm'), assert = require('node:assert/strict');
-class Element {
-  constructor(tag) { this.tag = tag; this.children = []; this.style = {}; this.hidden = false; this.textContent = ''; }
-  append(...children) { this.children.push(...children); }
-  replaceChildren(...children) { this.children = children; }
-  setAttribute() {}
-  before(panel) { this.panel = panel; }
-  closest() { return this.group || null; }
-  querySelector() { return null; }
-}
-async function render(items, wrapped=true) {
-  const anchor = new Element('div'), group = new Element('div');
-  group.parentElement = {classList:{contains:name=>name==='viewport-pages-body'}};
-  if(wrapped) anchor.group=group;
-  const document = {hidden:false, documentElement:{dataset:{zeroView:'news'}},
-    getElementById:id => id === 'news-list' ? anchor : new Element('div'),
-    createElement:tag => new Element(tag), addEventListener(){}, querySelectorAll:()=>[]};
-  vm.runInNewContext(fs.readFileSync(process.argv[1], 'utf8'), {
-    document, Intl, Date, AbortSignal, queueMicrotask, Event, setInterval(){},
-    fetch:async()=>({ok:true,json:async()=>({schema_version:1,items,checked_at:'2026-10-15T00:00:00Z'})})
-  });
-  await new Promise(resolve=>setImmediate(resolve));
-  assert.equal(anchor.panel, wrapped ? undefined : anchor.panel, 'wrapped live headlines are a separate page, not inside the news archive');
-  return wrapped ? group.panel : anchor.panel;
-}
-(async()=>{
-  const base={url:'https://news.google.com/rss/articles/x',market:'미국',publisher:'Reuters',published_at:'2026-10-15T00:00:00Z'};
-  const bad=[
-    {...base,title:'Congress approves budget',title_ko:null,translation_status:'PENDING'},
-    {...base,title:'Congress approves budget',title_ko:'Same English',translation_status:'TRANSLATED'},
-    {...base,title:'中国经济增长',title_ko:'중국 경제 성장',translation_status:'TRANSLATED'},
-    {...base,title:'정부 中文 발표'},
-    {...base,title:'Congress approves budget',title_ko:'의회 예산 승인',translation_status:'PENDING'},
-    {...base,title:'Congress approves budget',title_ko:'예산 中文',translation_status:'TRANSLATED'},
-    {...base,title:'Économie en hausse',title_ko:'경제 상승',translation_status:'TRANSLATED'},
-    {...base,title:'정부 � 발표'},
-    {...base,title:'Congress approves budget',title_ko:'<b>예산 승인</b>',translation_status:'TRANSLATED'}
-  ];
-  const panel=await render([...bad,
-    {...base,title:'정부 경제 대책 발표',title_ko:'append nothing'},
-    {...base,title:'Congress approves budget',title_ko:'의회 예산 승인',translation_status:'TRANSLATED'}]);
-  const labels=panel.children[2].children.map(row=>row.children[0].textContent);
-  assert.deepEqual(labels,['정부 경제 대책 발표','Congress approves budget (의회 예산 승인)']);
-  assert.equal(panel.hidden,false);
-  assert.equal(panel.children[2].id,'live-headlines-list','live rows participate in the existing responsive pager');
-  assert.equal((await render([{...base,title:'한국 경제 뉴스'}],false)).hidden,false,'plain layouts retain the original insertion fallback');
-  for (const items of [bad,[]]) {
-    const empty=await render(items);
-    assert.equal(empty.hidden,false,'a failed or empty update stays visible with retry feedback');
-    assert.equal(empty.children[2].children.length,0,'blocked languages never enter the news list');
-    assert.ok(empty.children[1].textContent.includes('재시도'));
-  }
-})().catch(error=>{console.error(error);process.exitCode=1;});
-"""
-        result = subprocess.run(['node', '-e', program, str(ROOT / 'extras' / 'headlines.js')],
-                                capture_output=True, text=True, encoding='utf-8', timeout=10)
-        self.assertEqual(result.returncode, 0, result.stderr)
-
 
 if __name__ == '__main__':
     unittest.main()

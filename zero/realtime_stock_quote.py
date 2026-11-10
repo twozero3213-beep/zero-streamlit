@@ -3,7 +3,7 @@
 
 Integrates:
 1. Toss Securities Open API (openapi.tossinvest.com) - Primary for KR & US
-2. Korea Investment & Securities Open API (openapi.koreainvestment.com) - Secondary
+2. Korea Investment & Securities mock Open API (openapivts.koreainvestment.com) - Secondary
 3. Naver Finance Realtime Polling (polling.finance.naver.com) - 0-won real-time fallback for KR
 4. Yahoo Finance Chart API - Fallback for US / Global
 
@@ -83,7 +83,7 @@ def _get_zero_env() -> dict:
             except Exception:
                 pass
     # OS env overrides
-    for k in ["TOSS_APP_KEY", "TOSS_SECRET_KEY", "KIS_APP_KEY", "KIS_APP_SECRET", "KIS_MOCK_APP_KEY", "KIS_MOCK_APP_SECRET"]:
+    for k in ["TOSS_APP_KEY", "TOSS_SECRET_KEY", "KIS_MOCK_APP_KEY", "KIS_MOCK_APP_SECRET"]:
         val = os.environ.get(k)
         if val:
             env[k] = val
@@ -239,19 +239,13 @@ def _fetch_from_naver_kr(code: str) -> dict | None:
 
 def _get_kis_token(env: dict) -> tuple[str | None, str, str]:
     now = time.time()
+    # ZERO keeps KIS on the mock server only (docs/ai-collaboration.md), so real keys are never read here.
+    base = "https://openapivts.koreainvestment.com:29443"
+    app_key = env.get("KIS_MOCK_APP_KEY")
+    app_secret = env.get("KIS_MOCK_APP_SECRET")
     with _CACHE_LOCK:
         if _KIS_TOKEN_CACHE["token"] and _KIS_TOKEN_CACHE["expires_at"] > now + 60:
-            base = "https://openapi.koreainvestment.com:9443" if env.get("KIS_APP_KEY") else "https://openapivts.koreainvestment.com:29443"
-            app_key = env.get("KIS_APP_KEY") or env.get("KIS_MOCK_APP_KEY")
             return _KIS_TOKEN_CACHE["token"], base, app_key
-
-    app_key = env.get("KIS_APP_KEY")
-    app_secret = env.get("KIS_APP_SECRET")
-    base = "https://openapi.koreainvestment.com:9443"
-    if not app_key:
-        app_key = env.get("KIS_MOCK_APP_KEY")
-        app_secret = env.get("KIS_MOCK_APP_SECRET")
-        base = "https://openapivts.koreainvestment.com:29443"
 
     if not app_key or not app_secret:
         return None, base, ""
@@ -290,7 +284,7 @@ def _fetch_from_kis_kr(code: str, env: dict) -> dict | None:
                 "content-type": "application/json",
                 "authorization": f"Bearer {token}",
                 "appkey": app_key,
-                "appsecret": env.get("KIS_APP_SECRET") or env.get("KIS_MOCK_APP_SECRET", ""),
+                "appsecret": env.get("KIS_MOCK_APP_SECRET", ""),
                 "tr_id": "FHKST01010100",
                 "User-Agent": "ZERO-KIS/1.0",
             },
@@ -395,22 +389,10 @@ def fetch_stock_quote(raw_symbol: str) -> dict:
     if not quote:
         quote = _fetch_from_yahoo(code, market, currency)
 
-    # Fallback placeholder if entirely offline
+    # 변경: 모든 시세 소스가 실패하면 가짜 가격(OFFLINE_FALLBACK)을 만들지 않고 None을 돌려준다.
+    # 이유: 지어낸 가격이 정상 시세처럼 화면·포트폴리오 재계산에 쓰이는 것을 막기 위함.
     if not quote:
-        # Realistic fallback baseline
-        fallback_prices = {"005930": 225000.0, "000660": 1374000.0, "NVDA": 217.5, "SPY": 767.3}
-        quote = {
-            "symbol": code,
-            "identity": f"{market}:{code}",
-            "name": _STOCK_NAMES_KR.get(code) or _STOCK_NAMES_US.get(code) or code,
-            "market": market,
-            "currency": currency,
-            "current_price": fallback_prices.get(code, 225000.0 if market == "KR" else 100.0),
-            "change": 0.0,
-            "change_percent": 0.0,
-            "market_time": datetime.now(timezone.utc).isoformat(),
-            "source": "OFFLINE_FALLBACK",
-        }
+        return None
 
     with _CACHE_LOCK:
         _QUOTE_CACHE[code] = (quote, now + QUOTE_TTL_SECONDS)
@@ -449,7 +431,10 @@ def fetch_multiple_quotes(symbols: list[str]) -> dict[str, dict]:
 
         for code, market, curr in parsed:
             if code not in results:
-                results[code] = fetch_stock_quote(code)
+                quote = fetch_stock_quote(code)
+                # 변경: 시세를 못 구한 종목은 결과에서 뺀다(가짜 값으로 채우지 않는다).
+                if quote:
+                    results[code] = quote
 
     return results
 
@@ -462,29 +447,25 @@ def get_quote_response(path_or_query: str) -> tuple[int, dict]:
         symbols_param = qs.get("symbols", [""])[0]
         symbol_param = qs.get("symbol", [""])[0] or qs.get("identity", [""])[0]
 
+        now_iso = datetime.now(timezone.utc).isoformat()
         if symbols_param:
             syms = [s.strip() for s in symbols_param.split(",") if s.strip()]
             quotes = fetch_multiple_quotes(syms)
-            return 200, {
-                "status": "OK",
-                "quotes": quotes,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-        elif symbol_param:
-            quote = fetch_stock_quote(symbol_param)
-            return 200, {
-                "status": "OK",
-                "quote": quote,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-        else:
-            # Default to Samsung Electronics if no parameter given
-            quote = fetch_stock_quote("005930")
-            return 200, {
-                "status": "OK",
-                "quote": quote,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
+            # 변경: 못 구한 종목은 missing으로 알려 화면이 '시세 없음'을 정직하게 보여 주게 한다.
+            missing = []
+            for s in syms:
+                try:
+                    code = _clean_symbol(s)[0]
+                except ValueError:
+                    code = s
+                if code not in quotes:
+                    missing.append(code)
+            return 200, {"status": "OK", "quotes": quotes, "missing": missing, "timestamp": now_iso}
+        # 변경: 기본 종목(삼성전자) 가정은 유지하되, 시세를 못 구하면 503으로 알린다.
+        quote = fetch_stock_quote(symbol_param or "005930")
+        if not quote:
+            return 503, {"status": "UNAVAILABLE", "quote": None, "timestamp": now_iso}
+        return 200, {"status": "OK", "quote": quote, "timestamp": now_iso}
     except Exception as e:
         return 400, {"status": "ERROR", "error": str(e)}
 
@@ -509,29 +490,34 @@ def get_live_quotes_endpoint(store=None) -> tuple[int, dict]:
 
     quote_rows = []
     for q in quotes.values():
-        quote_rows.append({
+        row = {
             'market': q['market'],
             'symbol': q['symbol'],
             'currency': q['currency'],
             'price': q['current_price'],
-            'previous_close': q.get('previous_close', q['current_price']),
             'market_time': q.get('market_time', now_iso),
-        })
+        }
+        # 변경: 전일 종가를 모르면 현재가로 대신 채우지 않고 키를 뺀다.
+        if q.get('previous_close') is not None:
+            row['previous_close'] = q['previous_close']
+        quote_rows.append(row)
 
-    spy_price = quotes.get('SPY', {}).get('current_price', 767.3)
+    # 변경: 실제 시세가 하나도 없으면 AVAILABLE로 속이지 않고 503을 돌려준다.
+    if not quote_rows:
+        return 503, {'schema_version': 1, 'scope': 'PUBLIC_REALTIME_QUOTES', 'state': 'UNAVAILABLE',
+                     'checked_at': now_iso, 'quotes': []}
 
-    return 200, {
+    payload = {
         'schema_version': 1,
         'scope': 'PUBLIC_REALTIME_QUOTES',
         'basis': 'BROKER_AND_REALTIME_POLLING_PRICE',
         'state': 'AVAILABLE',
         'checked_at': now_iso,
         'quotes': quote_rows,
-        'benchmarks': {
-            'SP500': {'price': spy_price, 'market_time': now_iso}
-        },
-        'fx': {
-            'usd_krw': 1400.0,
-            'market_time': now_iso
-        }
     }
+    # 변경: SPY를 실제로 구했을 때만 벤치마크를 싣는다. 환율(fx)은 이 모듈에 실제 출처가 없어
+    # 고정값(1400)을 넣지 않고 뺀다. 클라이언트(livePortfolio)는 fx가 없으면 저장된 화면을 유지한다.
+    if 'SPY' in quotes:
+        spy = quotes['SPY']
+        payload['benchmarks'] = {'SP500': {'price': spy['current_price'], 'market_time': spy.get('market_time', now_iso)}}
+    return 200, payload

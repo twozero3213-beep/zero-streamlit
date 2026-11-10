@@ -1,752 +1,92 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-zero-hosted="true">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self'; connect-src 'self' https://zero-lobby.zero-cloudflare.workers.dev wss://zero-lobby.zero-cloudflare.workers.dev https://api.open-meteo.com https://date.nager.at; object-src 'none'; base-uri 'self'"/>
-  <meta name="referrer" content="no-referrer"/><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ZERO · 나의 포트폴리오</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://zero-lobby.zero-cloudflare.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>ZERO</title>
+  <meta name="description" content="내 자산, 오늘 시장, 관심 종목을 한 화면에서 보는 ZERO">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="assets/manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="ZERO">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#ffffff">
+  <meta name="zero-lobby-api" content="https://zero-lobby.zero-cloudflare.workers.dev">
   <script src="assets/theme-boot.js"></script>
-  <meta name="zero-owner-finance-api" content="">
-  <meta name="zero-lobby-api" content="">
-  <meta name="zero-lightweight-chart" content="">
-  <link rel="stylesheet" href="assets/figma-tokens.css">
-  <link rel="stylesheet" href="assets/figma-autolayout.css">
-  <link rel="stylesheet" href="assets/styles.css">
-  <link rel="stylesheet" href="assets/stock-analytics.css">
-  <link rel="stylesheet" href="assets/office.css">
-  <link rel="stylesheet" href="assets/lobby.css">
-  <link rel="stylesheet" href="assets/social.css"><link rel="stylesheet" href="assets/company.css">
-  <link rel="stylesheet" href="assets/lobby-polish.css">
-  <link rel="stylesheet" href="assets/research-center.css">
-  <link rel="stylesheet" href="assets/mobile-modern.css">
-  <link rel="stylesheet" href="assets/toss-kakao-simple.css">
-  <link rel="stylesheet" href="assets/dark-comprehensive.css">
-  <link rel="stylesheet" href="assets/viewport.css">
-  <link rel="stylesheet" href="assets/office-sprites.css">
-  <link rel="stylesheet" href="assets/office-native.css">
-  <link rel="stylesheet" href="assets/cosmetic-catalogue.css">
-  <link rel="stylesheet" href="assets/office-editor.css">
-  <link rel="stylesheet" href="assets/mts-cards.css">
-  <link rel="stylesheet" href="assets/mts-orders.css">
-  <link rel="stylesheet" href="assets/mts-shell.css">
-  <link rel="stylesheet" href="assets/analysis-view.css">
-  <link rel="stylesheet" href="assets/account-audit.css">
-  <link rel="stylesheet" href="assets/technical-chart.css">
-  <link rel="stylesheet" href="assets/office-wide.css">
-  <link rel="stylesheet" href="assets/desktop-workspace.css">
-  <link rel="stylesheet" href="assets/desktop-interactions.css">
-  <link rel="stylesheet" href="assets/office-room.css">
-  <script src="assets/analysis-view.js" defer></script>
-  <script src="assets/account-audit.js" defer></script>
-  <script src="assets/technical-chart.js" defer></script>
-  <script src="assets/mts-portfolio.js" defer></script>
-  <script src="assets/mts-cards.js" defer></script>
-  <script src="assets/mts-orders.js" defer></script>
-  <script src="assets/owner-finance.js" defer></script>
-  <script src="assets/app.js" defer></script>
-  <script src="assets/office.js" defer></script>
-  <script src="assets/company-research.js" defer></script>
-  <script src="assets/stock-workbench.js" defer></script>
-  <script src="assets/research-desk.js" defer></script>
-  <script src="assets/dca.js" defer></script>
-  <script src="assets/desk-visuals.js" defer></script>
-  <script src="assets/toss-home.js" defer></script>
-  <script src="assets/rpg-system.js" defer></script>
-  <script src="assets/toss-stock.js" defer></script>
-  <script src="assets/dark-theme.js" defer></script>
-  <script src="assets/fund-view.js" defer></script>
-  <script src="assets/vendor-astar.js" defer></script>
-  <script src="assets/vendor-anime-4.5.0.min.js" defer></script>
-  <script src="assets/office-layout.js" defer></script>
-  <script src="assets/office-sprites.js" defer></script>
-  <script src="assets/office-art.js" defer></script>
-  <script src="assets/office-native.js" defer></script>
-  <script src="assets/cosmetic-catalogue.js" defer></script>
-  <script src="assets/lobby-world.js" defer></script>
-  <script src="assets/lobby-logic.js" defer></script>
-  <script src="assets/lobby.js" defer></script>
-  <script src="assets/research-center.js" defer></script>
-  <script src="assets/academy-logic.js" defer></script>
-  <script src="assets/academy.js" defer></script>
-  <link rel="stylesheet" href="assets/member-onboarding.css">
-  <script src="assets/member-auth.js" defer></script>
-  <script src="assets/member-onboarding.js" defer></script>
-  <script src="assets/lobby-users.js" defer></script>
-  <script src="assets/office-editor.js" defer></script>
-  <script src="assets/social.js" defer></script><script src="assets/office-room.js" defer></script><script src="assets/company.js" defer></script>
+  <link rel="stylesheet" href="assets/zero.css">
+  <script src="assets/vendor-lightweight-charts-4.1.3.js" defer></script>
+  <script src="assets/zero-core.js" defer></script>
   <script src="assets/outlook.js" defer></script>
-  <script src="assets/numfmt.js" defer></script>
-  <script src="assets/ux.js" defer></script>
-  <script src="assets/viewport.js" defer></script>
-  <script src="assets/desktop-workspace.js" defer></script>
-  <script src="assets/desktop-interactions.js" defer></script>
+  <script src="assets/academy-logic.js" defer></script>
+  <script src="assets/zero-ui.js" defer></script>
+  <script src="assets/zero-data.js" defer></script>
+  <script src="assets/zero-home.js" defer></script>
+  <script src="assets/zero-stocks.js" defer></script>
+  <script src="assets/zero-discover.js" defer></script>
+  <script src="assets/zero-more.js" defer></script>
+  <script src="assets/zero-school.js" defer></script>
+  <script src="assets/zero-app.js" defer></script>
 </head>
-<body data-zero-hosted="true">
-<div id="boot-splash" class="boot-splash" role="status" aria-live="polite"><div class="boot-ring" aria-hidden="true"></div><p class="boot-text">로딩중…</p><p class="boot-sub">ZERO 트레이딩 플로어를 열고 있어요</p></div>
-<a class="skip-link" href="#page-title">본문으로 이동</a>
-<aside class="rail"><a class="brand" href="#lobby" aria-label="ZERO 트레이딩 플로어 홈"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M9 10h18L10 26h17"/></svg><span>ZERO</span></a><p class="rail-description">투자를 이해하는 일상</p><nav aria-label="전체 화면 선택"><div class="nav-group" role="group" aria-labelledby="rail-social-title"><p id="rail-social-title" class="nav-group-label">투자회사·소셜</p><button type="button" class="nav-item" data-view="lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M9 21v-6h6v6M8 11h2M14 11h2"/></svg><span>사무실</span></button><button type="button" class="nav-item" data-view="team"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 21v-3a6 6 0 0 1 12 0v3M4 5a3 3 0 0 0 0 6M20 5a3 3 0 0 1 0 6"/></svg><span>ZERO 팀</span></button><button type="button" class="nav-item" data-view="company"><span>내 투자회사</span></button><button type="button" class="nav-item" data-view="plaza"><span>광장</span></button><button type="button" class="nav-item" data-view="community"><span>커뮤니티</span></button></div><div class="nav-group" role="group" aria-labelledby="rail-investment-title"><p id="rail-investment-title" class="nav-group-label">투자</p><button type="button" class="nav-item" data-view="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5V20h-5.5v-5h-5v5H4Z"/></svg><span>홈</span></button><button type="button" class="nav-item active" data-view="portfolio" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8v10h-6v-7H9v7H3Z"/></svg><span>자산</span></button><button type="button" class="nav-item" data-view="comparison"><span>수익률 비교</span></button><button type="button" class="nav-item" data-view="research"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l4-6 4 3 5-8"/></svg><span>주식 탐색</span></button><button type="button" class="nav-item" data-view="workbench"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v15M3 8h4v7H3ZM12 2v20M10 5h4v9h-4ZM19 5v15M17 11h4v6h-4Z"/></svg><span>종목·차트</span></button><button type="button" class="nav-item" data-view="analysis"><span>시장</span></button><button type="button" class="nav-item" data-view="audit"><span>계좌 대조</span></button></div><div class="nav-group" role="group" aria-labelledby="rail-learning-title"><p id="rail-learning-title" class="nav-group-label">정보·학습</p><button type="button" class="nav-item" data-view="news"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span>뉴스</span></button><button type="button" class="nav-item" data-view="macro"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a16 16 0 0 1 0 18M12 3a16 16 0 0 0 0 18"/></svg><span>경제 지표</span></button><button type="button" class="nav-item" data-view="reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5ZM14 3v5h5M8 12h8M8 16h6"/></svg><span>보고서</span></button><button type="button" class="nav-item" data-view="study"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h6a3 3 0 0 1 3 3v14a4 4 0 0 0-4-2H3ZM12 7a3 3 0 0 1 3-3h6v15h-5a4 4 0 0 0-4 2"/></svg><span>투자 공부</span></button><button type="button" class="nav-item" data-view="guide"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg><span>자료·앱 안내</span></button></div></nav><div class="rail-bottom"><span class="private-dot"></span>대표님 전용<p>마지막 저장 자료 기준</p></div></aside><header class="global-header"><a class="mobile-brand brand" href="#portfolio" aria-label="ZERO 홈"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M9 10h18L10 26h17"/></svg><span>ZERO</span></a><nav class="global-navigation" aria-label="서비스 주요 메뉴"><button type="button" class="top-nav-item" data-view="portfolio" data-domain="investment">모의 투자 <small>MTS</small></button><button type="button" class="top-nav-item" data-view="lobby" data-domain="office">내 사무실</button><button type="button" class="top-nav-item" data-view="plaza" data-domain="plaza">실시간 광장</button><button type="button" class="top-nav-item" data-view="community" data-domain="community">커뮤니티</button></nav><div class="global-search-wrap"><label for="global-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="global-search" type="search" placeholder="어떤 종목이 궁금하세요?" aria-label="전체 종목 검색" aria-controls="global-search-results" aria-expanded="false" autocomplete="off"><kbd aria-hidden="true">/</kbd></label><div id="global-search-results" class="global-search-results" role="listbox" aria-label="종목 검색 결과" hidden></div></div><button type="button" id="member-entry" class="member-entry" aria-haspopup="dialog" aria-controls="member-profile-dialog" hidden>로그인</button><button type="button" id="global-watchlist" class="icon-button" aria-label="관심 종목 보기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></svg></button><button type="button" class="icon-button menu-open" aria-label="전체 메뉴 열기" aria-haspopup="dialog" aria-controls="more-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></header>
-  <!-- Mobile Real-time Visual Market Ticker -->
-  <aside class="mobile-market-ticker" aria-label="모바일 실시간 시황 펄스">
-    <div class="ticker-item"><span>🇰🇷 코스피</span><strong>2,585.32</strong><span class="up">+0.48%</span></div>
-    <div class="ticker-item"><span>🇺🇸 나스닥</span><strong>18,518.61</strong><span class="up">+0.56%</span></div>
-    <div class="ticker-item"><span>💵 환율</span><strong>1,386.5원</strong><span class="up">+0.30%</span></div>
-    <div class="ticker-item"><span>🏛️ 총괄 디렉터</span><strong style="color: #38bdf8;">적극 매수 62%</strong></div>
-    <button type="button" class="ticker-pill-btn" onclick="document.getElementById('morning-report-dialog')?.showModal()">☀️ 브리핑</button>
-  </aside>
-<main id="main" class="zero-main-viewport">
-  <header class="page-header"><div><h1 id="page-title" tabindex="-1">내 자산</h1><p id="page-subtitle">1억원으로 시작한 ZERO의 보유 자산과 잔여자금을 확인하세요.</p></div></header>
-  <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
-  <nav class="mts-subnav" aria-label="투자 화면"><button type="button" data-view="home" aria-label="홈">홈</button><button type="button" data-view="portfolio" aria-label="내 자산" class="active">자산</button><button type="button" data-view="comparison" aria-label="ZERO · TQQQ · S&P 500 비교">비교</button><button type="button" data-view="research" aria-label="주식 탐색">탐색</button><button type="button" data-view="workbench" aria-label="종목과 주문">종목</button><button type="button" data-view="analysis">시장</button><button type="button" data-view="audit">감사</button><button id="refresh" class="primary-button" type="button" aria-label="자료 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M18 17a7 7 0 0 1-12 1l-2-3"/></svg><span>시세 새로고침</span></button></nav>
-  <section id="analysis-view" class="view" hidden><section class="panel analysis-panel" aria-label="시장 브리핑"><div class="analysis-heading"><h2>오늘의 시장</h2><button type="button" id="analysis-retry" class="secondary-button">다시 확인</button></div><p id="analysis-status" class="muted-note" role="status">시장 탭을 열면 확인합니다.</p><div id="analysis-content"></div></section></section>
-  <section id="audit-view" class="view" hidden><section id="account-audit" class="panel" aria-label="계좌 회계 감사"></section></section>
-  <section id="home-view" class="view" hidden aria-label="홈"><div id="toss-home" class="toss-home"></div></section>
-  <section id="portfolio-view" class="view" aria-label="내 모의자산">
-    <div id="portfolio-floor-radar" class="th-floor-radar th-card" style="margin-bottom: 16px;"></div>
-    <div id="member-portfolio"><section class="panel company-state"><p role="status">로그인 정보를 확인한 뒤 내 모의자산을 표시해요.</p></section></div>
-  </section>
-  <section id="plaza-view" class="view" hidden aria-labelledby="plaza-title">
-    <h2 id="plaza-title">실시간 광장</h2>
-    <p id="plaza-status" role="status">닉네임으로 로그인한 뒤 기존 공용 광장에 참여하세요.</p>
-    <button id="plaza-open" type="button" class="primary-button">광장 입장</button>
-  </section>
-  <section id="comparison-view" class="view" hidden>
-    <section id="comparison-dashboard" class="comparison-dashboard" aria-labelledby="comparison-title">
-      <h2 id="comparison-title" class="sr-only">ZERO · 전액 TQQQ · S&amp;P 500 참고 비교</h2>
-      <div class="comparison-cards">
-        <section id="comparison-zero" class="panel" aria-label="ZERO 참고 원장"></section>
-        <section id="tqqq-panel" class="panel benchmark-panel" aria-labelledby="tqqq-title">
-      <div class="panel-heading"><div><h2 id="tqqq-title">1억원을 TQQQ에 투자했다면</h2><p>실제 ETF 종가에 따른 별도 참고 가정 · 배당·수수료·세금·환전 비용 제외</p></div></div>
-      <p id="tqqq-basis" class="muted-note">기존 첫 매수 기록과 TQQQ 종가·공식 환율의 기준일을 확인한 뒤 표시합니다.</p>
-      <div id="tqqq-empty" class="small-empty" role="status" aria-live="polite">공개 비교 자료를 아직 확인하지 못했습니다.</div>
-      <div id="tqqq-content" hidden>
-        <dl class="benchmark-metrics">
-          <div><dt>달러 기준 ETF 가격수익률</dt><dd id="tqqq-price-return">근거 없음</dd><dd id="tqqq-price-period" class="metric-note">미국 거래일 미확인</dd></div>
-          <div><dt>환율 고정 참고 평가액</dt><dd id="tqqq-fixed-value">근거 없음</dd><dd id="tqqq-fixed-gain" class="metric-note">참고 차액 미확인</dd></div>
-          <div><dt>공식 환율 반영 원화 참고 평가액</dt><dd id="tqqq-krw-value">근거 없음</dd><dd id="tqqq-krw-return" class="metric-note">참고 수익률 미확인</dd><dd id="tqqq-fx-period" class="metric-note">공식 공통 관측일 미확인</dd></div>
-        </dl>
-        <p class="muted-note">액면분할을 반영한 실제 ETF 종가를 사용합니다. 펀드 운영비용의 영향은 ETF 가격에 이미 반영돼 있습니다. 배당 재투자·개인 거래 수수료·세금·환전 비용은 반영하지 않습니다.</p>
-        <p class="muted-note">TQQQ는 Nasdaq-100의 하루 수익률 3배를 목표로 합니다. 매일 달라지는 수익률이 누적되므로 장기 수익률이 지수의 3배가 된다는 보장은 없습니다.</p>
-        <p class="muted-note">출처 자료에 기반한 참고 계산이며 독립 검증은 미완료입니다. ZERO의 TQQQ 보유·실제 이익이나 기존 자산과 동일 기간의 성과를 뜻하지 않습니다.</p>
-        <details class="source-details"><summary>시작 기준·가격·환율의 확인 시각과 출처</summary><p id="tqqq-assumptions" class="muted-note"></p><div id="tqqq-sources" class="benchmark-sources"></div></details>
-      </div>
-    </section>
-        <section id="benchmark-panel" class="panel benchmark-panel" aria-labelledby="benchmark-title">
-      <div class="panel-heading"><div><h2 id="benchmark-title">S&amp;P 500에 투자했다면</h2><p>지수 가격으로 계산한 참고값 · 배당·세금·수수료·환전 비용 제외</p></div></div>
-      <p id="benchmark-basis" class="muted-note">첫 매수 기록과 지수·환율의 기준일을 확인한 뒤 표시합니다.</p>
-      <div id="benchmark-empty" class="small-empty">비교 자료를 아직 확인하지 못했습니다.</div>
-      <div id="benchmark-content" hidden>
-        <dl class="benchmark-metrics">
-          <div><dt>달러 기준 지수 가격수익률</dt><dd id="benchmark-price-return">—</dd><dd id="benchmark-price-period" class="metric-note">기준일 미확인</dd></div>
-          <div><dt>환율 고정 참고 평가액</dt><dd id="benchmark-fixed-value">—</dd><dd id="benchmark-fixed-gain" class="metric-note">참고 평가이익 미확인</dd></div>
-          <div><dt>환율 반영 원화 참고 평가액</dt><dd id="benchmark-krw-value">—</dd><dd id="benchmark-krw-return" class="metric-note">수익률 미확인</dd><dd id="benchmark-fx-period" class="metric-note">공식 공통 관측일 미확인</dd></div>
-        </dl>
-        <p class="muted-note">달러 기준 지수가 올라도 달러 값이 원화 대비 내려가면, 원화 기준 이익은 작아지거나 손실이 될 수 있습니다.</p>
-        <details class="source-details"><summary>시작 기준·계산 가정과 출처</summary><p id="benchmark-assumptions" class="muted-note"></p><p class="muted-note">실제 ETF의 배당·비용·세후 수익률과 다릅니다. 보유종목 평가수익률과 기준일·계산 범위가 달라 초과수익 비교를 하지 않습니다. ZERO 계좌 누적수익률은 원장 대조 후 확인합니다.</p><div id="benchmark-sources" class="benchmark-sources"></div></details>
-      </div>
-    </section>
-      </div>
-    <details id="zero-reference-portfolio" class="zero-reference-portfolio">
-      <summary>ZERO 참고 운용 · 보유 종목과 평가 기록</summary>
-      <p class="muted-note">ZERO의 참고 원장입니다. 내 모의자산과 별도로 확인하는 비교 자료예요.</p>
-<div class="portfolio-summary panel" aria-label="1억원 ZERO 참고 운용자산 요약">
-      <div id="portfolio-empty" class="portfolio-empty" hidden><h2>ZERO 참고 운용 자료를 준비하고 있어요</h2><p>ZERO 참고 자료를 확인하거나 시연 화면으로 사용 방법을 살펴보세요. 시연 자료는 실제 계좌에 저장되지 않습니다.</p><div class="empty-actions"><button id="empty-query" type="button" class="secondary-button">계좌 조회하기</button><button id="demo-toggle" type="button" class="secondary-button">시연 모드 보기</button></div><p id="empty-query-note" class="muted-note" hidden></p></div><button id="demo-exit" type="button" class="secondary-button" hidden>시연 종료 · 저장 자료로 돌아가기</button><h2 class="account-scope">총자산과 수익률 <span>시작 원금 1억원 · ZERO 참고 원장</span></h2>
-      <dl class="account-metrics">
-        <div class="total-metric"><dt>ZERO 총자산 <small>참고</small></dt><dd id="observed-assets-total">미확인</dd><dd class="metric-note">보유종목 평가액 + 잔여자금</dd></div>
-        <div class="performance-metric"><dt>ZERO 누적수익률 <small>참고</small></dt><dd id="zero-total-return">미확인</dd><dd class="metric-note">시작 원금 1억원 대비 · 비용 미반영</dd></div>
-        <div class="secondary-metric"><dt>보유종목 평가액</dt><dd id="holdings-value">—</dd><dd class="metric-note">ZERO 계획 수량 · 원화 환산</dd></div>
-        <div class="secondary-metric"><dt>예수금 <small>연결 계좌</small></dt><dd id="mts-deposit">연결 전</dd><dd id="mts-deposit-note" class="metric-note">참고 잔여자금과 별도</dd></div>
-      </dl>
-      <p class="account-reference-note">ZERO 자산·수익률은 참고 원장 기준 · 예수금은 연결 계좌 별도 범위</p>
-      <section id="mts-allocation" class="mts-allocation" aria-label="ZERO 참고 자산 배분"></section>
-      <details class="summary-evidence"><summary>계산 기준과 계좌 범위 확인</summary><p class="muted-note">동결 계획과 확정 체결로 계산한 참고 원장입니다. 실제 결제 현금과 검증된 세후 순자산은 별도 대조가 필요합니다.</p>
-      <p class="holdings-pnl"><span>참고 잔여자금</span><strong id="observed-cash-total">미확인</strong></p>
-      <p class="holdings-pnl"><span>참고 평가손익</span><strong id="zero-total-gain">미확인</strong></p><p id="observed-assets-status" class="muted-note">1억원 계획·확정 체결·현재 보유분 대조 후 표시합니다.</p>
-      <dl class="performance-cost"><div><dt>ZERO 시작 원금</dt><dd id="policy-principal"><span id="investment-capital">1억원</span></dd></div><div><dt>보유분 매입금액 <small>증권사 평균 단가 · 현재환율 참고</small></dt><dd id="holdings-cost">—</dd></div></dl>
-      <p id="holdings-performance-status" class="muted-note" hidden></p>
-      <section class="evidence-group"><h3>1억원 범위·잔여자금의 계산 근거</h3><p id="reference-funds-basis" class="muted-note"></p><p class="muted-note">시작 보유분을 당시 계획의 기준가격으로 평가해 1억원에 배정한 가상 참고 계산입니다. 현재 보유분의 매입금액을 1억원에서 빼서 현금을 맞추지 않습니다. 거래비용·세금·배당·결제와 실제 환전 내역이 미확정이므로 검증된 순자산·세후 수익률로 해석하지 않습니다. 별도 종목과 같은 종목의 초과 수량은 제외합니다.</p></section>
-      <section class="evidence-group holdings-performance-details"><h3>보유분 가격수익률 <strong id="holdings-return">—</strong><span class="account-return-note">현금·실현손익 제외</span></h3><p class="holdings-pnl">가격 기준 평가손익 <strong id="holdings-pnl">—</strong></p><dl class="native-performance"><div><dt>미국 ZERO 보유분 <small>USD 가격 기준</small></dt><dd id="holdings-return-us">—</dd><dd id="holdings-pnl-us" class="metric-note">—</dd></div><div><dt>한국 ZERO 보유분 <small>KRW 가격 기준</small></dt><dd id="holdings-return-kr">—</dd><dd id="holdings-pnl-kr" class="metric-note">—</dd></div></dl><p class="muted-note">보유분의 현재 평가액을 증권사 평균 단가 × 해당 수량과 비교합니다. 매입금액과 평가액에 같은 현재환율을 적용하며 현금·실현손익·배당·수수료·세금·과거 환율 변화는 제외합니다. 별도 동일 종목과 평균 단가가 섞이면 해당 매입금액과 손익은 보류합니다.</p></section>
-      <section class="evidence-group account-performance-details"><h3>검증된 세후 누적수익률 <strong id="account-return">집계 보류</strong><span class="account-return-note">원장 대조 필요</span></h3><p class="muted-note">참고 원장과 별도로, 승인된 ZERO 소유 원장과 실제 입출금·매매·환전·배당·비용·결제 근거를 대조해야 확정합니다. 참고 수익률을 매매 승인이나 손실 한도 판단에 사용하지 않습니다.</p></section>
-      <section class="evidence-group"><h3>연결 계좌 전체 잔액 · ZERO와 범위가 다름</h3><dl class="native-performance"><div><dt>국내·미국 조회 자산 합계</dt><dd id="connected-assets-total">미확인</dd></div><div><dt>국내 결제 반영 예상 현금</dt><dd id="cash-krw">미확인</dd></div><div><dt>미국 조회 현금</dt><dd id="cash-usd">미확인</dd></div><div><dt>결제 전 국내 예수금</dt><dd id="cash-krw-before-settlement">미확인</dd></div></dl><p class="muted-note">증권사가 제공하는 별도 예수금이 포함됩니다. 이 잔액을 ZERO의 1억원 운용자산에 더하지 않습니다. 결제 전 예수금과 결제 반영 예상 현금을 중복 합산하지 않습니다.</p></section>
-      </details>
-      <div class="summary-meta"><strong id="holding-count">0개 종목</strong><div class="status-line"><span id="connection-status"><i class="status-dot"></i>계좌 조회 준비</span><span id="collected-at">아직 조회하지 않았습니다</span></div></div>
+<body>
+<a class="skip-link" href="#main">본문으로 이동</a>
+
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="#home" aria-label="ZERO 홈">ZERO</a>
+    <nav class="tabs" aria-label="주요 화면">
+      <a href="#home" data-tab="home">홈</a>
+      <a href="#stocks" data-tab="stocks">내 주식</a>
+      <a href="#discover" data-tab="discover">발견</a>
+      <a href="#more" data-tab="more">더보기</a>
+    </nav>
+    <div class="search" role="search">
+      <label class="sr-only" for="search">종목 검색</label>
+      <input id="search" type="search" placeholder="종목 이름이나 코드" autocomplete="off" role="combobox" aria-controls="search-results" aria-expanded="false">
+      <ul id="search-results" class="search-results" role="listbox" aria-label="검색 결과" hidden></ul>
     </div>
-    <section class="panel holdings-panel" aria-labelledby="holdings-title">
-      <div class="panel-heading"><div><h2 id="holdings-title" tabindex="-1">ZERO 보유 종목</h2><p>가격 기준 · 수수료·세금·환율 손익 제외</p></div><div class="currency-switch" role="group" aria-label="평가액 표시 통화"><button class="active" data-currency="KRW" aria-pressed="true">원화 환산</button><button data-currency="NATIVE" aria-pressed="false">현지 통화</button></div></div>
-      <div class="table-toolbar"><div class="market-filter" role="group" aria-label="보유 종목 시장 필터"><button class="active" data-market="ALL" aria-pressed="true">전체 <span id="count-all">0</span></button><button data-market="US" aria-pressed="false">미국 <span id="count-us">0</span></button><button data-market="KR" aria-pressed="false">한국 <span id="count-kr">0</span></button></div><button id="sort-value-mobile" class="mobile-sort" aria-label="원화 환산 평가액 큰 순, 누르면 작은 순으로 변경">평가액 큰 순</button><label class="search-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="search" type="search" placeholder="종목명 또는 코드 검색" aria-label="보유 종목명 또는 코드 검색" autocomplete="off"></label></div>
-      <details class="mts-table-details"><summary>수량·단가 상세</summary><div class="table-scroll" role="region" tabindex="0" aria-label="보유 종목 표, 좁은 화면에서 좌우 스크롤"><table><thead><tr><th scope="col">종목 / 시장</th><th scope="col" class="number">보유 수량</th><th scope="col" class="number">평균 단가</th><th scope="col" class="number">현재 가격</th><th scope="col" class="number" aria-sort="descending"><button id="sort-value" type="button" aria-label="평가금액 정렬" title="원화 환산 평가액을 기준으로 정렬합니다"><span class="sort-label">평가금액</span> <span aria-hidden="true">↓</span></button></th><th scope="col" class="number">가격 기준 평가손익</th><th scope="col" class="number position-return">종목별 수익률<br><small>가격 기준</small></th></tr></thead><tbody id="holdings-body"></tbody></table></div></details>
-      <ul id="holding-list" class="holding-list" aria-label="보유 종목 요약과 상세"></ul>
-      <div id="table-empty" class="table-empty">보유 종목을 조회하면 이곳에 표시합니다.</div>
-      <div class="table-foot"><span id="table-count">0개 종목</span><span>가격은 마지막 계좌 조회 기준 · 손익은 현지 통화의 가격 변화만 반영</span></div>
-    </section>
-    <section id="risk-panel" class="panel benchmark-panel" aria-labelledby="risk-title">
-      <div class="panel-heading"><div><h2 id="risk-title">손실 한도 정하기 전에 볼 숫자</h2><p>지금 비중 그대로 5년 전에 샀다면 · 가격 기준 · 배당·비용·세금·환율 제외</p></div><button id="risk-run" class="secondary-button" type="button">5년 일별 종가 계산하기</button></div>
-      <p id="risk-basis" class="muted-note">버튼을 누르면 보유 종목과 S&amp;P 500(SPY)의 5년 일별 종가로 계산합니다. 참고 자료일 뿐 검증된 백테스트가 아니며, 어떤 값도 적용되지 않습니다. 손실 한도는 대표님이 정합니다.</p>
-      <div id="risk-table" class="risk-table"></div>
-    </section>
+    <button id="theme-toggle" class="icon-button" type="button" aria-label="화면 색 바꾸기"></button>
+  </div>
+</header>
 
-    <div class="overview-layout">
-      <section class="panel asset-map-panel" aria-labelledby="map-title">
-        <div class="panel-heading"><div><h2 id="map-title">종목별 보유 비중</h2><p>원화 환산 보유 평가액 기준 · 현금 제외</p></div><div class="chart-switch" role="group" aria-label="보유 비중 차트 방식"><button class="active" data-chart="bars" aria-pressed="true">막대 비교</button><button data-chart="map" aria-pressed="false">면적 지도</button></div></div>
-        <div id="map-empty" class="chart-empty"><strong>계좌를 조회하면 보유 비중이 표시됩니다</strong><span>평가액과 환율이 확인된 종목으로 표시합니다.</span></div>
-        <ol id="holding-bars" class="holding-bars" aria-label="종목별 원화 평가액과 보유 비중" hidden></ol>
-        <svg id="holding-map" viewBox="0 0 900 246" role="group" aria-label="보유 종목별 평가액 지도" hidden></svg>
-        <div class="map-legend"><span><i class="legend-us"></i>미국 상장</span><span><i class="legend-kr"></i>한국 상장</span><span><i class="legend-reserve"></i>확인된 준비자산</span><small>종목을 누르면 보유 목록에서 선택됩니다.</small></div>
-      </section>
-      <aside class="account-panel panel" aria-labelledby="account-title">
-        <h2 id="account-title">운용 목표 <small id="allocation-basis-label">현금 제외</small></h2><div class="currency-switch" role="group" aria-label="비중 계산 범위"><button type="button" id="allocation-with-cash" aria-pressed="false">현금 포함</button><button type="button" id="allocation-without-cash" class="active" aria-pressed="true">현금 제외</button></div><div id="allocation-comparison" class="muted-note" role="status"></div>
-        <div class="budget-row"><span>설계 운용액</span><strong id="policy-capital">1억원</strong></div>
-        <div class="target-strip" role="img" aria-label="목표: 미국 주식 64%, 미국 준비자금 16%, 한국 주식 20%"><span class="target-us"></span><span class="target-reserve"></span><span class="target-kr"></span></div>
-        <dl class="target-list"><div><dt><i class="legend-us"></i>미국 주식</dt><dd>64%</dd></div><div><dt><i class="legend-reserve"></i>미국 단기채·현금</dt><dd>16%</dd></div><div><dt><i class="legend-kr"></i>한국 주식</dt><dd>20%</dd></div></dl>
-        <p class="muted-note">목표 원안은 현금 포함 64%·16%·20%입니다. 현금 제외 시 시작 참고 현금을 제외하고 목표를 같은 기준으로 환산합니다. 실제 결제 현금 기준은 아닙니다.</p>
-        <details class="source-details"><summary>예수금·환율과 계산 범위</summary><div class="cash-box"><h3>계좌 예수금과 운용 현금</h3><p>예수금은 주문 가능금액과 다릅니다. 참고 잔여자금은 동결 계획과 확정 체결에서 계산합니다. 실제 결제 현금·검증된 순자산은 미확정입니다.</p></div><div class="fx-row"><span>원·달러 환율</span><strong id="fx-value">—</strong></div><p id="fx-date" class="muted-note">확인된 환율을 사용해 평가액을 환산합니다.</p></details>
-      </aside>
-    </div>
-    <div class="lower-layout"><section class="panel history-panel"><div class="panel-heading"><div><h2>ZERO 평가 기록</h2><p>동일한 1억원 범위의 과거 기록을 확인한 뒤 표시합니다.</p></div><span id="history-count" class="count-chip">0회 관측</span></div><svg id="history-chart" viewBox="0 0 900 190" role="img" aria-label="실제 조회한 보유자산 평가액 기록" hidden></svg><div id="history-empty" class="small-empty">ZERO 범위로 대조된 과거 평가 기록은 아직 없습니다.</div><p class="muted-note">입출금·매매·환율 변화가 섞인 평가액 기록입니다. 투자 수익률이나 S&amp;P 500 대비 성과가 아닙니다.</p></section><section class="panel allocation-panel"><h2>현재 보유 시장 비중</h2><p>원화 환산 보유 평가액 기준 · 현금 제외</p><div class="observed-strip" id="observed-strip" aria-hidden="true"></div><dl class="observed-list"><div><dt>미국 상장</dt><dd id="observed-us">—</dd></div><div><dt>한국 상장</dt><dd id="observed-kr">—</dd></div></dl><p class="muted-note">상장 시장 기준이며 기업의 실제 매출 지역·경제적 노출과 다를 수 있습니다.</p></section></div>
-    </details>
-      <section class="panel period-comparison" aria-labelledby="period-title"><h2 id="period-title">ZERO 참고 비교 기간</h2><p>첫 매수 기록 없이도 ETF 가격수익률을 살펴볼 수 있어요. 실제 계좌 성과와 별개이며 배당·세금·수수료·환율을 제외합니다.</p><label for="comparison-range">비교 기간</label> <select id="comparison-range"><option value="1Y">최근 1년</option><option value="5Y">최근 5년</option></select> <button id="comparison-run" type="button" class="secondary-button">S&amp;P 500(SPY) · TQQQ 참고 비교</button><div id="comparison-result" class="muted-note" role="status" aria-live="polite"></div></section>
-    </section>
-  </section>
-  <section id="lobby-view" class="view" hidden>
-    <section class="lobby" aria-labelledby="lobby-title">
-      <h2 id="lobby-title" class="sr-only">지금 근무 중인 팀</h2><p id="lobby-sub" class="sr-only">지금 근무 중인 ZERO 팀이에요.</p>
-      <div class="lobby-layout">
-        <div class="lobby-main">
-          <div id="lobby-board" class="lobby-board" role="region" aria-label="전광판">
-            <div class="lobby-board-row market-row"><span class="lobby-board-tag">지수·환율</span><div id="lobby-market" class="lobby-marquee"><div class="lobby-track"></div></div></div>
-            <div class="lobby-board-row"><span class="lobby-board-tag">정치·경제</span><div id="lobby-news" class="lobby-marquee"><div class="lobby-track"></div></div></div>
-            <div class="lobby-board-row"><span class="lobby-board-tag">연습 랭킹</span><div id="lobby-returns" class="lobby-marquee"><div class="lobby-track"></div></div></div>
-            <div class="lobby-board-row trend-row"><span class="lobby-board-tag">검색 관심</span><div id="lobby-trends" class="lobby-marquee"><div class="lobby-track"></div></div></div>
-              <div class="board-footer"><small id="lobby-board-source" class="board-source">공개 지연 시세 · Google Trends · 기사 원제와 기계 번역</small><details class="board-settings" id="lobby-board-settings"><summary id="lobby-board-settings-toggle" class="icon-button board-settings-toggle" aria-label="전광판 설정" title="전광판 설정"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m10 3-.5 2.4-2 .8L5.4 5 3 9l1.9 1.6v2.8L3 15l2.4 4 2.1-1.2 2 .8L10 21h4l.5-2.4 2-.8 2.1 1.2 2.4-4-1.9-1.6v-2.8L21 9l-2.4-4-2.1 1.2-2-.8L14 3z"/><circle cx="12" cy="12" r="3"/></svg></summary><div class="board-settings-panel"><label>전광판 크기<select id="lobby-board-size" aria-label="전광판 크기"><option value="compact">작게</option><option value="normal" selected>기본</option><option value="large">크게</option></select></label><label>글자 크기<select id="lobby-board-font" aria-label="글자 크기"><option value="12">12px</option><option value="14" selected>14px</option><option value="16">16px</option></select></label></div></details></div>
-          </div>
-          <div class="lobby-scroll zero-office-canvas-wrap"><div class="lobby-wallboard" id="lobby-wallboard"></div><div id="lobby-banner" class="lobby-banner" hidden></div><div id="lobby-error" class="lobby-error" hidden><p>팀 명부를 불러오지 못했어요.</p><button id="lobby-retry" class="secondary-button" type="button">다시 시도</button></div><div id="lobby-stage" class="lobby-stage" tabindex="0" role="application" aria-label="ZERO 트레이딩 플로어. 방향키로 이동하고 직원을 눌러 대화합니다."></div></div>
-          <details id="lobby-tools" class="lobby-tools" open><summary>사무실 메뉴</summary>
-      <div class="lobby-hero"><div class="hero-text"><p class="hero-date" id="lobby-hero-date"></p><p class="hero-say" id="lobby-hero-say">“ZERO 트레이딩 플로어에 어서 오세요.”</p></div><div class="hero-cta"><button type="button" id="floor-help">내 사무실 · 안내</button><button type="button" id="hero-talk">총괄에게 말 걸기</button><button type="button" id="hero-school" data-open-academy>🎓 주식 입문 학교 <b data-academy="lv">Lv.1</b></button></div></div>
-          <div class="lobby-meta"><span class="lobby-chip">내 캐릭터<b id="lobby-name-chip">ZERO</b><small id="lobby-player-level" class="character-level">Lv.1</small></span><span class="lobby-chip" id="lobby-count" role="status">직원 불러오는 중</span><button id="lobby-ranking-open" type="button" class="secondary-button">연습 랭킹</button><button id="lobby-pause" type="button" class="secondary-button" aria-pressed="false">연출 멈춤</button><p id="lobby-near" class="lobby-near" role="status" aria-live="polite"></p></div>
-          </details>
-          <div class="lobby-pad" aria-label="이동 버튼"><button type="button" data-pad="up" aria-label="위로"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" data-pad="left" aria-label="왼쪽으로"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" data-pad="down" aria-label="아래로"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" data-pad="right" aria-label="오른쪽으로"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-        </div>
-        <div class="lobby-side">
-          <section class="school-card" aria-label="주식 입문 학교"><div class="school-top"><span class="school-lv" data-academy="lv">Lv.1</span><div><strong>주식 입문 학교</strong><p data-academy="rank">입문 전</p></div><span class="school-xp" data-academy="xp">0 XP</span></div>
-            <div class="school-bar" aria-hidden="true"><div data-academy="fill"></div></div><p class="school-next" data-academy="next">다음: 주식이 뭔가요?</p>
-            <p class="school-note">매수·매도부터 ZERO 사용법까지, 문제를 풀며 레벨을 올려요.</p><button type="button" class="primary-button" data-open-academy data-academy="cta">배우기 시작</button></section>
-          <aside id="lobby-tutorial" class="lobby-tutorial" aria-label="사무실 길잡이" hidden><h3 class="tut-step"></h3><p class="tut-text"></p><div class="tut-bar"><div class="tut-progress"></div></div><div class="tut-actions"><button type="button" class="tut-next">건너뛰기</button><button type="button" class="tut-close">그만 보기</button></div></aside>
-          <section class="lobby-own" aria-label="내 사무실"><strong>원하는 직원은 내 사무실에서</strong><p>ZERO 공식 사무실의 직원은 정해진 명부(가상 직원)예요. 내가 원하는 성격의 직원, 팀과 팀장, 맡은 일, 사무실 꾸밈은 "내 사무실"에서 직접 만들어요.</p>
-            <div class="lobby-own-actions"><button id="lobby-profile-btn" class="secondary-button" type="button" hidden>내 사무실 만들기</button><button id="lobby-tutorial-btn" class="secondary-button" type="button">사무실 길잡이</button></div></section>
-          <p class="lobby-hint">방향키·WASD로 걷고, 바닥을 누르면 그곳으로 가요. 직원을 누르면 대화해요. 직원은 가상 인물이며 연결된 AI와 대화해요. 사무실 말풍선은 연출 대사예요. 투자 권유는 하지 않아요.</p>
-        </div>
-      </div>
-      <!-- 100 World-Famous Legendary Investors Council & DRL Engine -->
-      <section class="research-council-section" id="research-council-section" aria-label="100인 전설적 투자자 리서치 센터">
-        <!-- 40년차 월가 전설의 총괄 디렉터 결단 배너 -->
-        <section class="chief-director-banner" id="chief-director-banner" aria-label="월가 40년차 총괄 디렉터 결단">
-          <div class="director-profile-bar">
-            <div class="director-avatar-wrap">
-              <span class="director-badge-icon">👑</span>
-              <div>
-                <h4 class="director-name">총괄 디렉터 알렉산더 밴스 (Alexander Vance)</h4>
-                <p class="director-subtitle">40년 경력 월가 전설의 수석 포트폴리오 총괄 디렉터 · 워런 버핏, 찰리 멍거, 짐 사이먼스도 자문을 구하는 최고 통찰력</p>
-              </div>
-            </div>
-            <div class="director-signal-tag" id="director-signal-tag">
-              <span class="signal-text">적극 매수 (BUY) 결단</span>
-              <small>보류(HOLD) 배제 · 단호한 확률 결단</small>
-            </div>
-            <button type="button" id="open-morning-report-btn" class="secondary-button" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #fff; border: none; border-radius: 10px; padding: 8px 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);">
-              <span>☀️ 모닝 리포트 (Figma 뷰)</span>
-            </button>
-          </div>
-
-          <div class="director-verdict-grid">
-            <div class="director-card">
-              <div class="director-card-header">
-                <span>🎯 총괄 디렉터 확률 결단</span>
-                <span class="director-ratio-text"><strong class="buy-color">매수 62%</strong> vs <strong class="sell-color">매도 38%</strong></span>
-              </div>
-              <div class="prob-bar-track">
-                <div class="prob-bar-fill buy-bar" id="director-buy-bar" style="width: 62%;"></div>
-                <div class="prob-bar-fill sell-bar" id="director-sell-bar" style="width: 38%;"></div>
-              </div>
-              <p class="director-reasoning-text" id="director-reasoning-text">
-                "연준의 통화정책 완화 사이클(기준금리 4.88%)과 인플레이션 둔화(CPI 2.4%)가 확고합니다. 단기 변동성은 잡음에 불과하며, 실질 GDP와 기업 어닝의 강력한 펀더멘털을 고려할 때 지금은 매수 우위 시장입니다. 62%의 높은 확률로 주식 비중 유지를 결단합니다."
-              </p>
-            </div>
-
-            <div class="director-card">
-              <div class="director-card-header">
-                <span>🌐 거시경제 종합 방향성 전망</span>
-                <span class="director-ratio-text"><strong class="positive-color">긍정 68%</strong> vs <strong class="negative-color">부정 32%</strong></span>
-              </div>
-              <div class="prob-bar-track">
-                <div class="prob-bar-fill positive-bar" id="director-pos-bar" style="width: 68%;"></div>
-                <div class="prob-bar-fill negative-bar" id="director-neg-bar" style="width: 32%;"></div>
-              </div>
-              <div class="director-indicators-pills" id="director-indicators-pills">
-                <span class="indicator-pill good">연준 기준금리 4.88% (인하 사이클)</span>
-                <span class="indicator-pill good">미국 CPI 2.4% (안정 궤도)</span>
-                <span class="indicator-pill good">실업률 4.1% (견조한 고용)</span>
-                <span class="indicator-pill neutral">10년물 국채 4.25% (수렴)</span>
-                <span class="indicator-pill good">VIX 18.2 (안정 범위)</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 100인 투자자 일일 상시 토론 및 강세/약세 섹터·기업 -->
-        <section class="council-debate-panel" id="council-debate-panel" aria-label="100인 투자자 일일 상시 토론 및 섹터 분석">
-          <div class="debate-panel-header">
-            <h4>💬 100인 투자자 일일 상시 토론 및 섹터·기업 인텔리전스</h4>
-            <span class="debate-date-badge" id="debate-date-badge">오늘의 심층 토론</span>
-          </div>
-          <div class="debate-topics-grid">
-            <div class="debate-topic-card">
-              <strong>🌍 거시경제(Macro) 토론</strong>
-              <p id="debate-macro-text">연준의 완화적 금리 인하와 글로벌 유동성 확장이 가치주와 성장주 밸류에이션에 미치는 파급 효과를 100인 위원회가 치열하게 분석 중입니다.</p>
-            </div>
-            <div class="debate-topic-card">
-              <strong>🔬 미시경제(Micro) 토론</strong>
-              <p id="debate-micro-text">빅테크 AI 인프라 실수요와 반도체 설비투자(CAPEX) 현금흐름 창출 능력 및 주주환원(자사주 매입, 배당) 여력을 심층 검증했습니다.</p>
-            </div>
-          </div>
-
-          <div class="sectors-comparison-grid">
-            <div class="sector-box sector-strong">
-              <div class="sector-box-head">
-                <span class="sector-head-title">🚀 강세 섹터 (Bullish Sectors)</span>
-                <span class="sector-badge-bull">비중 확대 권고</span>
-              </div>
-              <div id="strong-sectors-list" class="sector-items-wrap">
-                <div class="sector-item">
-                  <strong>AI 인프라 &amp; 반도체</strong>
-                  <div class="sector-stocks-split">
-                    <span class="tag-winner">강세 선도: NVDA, SK하이닉스, AVGO</span>
-                    <span class="tag-loser">약세/주의: 구형 레거시 파운드리</span>
-                  </div>
-                </div>
-                <div class="sector-item">
-                  <strong>비만치료제 &amp; 혁신 바이오</strong>
-                  <div class="sector-stocks-split">
-                    <span class="tag-winner">강세 선도: 일라이릴리, 알테오젠</span>
-                    <span class="tag-loser">약세/주의: 임상 파이프라인 불확실성 기업</span>
-                  </div>
-                </div>
-                <div class="sector-item">
-                  <strong>전력망 &amp; 원자력 인프라</strong>
-                  <div class="sector-stocks-split">
-                    <span class="tag-winner">강세 선도: 콘스텔레이션에너지, 현대일렉트릭</span>
-                    <span class="tag-loser">약세/주의: 고부채 비효율 발전사</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="sector-box sector-weak">
-              <div class="sector-box-head">
-                <span class="sector-head-title">⚠️ 약세 섹터 (Defensive / Bearish)</span>
-                <span class="sector-badge-bear">비중 축소/방어</span>
-              </div>
-              <div id="weak-sectors-list" class="sector-items-wrap">
-                <div class="sector-item">
-                  <strong>고부채 상업용 부동산</strong>
-                  <div class="sector-stocks-split">
-                    <span class="tag-winner">방어 우량: 데이터센터 리츠</span>
-                    <span class="tag-loser">약세 주의: 공실률 높은 도심 오피스 리츠</span>
-                  </div>
-                </div>
-                <div class="sector-item">
-                  <strong>전통 저마진 오프라인 유통</strong>
-                  <div class="sector-stocks-split">
-                    <span class="tag-winner">방어 우량: 코스트코 (COST), 월마트</span>
-                    <span class="tag-loser">약세 주의: 마진 압박 백화점·중소형 유통</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 100인 위원회 매일 엄선 추천 25선 (나스닥 10, 코스피 5, 코스닥 5, ETF 5) -->
-        <section class="council-picks-panel" id="council-picks-panel" aria-label="100인 위원회 매일 추천 25선">
-          <div class="picks-panel-header">
-            <div>
-              <h4>⭐ 100인 위원회 일일 엄선 추천 25선</h4>
-              <p class="muted-note">나스닥 10개 · 코스피 5개 · 코스닥 5개 · 글로벌 ETF 5개 매일 갱신</p>
-            </div>
-            <div class="picks-filter-tabs" id="picks-filter-tabs" role="tablist">
-              <button type="button" class="active" data-pick-tab="ALL">전체 25선</button>
-              <button type="button" data-pick-tab="NASDAQ">나스닥 10</button>
-              <button type="button" data-pick-tab="KOSPI">코스피 5</button>
-              <button type="button" data-pick-tab="KOSDAQ">코스닥 5</button>
-              <button type="button" data-pick-tab="ETF">ETF 5</button>
-            </div>
-          </div>
-          <div id="council-picks-grid" class="council-picks-grid"></div>
-        </section>
-
-        <div class="council-header-wrap">
-          <div class="council-title-row">
-            <h3>🏛️ 전 세계 100인 전설적 투자자 리서치 센터 <span class="council-badge-pill">글로벌 100인 위원회</span></h3>
-            <button type="button" id="drl-train-btn" class="drl-train-btn">⚡ 자가 증류강화학습 1회 실행</button>
-          </div>
-          <div class="council-summary-grid">
-            <div class="council-summary-card">
-              <div class="summary-card-title">
-                <span>100인 위원회 실시간 합의 권고 비중</span>
-                <span id="council-sentiment-display">합의 심리: 계산 중…</span>
-              </div>
-              <div class="summary-consensus-weights" id="council-weights-display">
-                <span class="weight-item-stock">주식 계산 중</span> · 
-                <span class="weight-item-bond">채권 계산 중</span> · 
-                <span class="weight-item-cash">현금 계산 중</span>
-              </div>
-            </div>
-            <div class="council-summary-card">
-              <div class="summary-card-title">
-                <span>증류강화학습 (DRL) 자가 진화 모델</span>
-                <span style="color: #38bdf8; font-weight: 600;">PPO + Fractional Kelly</span>
-              </div>
-              <div class="drl-metric-line" id="drl-metrics-display">
-                <span class="drl-metric-tag">DRL v2.2-Thorp</span>
-                <span class="drl-metric-tag">자가 학습 활성화</span>
-                <span class="drl-metric-tag">Sortino 2.65</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="council-controls-row">
-          <div class="council-category-tabs" role="tablist">
-            <button type="button" class="active" data-category="ALL">전체 100인</button>
-            <button type="button" data-category="VALUE">가치투자 22인</button>
-            <button type="button" data-category="QUANT">계량·퀀트 20인</button>
-            <button type="button" data-category="MACRO">글로벌 매크로 20인</button>
-            <button type="button" data-category="GROWTH_VC">성장주 & VC 18인</button>
-            <button type="button" data-category="INDEX_ALLOC">인덱스 & 자산배분 10인</button>
-            <button type="button" data-category="CONTRARIAN_GLOBAL">글로벌 역발상 10인</button>
-          </div>
-          <input type="search" id="investor-search-input" class="council-search-input" placeholder="투자자 이름, 소속 펀드, 핵심 철학 검색 (예: 워런 버핏, 에드워드 소프, 레이 달리오, 켈리 공식, 인덱스)..." aria-label="투자자 검색">
-        </div>
-
-        <div class="investor-cards-grid" id="investor-cards-grid" role="region" aria-label="100인 투자자 목록"></div>
-      </section>
-    </section>
-    <dialog id="investor-dialog" class="investor-dialog" aria-labelledby="dialog-inv-name">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-        <div>
-          <h3 id="dialog-inv-name">투자자 정보</h3>
-          <p id="dialog-inv-weights" style="margin: 0; font-size: 12px; color: #38bdf8; font-weight: 600;"></p>
-        </div>
-        <button type="button" id="investor-dialog-close" class="icon-button icon-close" aria-label="닫기">닫기</button>
-      </div>
-      <div class="dialog-quote-box" id="dialog-inv-quote"></div>
-      <p id="dialog-inv-philo" style="font-size: 12px; color: #94a3b8; margin: 6px 0 12px;"></p>
-      <div class="dialog-reply-box" id="dialog-inv-reply"></div>
-      
-      <!-- 100인 투자 대가 개별 주식/ETF 1:1 맞춤 자문 입력창 -->
-      <div class="dialog-asset-consult-wrap" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #232936;">
-        <label for="dialog-asset-input" style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">
-          💬 이 투자자에게 개별 주식 또는 ETF 묻기 (무료 범용 AI 연동)
-        </label>
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="dialog-asset-input" placeholder="종목명 또는 티커 입력 (예: 삼성전자, NVDA, SPY, QQQ, TSLA)..." style="flex: 1; padding: 8px 12px; border-radius: 8px; background: #0b0f17; border: 1px solid #334155; color: #f1f5f9; font-size: 13px;">
-          <button type="button" id="dialog-asset-btn" style="padding: 8px 16px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">대가의 생각 듣기</button>
-        </div>
-        <div id="dialog-asset-result" style="margin-top: 10px; display: none;"></div>
-      </div>
-    </dialog>
-    <dialog id="lobby-chat" class="lobby-chat" aria-labelledby="lobby-chat-title"><div class="chat-head"><div><h2 id="lobby-chat-title"></h2><p id="lobby-chat-role"></p></div><button id="lobby-chat-close" class="icon-button icon-close" type="button" aria-label="대화 닫기" title="닫기">닫기</button></div>
-      <div id="lobby-chat-log" class="chat-log" aria-live="polite"></div><div id="lobby-chat-topics" class="chat-topics"></div>
-      <form id="lobby-chat-form" class="chat-form"><input id="lobby-chat-input" type="text" maxlength="600" placeholder="직원에게 자유롭게 물어보세요" aria-label="질문" aria-describedby="lobby-chat-disclosure"><button id="lobby-chat-send" class="primary-button" type="submit">보내기</button></form>
-      <div class="chat-feedback"><p id="lobby-chat-status" role="status" aria-live="polite"></p><button id="lobby-chat-retry" class="secondary-button" type="button" hidden>다시 시도</button></div><p id="lobby-chat-disclosure" class="lobby-note">최근 12개 이내 메시지와 공개 성향을 Cloudflare AI로 보내요. 계좌·비밀번호·전화번호·이메일·API 키를 입력하지 마세요. 기록은 이 화면의 메모리에만 보관해요. 가상 직원의 AI 답변은 투자 조언이 아니에요. <a href="https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/" target="_blank" rel="noopener noreferrer">Cloudflare Workers AI · Built with Llama</a></p></dialog>
-  </section>
-  <dialog id="lobby-ranking-dialog" class="lobby-chat ranking-dialog" aria-labelledby="lobby-ranking-title"><header class="chat-head"><div><h2 id="lobby-ranking-title">사무실 연습 수익률 랭킹</h2><p id="lobby-ranking-status" role="status">조회 중</p></div><button id="lobby-ranking-close" class="icon-button icon-close" type="button" autofocus aria-label="랭킹 닫기" title="닫기">닫기</button></header><p class="ranking-basis">각자의 가입 시점부터 가상 1억원의 ETF 가격 변동을 비교해요. 공개 지연 시세이며 환율·세금·수수료는 제외해요. 시작일이 다르고 실제 투자 성과가 아니에요. 닉네임을 누르면 그 사람의 사무실을 방문해요. 팀 구성과 직원 역할은 공개하지 않아요.</p><p id="lobby-ranking-time" class="ranking-time"></p><ol id="lobby-ranking-list" class="ranking-list"></ol></dialog>
-<dialog id="academy" class="academy" aria-labelledby="academy-title"><div class="academy-head"><div><h2 id="academy-title">주식 입문 학교</h2><p id="academy-rank"></p></div><button id="academy-close" class="icon-button icon-close" type="button" aria-label="학교 닫기" title="닫기">닫기</button></div>
-    <div class="academy-xpbar" aria-hidden="true"><div id="academy-bar"></div></div><div id="academy-body" class="academy-body"></div></dialog>
-  <section id="company-view" class="view" hidden><h2>대표님의 투자회사</h2><p class="muted-note">직원을 조합해 전략을 검증하고, 제안을 확인하세요. 실제 계좌 주문 권한과 가상 회사 연구는 별개입니다.</p><div id="company-content"></div></section><section id="community-view" class="view" hidden>
-    <section class="community-feed" aria-label="커뮤니티 글">
-      <div class="community-toolbar">
-        <form id="community-search" role="search"><input id="community-query" type="search" maxlength="80" aria-label="커뮤니티 글 검색" placeholder="제목, 내용, 닉네임 검색"><button type="submit" class="secondary-button">검색</button></form>
-        <button id="community-write" type="button" class="primary-button">글쓰기</button>
-      </div>
-      <div class="community-filterbar"><div id="community-categories" role="group" aria-label="글 분류"><button type="button" data-category="" aria-pressed="true">전체</button><button type="button" data-category="question" aria-pressed="false">질문</button><button type="button" data-category="strategy" aria-pressed="false">전략</button><button type="button" data-category="journal" aria-pressed="false">운영 일지</button></div><button id="community-reload" type="button" class="secondary-button">새로고침</button></div>
-      <p id="community-status" class="social-status" role="status" aria-live="polite"></p>
-      <div id="community-list" aria-label="최신 글 목록" tabindex="0"></div>
-      <nav class="community-pager" aria-label="커뮤니티 페이지"><button id="community-prev" type="button" class="secondary-button" disabled>이전</button><span id="community-page" aria-live="polite">1페이지</span><button id="community-next" type="button" class="secondary-button" disabled>다음</button></nav>
-      <p class="community-disclaimer muted-note">개인의 경험을 나누는 공간이에요. 게시글은 검증된 투자 성과나 투자 권유가 아닙니다.</p>
-    </section>
-  </section>
-  <section id="team-view" class="view" hidden>
-    <section id="office-panel" class="office-panel" aria-labelledby="office-title">
-      <div class="office-heading"><div><h2 id="office-title">ZERO 팀 사무실</h2><p>ZERO 의장과 직원들의 가상 사무실 · 방을 선택해 둘러보세요.</p></div><div class="office-heading-status"><span id="office-roster-count" class="office-roster-count">팀원 불러오는 중…</span></div></div>
-      <div class="office-toolbar"><label for="office-department">둘러볼 팀<select id="office-department"><option value="ALL">전체 사무실</option></select></label><details class="office-tools"><summary>보기 설정</summary><div class="office-scene-controls" aria-label="사무실 보기 설정">
-        <button id="office-demo" class="office-reload" type="button">중앙 회의실 보기</button><button id="office-pause" class="office-reload" type="button" aria-pressed="false">움직임 멈추기</button><button id="office-zoom-out" class="office-reload" type="button" aria-label="사무실 축소">−</button><button id="office-zoom-in" class="office-reload" type="button" aria-label="사무실 확대">+</button><button id="office-zoom-reset" class="office-reload" type="button">전체 사무실 보기</button><button id="office-reload" class="office-reload" type="button">기록 새로 읽기</button>
-      </div></details></div>
-      <p id="office-empty" class="office-job-empty" role="status">팀원 명부를 불러오는 중…</p>
-      <div class="office-view-switch" role="group" aria-label="사무실과 작업 보드"><button id="office-view-scene" type="button" aria-pressed="true">사무실</button><button id="office-view-board" type="button" aria-pressed="false">작업 보드</button><button id="office-lobby-request" type="button" aria-label="총괄에게 업무 맡기기">업무 요청</button></div>
-      <div id="office-scene-surface" class="office-layout zero-office-canvas-wrap"><div id="office-loading" class="office-loading" role="status" aria-live="polite" hidden><div id="office-loading-ring" class="boot-ring" aria-hidden="true"></div><p id="office-loading-label" class="boot-text">로딩 중…</p><p id="office-loading-note" class="boot-sub">ZERO 팀 사무실과 직원들을 준비하고 있어요.</p><button id="office-loading-retry" class="office-reload" type="button" hidden>다시 불러오기</button></div><div id="office-map" class="office-map" role="region" aria-label="ZERO 의장실, 12개 팀 사무실과 중앙 회의실. 직원 캐릭터를 누르면 업무를 요청하고, 방 선택으로 확대할 수 있습니다." tabindex="0"></div></div>
-      <section id="office-board" class="office-board" aria-label="실제 요청 작업 보드" hidden></section>
-    </section>
-    <section id="office-records" class="office-records" aria-labelledby="office-records-title">
-      <h2 id="office-records-title">업무 기록과 회의 안내</h2><p id="office-service-state" class="office-service-state" role="status">업무 처리 상태 확인 중…</p><p id="office-schedule-time" class="office-schedule-time"></p>
-      <section id="office-meeting" class="office-meeting" aria-label="중앙 회의실"><div class="office-meeting-heading"><p id="office-meeting-label">회의 연출 · 총괄과 팀장들의 업무 협의</p><div><button id="office-meeting-mode" class="office-reload" type="button" aria-pressed="false">실제 기록 보고 보기</button><button id="office-meeting-exit" class="office-reload" type="button">전체 사무실 보기</button></div></div><h3 id="office-meeting-speaker"></h3><p id="office-meeting-copy" aria-live="polite"></p><details class="office-meeting-details"><summary>발표 근거와 전체 내용</summary><p id="office-meeting-detail"></p></details></section>
-      <nav class="office-library-links" aria-label="사무실 자료실"><span>자료실</span><a href="#news">주요 뉴스</a><a href="#study">주식 공부</a><a href="#reports">보고서 자료실</a></nav>
-      <p class="office-limit">직원들의 일상 대화는 시간대에 맞춘 가상 대사입니다. 실제 요청 상태와 담당 업무는 기록 기준이며, ‘실제 기록 보고 보기’를 누르면 업무 기록만 확인할 수 있습니다. 회의 장면 자체는 실제 합의 기록이 아닙니다.</p>
-      <p class="office-coordination-note"><strong>총괄 조율 원칙</strong> · 각 팀의 근거와 미확인 사항을 모아 다음 조사를 정합니다. 이 회의 장면 자체는 실제 합의·투자 결정 기록이 아닙니다.</p>
-      <section class="office-flow-overview" aria-labelledby="office-flow-title"><div class="office-flow-heading"><h3 id="office-flow-title">팀별 요청 처리 현황</h3><p>현재 저장된 최대 128건 기준 · 인재 능력이나 투자 성과 평가가 아닙니다.</p></div><div id="office-flow-teams" class="office-flow-teams"><p class="office-job-empty">처리 기록을 확인하고 있습니다.</p></div></section>
-      <details class="office-selected-details"><summary>선택한 팀원의 업무와 최근 기록</summary>
-        <aside id="office-inspector" class="office-inspector" aria-labelledby="office-focus-name">
-          <p id="office-focus-kind" class="office-focus-kind">팀원 정보</p>
-          <h3 id="office-focus-name">팀원을 선택해 보세요</h3>
-          <p id="office-focus-role" class="office-focus-role">캐릭터를 누르면 담당 업무를 읽고 바로 일을 맡길 수 있습니다.</p>
-          <p id="office-focus-status" class="office-focus-status" role="status" aria-live="polite">기록 확인 중…</p>
-          <div class="office-focus-section"><h4>맡은 일</h4><p id="office-focus-principle"></p></div>
-          <div class="office-focus-section"><h4>최근 업무 기록</h4><p id="office-focus-result">팀원을 선택하면 확인할 수 있습니다.</p></div>
-          <button id="office-focus-request" class="office-submit" type="button">이 팀원에게 일 맡기기</button>
-        </aside>
-      </details>
-      <div class="office-activity"><div class="office-activity-heading"><h3>맡긴 일의 진행 기록</h3><p id="office-status" class="office-status" role="status" aria-live="polite">업무 기록을 확인하고 있습니다.</p></div><ul id="office-jobs" class="office-jobs" aria-label="최근 연구 요청"></ul></div>
-      <details class="office-record-info"><summary>업무 기록과 처리 시간 안내</summary><p id="office-processing-note" class="office-limit">실제 처리 시간은 저장된 실행 정책을 확인해 표시합니다. 화면이 보이는 동안 30초마다 상태를 읽습니다. 결과 제출은 독립 검증이나 투자 승인을 뜻하지 않습니다. 투자자 이름은 공개 원칙을 참고한 가상 역할이며 실제 참여를 뜻하지 않습니다.</p></details>
-    </section>
-    <section class="office-directory-section" aria-labelledby="office-directory-title"><h2 id="office-directory-title">팀별 담당 업무</h2><p>각 팀의 책임자와 실무 담당자가 맡은 일입니다. 원하는 팀원에게 바로 일을 맡길 수 있습니다.</p><div id="office-directory"><p class="office-job-empty">팀별 업무를 불러오는 중…</p></div></section>
-    <details class="office-ledger-section"><summary>직원별 제출 기록·처리 시간·비용</summary><div id="office-staff-ledger"></div></details>
-    <dialog id="office-request-dialog" class="office-request-dialog" aria-labelledby="office-request-title">
-      <div class="office-request-content"><div class="office-request-header"><h2 id="office-request-title">팀원에게 업무 맡기기</h2><button id="office-request-close" class="office-request-close icon-button icon-close" type="button" aria-label="업무 요청 닫기" title="닫기">×</button></div>
-        <p id="office-selected-name" class="office-selected-name"></p><p id="office-selected-role" class="office-selected-role"></p><p id="office-selected-status" class="office-selected-status"></p>
-        <p id="office-bubble" class="office-bubble" aria-live="polite"></p>
-        <form id="office-request-form" class="office-request-form"><label for="office-assignee">담당 직무</label><select id="office-assignee" aria-describedby="office-selected-role"></select><label for="office-job-type">어떤 일을 맡길까요?</label><select id="office-job-type"><option value="NEWS_REVIEW">뉴스 근거 검토</option><option value="COMPANY_RESEARCH">기업 리서치</option><option value="PORTFOLIO_EXPLANATION">포트폴리오 설명</option><option value="UI_REVIEW">화면 사용성 검토</option></select><label for="office-instruction">완료 조건 · 어떤 결과를 받을까요?</label><textarea id="office-instruction" rows="3" minlength="10" maxlength="1000" required placeholder="예: 최근 공시에서 수익성이 달라진 이유를 출처 3개와 함께 정리해 주세요." aria-describedby="office-instruction-note"></textarea><label for="office-scope">조사 범위 · 선택</label><input id="office-scope" type="text" maxlength="500" placeholder="예: 미국 전력 기업 · 최근 1년"><label for="office-deadline">희망 기한 · 선택</label><input id="office-deadline" type="text" maxlength="100" placeholder="예: 내일 오전 9시까지"><fieldset id="office-team-assignment" hidden><legend>함께 담당할 팀 · 선택</legend><div id="office-team-choices"></div><p>선택한 팀장에게 같은 완료 조건을 각각 접수합니다. 자동 업무 분해는 연결되지 않았습니다. 선택하지 않으면 총괄에게 접수합니다.</p></fieldset><p id="office-instruction-note" class="office-instruction-note">완료 조건은 10자 이상 · 전체 1,000자 이내 · 줄바꿈·계좌번호·비밀번호·인증정보는 입력하지 마세요.</p><button id="office-submit" class="office-submit" type="submit" disabled>업무 접수</button><p id="office-request-feedback" class="office-request-feedback" role="status" aria-live="polite">요청을 저장한 뒤 실행자의 처리 상태와 결과를 확인할 수 있습니다.</p></form>
-      </div>
-    </dialog>
-    <details class="office-team-reference"><summary>팀 구성·운영 기준·검토 기록</summary>
-    <div class="team-intro"><h2>전문적인 판단, 하나의 최종 책임</h2><p>수석 책임자들은 기존 전문 모듈의 검증 결과를 공유합니다. 전원 동의나 다수결을 요구하지 않으며, 최종 판단과 책임은 ZERO 최종 관리자에게 있습니다.</p><p class="muted-note">30년 경력·최상위 금융기관 경험은 가상 역할 설정입니다. 실제 인물의 고용이나 해당 기관의 참여를 의미하지 않습니다.</p></div>
-    <section class="quality-team panel" aria-labelledby="team-manager-name"><h2 id="team-manager-name">ZERO 최종 관리자</h2><p id="team-manager-instruction">단일 관리자가 최종 판단을 책임집니다. 공통 업무 지시 자료는 미확인입니다.</p><p id="team-staff-count" class="muted-note">가상 실무 구성 미확인 · 자율 실행 없음</p><p id="team-order-count" class="team-scope" aria-live="polite">업무 배정 자료 미확인</p><details class="team-disclosure"><summary>공통 지시와 관리자 산출물</summary><ul id="team-policy-rules"><li>공통 업무 지시 자료 미확인</li></ul><div id="team-manager-outputs"></div></details></section>
-    <section class="quality-team panel" id="manager-learning-panel" aria-labelledby="manager-learning-title"><h2 id="manager-learning-title">총괄 관리자 · 뉴스 검토 기록</h2><p id="manager-learning-state" class="muted-note" aria-live="polite">뉴스 검토 기록 미확인</p><div id="manager-learning-metrics"></div><p class="muted-note">제출된 원문 검토 기록입니다. 원문 열람의 독립 검증·판단력 향상·모델 재훈련을 증명하지 않습니다.</p></section>
-    <section class="quality-team panel" id="team-meeting-panel" aria-labelledby="team-meeting-title"><h2 id="team-meeting-title">팀원 → 팀장 → 총괄 책임자</h2><p class="muted-note">팀원은 근거와 개별 의견을 제출하고, 팀장은 반대·미제출을 보존해 종합합니다. 총괄 책임자는 최종 이유와 다음 업무를 기록합니다.</p><p id="team-meeting-state" aria-live="polite">회의 제출 현황 미확인</p><div id="team-meeting-metrics"></div><div id="team-meeting-heads"></div><p class="muted-note">제출 기록 · 수행·독립 검증 별도. 운영·검토 제안 채택은 매매 실행 승인이 아닙니다.</p></section>
-    <section class="quality-team panel team-evidence" id="team-evidence-report" aria-labelledby="team-evidence-title"><h2 id="team-evidence-title">업무 우선순위와 납품 근거</h2><p id="team-evidence-status" class="muted-note" aria-live="polite">근거 없음 · 보고서 자료 미확인 · 수행 미확인 · 주문 승인 없음</p><div id="team-evidence-content"></div></section>
-    <section class="quality-team panel company-policy" id="team-company-policy" aria-labelledby="team-company-status"><h2 id="team-company-status">새 전략 승인 보류 · 정책 미확인</h2><p id="team-company-evidence" class="muted-note">근거 없음 · 정책 자료 미확인 · 주문 승인 없음</p><p class="muted-note">새 전략 검토에만 적용합니다. 기존에 승인된 운용 업무는 별도로 유지합니다.</p><div id="team-company-criteria" class="company-criteria"></div><div id="team-company-disclosures"></div></section>
-    <section class="quality-team panel" aria-labelledby="team-assignment-title"><h2 id="team-assignment-title">계기별 업무 배정</h2><p class="muted-note">배정은 수행·검증 완료를 뜻하지 않습니다. 선행 업무는 작업 순서이며 매매 승인 조건이 아닙니다.</p><label class="team-event-label" for="team-event">검토 계기 <select id="team-event"><option value="ONBOARDING">최초 구성</option><option value="INPUT_CHANGED">입력 자료 변경</option><option value="FILL_CONFIRMED">체결 확인</option><option value="QUARTERLY_REVIEW">분기 검토</option><option value="MODEL_CHANGED">모델 변경</option><option value="INCIDENT">오류·사고 점검</option><option value="UI_CHANGED">화면 변경</option></select></label><details class="team-disclosure"><summary>배정된 업무 지시 보기 · 읽기 전용</summary><ol id="team-orders" class="team-orders"></ol></details></section>
-    <details class="quality-team panel team-disclosure"><summary id="quality-title">화면 품질팀 · 4개 역할과 검수 지시</summary><p class="muted-note">가상 역할 · 제품 품질 검수 · 매매 판단과 의결 권한 없음</p><div id="team-product-list"><dl><div><dt>UX·UI 수석</dt><dd>보유 종목을 먼저 찾도록 정보 순서와 읽기 흐름을 설계합니다.</dd></div><div><dt>투자정보·데이터 시각화</dt><dd>금액·통화·비중의 기준과 미확인 값을 차트 옆에 명확히 표시합니다.</dd></div><div><dt>프런트엔드·접근성</dt><dd>재사용 가능한 화면과 키보드·모바일 사용성을 구현합니다.</dd></div><div><dt>사용성 검증</dt><dd>작은 화면·긴 종목명·조회 실패 상황에서 실제 사용 흐름을 점검합니다.</dd></div></dl></div></details>
-    <div id="team-grid" class="team-grid"></div><div id="team-error" class="table-empty" hidden>팀 구성을 불러오지 못했습니다. 화면을 다시 열어 주세요.</div>
-  </details>
-  </section>
-  <section id="research-view" class="view" hidden>
-    <section class="panel research-panel" aria-labelledby="research-title">
-      <div class="panel-heading"><div><h2 id="research-title">오늘의 기업 순위</h2><p id="research-intro">시가총액으로 보는 시장 · 기업을 누르면 사업과 실적을 확인합니다.</p></div><button id="research-reload" class="secondary-button">다시 불러오기</button></div>
-      <div class="table-toolbar" style="flex-wrap:wrap"><div class="market-filter" role="group" aria-label="연구 시장"><button class="active" data-research-market="SP500" aria-pressed="true">미국 100</button><button data-research-market="KOSPI" aria-pressed="false">코스피 50</button><button data-research-market="KOSDAQ" aria-pressed="false">코스닥 50</button><button data-research-market="ETF" aria-pressed="false">ETF 50</button></div><label class="search-label"><input id="research-search" type="search" placeholder="기업·ETF명 또는 코드 검색" aria-label="연구 기업·ETF명 또는 코드 검색" autocomplete="off"></label></div>
-      <ol id="research-ranks" class="research-ranks" aria-label="기업 시가총액 순위"></ol>
-      <p id="research-empty" class="table-empty">기업 자료를 아직 불러오지 않았습니다.</p>
-    </section>
-    <section class="panel research-panel" aria-label="순위 기준·출처와 주요 ETF"><h2>순위 기준·출처와 주요 ETF</h2>
-      <h3>정렬·통화·기간</h3><div id="research-options"></div>
-      <p id="research-status" class="muted-note" role="status" aria-live="polite">기업 자료를 불러오면 표시합니다.</p>
-      <div class="table-foot"><span id="research-count">자료 미확인</span><span>사업·재무 요약은 공개 제공자 자료 · 독립 검토 별도</span></div>
-      <p id="research-date" class="research-date muted-note"></p>
-      <p id="research-basis" class="muted-note"></p>
-      <details id="research-etf-details" class="desk-details" hidden><summary>순위 기준·출처</summary><div id="research-etf-evidence"></div></details>
-      <section id="research-etf-major" class="company-section" hidden aria-labelledby="research-etf-major-title"><h3 id="research-etf-major-title">주요 ETF · 순위와 별도</h3><div id="research-etf-shortcuts" class="market-filter" role="group" aria-label="주요 ETF 바로가기"></div></section>
-    </section>
-    <div id="institution-panel"></div>
-  </section>
-  <section id="guide-view" class="view" hidden><section class="guide-panel panel install-guide" aria-labelledby="install-title">
-  <div class="install-heading"><img src="assets/icon-192.png" width="64" height="64" alt=""/><div><h2 id="install-title">아이폰에 ZERO 설치하기</h2><p class="muted-note">홈 화면에서 아이콘을 눌러 내 자산으로 바로 들어오세요.</p></div></div>
-  <ol><li>아이폰의 <strong>Safari</strong>에서 이 사이트를 열고 로그인하세요.</li><li><strong>공유 버튼</strong>을 누르고 <strong>홈 화면에 추가</strong>를 선택하세요. 메뉴에 없다면 아래로 내려 찾아보세요.</li><li><strong>웹 앱으로 열기</strong>가 보이면 켜고, 이름을 <strong>ZERO</strong>로 정한 뒤 <strong>추가</strong>를 누르세요.</li><li>홈 화면에 생긴 <strong>ZERO 아이콘</strong>을 누르면 앱 창으로 열립니다.</li></ol>
-  <p class="muted-note">처음 앱을 열 때 로그인을 다시 요청할 수 있습니다. 자료를 조회하려면 인터넷 연결이 필요합니다.</p>
-</section><div class="guide-panel panel"><h2>숫자를 정확하게 읽는 방법</h2><dl><dt>보유 종목 평가액</dt><dd>확인된 현재 가격 × 수량의 합계입니다. 환율이 확인되면 원화로 환산합니다. ZERO의 초기 1억원 동결 계획 수량과 이후 확정 체결을 대조합니다. 총자산 참고값은 이 보유 평가액과 계획·체결로 계산한 잔여자금의 합계입니다. 연결 계좌의 별도 예수금은 더하지 않습니다. 실제 결제 현금과 검증된 순자산은 별도 원장 근거가 필요합니다.</dd><dt>가격 기준 평가손익</dt><dd>(현재 가격 − 평균 단가) × 보유 수량으로 계산한 현지통화 추정치입니다. 수수료·세금·과거 매수 환율은 반영하지 않으며, 실제 증권사 손익 확정값과 다를 수 있습니다.</dd><dt>설계 운용액과 목표 비중</dt><dd>1억원과 64%·16%·20%는 ZERO의 운용 정책입니다. 현재 계좌의 자산 또는 투자 완료를 뜻하는 숫자가 아닙니다.</dd><dt>조회 기록</dt><dd>연결 계좌 전체의 관측 기록을 ZERO 범위의 과거 기록으로 대신 표시하지 않습니다. 수익률 계산에는 입출금·배당·비용·세금·환율을 반영한 별도 원장이 필요합니다.</dd><dt>갱신과 데이터 상태</dt><dd>‘계좌 새로고침’은 계좌 조회를 요청합니다. 연결이 실패하면 이전 정상 자료에 마지막 확인 시각과 오류를 표시합니다. 시장이 닫힌 때에는 현재 가격의 기준일이 다를 수 있습니다.</dd></dl></div><section class="guide-panel panel references-panel" aria-labelledby="references-title"><h2 id="references-title">연구 참고 저장소</h2><p id="references-status" class="references-note">자료 설명 화면을 열면 목록을 불러옵니다.</p><div id="research-references" class="reference-list"></div></section></section>
-  <section id="study-view" class="view desk-view" hidden>
-    <section class="panel desk-panel" aria-label="주식 입문 학교"><div class="panel-heading"><div><h2>주식 입문 학교</h2><p>매수·매도부터 ZERO 사용법까지, 문제를 풀며 레벨을 올려 보세요. 현재 <span data-academy="rank">입문 전</span></p></div><button class="primary-button" type="button" data-open-academy>배우기</button></div></section>
-    <section class="panel desk-panel" aria-labelledby="study-title">
-      <div class="panel-heading"><div><h2 id="study-title">가격 그래프를 직접 읽어 보기</h2><p>종목과 주기를 바꾸고, 봉을 움직여 실제 가격의 구조를 확인합니다.</p></div><button class="secondary-button" data-desk-reload>자료 다시 불러오기</button></div>
-      <p id="study-data-status" class="muted-note desk-data-status" role="status" aria-live="polite">공개 자료를 불러오면 기록 시각을 표시합니다.</p>
-      <div class="desk-controls">
-        <label for="study-company">회사 <select id="study-company"><option value="KR:005930">삼성전자 · 005930</option><option value="KR:247540">에코프로비엠 · 247540</option><option value="US:NVDA">NVIDIA · NVDA</option></select></label>
-        <label for="study-interval">봉의 주기 <select id="study-interval"><option value="1d">일봉</option><option value="1m">1분봉</option><option value="10m">10분봉</option><option value="60m">60분봉</option></select></label>
-        <label class="desk-check"><input id="study-learning" type="checkbox"> 학습용 그래프 사용 · 실제 가격과 무관</label>
-      </div>
-      <fieldset class="desk-ma-controls"><legend>일봉 이동평균</legend><label><input id="study-ma-5" type="checkbox" checked> 5일 · 파랑</label><label><input id="study-ma-20" type="checkbox" checked> 20일 · 초록</label><label><input id="study-ma-60" type="checkbox" checked> 60일 · 갈색</label></fieldset>
-      <div id="study-price-chart" class="desk-chart"><p class="chart-empty">가격 자료를 불러오면 그래프를 표시합니다.</p></div>
-      <p id="study-chart-status" class="muted-note desk-chart-status"></p>
-      <label class="desk-candle-slider" for="study-candle-index">봉 선택 · 방향키로 이전·다음 봉 읽기<input id="study-candle-index" type="range" min="0" max="0" value="0" disabled aria-describedby="study-candle-reading"></label>
-      <p id="study-candle-reading" class="desk-candle-reading" aria-live="polite">읽을 가격 근거 없음</p>
-      <p id="study-ma-note" class="muted-note">이동평균은 각 시점까지 확인된 일봉만 사용합니다.</p>
-      <div id="study-company-evidence" class="desk-evidence"></div>
-    </section>
-    <section id="dca-panel" class="panel desk-panel" aria-labelledby="dca-title"><div class="panel-heading"><div><h2 id="dca-title">📅 주식 모으기 계산기</h2><p>매달 같은 금액을 사 모았다면? 한 번에 샀다면?</p></div><label class="dca-input" for="dca-amount">매달 <input id="dca-amount" type="number" min="1" step="any" inputmode="decimal" value="100"> <span id="dca-unit"></span></label></div><div id="dca-body" class="dca-body"></div></section>
-    <section class="panel desk-panel" aria-labelledby="study-basics-title">
-      <h2 id="study-basics-title">봉, 이동평균, 변동성을 읽는 순서</h2>
-      <dl class="desk-lessons">
-        <dt>캔들 한 개에 담긴 네 가격</dt><dd>시가는 구간의 첫 가격, 종가는 마지막 가격입니다. 몸통의 양 끝은 시가와 종가, 꼬리의 끝은 고가와 저가입니다. 이 화면은 종가가 시가 이상이면 빨강, 낮으면 파랑을 씁니다. 일봉은 하루의 흐름이고, 1·10·60분봉은 짧은 구간을 보여 줍니다.</dd>
-        <dt>이동평균 MA</dt><dd>5일 이동평균 = 그 시점까지 최근 5개 일봉 종가 합계 ÷ 5입니다. 20·60일도 같은 원리입니다. 들쭉날쭉한 가격을 완만하게 보지만 과거 평균이므로 늦게 반응합니다. 선의 교차만으로 이후 방향을 확정할 수 없습니다.</dd>
-        <dt>VIX · 시장이 예상하는 흔들림</dt><dd>S&amp;P 500 옵션 가격에서 앞으로 약 30일의 예상 변동성을 구해 연율로 표시하는 지수입니다. 주가의 상승·하락 방향을 예측하는 숫자는 아닙니다. 높은 값은 큰 흔들림이 가격에 반영됐다는 뜻이며, 실제 VIX는 ‘세계 주요 지수’의 관측 날짜와 출처를 함께 읽습니다.</dd>
-        <dt>장기 판단과 분봉의 역할</dt><dd>ZERO는 분기 점검과 장기 판단을 기본으로 합니다. 분봉의 잡음만으로 거래를 늘리면 수수료·세금·체결 차이가 쌓일 수 있습니다. 짧은 차트는 가격 형식을 공부하는 자료이며 기존 점검 주기나 매매 승인 조건을 바꾸지 않습니다.</dd>
-      </dl>
-      <p class="desk-source"><a class="research-link" href="https://www.cboe.com/tradable-products/volatility-trading/" target="_blank" rel="noopener noreferrer">Cboe VIX 설명</a><a class="research-link" href="https://www.investor.gov/introduction-investing/investing-basics/investment-products/stocks" target="_blank" rel="noopener noreferrer">SEC 주식·비용 안내</a></p>
-    </section>
-    <section class="panel desk-panel" aria-labelledby="study-formulas-title">
-      <h2 id="study-formulas-title">기업 숫자를 가격과 연결하기</h2>
-      <p class="muted-note">기간·통화·주식 종류가 맞는지 먼저 확인합니다. 아래 예시는 모두 학습용이고 특정 기업의 실제 실적이 아닙니다.</p>
-      <dl class="desk-lessons">
-        <dt>EPS · 주당순이익</dt><dd>보통주에 귀속되는 순이익 ÷ 가중평균 보통주 수입니다. 학습 예로 순이익 100억원, 평균 주식 수 200만 주라면 EPS는 5,000원입니다. 우선주 배당, 희석 주식과 실제 공시의 산식을 확인해야 합니다.</dd>
-        <dt>BPS · 주당순자산</dt><dd>보통주에 귀속되는 자기자본 ÷ 기준일 보통주 수입니다. 학습 예로 자기자본 1,000억원, 주식 수 200만 주라면 BPS는 50,000원입니다. EPS의 평균 주식 수와 BPS의 기준일 주식 수는 다를 수 있습니다.</dd>
-        <dt>PER · 주가수익비율</dt><dd>주가 ÷ EPS입니다. 주가 100,000원과 연간 EPS 5,000원을 비교하면 20배입니다. EPS가 적자이거나 0이면 낮은 PER로 ‘싸다’고 판단할 수 없습니다. 연간·최근 12개월·예상 EPS를 섞지 않습니다.</dd>
-        <dt>PBR · 주가순자산비율</dt><dd>주가 ÷ BPS입니다. 주가 100,000원과 BPS 50,000원이면 2배입니다. 장부에 기록된 자산과 실제 가치가 다를 수 있고 자기자본이 0·음수이면 일반적인 배수 해석이 어렵습니다.</dd>
-        <dt>ROE · 자기자본이익률</dt><dd>같은 기간의 순이익 ÷ 평균 자기자본 × 100입니다. 순이익 100억원과 평균 자기자본 1,000억원이면 10%입니다. 단순히 기말 자기자본으로 대신하면 값이 달라질 수 있으며 부채 증가·일회성 이익도 살펴야 합니다.</dd>
-        <dt>PSR · 주가매출비율</dt><dd>시가총액 ÷ 같은 기간의 매출액입니다. 학습 예로 시가총액 2,000억원과 연간 매출 1,000억원이면 2배입니다. 매출이 커도 이익이나 현금이 남는다는 뜻은 아닙니다.</dd>
-        <dt>이익률 · 매출 중 얼마를 남겼나</dt><dd>영업이익률 = 영업이익 ÷ 매출 × 100, 순이익률 = 순이익 ÷ 매출 × 100입니다. 매출 1,000억원에서 영업이익 100억원이면 10%입니다. 매출과 이익은 같은 회계기간·범위·통화를 사용합니다.</dd>
-        <dt>잉여현금흐름 FCF</dt><dd>대표적인 산식은 영업활동 현금흐름 − 설비투자 지출입니다. 영업 현금 150억원에서 설비투자 70억원을 빼면 80억원입니다. 회계상 이익과 다르며 회사마다 정의·설비투자 범위가 달라 공시를 확인해야 합니다.</dd>
-      </dl>
-      <form id="study-example" class="desk-example">
-        <h3>학습용 회사 사례 · 숫자를 바꾸어 보세요</h3>
-        <div class="desk-example-inputs"><label for="study-price">주가 (원)<input id="study-price" type="number" value="100000" step="1000"></label><label for="study-eps">연간 EPS (원)<input id="study-eps" type="number" value="5000" step="100"></label><label for="study-bps">BPS (원)<input id="study-bps" type="number" value="50000" step="1000"></label><label for="study-profit">연간 순이익 (억원)<input id="study-profit" type="number" value="100" step="1"></label><label for="study-equity">연간 평균 자기자본 (억원)<input id="study-equity" type="number" value="1000" step="10"></label></div>
-        <dl class="desk-metrics"><div><dt>PER = 주가 ÷ EPS</dt><dd id="study-per-result">20배</dd></div><div><dt>PBR = 주가 ÷ BPS</dt><dd id="study-pbr-result">2배</dd></div><div><dt>ROE = 순이익 ÷ 평균 자기자본 × 100</dt><dd id="study-roe-result">10%</dd></div></dl>
-        <p class="muted-note">손실·0인 EPS, 음수 자기자본은 일반적인 배수 해석을 보류합니다. 실제 회사의 EPS·BPS·ROE는 분모와 기간 근거 없이 역산하지 않습니다.</p>
-      </form>
-      <p class="desk-source"><a class="research-link" href="https://www.sec.gov/about/reports-publications/investorpubsbegfinstmtguide" target="_blank" rel="noopener noreferrer">SEC 재무제표 읽기</a></p>
-    </section>
-    <section class="panel desk-panel" aria-labelledby="study-nvda-title">
-      <h2 id="study-nvda-title">실제 NVIDIA 공시로 계산해 보기</h2>
-      <div id="study-nvda-example"></div>
-    </section>
-    <section class="panel desk-panel study-valuation-panel" aria-labelledby="study-valuation-title">
-      <div class="panel-heading">
-        <div>
-          <h2 id="study-valuation-title">🎯 대가들의 실전 밸류에이션 &amp; 리스크 관리 계산기</h2>
-          <p>피터 린치(PEG), 에드워드 소프(켈리 공식), 조엘 그린블라트(마법공식), 복리 72의 법칙을 직접 계산해 보세요.</p>
-        </div>
-      </div>
-      
-      <!-- PEG Calculator -->
-      <div class="study-calc-card">
-        <h3>1. 피터 린치의 PEG (주가이익증가비율) 계산기</h3>
-        <p class="muted-note">산식: PER ÷ 연평균 이익성장률(%). PEG 1.0 미만은 성장 대비 저평가 매수, 2.0 초과는 고평가 주의 구간입니다.</p>
-        <div class="desk-example-inputs">
-          <label for="study-peg-per">PER (배)<input id="study-peg-per" type="number" value="25" step="0.5"></label>
-          <label for="study-peg-growth">연평균 EPS 성장률 (%)<input id="study-peg-growth" type="number" value="30" step="1"></label>
-        </div>
-        <div class="study-calc-result-box">
-          <strong>PEG 결과: <span id="study-peg-result" style="color: #38bdf8; font-size: 16px;">0.83배</span></strong>
-          <span id="study-peg-verdict" class="study-tag-safe" style="padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">저평가 매력 구간 (PEG &lt; 1.0)</span>
-        </div>
-      </div>
-
-      <!-- Kelly Criterion Calculator -->
-      <div class="study-calc-card" style="margin-top: 14px;">
-        <h3>2. 에드워드 소프 &amp; 짐 사이먼스의 켈리 공식 (Kelly Criterion) 포지션 사이징</h3>
-        <p class="muted-note">산식: f* = p − (1−p)/b. 승률과 손익비를 바탕으로 파산 위험을 차단하고 기하평균 복리 수익률을 극대화하는 자산 배분 비중입니다.</p>
-        <div class="desk-example-inputs">
-          <label for="study-kelly-winrate">예상 승률 (%)<input id="study-kelly-winrate" type="number" value="60" min="1" max="99" step="1"></label>
-          <label for="study-kelly-payoff">손익비 (익절비율 ÷ 손절비율)<input id="study-kelly-payoff" type="number" value="1.5" min="0.1" step="0.1"></label>
-          <label for="study-kelly-fraction">분할 배율 (Fractional Kelly)<select id="study-kelly-fraction"><option value="0.5" selected>하프 켈리 (Half-Kelly · 0.5x 권장)</option><option value="0.25">쿼터 켈리 (Quarter-Kelly · 0.25x 방어적)</option><option value="1.0">풀 켈리 (Full-Kelly · 1.0x 공격적)</option></select></label>
-        </div>
-        <div class="study-calc-result-box">
-          <strong>최적 투자 비중: <span id="study-kelly-result" style="color: #10b981; font-size: 16px;">16.7%</span></strong>
-          <span id="study-kelly-note" class="muted-note" style="margin-left: 8px;">실전 퀀트에서는 과잉 베팅 방지를 위해 하프 켈리를 기본으로 채택합니다.</span>
-        </div>
-      </div>
-
-      <!-- Magic Formula & Rule of 72 -->
-      <div class="study-calc-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 14px;">
-        <div class="study-calc-card">
-          <h3>3. 조엘 그린블라트 마법공식</h3>
-          <p class="muted-note">자본수익률(ROC)과 이익수익률(EBIT ÷ EV) 상위 종목을 발굴합니다.</p>
-          <div class="desk-example-inputs">
-            <label for="study-magic-ebit">EBIT (영업이익, 억원)<input id="study-magic-ebit" type="number" value="150" step="10"></label>
-            <label for="study-magic-ev">EV (기업가치, 억원)<input id="study-magic-ev" type="number" value="1500" step="50"></label>
-          </div>
-          <div class="study-calc-result-box">
-            <strong>이익수익률: <span id="study-magic-result" style="color: #f59e0b; font-size: 15px;">10.0%</span></strong>
-          </div>
-        </div>
-
-        <div class="study-calc-card">
-          <h3>4. 복리의 72의 법칙</h3>
-          <p class="muted-note">투자 원금이 2배가 되는 데 걸리는 기간 (년) ≈ 72 ÷ 연평균 복리 수익률(%).</p>
-          <div class="desk-example-inputs">
-            <label for="study-rule72-rate">연평균 복리 수익률 (%)<input id="study-rule72-rate" type="number" value="12" step="0.5"></label>
-          </div>
-          <div class="study-calc-result-box">
-            <strong>원금 2배 달성: <span id="study-rule72-result" style="color: #a855f7; font-size: 15px;">6.0년</span></strong>
-          </div>
-        </div>
-      </div>
-    </section>
-  </section>
-  <section id="macro-view" class="view desk-view" hidden>
-    <section class="panel desk-panel" aria-labelledby="macro-title"><div class="panel-heading"><div><h2 id="macro-title">세계 주요 지수의 현재와 과거</h2><p>같은 단위·주기의 관측값을 비교하고, 과거 분포가 뜻하는 배경을 읽습니다.</p></div><button class="secondary-button" data-desk-reload>자료 다시 불러오기</button></div><p id="macro-data-status" class="muted-note desk-data-status" role="status" aria-live="polite">공개 자료를 불러오면 기록 시각을 표시합니다.</p><div class="desk-controls"><label for="macro-search">지표 검색<input id="macro-search" type="search" placeholder="물가, 금리, VIX…" autocomplete="off"></label><label for="macro-country">지역 <select id="macro-country"><option value="ALL">전체</option><option value="US">미국</option><option value="KR">한국</option><option value="GLOBAL">세계</option></select></label></div><label class="desk-category-control" for="macro-category">분야<select id="macro-category"><option value="ALL">전체</option><option value="EMPLOYMENT">고용</option><option value="INFLATION">물가</option><option value="ACTIVITY">생산·소비</option><option value="MARKETS">시장·금리</option></select></label><p id="macro-count" class="muted-note">자료 미확인</p></section>
-    <div id="macro-list" class="desk-indicators"></div><p id="macro-empty" class="table-empty">지표 자료가 없거나 검색 결과가 없습니다.</p>
-  </section>
-  <section id="news-view" class="view desk-view" hidden>
-    <section class="panel desk-panel" aria-labelledby="news-title"><div class="panel-heading"><div><h2 id="news-title">주요 뉴스를 다섯 문장으로 읽기</h2><p>확인된 사실에서 출발해 영향 경로와 다음 확인 항목을 살펴봅니다.</p></div><button class="secondary-button" data-desk-reload>자료 다시 불러오기</button></div><p id="news-data-status" class="muted-note desk-data-status" role="status" aria-live="polite">공개 자료를 불러오면 기록 시각을 표시합니다.</p><div class="desk-controls"><label for="news-search">뉴스 검색<input id="news-search" type="search" placeholder="경제, 금리, 전쟁…" autocomplete="off"></label></div><label class="desk-category-control" for="news-category">주제<select id="news-category"><option value="ALL">모든 뉴스</option></select></label><p id="news-count" class="muted-note">자료 미확인</p></section>
-    <details id="news-outline" class="panel news-outline" hidden><summary>뉴스 목록에서 선택</summary><ol id="news-outline-list"></ol></details>
-    <div id="news-list" class="desk-news-list"></div><p id="news-empty" class="table-empty">확인된 뉴스가 없거나 검색 결과가 없습니다.</p>
-
-  </section>
-<section id="reports-view" class="view desk-view" hidden><div id="report-library"><section class="panel desk-panel source-library" aria-labelledby="source-library-title"><div class="panel-heading"><div><h2 id="source-library-title" class="sr-only">보고서 자료실</h2></div><button class="secondary-button" data-desk-reload>자료 다시 불러오기</button></div><div class="report-filters desk-controls"><label for="report-search">보고서 검색<input id="report-search" type="search" placeholder="제목, 금리, 반도체, 금융안정…" autocomplete="off"></label><label for="report-institution">기관<select id="report-institution"><option value="ALL">모든 기관</option><option value="BOK">한국은행</option><option value="FED">미국 연준</option><option value="BIS">국제결제은행</option><option value="TOSS">토스</option></select></label><details class="report-advanced"><summary>상세 필터</summary><div><label for="report-kind">자료 종류<select id="report-kind"><option value="ALL">모든 자료</option><option value="MACRO_RESEARCH">경제 연구</option><option value="POLICY_RELEASE">정책 발표</option><option value="EDUCATION">투자 공부</option></select></label><label for="report-sort">정렬<select id="report-sort"><option value="NEWEST">최신순</option><option value="OLDEST">오래된순</option></select></label></div></details></div><p id="source-library-status" class="muted-note" role="status">보고서 목록을 아직 확인하지 못했습니다.</p><p id="report-count" class="muted-note"></p><div id="source-library-list"></div><p id="report-empty" class="table-empty" hidden>조건에 맞는 자료가 없습니다. 검색어나 필터를 바꿔 주세요.</p></section></div></section><section id="workbench-view" class="view" hidden><div id="stock-workbench"></div></section>
-  <footer>ZERO · 분기 점검, 장기적인 판단 <span>이 화면의 계좌 조회는 매매를 실행하지 않습니다.</span></footer>
+<main id="main">
+  <section id="view-home" class="view"><p class="empty loading" role="status">불러오는 중이에요</p></section>
+  <section id="view-stocks" class="view" hidden></section>
+  <section id="view-discover" class="view" hidden></section>
+  <section id="view-stock" class="view" hidden></section>
+  <section id="view-more" class="view" hidden></section>
+  <noscript><p class="empty">이 화면은 자바스크립트를 켜야 볼 수 있어요.</p></noscript>
 </main>
-<nav class="mobile-tabbar" aria-label="모바일 주요 메뉴">
-  <button type="button" class="mobile-tab" data-view="home" aria-label="홈">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5V20h-5.5v-5h-5v5H4Z"/></svg>
-    <span>홈</span>
-  </button>
-  <button type="button" class="mobile-tab active" data-view="portfolio" data-domain="investment" aria-current="page" aria-label="내 자산">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8v10h-6v-7H9v7H3Z"/></svg>
-    <span>자산</span>
-  </button>
-  <button type="button" class="mobile-tab" data-view="lobby" data-domain="office" aria-label="AI 리서치">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 21v-3a6 6 0 0 1 12 0v3M4 5a3 3 0 0 0 0 6M20 5a3 3 0 0 1 0 6"/></svg>
-    <span>AI 리서치</span>
-  </button>
-  <button type="button" class="mobile-tab" data-view="workbench" aria-label="종목·차트">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v15M3 8h4v7H3ZM12 2v20M10 5h4v9h-4ZM19 5v15M17 11h4v6h-4Z"/></svg>
-    <span>종목·차트</span>
-  </button>
-  <button type="button" class="mobile-tab menu-open" aria-label="전체 메뉴 열기" aria-haspopup="dialog" aria-controls="more-menu">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-    <span>더보기</span>
-  </button>
-</nav><dialog id="more-menu" class="more-menu" aria-labelledby="more-menu-title"><header><div class="more-header-text"><h2 id="more-menu-title">전체 메뉴</h2><p class="more-subtitle">실전 주식 투자 및 분석 기능을 한눈에 찾아보세요</p></div><button id="menu-close" type="button" class="icon-button icon-close" autofocus aria-label="메뉴 닫기" title="닫기">닫기</button></header><nav aria-label="더보기 전체 메뉴">
-<div class="nav-group more-group" role="group" aria-labelledby="menu-investment-title"><div id="menu-investment-title" class="nav-group-label more-cat-label"><span class="more-cat-badge">📈</span><strong>주식 투자 & 계좌 자산</strong></div><div class="more-grid">
-<button type="button" class="nav-item more-card-item" data-view="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5V20h-5.5v-5h-5v5H4Z"/></svg><div class="more-text-wrap"><strong>홈 화면</strong><small>지수 시황 · 층수 레이더 · 실전 계산기</small></div></button>
-<button type="button" class="nav-item more-card-item active" data-view="portfolio" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8v10h-6v-7H9v7H3Z"/></svg><div class="more-text-wrap"><strong>내 자산 (MTS)</strong><small>1억 모의계좌 · 보유 주식 · 물타기 계산</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="research"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l4-6 4 3 5-8"/></svg><div class="more-text-wrap"><strong>주식 탐색</strong><small>국내·미국 시가총액 & 테마별 ETF</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="workbench"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v15M3 8h4v7H3ZM12 2v20M10 5h4v9h-4ZM19 5v15M17 11h4v6h-4Z"/></svg><div class="more-text-wrap"><strong>종목·차트</strong><small>기술적 캔들 차트 & 실시간 호가·수급</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="comparison"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><div class="more-text-wrap"><strong>수익률 비교</strong><small>S&P 500 · TQQQ 대비 포트폴리오 성과</small></div></button>
-</div></div>
-<div class="nav-group more-group" role="group" aria-labelledby="menu-learning-title"><div id="menu-learning-title" class="nav-group-label more-cat-label"><span class="more-cat-badge">📊</span><strong>마켓 리서치 & 금융 지표</strong></div><div class="more-grid">
-<button type="button" class="nav-item more-card-item" data-view="analysis"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"/></svg><div class="more-text-wrap"><strong>시장 브리핑</strong><small>글로벌 주요 지수 · 선물 시황 요약</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="news"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><div class="more-text-wrap"><strong>실시간 속보</strong><small>AI 필터링 핵심 경제 뉴스 브리핑</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="macro"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a16 16 0 0 1 0 18M12 3a16 16 0 0 0 0 18"/></svg><div class="more-text-wrap"><strong>거시 경제 지표</strong><small>기준금리 · 물가 · 환율 · VIX 변동성</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5ZM14 3v5h5M8 12h8M8 16h6"/></svg><div class="more-text-wrap"><strong>보고서 자료실</strong><small>한국은행 · 연준 · 주요 금융기관 리포트</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="study"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h6a3 3 0 0 1 3 3v14a4 4 0 0 0-4-2H3ZM12 7a3 3 0 0 1 3-3h6v15h-5a4 4 0 0 0-4 2"/></svg><div class="more-text-wrap"><strong>투자 공부</strong><small>밸류에이션(PER·PEG) & 켈리·마법공식</small></div></button>
-</div></div>
-<div class="nav-group more-group" role="group" aria-labelledby="menu-social-title"><div id="menu-social-title" class="nav-group-label more-cat-label"><span class="more-cat-badge">🤖</span><strong>AI 리서치 센터 & 퀀트 자문 전략실</strong></div><div class="more-grid">
-<button type="button" class="nav-item more-card-item" data-view="lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M9 21v-6h6v6M8 11h2M14 11h2"/></svg><div class="more-text-wrap"><strong>AI 리서치 센터 (전설 100인)</strong><small>총괄 디렉터 결단 · 100인 일일 토론 · 25선 추천</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="team"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 21v-3a6 6 0 0 1 12 0v3M4 5a3 3 0 0 0 0 6M20 5a3 3 0 0 1 0 6"/></svg><div class="more-text-wrap"><strong>AI 자문단 명부</strong><small>100인 대가 프로필 & 개별 종목 1:1 심층 자문</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="company"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg><div class="more-text-wrap"><strong>포트폴리오 전략실</strong><small>자산 배분 모델링 & 리밸런싱 시뮬레이션</small></div></button>
-<button type="button" class="nav-item more-card-item" data-view="guide"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg><div class="more-text-wrap"><strong>서비스 안내 & 앱 설치</strong><small>안전 원칙 및 홈 화면 앱 추가</small></div></button>
-</div></div>
-</nav><p class="muted-note">자료 조회와 시뮬레이션을 위한 화면입니다. 실제 계좌 매매를 실행하지 않습니다.</p></dialog>
-<dialog id="company-dialog" aria-labelledby="company-title"><header class="company-dialog-header"><h2 id="company-title">종목 설명</h2><button id="company-close" class="icon-button icon-close" autofocus aria-label="종목 설명 닫기" title="닫기">닫기</button></header><div id="company-content"></div></dialog>
-  <dialog id="morning-report-dialog" class="morning-report-dialog" aria-labelledby="morning-report-title" style="max-width: 960px; width: 95vw; max-height: 90vh; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.15); background: #0b0f19; color: #f8fafc; padding: 0; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); overflow: hidden;">
-    <header style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: rgba(22, 30, 49, 0.9);">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 20px;">☀️</span>
-        <h3 id="morning-report-title" style="margin: 0; font-size: 18px; font-weight: 800;">ZERO 프리미엄 모닝 인텔리전스 (피그마 에디션)</h3>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button type="button" id="morning-report-refresh" class="secondary-button" style="padding: 6px 12px; font-size: 12px;">새로고침</button>
-        <button type="button" id="morning-report-close" class="icon-button icon-close" aria-label="보고서 닫기" style="cursor: pointer;">닫기</button>
-      </div>
-    </header>
-    <div id="morning-report-body" style="padding: 24px; overflow-y: auto; max-height: calc(90vh - 70px);">
-      <p style="color: #94a3b8; text-align: center; padding: 40px 0;">실시간 모닝 리포트를 생성하고 있습니다...</p>
+
+<footer class="foot">
+  <p>ZERO는 공부와 참고용이에요. 주문을 내지 않고 투자 권유를 하지 않아요.</p>
+</footer>
+
+<nav class="tabbar" aria-label="주요 화면">
+  <a href="#home" data-tab="home"><span data-icon="home"></span>홈</a>
+  <a href="#stocks" data-tab="stocks"><span data-icon="wallet"></span>내 주식</a>
+  <a href="#discover" data-tab="discover"><span data-icon="search"></span>발견</a>
+  <a href="#more" data-tab="more"><span data-icon="menu"></span>더보기</a>
+</nav>
+
+<dialog id="sheet" class="sheet" aria-labelledby="sheet-title">
+  <header class="sheet-head">
+    <h2 id="sheet-title"></h2>
+    <button class="icon-button" type="button" data-close-dialog aria-label="닫기"></button>
+  </header>
+  <div id="sheet-body" class="sheet-body"></div>
+</dialog>
+
+<dialog id="school" class="sheet" aria-labelledby="school-title">
+  <header class="sheet-head">
+    <div>
+      <h2 id="school-title">주식 입문 학교</h2>
+      <p id="school-rank" class="note"></p>
     </div>
-  </dialog>
-  <script src="assets/headlines.js" defer></script>
-  <script src="assets/install.js" defer></script>
+    <button class="icon-button" type="button" data-close-dialog aria-label="닫기"></button>
+  </header>
+  <div class="school-bar" aria-hidden="true"><span id="school-fill"></span></div>
+  <div id="school-body" class="sheet-body"></div>
+</dialog>
 </body>
 </html>

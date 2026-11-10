@@ -32,10 +32,15 @@ def clean_trend_keyword(value: str) -> str | None:
     cleaned = re.sub(r' +', ' ', normalized)
     if not 2 <= len(cleaned) <= 15:
         return None
-    if any(not (char.isalnum() or char in ' ·&.+-') for char in cleaned):
-        return None
-    # Hangul jamo/compatibility initials and punctuation alone do not form a keyword.
-    letters = [char for char in cleaned if char.isalpha() and not ('\u1100' <= char <= '\u11ff' or '\u3130' <= char <= '\u318f' or '\ua960' <= char <= '\ua97f' or '\ud7b0' <= char <= '\ud7ff')]
+    # 수정 사유: 전광판 및 대화에 한국어와 영어, 숫자 외의 외래 문자(한자, 일본어 가나, 특수 외래 문자 등) 노출 전면 차단
+    for char in cleaned:
+        is_hangul = ('\uac00' <= char <= '\ud7a3') or ('\u3131' <= char <= '\u3163') or ('\u1100' <= char <= '\u11ff')
+        is_english = ('a' <= char <= 'z') or ('A' <= char <= 'Z')
+        is_digit = ('0' <= char <= '9')
+        if not (is_hangul or is_english or is_digit or char in ' ·&.+-'):
+            return None
+    # 한글 자모 단독이나 부호만으로는 키워드가 될 수 없으며 한국어 음절 또는 영문자가 반드시 포함되어야 함
+    letters = [char for char in cleaned if ('\uac00' <= char <= '\ud7a3') or ('a' <= char <= 'z') or ('A' <= char <= 'Z')]
     return cleaned if letters else None
 
 

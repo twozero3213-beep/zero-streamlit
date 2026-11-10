@@ -27,7 +27,7 @@ def call(handler, method, path, query=b''):
 class BridgeTests(unittest.TestCase):
     def test_staff_dialogue_url_survives_the_hosted_path_rewrite(self):
         import build_ui
-        script=(ROOT / 'ui/assets/lobby.js').read_text(encoding='utf-8')
+        script=(ROOT / 'ui/assets/zero-more.js').read_text(encoding='utf-8')
         rebuilt=build_ui.relative(script)
         self.assertIn('fetch(`${base}/api/lobby/dialogue`,',rebuilt)
         self.assertNotIn("base + 'api/lobby/dialogue'",rebuilt)
@@ -46,14 +46,14 @@ class BridgeTests(unittest.TestCase):
             (assets / 'manifest.webmanifest').write_text('{"id":"/","start_url":"/","scope":"/"}', encoding='utf-8')
             (source / 'index.html').write_text('<html data-zero-hosted="true"><head><meta http-equiv="Content-Security-Policy" content="connect-src \'self\'"></head><body><span>본인 전용</span></body></html>', encoding='utf-8')
             output = Path(tmp) / 'ui'
-            with mock.patch.object(build_ui, 'OUT', output), mock.patch.object(build_ui, 'EXTRAS', Path(tmp) / 'empty'), mock.patch.dict('os.environ', {'ZERO_LOBBY_API': ''}):
+            with mock.patch.object(build_ui, 'OUT', output), mock.patch.object(build_ui, 'EXTRAS', Path(tmp) / 'empty'), mock.patch.dict('os.environ', {'ZERO_LOBBY_API': 'https://lobby.example'}):
                 build_ui.build(source)
             self.assertEqual((output / 'assets/vendor-example.js').read_bytes(), vendor)
             self.assertEqual((output / 'assets/vendor-example-LICENSE.txt').read_bytes(), license_text)
             self.assertIn('"api/quotes"', (output / 'assets/app.js').read_text(encoding='utf-8'))
             self.assertIn('공개 참고 화면',(output/'index.html').read_text(encoding='utf-8'))
-            self.assertIn('connect-src \'self\' https://txhozsfszjryasemyecx.supabase.co', (output/'index.html').read_text(encoding='utf-8'), 'Streamlit may strip HTTP CSP, so the document must retain the same Auth boundary')
-            self.assertNotIn('supabase.co', (source/'index.html').read_text(encoding='utf-8'))
+            self.assertIn('connect-src \'self\' https://lobby.example"', (output/'index.html').read_text(encoding='utf-8'), 'Streamlit may strip HTTP CSP, so the document names the account server itself')
+            self.assertNotIn('lobby.example', (source/'index.html').read_text(encoding='utf-8'))
             self.assertIn('본인 전용',(source/'index.html').read_text(encoding='utf-8'),'public wording must not change the owner-private source')
 
     def setUp(self):
@@ -216,13 +216,6 @@ class HeadlineTests(unittest.TestCase):
         self.assertNotIn('headlines', zero_proxy._cache)
         self.assertEqual(call(zero_proxy.api, 'POST', 'api/headlines').status_code, 403)
 
-    def test_panel_script_is_injected_and_never_writes_html(self):
-        self.assertIn('<script src="assets/headlines.js" defer></script>', (ROOT / 'ui' / 'index.html').read_text(encoding='utf-8'))
-        script = (ROOT / 'ui' / 'assets' / 'headlines.js').read_text(encoding='utf-8')
-        self.assertNotIn('innerHTML', script)
-        self.assertIn("fetch('api/headlines'", script)
-
-
 class BuildTests(unittest.TestCase):
     def test_invalid_build_source_preserves_current_output(self):
         import tempfile
@@ -269,17 +262,6 @@ class BuildTests(unittest.TestCase):
         for path in list((ROOT / 'ui').rglob('*.js')) + list((ROOT / 'ui').rglob('*.html')) + list((ROOT / 'ui').rglob('*.css')):
             self.assertIsNone(re.search(r"""['"`(]/(api|assets)/""", path.read_text(encoding='utf-8')), path.name)
 
-    def test_install_guide_is_installable_from_this_site(self):
-        html = (ROOT / 'ui' / 'index.html').read_text(encoding='utf-8')
-        self.assertIn('assets/install.js', html)
-        script = (ROOT / 'ui' / 'assets' / 'install.js').read_text(encoding='utf-8')
-        self.assertIn('beforeinstallprompt', script)
-        self.assertIn('로그인은 필요 없습니다', script)
-        manifest = json.loads((ROOT / 'ui' / 'assets' / 'manifest.webmanifest').read_text(encoding='utf-8'))
-        self.assertEqual((manifest['display'], manifest['start_url'], manifest['scope']), ('standalone', '../', '../'))
-        for icon in manifest['icons']:
-            self.assertTrue((ROOT / 'ui' / 'assets' / icon['src']).is_file(), icon['src'])
-
     def test_ui_files_are_revalidated_on_every_load(self):
         scope = {'type': 'http', 'method': 'GET', 'path': '/index.html', 'root_path': '', 'query_string': b'', 'headers': []}
         app = zero_proxy._UI(directory=zero_proxy.UI, html=True)
@@ -291,7 +273,7 @@ class BuildTests(unittest.TestCase):
         app = AppTest.from_file(str(ROOT / 'zero_page.py'), default_timeout=240).run()
         css = ''.join(block.value for block in app.markdown)
         for rule in ('position:fixed!important', 'inset:0!important', 'height:100dvh!important', 'overflow:hidden!important',
-                     'background:#f7f8fa!important'):
+                     'background:#f2f4f6!important'):
             self.assertIn(rule, css)
 
     def test_page_script_renders(self):

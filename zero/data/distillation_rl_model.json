@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "current_checkpoint": {
-    "version": "2.2.48-Thorp",
-    "iteration": 48,
-    "trained_at": "2026-10-27T08:38:52.383549+00:00",
+    "version": "2.2.50-Thorp",
+    "iteration": 50,
+    "trained_at": "2026-11-10T11:05:14.435414+00:00",
     "teacher_kl_divergence": 0.0286,
-    "student_sharpe": 6.8,
-    "student_sortino": 9.15,
+    "student_sharpe": 7.04,
+    "student_sortino": 9.49,
     "student_mdd": 2.5,
     "student_cvar_95": 2.0,
     "ethics_compliance_rate": 100.0,
@@ -345,6 +345,20 @@
       "avg_kl": 0.0714,
       "sortino": 9.15,
       "updated_at": "2026-10-27T08:38:52.383549+00:00"
+    },
+    {
+      "iteration": 48,
+      "avg_reward": 2.4257,
+      "avg_kl": 0.0714,
+      "sortino": 9.32,
+      "updated_at": "2026-11-10T11:04:37.694052+00:00"
+    },
+    {
+      "iteration": 49,
+      "avg_reward": 2.4257,
+      "avg_kl": 0.0714,
+      "sortino": 9.49,
+      "updated_at": "2026-11-10T11:05:14.435414+00:00"
     }
   ]
 }

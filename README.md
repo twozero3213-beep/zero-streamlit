@@ -12,10 +12,10 @@ ZERO 포트폴리오 화면(로컬 `127.0.0.1:8765`와 같은 화면)을 Streaml
 - `zero_proxy.py` — `/zero/api/*`를 ZERO Cloudflare 사이트에서 서버가 대신 읽는다(허용 목록 GET만, 짧은 캐시).
   `/zero/status`는 키 설정 모양과 연결 결과만 알려준다(키 값 없음, 항상 200).
 - `zero_headlines.py` — `/zero/api/headlines`: 뉴스 검색 결과 제목만 요청 때 모아 1분 캐시(https 링크만, 전부 실패하면 캐시하지 않고 503).
-- `extras/headlines.js` — 주요 뉴스의 첫 페이지에 실시간 헤드라인을 1분마다 확인하며 기존 페이징을 재사용한다. 실패와 재시도를 표시하고 한국어·번역된 영어 제목만 노출한다.
 - `zero_research.py` — `/zero/api/desk`를 읽을 때 서버 공통 작업 하나가 공식 보고서·지표를 15분마다 확인한다. 첫 응답은 기존 값을 반환하고 실패한 값·원래 조회 시각·검토 기록은 보존한다. BLS 최근 관측은 1시간, 과거 이력은 7일 캐시하며 무인증 25회/일 한도를 제한한다. 제공자 발표가 있어야 관측값이 바뀐다.
 - `zero_macro.py`, `zero_gauges.py`, `zero_reports.py`, `zero_statistics.py`, `briefing_sources.json`은 빌더가 지정된 Git 추적 수집기·순수 함수에서 생성한다. 소유자 CLI·원장·인증 파일 로더는 포함하지 않는다.
-- `build_ui.py` — `ui/`를 다시 만들고 `extras/*.js`를 `index.html`에 붙인다.
+- `build_ui.py` — `ui/`를 다시 만든다. 화면은 zero-bot 0.7.0의 새 화면(홈, 내 주식, 발견, 더보기)이다.
+- `/zero/api/decade` — 10년 전 1억원을 넣었다면(S&P 500, TQQQ, SOXL, SCHD) 참고 계산. `zero/decade_reference.py`, 키 없음, 6시간 캐시.
   닉네임 계정 서버 주소는 환경변수 `ZERO_LOBBY_API`로 주입한다(현재 `https://zero-lobby.zero-cloudflare.workers.dev`, zero-bot의 `scripts/build_lobby_worker.py`로 만든 Worker). 비우면 가입 버튼은 "준비 중"이다. 빌드 때 이 값을 빼먹으면 가입이 꺼지니 주의.
 
 이메일 가입·로그인은 별도 공개 인증 서버의 `AUTH_EMAIL_ENABLED`와 Supabase SMTP·숫자 인증번호 메일 템플릿을 함께 설정해야 합니다. Streamlit의 HTTP 보안정책은 ZERO의 기존 공개 Supabase 프로젝트 한 곳을 기본 허용하며, `ZERO_AUTH_SUPABASE_ORIGIN`으로 지정된 HTTPS 프로젝트 주소로만 교체할 수 있습니다. Streamlit이 HTTP 보안 헤더를 전달하지 않아도 보호되도록 빌드 시 HTML CSP에도 같은 인증 주소를 반영합니다.

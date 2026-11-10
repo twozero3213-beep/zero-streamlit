@@ -30,12 +30,12 @@
     // The leading side is named first, so a split can never be read the wrong way round.
     const split = result.lean === 'DOWN' ? '낮게 ' + result.down + '% 대 높게 ' + result.up + '%' : '높게 ' + result.up + '% 대 낮게 ' + result.down + '%';
     return {
-      headline: side ? '다음 발표는 직전보다 ' + side + ' 나온 쪽이 ' + (lead < 56 ? '근소하게 ' : '') + '더 많았어요 · ' + split : '높게·낮게 나온 횟수가 거의 같았어요 · ' + split,
+      headline: side ? '다음 발표는 직전보다 ' + side + ' 나온 쪽이 ' + (lead < 56 ? '근소하게 ' : '') + '더 많았어요. ' + split + '.' : '높게 나온 횟수와 낮게 나온 횟수가 거의 같았어요. ' + split + '.',
       lines: [
         ['높게 나오면 (' + result.up + '%)', String(item?.above_range || '높을 때 확인할 점이 아직 정리되지 않았어요.')],
         ['낮게 나오면 (' + result.down + '%)', String(item?.below_range || '낮을 때 확인할 점이 아직 정리되지 않았어요.')]
       ],
-      basis: '근거 · ' + BASIS[result.basis] + ' ' + result.sample + '번 중 ' + result.ups + '번이 직전보다 높았어요(적은 표본의 쏠림을 줄이려 보정). ' + (lead >= 60 ? '' : '두 쪽의 차이가 작아 방향을 믿을 만한 정도는 아니에요.'),
+      basis: '근거: ' + BASIS[result.basis] + ' ' + result.sample + '번 중 ' + result.ups + '번이 직전보다 높았어요(적은 표본의 쏠림을 줄이려 보정). ' + (lead >= 60 ? '' : '두 쪽의 차이가 작아 방향을 믿을 만한 정도는 아니에요.'),
       disclaimer: DISCLAIMER
     };
   }
@@ -51,13 +51,13 @@
     if (result) {
       // The split is drawn first; the words below only repeat it.
       const bar = document.createElement('div'); bar.className = 'outlook-bar'; bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', '높게 ' + result.up + '퍼센트 대 낮게 ' + result.down + '퍼센트');
-      [['up', '📈 높게 ', result.up], ['down', '📉 낮게 ', result.down]].forEach(([kind, label, value]) => { const part = document.createElement('span'); part.className = 'outlook-' + kind; part.style.flexGrow = String(value); part.textContent = label + value + '%'; bar.append(part); });
+      [['up', '높게 ', result.up], ['down', '낮게 ', result.down]].forEach(([kind, label, value]) => { const part = document.createElement('span'); part.className = 'outlook-' + kind; part.style.flexGrow = String(value); part.textContent = label + value + '%'; bar.append(part); });
       box.append(bar);
     }
     add('p', 'outlook-head', info.headline);
     info.lines.forEach(([title, text]) => { const row = document.createElement('div'); row.className = 'outlook-row'; const strong = document.createElement('strong'); strong.textContent = title; const span = document.createElement('span'); span.textContent = text; row.append(strong, span); box.append(row); });
     if (info.basis) add('p', 'muted-note', info.basis);
-    add('p', 'outlook-warn', '⚠ ' + info.disclaimer);
+    add('p', 'outlook-warn', info.disclaimer);
     return box;
   };
 })();

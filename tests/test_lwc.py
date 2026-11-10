@@ -141,22 +141,6 @@ class LightweightRouteTests(unittest.TestCase):
         self.assertIn(b'LightweightCharts',response.body)
         self.assertNotIn(b'src="https://',response.body,'library scripts must be bundled, not CDN fetched')
 
-    def test_chart_link_and_public_flag_contract(self):
-        node=shutil.which('node')
-        if not node:self.skipTest('Node is absent')
-        script="""const assert=require('node:assert/strict'),{lightweightChartLink}=require('./ui/assets/stock-workbench.js');
-assert.equal(lightweightChartLink('US:SPY','5Y'),'./lwc?identity=US%3ASPY&range=5Y&height=240');
-for(const args of [['https://evil.example','5Y'],['US:SPY','BAD'],['US:SPY','5Y',159],['US:SPY','5Y',361]])assert.equal(lightweightChartLink(...args),null);
-"""
-        result=subprocess.run([node,'-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
-        self.assertEqual(result.returncode,0,result.stderr)
-        source=(PUBLIC/'ui/assets/stock-workbench.js').read_text(encoding='utf-8')
-        self.assertIn('meta[name="zero-lightweight-chart"]',source)
-        self.assertIn("content==='./lwc'",source)
-        self.assertIn("frame.setAttribute('sandbox','allow-scripts')",source)
-        self.assertIn("button('다시 불러오기'",source)
-        self.assertIn('wireCanvas(canvas)',source)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -261,6 +261,10 @@ async def api(request):
         elif path == '/api/market/recommendations':
             from zero.market_intelligence import get_daily_25_recommendations
             return JSONResponse(get_daily_25_recommendations())
+        elif path == '/api/decade' and not query:
+            from zero.decade_reference import get_decade_reference
+            status_code, body = await run_in_threadpool(get_decade_reference)
+            return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=600'})
         elif path == '/api/market/quote':
             from zero.realtime_stock_quote import get_quote_response
             full_path = path + ('?' + request.url.query if request.url.query else '')
