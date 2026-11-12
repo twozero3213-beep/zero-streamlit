@@ -10,10 +10,11 @@
     const scope = data?.summary?.zero_portfolio;
     if (!scope) return null;
     const ids = (scope.holdings || []).map((row) => row.market + ':' + row.symbol);
-    let quoteMap = await U.quotes(ids);
+    const deadline = performance.now() + 12000;
+    let quoteMap = await U.quotes(ids, deadline);
     let liveFx = null;
     if (ids.some((id) => !quoteMap.has(id))) {
-      const live = await U.api('api/live-quotes', 15);
+      const live = await U.api('api/live-quotes', 15, deadline);
       quoteMap = new Map([...C.liveQuoteMap(live), ...quoteMap]);
       liveFx = C.num(live?.fx?.usd_krw) > 0 && live.fx.market_time ? C.num(live.fx.usd_krw) : null;
     }

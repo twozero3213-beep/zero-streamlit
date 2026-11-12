@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import unittest
-from unittest.mock import call, patch
+from unittest.mock import patch
 from zero import realtime_stock_quote as rq
 
 
@@ -56,7 +56,7 @@ class TestRealtimeStockQuote(unittest.TestCase):
         self.assertEqual(rq._QUOTE_CACHE, {}, "failed lookups must not be cached")
 
     def test_multiple_quotes_keep_only_real_ones(self):
-        def naver(code):
+        def naver(code, **kwargs):
             return _quote(code, 71000.0) if code == "005930" else None
         with patch.object(rq, "_fetch_from_toss", return_value={}), \
              patch.object(rq, "_fetch_from_kis_kr", return_value=None), \
@@ -86,7 +86,7 @@ class TestRealtimeStockQuote(unittest.TestCase):
         self.assertEqual(body["quotes"], [])
 
     def test_live_quotes_has_no_invented_fx_or_benchmark(self):
-        def naver(code):
+        def naver(code, **kwargs):
             return _quote(code, 71000.0)
         with patch.object(rq, "_fetch_from_toss", return_value={}), \
              patch.object(rq, "_fetch_from_kis_kr", return_value=None), \
@@ -142,16 +142,17 @@ class TestRealtimeStockQuote(unittest.TestCase):
         a, b, c, d = _all_sources_down()
         with a, b, c as naver, d as yahoo:
             self.assertEqual(rq.fetch_multiple_quotes(["NVDA", "US:NVDA"]), {})
-            yahoo.assert_called_once_with("NVDA", "US", "USD")
+            self.assertEqual(yahoo.call_count, 1)
+            self.assertEqual(yahoo.call_args.args, ("NVDA", "US", "USD"))
             naver.assert_not_called()
             code, body = rq.get_quote_response("/api/market/quote?symbols=" + ",".join("S" + str(i) for i in range(30)))
             self.assertEqual(code, 200)
             self.assertEqual(len(body["missing"]), 30)
 
     def test_fallback_preserves_explicit_market(self):
-        with patch.object(rq, "_fetch_from_toss", return_value={}), patch.object(rq, "fetch_stock_quote", return_value=None) as fallback:
+        with patch.object(rq, "_fetch_from_toss", return_value={}), patch.object(rq, "_fallback_quote", return_value=None) as fallback:
             rq.fetch_multiple_quotes(["US:NVDA", "KR:005930"])
-        self.assertEqual(fallback.call_args_list, [call("US:NVDA"), call("KR:005930")])
+        self.assertEqual([item.args[:3] for item in fallback.call_args_list], [("NVDA", "US", "USD"), ("005930", "KR", "KRW")])
 
     def test_cache_prunes_expired_entries_and_caps_512(self):
         rq._QUOTE_CACHE.update({"S" + str(i): (_quote("S" + str(i), 1, "US", "USD"), 1015) for i in range(512)})
@@ -177,15 +178,15 @@ class TestRealtimeStockQuote(unittest.TestCase):
                 return {"holdings": [{"market": "US", "symbol": "123"}, {"market": "US", "symbol": "AAPL"}]}
         a, b, c, d = _all_sources_down()
         with a, b, c as naver, d as yahoo:
-            naver.side_effect = lambda code: _quote(code, 71000) if code == "005930" else None
-            yahoo.side_effect = lambda code, market, currency: _quote(code, 200, market, currency) if code == "AAPL" else None
+            naver.side_effect = lambda code, **kwargs: _quote(code, 71000) if code == "005930" else None
+            yahoo.side_effect = lambda code, market, currency, **kwargs: _quote(code, 200, market, currency) if code == "AAPL" else None
             try:
                 code, body = rq.get_live_quotes_endpoint(Store())
             except ValueError:
                 self.fail("An unsupported saved holding aborted quote refresh")
         self.assertEqual(code, 200)
         self.assertEqual({row["symbol"] for row in body["quotes"]}, {"005930", "AAPL"})
-        yahoo.assert_any_call("AAPL", "US", "USD")
+        self.assertIn(("AAPL", "US", "USD"), [item.args for item in yahoo.call_args_list])
 
     def test_live_quotes_chunks_saved_holdings_without_private_reads(self):
         class Store:

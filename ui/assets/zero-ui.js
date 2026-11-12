@@ -80,25 +80,34 @@
   // ---- 자료 요청 ------------------------------------------------------------------------------
   const cache = new Map();
 
-  // 같은 주소는 ttl(초) 동안 다시 부르지 않는다. 실패하면 null(화면은 그 칸을 비운다).
-  async function api(path, ttl = 30) {
+  async function untilDeadline(promise, deadline, abort) {
+    if (!Number.isFinite(deadline)) return promise;
+    let timer;
+    try {
+      const value = await Promise.race([promise, new Promise((resolve) => {
+        timer = setTimeout(() => { abort?.(); resolve(null); }, Math.max(0, deadline - performance.now()));
+      })]);
+      return performance.now() < deadline ? value : null;
+    } finally { clearTimeout(timer); }
+  }
+
+  // 같은 주소의 요청은 공유하되, 짧게 기다리는 화면이 다른 화면의 요청을 취소하지 않는다.
+  async function api(path, ttl = 30, deadline = Infinity) {
+    if (performance.now() >= deadline) return null;
     const hit = cache.get(path);
-    if (hit && Date.now() - hit.at < ttl * 1000) return hit.promise;
-    const promise = (async () => {
-      const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 20000);
+    if (hit && Date.now() - hit.at < ttl * 1000) return untilDeadline(hit.promise, deadline);
+    const controller = new AbortController();
+    const request = (async () => {
       try {
         const response = await fetch(path, {cache: 'no-store', signal: controller.signal});
         if (!response.ok) return null;
         return await response.json();
-      } catch (_) {
-        return null;
-      } finally {
-        clearTimeout(timer);
-      }
+      } catch (_) { return null; }
     })();
+    const promise = untilDeadline(request, Math.min(deadline, performance.now() + 20000), () => controller.abort());
     cache.set(path, {at: Date.now(), promise});
     const data = await promise;
-    if (data === null) cache.delete(path);
+    if (data === null && cache.get(path)?.promise === promise) cache.delete(path);
     return data;
   }
 
@@ -107,10 +116,10 @@
   }
 
   // 여러 종목 시세를 한 번에. /api/market/quote가 없는 곳에서는 빈 Map.
-  async function quotes(ids) {
+  async function quotes(ids, deadline = performance.now() + 12000) {
     const symbols = [...new Set(ids)].filter(Boolean), map = new Map();
-    for (let offset = 0; offset < symbols.length; offset += 30) {
-      const data = await api('api/market/quote?symbols=' + symbols.slice(offset, offset + 30).map(encodeURIComponent).join(','), 15);
+    for (let offset = 0; offset < symbols.length && performance.now() < deadline; offset += 30) {
+      const data = await api('api/market/quote?symbols=' + symbols.slice(offset, offset + 30).map(encodeURIComponent).join(','), 15, deadline);
       for (const [id, quote] of C.quoteMap(data)) map.set(id, quote);
     }
     return map;

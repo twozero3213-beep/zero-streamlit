@@ -6,6 +6,7 @@ every write is refused here. The Cloudflare Access service token stays on the se
 Secrets or ZERO_* environment variables); errors are fixed codes, never provider bodies.
 """
 from concurrent.futures import Future, TimeoutError as FutureTimeout
+import asyncio
 import gzip
 import io
 import json
@@ -48,6 +49,7 @@ HEADLINES_SECONDS = 60  # live news-search titles; collected here, not on the Cl
 
 _cache, _pending, _lock = {}, {}, threading.Lock()
 _upstream_slots = threading.BoundedSemaphore(4)
+_quote_slots = threading.BoundedSemaphore(8)
 
 
 class Unavailable(Exception):
@@ -218,6 +220,56 @@ def get_trends():
     return _cached('trends', TRENDS_SECONDS, load)
 
 
+async def _quote_response(function, *args):
+    from zero.realtime_stock_quote import QUOTE_DEADLINE_SECONDS
+    deadline = time.monotonic() + QUOTE_DEADLINE_SECONDS
+
+    def expired():
+        return JSONResponse({'error': 'QUOTE_DEADLINE'}, status_code=503, headers={'Cache-Control': 'no-store'})
+
+    slots = _quote_slots
+    if not slots.acquire(blocking=False):
+        return expired()
+    state, lock = {'started': False, 'released': False}, threading.Lock()
+
+    def run():
+        with lock:
+            if state['released']:
+                return 503, {'error': 'QUOTE_DEADLINE'}
+            state['started'] = True
+        try:
+            return function(*args, deadline=deadline)
+        finally:
+            with lock:
+                if not state['released']:
+                    state['released'] = True
+                    slots.release()
+
+    def settled(task):
+        with lock:
+            if not state['started'] and not state['released']:
+                state['released'] = True
+                slots.release()
+        if not task.cancelled():
+            task.exception()
+
+    task = asyncio.create_task(run_in_threadpool(run))
+    task.add_done_callback(settled)
+    try:
+        done, _ = await asyncio.wait({task}, timeout=max(0, deadline + .25 - time.monotonic()))
+    except asyncio.CancelledError:
+        task.cancel()
+        raise
+    if not done:
+        # Cancelling a pool await does not stop its thread; run() owns the occupied slot.
+        task.cancel()
+        return expired()
+    if task.cancelled() or time.monotonic() >= deadline:
+        return expired()
+    status_code, body = task.result()
+    return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=15'})
+
+
 async def api(request):
     path = '/api/' + request.path_params['path']
     if path == '/api/research/consult-asset' and request.method == 'POST':
@@ -283,12 +335,10 @@ async def api(request):
         elif path == '/api/market/quote':
             from zero.realtime_stock_quote import get_quote_response
             full_path = path + ('?' + request.url.query if request.url.query else '')
-            status_code, body = await run_in_threadpool(get_quote_response, full_path)
-            return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=15'})
+            return await _quote_response(get_quote_response, full_path)
         elif path == '/api/live-quotes':
             from zero.realtime_stock_quote import get_live_quotes_endpoint
-            status_code, body = await run_in_threadpool(get_live_quotes_endpoint, None)
-            return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=15'})
+            return await _quote_response(get_live_quotes_endpoint, None)
         else:
             body = await run_in_threadpool(get_public, path, query)
     except Unavailable as error:
