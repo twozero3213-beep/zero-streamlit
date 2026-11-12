@@ -388,7 +388,7 @@ class _UI(StaticFiles):
 
 import zero_lwc
 
-routes = [*zero_lwc.routes,
+routes = [Route('/', to_ui), *zero_lwc.routes,
     Route('/zero/status', status),
     Route('/zero/api/{path:path}', api, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
     Route('/zero', to_ui),

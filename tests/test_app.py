@@ -7,8 +7,10 @@ import sys
 import unittest
 from pathlib import Path
 from unittest import mock
+from urllib.parse import urljoin
 
 from starlette.requests import Request
+from starlette.routing import Match, Router
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -25,6 +27,48 @@ def call(handler, method, path, query=b''):
 
 
 class BridgeTests(unittest.TestCase):
+    def routed(self, method, path, prefix=''):
+        async def dispatch():
+            messages = []
+
+            async def receive():
+                return {'type': 'http.request', 'body': b'', 'more_body': False}
+
+            async def send(message):
+                messages.append(message)
+
+            scope = {'type': 'http', 'method': method, 'path': path, 'root_path': prefix,
+                     'query_string': b'', 'headers': [], 'scheme': 'https', 'server': ('zero.example', 443)}
+            await Router(zero_proxy.routes)(scope, receive, send)
+            start = next(message for message in messages if message['type'] == 'http.response.start')
+            body = b''.join(message.get('body', b'') for message in messages if message['type'] == 'http.response.body')
+            return start['status'], dict(start['headers']), body
+        return asyncio.run(dispatch())
+
+    def test_backend_root_get_and_head_redirect_without_streamlit_html(self):
+        for method in ('GET', 'HEAD'):
+            for path, prefix in (('/', ''), ('/~/+/', '/~/+'), ('/', '/~/+')):
+                with self.subTest(method=method, path=path, prefix=prefix):
+                    status, headers, body = self.routed(method, path, prefix)
+                    self.assertEqual((status, headers.get(b'location'), body), (307, b'zero/', b''))
+                    target = urljoin('https://zero.example/~/+/' if prefix else 'https://zero.example/', headers[b'location'].decode())
+                    self.assertEqual(target, 'https://zero.example/~/+/zero/' if prefix else 'https://zero.example/zero/')
+
+    def test_backend_root_post_is_rejected_and_existing_zero_redirect_is_unchanged(self):
+        self.assertEqual(self.routed('POST', '/')[0], 405)
+        self.assertEqual(self.routed('POST', '/~/+/', '/~/+')[0], 405)
+        status, headers, body = self.routed('GET', '/zero')
+        self.assertEqual((status, headers.get(b'location'), body), (307, b'zero/', b''))
+
+    def test_backend_root_route_precedes_frontend_and_preserves_other_paths(self):
+        root = zero_proxy.routes[0]
+        self.assertEqual(root.path, '/')
+        self.assertIs(root.endpoint, zero_proxy.to_ui)
+        for path in ('/zero/', '/zero/assets/zero-ui.js', '/zero/api/portfolio', '/zero/lwc', '/_stcore/health', '/static/app.js'):
+            with self.subTest(path=path):
+                match, _ = root.matches({'type': 'http', 'method': 'GET', 'path': path, 'root_path': ''})
+                self.assertEqual(match, Match.NONE)
+
     def test_staff_dialogue_url_survives_the_hosted_path_rewrite(self):
         import build_ui
         script=(ROOT / 'ui/assets/zero-more.js').read_text(encoding='utf-8')

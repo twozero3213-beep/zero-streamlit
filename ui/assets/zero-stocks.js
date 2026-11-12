@@ -84,21 +84,36 @@
     return el('details', {class: 'block details'}, el('summary', {text: '이 숫자는 어떻게 계산했나요'}), ...lines.map((line) => el('p', {text: line})));
   }
 
-  async function paint() {
-    root.replaceChildren(el('h1', {class: 'page-title', text: '내 주식'}), U.loading());
-    const view = await D.portfolio();
-    if (!view) {
-      root.replaceChildren(el('h1', {class: 'page-title', text: '내 주식'}), U.empty('내 주식 자료를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'));
-      return;
-    }
-    const compare = await comparison(view);
+  let lastView = null, lastCompare = null, paintToken = 0;
+  function render() {
     root.replaceChildren(
       el('h1', {class: 'page-title', text: '내 주식'}),
       el('div', {class: 'columns'},
-        el('div', {class: 'column'}, summary(view), allocation(view), compare),
-        el('div', {class: 'column'}, holdings(view), basis(view))));
+        el('div', {class: 'column'}, summary(lastView), allocation(lastView), lastCompare),
+        el('div', {class: 'column'}, holdings(lastView), basis(lastView))));
   }
 
-  document.addEventListener('zero-amounts-changed', () => { if (!root.hidden) paint(); });
+  async function paint() {
+    const token = ++paintToken;
+    lastCompare = null;
+    if (lastView) render(); else root.replaceChildren(el('h1', {class: 'page-title', text: '내 주식'}), U.loading());
+    const show = (view) => {
+      if (token !== paintToken) return;
+      lastView = view;
+      if (view) render(); else root.replaceChildren(el('h1', {class: 'page-title', text: '내 주식'}), U.empty('내 주식 자료를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'));
+    };
+    const view = await D.portfolio(show);
+    if (token !== paintToken) return;
+    show(view);
+    if (!view) return;
+    const compare = await comparison(view);
+    if (token !== paintToken) return;
+    lastCompare = compare;
+    render();
+  }
+
+  const redraw = () => { if (!root.hidden && lastView) render(); };
+  document.addEventListener('zero-amounts-changed', redraw);
+  document.addEventListener('zero-theme-changed', redraw);
   U.route('stocks', {title: () => '내 주식', show: paint});
 })();

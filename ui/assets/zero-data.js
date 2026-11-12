@@ -5,12 +5,19 @@
   const C = window.ZeroCore, U = window.ZeroUI;
 
   // 내 주식: 저장된 참고 포트폴리오에 지금 시세를 입힌다. 시세를 못 받으면 저장된 값 그대로.
-  async function portfolio() {
-    const data = await U.api('api/portfolio', 60);
-    const scope = data?.summary?.zero_portfolio;
-    if (!scope) return null;
-    const ids = (scope.holdings || []).map((row) => row.market + ':' + row.symbol);
+  async function portfolio(onSaved) {
     const deadline = performance.now() + 12000;
+    const data = await U.api('api/portfolio', 60, deadline);
+    const scope = data?.summary?.zero_portfolio;
+    if (!scope || performance.now() >= deadline) return null;
+    const ids = (scope.holdings || []).map((row) => row.market + ':' + row.symbol);
+    const saved = C.savedPortfolio(scope), savedFx = C.num(data.summary.fx?.usd_krw);
+    const stored = {
+      ...saved, live: false, pricedAt: scope.observed_at || null,
+      fx: savedFx > 0 ? savedFx : null, fxLive: false, fxAt: data.summary.fx?.observed_at || null,
+      startAt: scope.start_at || null, benchmark: data.benchmark || null, targets: data.allocations?.target_percent || null
+    };
+    if (saved) onSaved?.(stored);
     let quoteMap = await U.quotes(ids, deadline);
     let liveFx = null;
     if (ids.some((id) => !quoteMap.has(id))) {
@@ -18,20 +25,16 @@
       quoteMap = new Map([...C.liveQuoteMap(live), ...quoteMap]);
       liveFx = C.num(live?.fx?.usd_krw) > 0 && live.fx.market_time ? C.num(live.fx.usd_krw) : null;
     }
-    const savedFx = C.num(data.summary.fx?.usd_krw);
-    const fx = liveFx || (savedFx > 0 ? savedFx : null);
+    const fx = liveFx || stored.fx;
     const live = C.reprice(scope, quoteMap, fx);
-    const view = live || C.savedPortfolio(scope);
+    const view = live || saved;
     if (!view) return null;
     const times = [...quoteMap.values()].map((quote) => Date.parse(quote.at)).filter(Number.isFinite);
     return {
-      ...view,
+      ...stored, ...view,
       live: Boolean(live),
       pricedAt: live && times.length ? new Date(Math.max(...times)).toISOString() : scope.observed_at || null,
-      fx, fxLive: Boolean(liveFx), fxAt: liveFx ? null : data.summary.fx?.observed_at || null,
-      startAt: scope.start_at || null,
-      benchmark: data.benchmark || null,
-      targets: data.allocations?.target_percent || null
+      fx: live ? fx : stored.fx, fxLive: Boolean(live && liveFx), fxAt: live && liveFx ? null : stored.fxAt
     };
   }
 

@@ -30,8 +30,8 @@
     return '오늘은 ' + view.rows.length + '종목 중 ' + up + '종목이 오르고 ' + down + '종목이 내렸어요.';
   }
 
-  async function paintAssets() {
-    const view = await D.portfolio();
+  let lastAssets = null, assetToken = 0;
+  function renderAssets(view) {
     if (!view) { fill('assets', U.empty('내 자산 자료를 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.')); return; }
     const hidden = U.amounts.hidden();
     const today = view.todayPnl === null ? null
@@ -50,6 +50,16 @@
       rows,
       el('a', {class: 'button ghost', href: '#stocks', text: '내 주식 모두 보기'}),
       U.note('ZERO 참고 포트폴리오(모의)예요. ' + (view.live ? '공개 시세로 다시 계산했고 ' : '저장된 값이고 ') + (priced ? priced + ' 기준이에요.' : '기준 시각은 확인하지 못했어요.')));
+  }
+
+  async function paintAssets() {
+    const token = ++assetToken;
+    const paint = (view) => {
+      if (token !== assetToken) return;
+      lastAssets = view;
+      renderAssets(view);
+    };
+    paint(await D.portfolio(paint));
   }
 
   // ---- 오늘 시장 ------------------------------------------------------------------------------
@@ -148,7 +158,8 @@
       hide.setAttribute('aria-label', U.amounts.hidden() ? '금액 보이기' : '금액 가리기');
     };
     paintHide();
-    document.addEventListener('zero-amounts-changed', () => { paintHide(); paintAssets(); });
+    document.addEventListener('zero-amounts-changed', () => { paintHide(); if (lastAssets) renderAssets(lastAssets); });
+    document.addEventListener('zero-theme-changed', () => { if (lastAssets) renderAssets(lastAssets); });
     const refresh = el('button', {type: 'button', class: 'icon-button', 'aria-label': '시세 새로고침', onclick: () => { U.forget('api/market/quote'); U.forget('api/live-quotes'); U.forget('api/market-rank'); paintAll(); }}, U.icon('refresh'));
     const assets = el('section', {class: 'block hero'},
       el('div', {class: 'block-head'}, el('h2', {class: 'block-title', text: '내 자산'}), el('span', {class: 'block-tools'}, hide, refresh)),
