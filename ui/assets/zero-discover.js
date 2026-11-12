@@ -29,6 +29,7 @@
 
   input.addEventListener('input', () => { closeSearch(); searchTimer = setTimeout(runSearch, 150); });
   input.addEventListener('keydown', (event) => {
+    if (event.isComposing || event.keyCode === 229) return;
     if (event.key === 'Escape') { input.value = ''; closeSearch(); }
     if (event.key === 'Enter') { event.preventDefault(); results.querySelector('a')?.click(); }
   });
@@ -204,15 +205,16 @@
     const company = research?.companies?.find((item) => item.id === id);
     const quote = quoteMap.get(id);
     const name = quote?.name || info?.name || company?.name || code;
-    const price = quote?.price ?? (card?.quote?.status === 'AVAILABLE' ? C.num(card.quote.price) : info ? C.num(info.price) : NaN);
+    const snapshot = C.stockSnapshot(quote, card, info);
+    const price = snapshot?.price ?? NaN;
     const currency = kr ? 'KRW' : 'USD';
-    const percent = quote?.changePercent ?? (info && Number.isFinite(info.change_rate) ? info.change_rate : undefined);
+    const percent = snapshot?.changePercent ?? undefined;
 
     const head = el('header', {class: 'stock-head'},
       el('div', {}, el('h1', {class: 'page-title', text: name}), el('p', {class: 'stock-code', text: code + ', ' + (kr ? '한국' : '미국')})),
       U.heartButton(id, name));
     const priceLine = el('p', {class: 'stock-price'}, el('strong', {text: C.priceText(price, currency) || '시세 미확인'}), percent === undefined ? null : U.change(percent));
-    const stamp = U.timeText(quote?.at || card?.quote?.as_of);
+    const stamp = U.timeText(snapshot?.at);
 
     const chartHost = el('div', {class: 'slot'});
     let range = '3M';

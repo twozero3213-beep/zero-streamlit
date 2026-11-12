@@ -2,9 +2,12 @@
 """100인 전설적 투자자 및 증류강화학습(DRL) 자가 진화 리서치센터 종합 테스트."""
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
+from unittest import mock
 
-from zero.distillation_rl import DistillationRLEngine, MarketState
+from zero import distillation_rl
+from zero.distillation_rl import MarketState
 from zero.investors_100 import (
     calculate_100_investors_consensus,
     get_all_investors,
@@ -14,7 +17,6 @@ from zero.investors_100 import (
 from zero.research_center import (
     BENCHMARK_MARKET_EPISODES,
     ResearchCenter,
-    get_research_center,
 )
 
 
@@ -22,8 +24,19 @@ class Test100InvestorsAndDistillationRL(unittest.TestCase):
     """100인 투자자 명부, 위원회 합의 및 증류강화학습 자가 학습 검증"""
 
     def setUp(self):
-        self.center = get_research_center()
-        self.drl = DistillationRLEngine()
+        self.tmp = TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        directory = Path(self.tmp.name)
+        storage = mock.patch.multiple(distillation_rl, DATA_DIR=directory,
+                                      DRL_MODEL_PATH=directory / 'distillation_rl_model.json')
+        storage.start()
+        self.addCleanup(storage.stop)
+        self.center = ResearchCenter()
+        self.drl = self.center.drl
+
+    def test_checkpoint_storage_is_isolated_from_source_tree(self):
+        root = Path(__file__).resolve().parents[1]
+        self.assertFalse(distillation_rl.DRL_MODEL_PATH.resolve().is_relative_to(root))
 
     def test_investors_100_integrity(self):
         """100인 투자자가 누락 없이 정확히 100명 등록되어 있고 중복 ID가 없는지 검증"""

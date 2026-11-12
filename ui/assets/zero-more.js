@@ -4,6 +4,7 @@
   const C = window.ZeroCore, U = window.ZeroUI, D = window.ZeroData;
   const {el} = U;
   const root = document.getElementById('view-more');
+  let pageToken = 0, paintChat = null;
 
   const MENU = [
     ['macro', 'globe', '경제 지표', '물가, 고용, 금리가 평소보다 높은지 낮은지'],
@@ -58,9 +59,10 @@
     U.sheet(item.name, parts.filter(Boolean));
   }
 
-  async function macro() {
+  async function macro(token) {
     page('경제 지표', U.loading());
     const desk = await D.desk();
+    if (token !== pageToken) return;
     const items = (desk?.macro || []).filter((item) => item?.name);
     if (!items.length) { page('경제 지표', U.empty('지표 자료를 불러오지 못했어요.')); return; }
     const rows = items.map((item) => {
@@ -85,9 +87,10 @@
     U.sheet(item.title, [el('ol', {class: 'digest'}, lines), ...sources, U.note('원문에서 확인한 내용을 다섯 문장으로 줄였어요. 예측이 아니에요.')]);
   }
 
-  async function news() {
+  async function news(token) {
     page('뉴스', U.loading());
     const [headlines, desk] = await Promise.all([U.api('api/headlines', 60), D.desk()]);
+    if (token !== pageToken) return;
     const live = (headlines?.items || []).filter((item) => /^https:\/\//.test(item?.url || '') && (item.title_ko || item.title)).slice(0, 20);
     const digests = (desk?.news || []).filter((item) => item?.title && Array.isArray(item.core_sentences)).slice(0, 12);
     const liveBlock = live.length ? U.section('지금 올라온 기사', el('ul', {class: 'rows'}, live.map((item) => el('li', {class: 'row'},
@@ -106,9 +109,10 @@
   const INSTITUTIONS = [['ALL', '전체'], ['bok-', '한국은행'], ['fed-', '미국 연준'], ['bis-', '국제결제은행'], ['toss-', '토스']];
   let reportFilter = 'ALL';
 
-  async function reports() {
+  async function reports(token) {
     page('보고서', U.loading());
     const desk = await D.desk();
+    if (token !== pageToken) return;
     const library = desk?.briefing_sources;
     const records = [];
     (library?.sources || []).forEach((source) => (source.records || []).forEach((record) => {
@@ -183,7 +187,7 @@
     return block;
   }
 
-  async function study() {
+  async function study(token) {
     const school = el('section', {class: 'block school'},
       el('h2', {class: 'block-title', text: '주식 입문 학교'}),
       el('p', {}, '매수와 매도부터 ZERO 사용법까지 여섯 단계예요. 단계마다 짧은 설명을 읽고 문제를 풀면 다음 단계가 열려요.'),
@@ -192,11 +196,12 @@
     page('주식 공부', el('div', {class: 'columns'}, el('div', {class: 'column'}, school, averageDownCalc()), el('div', {class: 'column', id: 'study-savings'}, U.loading())));
     document.dispatchEvent(new CustomEvent('zero-academy-badges'));
     const savings = await savingsCalc();
+    if (token !== pageToken) return;
     document.getElementById('study-savings')?.replaceChildren(savings || U.empty('계산에 쓸 가격 기록을 불러오지 못했어요.'));
   }
 
   // ---- ZERO에게 물어보기 ----------------------------------------------------------------------
-  const chat = {messages: [], busy: false};
+  const chat = {messages: [], busy: false, draft: '', status: ''};
   const ERRORS = {
     DIALOGUE_RATE_LIMITED: '오늘 쓸 수 있는 무료 한도를 다 썼거나 요청이 몰렸어요. 잠시 뒤 다시 물어봐 주세요.',
     DIALOGUE_PRIVATE_INPUT: '이메일, 전화번호, 키처럼 보이는 내용은 보낼 수 없어요. 지우고 다시 보내 주세요.',
@@ -207,20 +212,22 @@
   function ask() {
     const base = String(document.querySelector('meta[name="zero-lobby-api"]')?.content || '').trim().replace(/\/+$/, '');
     const log = el('div', {class: 'chat-log', 'aria-live': 'polite'}), status = el('p', {class: 'note', role: 'status'});
-    const input = el('input', {type: 'text', maxlength: '300', placeholder: '예: PER이 뭐예요?', 'aria-label': '질문'});
+    const input = el('input', {type: 'text', maxlength: '300', placeholder: '예: PER이 뭐예요?', 'aria-label': '질문', oninput: () => { chat.draft = input.value; }});
     const send = el('button', {type: 'submit', class: 'button', text: '보내기'});
     const paint = () => {
       log.replaceChildren(...(chat.messages.length ? chat.messages.map((message) => el('p', {class: 'bubble ' + (message.role === 'user' ? 'mine' : 'theirs'), text: message.content}))
         : [U.empty('주식 용어나 ZERO 사용법을 물어보세요. 특정 종목을 사라, 팔라는 답은 하지 않아요.')]));
       log.scrollTop = log.scrollHeight;
       send.disabled = chat.busy || !base;
+      if (input.value !== chat.draft) input.value = chat.draft;
+      status.textContent = base ? chat.status : '이 화면에서는 AI 대화가 연결돼 있지 않아요. 공개 앱에서 쓸 수 있어요.';
     };
     const submit = async (event) => {
       event.preventDefault();
       const text = input.value.trim();
       if (!text || chat.busy || !base) return;
       chat.messages.push({role: 'user', content: text});
-      chat.busy = true; input.value = ''; status.textContent = 'AI가 답을 쓰는 중이에요.'; paint();
+      chat.busy = true; chat.draft = ''; chat.status = 'AI가 답을 쓰는 중이에요.'; paintChat?.();
       let reply = null, error = 'DIALOGUE_UNAVAILABLE';
       try {
         // 다른 서버 주소 뒤에 붙는 경로라 템플릿 문자열로 쓴다(공개 앱 빌더가 따옴표로 시작하는 경로를 상대 경로로 바꾸기 때문).
@@ -231,13 +238,13 @@
         else if (typeof body?.error === 'string') error = body.error;
       } catch (_) { /* 아래에서 실패 안내 */ }
       chat.busy = false;
-      if (reply) { chat.messages.push({role: 'assistant', content: reply}); status.textContent = ''; }
-      else { chat.messages.pop(); input.value = text; status.textContent = ERRORS[error] || '지금은 답을 받지 못했어요. 잠시 뒤 다시 시도해 주세요.'; }
+      if (reply) { chat.messages.push({role: 'assistant', content: reply}); chat.status = ''; }
+      else { chat.messages.pop(); if (!chat.draft) chat.draft = text; chat.status = ERRORS[error] || '지금은 답을 받지 못했어요. 잠시 뒤 다시 시도해 주세요.'; }
       chat.messages = chat.messages.slice(-12);
-      paint();
+      paintChat?.();
     };
+    paintChat = paint;
     paint();
-    if (!base) status.textContent = '이 화면에서는 AI 대화가 연결돼 있지 않아요. 공개 앱에서 쓸 수 있어요.';
     page('ZERO에게 물어보기',
       el('section', {class: 'block'}, log, el('form', {class: 'chat-form', onsubmit: submit}, input, send), status),
       U.note('AI가 만든 답이라 틀릴 수 있어요. 투자 권유가 아니고, 내 계좌나 실제 시세를 조회하지 못해요. 무료 한도 안에서만 동작해서 하루 사용량이 정해져 있어요.'));
@@ -262,6 +269,10 @@
   const PAGES = {macro, news, reports, study, ask, settings};
   U.route('more', {
     title: (arg) => (MENU.find(([key]) => key === arg)?.[2]) || '더보기',
-    show: (arg) => (PAGES[arg] || menu)()
+    show(arg) {
+      const token = ++pageToken;
+      paintChat = null;
+      return (Object.hasOwn(PAGES, arg) ? PAGES[arg] : menu)(token);
+    }
   });
 })();

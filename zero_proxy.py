@@ -222,15 +222,30 @@ async def api(request):
     path = '/api/' + request.path_params['path']
     if path == '/api/research/consult-asset' and request.method == 'POST':
         try:
-            from zero.market_intelligence import consult_investor_on_specific_asset
-            body = await request.json()
+            if request.headers.get('Content-Type', '').split(';', 1)[0].strip().lower() != 'application/json':
+                raise ValueError
+            raw = bytearray()
+            async for chunk in request.stream():
+                if len(raw) + len(chunk) > 8192:
+                    raise ValueError
+                raw.extend(chunk)
+            body = json.loads(raw)
+            if not isinstance(body, dict) or not set(body).issubset({'investor_id', 'asset', 'question'}):
+                raise ValueError
             inv_id = body.get('investor_id', 'WARREN_BUFFETT')
             asset = body.get('asset', 'NVDA')
             q = body.get('question', '')
+            if (any(not isinstance(value, str) or len(value) > limit
+                    for value, limit in ((inv_id, 64), (asset, 200), (q, 2000))) or not asset.strip()):
+                raise ValueError
+        except (ValueError, TypeError, RecursionError):
+            return JSONResponse({'error': 'CONSULT_ASSET_INVALID'}, status_code=400)
+        try:
+            from zero.market_intelligence import consult_investor_on_specific_asset
             res = consult_investor_on_specific_asset(inv_id, asset, q)
             return JSONResponse(res, headers={'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff'})
-        except Exception as e:
-            return JSONResponse({'error': 'CONSULT_ASSET_FAILED', 'detail': type(e).__name__}, status_code=500)
+        except Exception:
+            return JSONResponse({'error': 'CONSULT_ASSET_FAILED'}, status_code=500)
 
     if request.method != 'GET':
         # Account refresh and office requests run only on the owner's PC.

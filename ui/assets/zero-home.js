@@ -90,13 +90,16 @@
   }
 
   // ---- 관심 종목 ------------------------------------------------------------------------------
+  let watchToken = 0;
   async function paintWatch() {
+    const token = ++watchToken;
     const list = U.watch.list();
     if (!list.length) {
       fill('watch', U.empty('아직 담은 종목이 없어요. 종목 화면에서 하트를 누르면 여기에 모여요.'), el('a', {class: 'button ghost', href: '#discover', text: '종목 찾아보기'}));
       return;
     }
     const quoteMap = await U.quotes(list.map((item) => item.id));
+    if (token !== watchToken) return;
     fill('watch', el('ul', {class: 'rows'}, list.map((item) => {
       const quote = quoteMap.get(item.id);
       return U.stockRow({id: item.id, name: item.name, sub: item.id.split(':')[1], value: quote ? C.priceText(quote.price, quote.currency) : null, percent: quote ? quote.changePercent : undefined, heart: true});

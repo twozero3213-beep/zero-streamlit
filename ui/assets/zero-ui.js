@@ -108,15 +108,19 @@
 
   // 여러 종목 시세를 한 번에. /api/market/quote가 없는 곳에서는 빈 Map.
   async function quotes(ids) {
-    const symbols = [...new Set(ids)].filter(Boolean).map((id) => id.split(':')[1]);
-    if (!symbols.length) return new Map();
-    const data = await api('api/market/quote?symbols=' + symbols.map(encodeURIComponent).join(','), 15);
-    return C.quoteMap(data);
+    const symbols = [...new Set(ids)].filter(Boolean), map = new Map();
+    for (let offset = 0; offset < symbols.length; offset += 30) {
+      const data = await api('api/market/quote?symbols=' + symbols.slice(offset, offset + 30).map(encodeURIComponent).join(','), 15);
+      for (const [id, quote] of C.quoteMap(data)) map.set(id, quote);
+    }
+    return map;
   }
 
   // ---- 저장(이 브라우저에만) ------------------------------------------------------------------
+  const visitStore = new Map();
   const store = {
     get(key, fallback) {
+      if (visitStore.has(key)) return visitStore.get(key);
       try {
         const raw = localStorage.getItem(key);
         return raw === null ? fallback : JSON.parse(raw);
@@ -125,7 +129,8 @@
       }
     },
     set(key, value) {
-      try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) { /* 저장이 막힌 브라우저에서는 이번 방문에만 유지 */ }
+      try { localStorage.setItem(key, JSON.stringify(value)); visitStore.delete(key); }
+      catch (_) { visitStore.set(key, value); }
     }
   };
 

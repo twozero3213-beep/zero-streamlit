@@ -31,6 +31,37 @@ class BridgeTests(unittest.TestCase):
         rebuilt=build_ui.relative(script)
         self.assertIn('fetch(`${base}/api/lobby/dialogue`,',rebuilt)
         self.assertNotIn("base + 'api/lobby/dialogue'",rebuilt)
+
+    def test_invalid_build_input_preserves_existing_ui_and_modules(self):
+        from tempfile import TemporaryDirectory
+        import build_ui
+        for invalid in ('javascript', 'collector'):
+            with self.subTest(invalid=invalid), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                source = root / 'source'
+                assets = source / 'assets'
+                assets.mkdir(parents=True)
+                (assets / 'app.js').write_bytes(b'\xff' if invalid == 'javascript' else b'const value = 1;')
+                (assets / 'manifest.webmanifest').write_text('{"id":"/"}', encoding='utf-8')
+                (source / 'index.html').write_text('<html data-zero-hosted="true"><body></body></html>', encoding='utf-8')
+                output = root / 'ui'
+                output.mkdir()
+                names = ('ui/index.html', 'zero_trend_filter.py', 'zero_streamlit_chart.py', 'chart_licenses.txt',
+                         'zero_statistics.py', 'zero_macro.py', 'zero_gauges.py', 'zero_reports.py', 'briefing_sources.json')
+                for name in names:
+                    (root / name).write_bytes(b'previous build')
+                before = {name: (root / name).read_bytes() for name in names}
+                def committed(command, **kwargs):
+                    code = 'def broken(\n' if command[-1] == 'HEAD:zero/research_desk.py' else '# synthetic committed input\n'
+                    return build_ui.subprocess.CompletedProcess(command, 0, stdout=code)
+                with mock.patch.object(build_ui, 'OUT', output), mock.patch.object(build_ui, '__file__', str(root / 'build_ui.py')), \
+                        mock.patch.object(build_ui, 'EXTRAS', root / 'extras'), mock.patch.object(build_ui.subprocess, 'run', side_effect=committed), \
+                        mock.patch.dict('os.environ', {'ZERO_LOBBY_API': ''}):
+                    with self.assertRaises((UnicodeDecodeError, SyntaxError)):
+                        build_ui.build(source, root / 'checkout' if invalid == 'collector' else None)
+                after = {name: (root / name).read_bytes() if (root / name).exists() else None for name in names}
+                self.assertEqual(after, before)
+
     def test_pinned_vendor_sources_and_licenses_keep_exact_bytes(self):
         from tempfile import TemporaryDirectory
         import build_ui

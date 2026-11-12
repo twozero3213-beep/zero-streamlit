@@ -9,14 +9,12 @@ Integrates:
 
 Features:
 - In-memory thread-safe caching (TTL 15s for quotes, token renewal based on expires_in)
-- Zero credentials leak: Reads from env / zero.env locally, never returns secrets
+- Public deployment uses keyless Naver/Yahoo quotes without loading broker credentials
 - Normalizes output format with market, currency, current_price, change, change_percent, timestamp
 """
 import base64
 from datetime import datetime, timezone
 import json
-import os
-from pathlib import Path
 import re
 import threading
 import time
@@ -61,33 +59,13 @@ _TOSS_TOKEN_CACHE = {"token": None, "expires_at": 0}
 _KIS_TOKEN_CACHE = {"token": None, "expires_at": 0}
 _CACHE_LOCK = threading.Lock()
 QUOTE_TTL_SECONDS = 15
+MAX_QUOTE_BATCH = 30
+MAX_QUOTE_CACHE = 512
 
 
 def _get_zero_env() -> dict:
-    """Read credentials from OS env or zero.env files without printing secrets."""
-    env = {}
-    candidates = [
-        Path(r"C:\Users\USER\Desktop\AI 툴\공용 AI툴 자료\비공개 API\zero.env"),
-        Path(r"C:\Users\USER\stock-bot\.env"),
-    ]
-    for p in candidates:
-        if p.is_file():
-            try:
-                with open(p, "r", encoding="utf-8", errors="ignore") as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and not line.startswith("#") and "=" in line:
-                            k, v = line.split("=", 1)
-                            env[k.strip()] = v.strip().strip('"').strip("'")
-                break
-            except Exception:
-                pass
-    # OS env overrides
-    for k in ["TOSS_APP_KEY", "TOSS_SECRET_KEY", "KIS_MOCK_APP_KEY", "KIS_MOCK_APP_SECRET"]:
-        val = os.environ.get(k)
-        if val:
-            env[k] = val
-    return env
+    """The public deployment uses keyless quotes and never loads broker credentials."""
+    return {}
 
 
 def _clean_symbol(raw: str) -> tuple[str, str, str]:
@@ -98,30 +76,40 @@ def _clean_symbol(raw: str) -> tuple[str, str, str]:
          'US:NVDA'   -> ('NVDA', 'US', 'USD')
          'NVDA'      -> ('NVDA', 'US', 'USD')
     """
-    raw = str(raw or "").strip().upper()
-    if raw.startswith("KR:"):
+    if not isinstance(raw, str):
+        raise ValueError("SYMBOL_INVALID")
+    raw = raw.strip().upper()
+    if raw.startswith("KR:") and RE_KR_CODE.fullmatch(raw[3:]):
         code = raw[3:]
         return code, "KR", "KRW"
-    elif raw.startswith("US:"):
+    elif raw.startswith("US:") and RE_US_CODE.fullmatch(raw[3:]):
         code = raw[3:]
         return code, "US", "USD"
     elif RE_KR_CODE.fullmatch(raw):
         return raw, "KR", "KRW"
     elif RE_US_CODE.fullmatch(raw):
         return raw, "US", "USD"
-    raise ValueError(f"SYMBOL_INVALID: {raw}")
+    raise ValueError("SYMBOL_INVALID")
+
+
+def _prune_quote_cache(now):
+    """Call under _CACHE_LOCK; expired prices and old identities must not accumulate."""
+    for code, (_, expires_at) in list(_QUOTE_CACHE.items()):
+        if expires_at <= now:
+            del _QUOTE_CACHE[code]
+    while len(_QUOTE_CACHE) > MAX_QUOTE_CACHE:
+        del _QUOTE_CACHE[next(iter(_QUOTE_CACHE))]
 
 
 def _get_toss_token(env: dict) -> str | None:
-    now = time.time()
-    with _CACHE_LOCK:
-        if _TOSS_TOKEN_CACHE["token"] and _TOSS_TOKEN_CACHE["expires_at"] > now + 30:
-            return _TOSS_TOKEN_CACHE["token"]
-
     app_key = env.get("TOSS_APP_KEY")
     secret = env.get("TOSS_SECRET_KEY")
     if not app_key or not secret:
         return None
+    now = time.time()
+    with _CACHE_LOCK:
+        if _TOSS_TOKEN_CACHE["token"] and _TOSS_TOKEN_CACHE["expires_at"] > now + 30:
+            return _TOSS_TOKEN_CACHE["token"]
 
     try:
         creds = base64.b64encode(f"{app_key}:{secret}".encode()).decode()
@@ -243,12 +231,11 @@ def _get_kis_token(env: dict) -> tuple[str | None, str, str]:
     base = "https://openapivts.koreainvestment.com:29443"
     app_key = env.get("KIS_MOCK_APP_KEY")
     app_secret = env.get("KIS_MOCK_APP_SECRET")
+    if not app_key or not app_secret:
+        return None, base, ""
     with _CACHE_LOCK:
         if _KIS_TOKEN_CACHE["token"] and _KIS_TOKEN_CACHE["expires_at"] > now + 60:
             return _KIS_TOKEN_CACHE["token"], base, app_key
-
-    if not app_key or not app_secret:
-        return None, base, ""
 
     try:
         body = json.dumps({"grant_type": "client_credentials", "appkey": app_key, "appsecret": app_secret}).encode("utf-8")
@@ -365,6 +352,7 @@ def fetch_stock_quote(raw_symbol: str) -> dict:
 
     # Check cache
     with _CACHE_LOCK:
+        _prune_quote_cache(now)
         cached = _QUOTE_CACHE.get(code)
         if cached and cached[1] > now:
             return cached[0]
@@ -396,24 +384,23 @@ def fetch_stock_quote(raw_symbol: str) -> dict:
 
     with _CACHE_LOCK:
         _QUOTE_CACHE[code] = (quote, now + QUOTE_TTL_SECONDS)
+        _prune_quote_cache(now)
 
     return quote
 
 
 def fetch_multiple_quotes(symbols: list[str]) -> dict[str, dict]:
     """Fetch multiple quotes optimizing batch requests via Toss first."""
-    parsed = []
-    for s in symbols:
-        try:
-            parsed.append(_clean_symbol(s))
-        except ValueError:
-            pass
+    if not isinstance(symbols, list) or len(symbols) > MAX_QUOTE_BATCH:
+        raise ValueError("QUOTE_BATCH_LIMIT")
+    parsed = list(dict.fromkeys(_clean_symbol(s) for s in symbols))
 
     now = time.time()
     results = {}
     missing_codes = []
 
     with _CACHE_LOCK:
+        _prune_quote_cache(now)
         for code, market, curr in parsed:
             cached = _QUOTE_CACHE.get(code)
             if cached and cached[1] > now:
@@ -425,13 +412,16 @@ def fetch_multiple_quotes(symbols: list[str]) -> dict[str, dict]:
         env = _get_zero_env()
         toss_res = _fetch_from_toss(missing_codes, env)
         with _CACHE_LOCK:
-            for code, q in toss_res.items():
-                _QUOTE_CACHE[code] = (q, now + QUOTE_TTL_SECONDS)
-                results[code] = q
+            for code in missing_codes:
+                q = toss_res.get(code)
+                if q:
+                    _QUOTE_CACHE[code] = (q, now + QUOTE_TTL_SECONDS)
+                    results[code] = q
+            _prune_quote_cache(now)
 
         for code, market, curr in parsed:
             if code not in results:
-                quote = fetch_stock_quote(code)
+                quote = fetch_stock_quote(market + ":" + code)
                 # 변경: 시세를 못 구한 종목은 결과에서 뺀다(가짜 값으로 채우지 않는다).
                 if quote:
                     results[code] = quote
@@ -449,7 +439,7 @@ def get_quote_response(path_or_query: str) -> tuple[int, dict]:
 
         now_iso = datetime.now(timezone.utc).isoformat()
         if symbols_param:
-            syms = [s.strip() for s in symbols_param.split(",") if s.strip()]
+            syms = [s.strip() for s in symbols_param.split(",")]
             quotes = fetch_multiple_quotes(syms)
             # 변경: 못 구한 종목은 missing으로 알려 화면이 '시세 없음'을 정직하게 보여 주게 한다.
             missing = []
@@ -466,8 +456,11 @@ def get_quote_response(path_or_query: str) -> tuple[int, dict]:
         if not quote:
             return 503, {"status": "UNAVAILABLE", "quote": None, "timestamp": now_iso}
         return 200, {"status": "OK", "quote": quote, "timestamp": now_iso}
-    except Exception as e:
-        return 400, {"status": "ERROR", "error": str(e)}
+    except ValueError as error:
+        code = "QUOTE_BATCH_LIMIT" if error.args == ("QUOTE_BATCH_LIMIT",) else "SYMBOL_INVALID"
+        return 400, {"status": "ERROR", "error": code}
+    except Exception:
+        return 400, {"status": "ERROR", "error": "QUOTE_REQUEST_INVALID"}
 
 
 def get_live_quotes_endpoint(store=None) -> tuple[int, dict]:
@@ -481,11 +474,17 @@ def get_live_quotes_endpoint(store=None) -> tuple[int, dict]:
             for h in holdings:
                 sym = h.get('symbol')
                 if sym and sym not in symbols:
+                    try:
+                        _clean_symbol(sym)
+                    except ValueError:
+                        continue
                     symbols.append(sym)
         except Exception:
             pass
 
-    quotes = fetch_multiple_quotes(symbols)
+    quotes = {}
+    for offset in range(0, len(symbols), MAX_QUOTE_BATCH):
+        quotes.update(fetch_multiple_quotes(symbols[offset:offset + MAX_QUOTE_BATCH]))
     now_iso = datetime.now(timezone.utc).isoformat()
 
     quote_rows = []

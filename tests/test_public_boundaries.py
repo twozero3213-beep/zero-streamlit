@@ -1,4 +1,5 @@
 """Synthetic public adapter boundaries; no provider or owner runtime access."""
+import asyncio
 import gzip
 import io
 import json
@@ -6,6 +7,8 @@ import unittest
 from datetime import datetime, timezone
 from unittest import mock
 from urllib.error import HTTPError
+
+from starlette.requests import Request
 
 import zero_macro
 import zero_proxy
@@ -128,3 +131,77 @@ class KoreanReleaseTests(unittest.TestCase):
                     zero_macro._release(client, '213', '소비자물가동향', datetime(2026, month, day, 14, 59, tzinfo=timezone.utc))
                 actual = zero_macro._release(client, '213', '소비자물가동향', datetime(2026, month, day, 15, 0, tzinfo=timezone.utc))
                 self.assertEqual(actual[2], published)
+
+
+class PublicConsultInputTests(unittest.TestCase):
+    def setUp(self):
+        patch = mock.patch('zero.market_intelligence.consult_investor_on_specific_asset', return_value={'state': 'SYNTHETIC'})
+        self.consult = patch.start()
+        self.addCleanup(patch.stop)
+
+    def call(self, body=b'{}', content_type='application/json', chunks=None):
+        parts = [body] if chunks is None else chunks
+        messages = [{'type': 'http.request', 'body': part, 'more_body': index < len(parts) - 1}
+                    for index, part in enumerate(parts)]
+        self.received = 0
+
+        async def receive():
+            self.received += 1
+            return messages.pop(0)
+
+        headers = [] if content_type is None else [(b'content-type', content_type.encode())]
+        scope = {'type': 'http', 'method': 'POST', 'path': '/zero/api/research/consult-asset',
+                 'headers': headers, 'query_string': b'', 'path_params': {'path': 'research/consult-asset'}}
+        return asyncio.run(zero_proxy.api(Request(scope, receive)))
+
+    def assert_invalid(self, response):
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(json.loads(response.body), {'error': 'CONSULT_ASSET_INVALID'})
+        self.consult.assert_not_called()
+
+    def test_defaults_and_static_template_arguments_are_preserved(self):
+        response = self.call()
+        self.assertEqual((response.status_code, json.loads(response.body)), (200, {'state': 'SYNTHETIC'}))
+        self.consult.assert_called_once_with('WARREN_BUFFETT', 'NVDA', '')
+        self.consult.reset_mock()
+        values = {'investor_id': 'warren-buffett', 'asset': '삼성전자', 'question': '이 종목은?'}
+        response = self.call(json.dumps(values, ensure_ascii=False).encode(), 'application/json; charset=utf-8')
+        self.assertEqual(response.status_code, 200)
+        self.consult.assert_called_once_with(values['investor_id'], values['asset'], values['question'])
+
+    def test_json_object_and_content_type_are_required(self):
+        for content_type in (None, 'text/plain', 'application/jsonx'):
+            with self.subTest(content_type=content_type):
+                self.assert_invalid(self.call(content_type=content_type))
+        for raw in (b'{', b'null', b'[]', b'1', b'true', b'"text"'):
+            with self.subTest(raw=raw):
+                self.assert_invalid(self.call(raw))
+
+    def test_unknown_fields_types_and_oversized_strings_are_invalid(self):
+        invalid = [{'extra': 'x'}, {'asset': ''}, {'asset': ' \t '},
+                   *({field: value} for field in ('investor_id', 'asset', 'question') for value in (None, [], 123)),
+                   {'investor_id': 'x' * 65}, {'asset': 'x' * 201}, {'question': 'x' * 2001}]
+        for value in invalid:
+            with self.subTest(value=value):
+                self.assert_invalid(self.call(json.dumps(value).encode()))
+
+    def test_string_limits_are_inclusive(self):
+        values = {'investor_id': 'x' * 64, 'asset': 'x' * 200, 'question': 'x' * 2000}
+        response = self.call(json.dumps(values).encode())
+        self.assertEqual(response.status_code, 200)
+        self.consult.assert_called_once_with(values['investor_id'], values['asset'], values['question'])
+
+    def test_body_limit_is_in_bytes_and_stops_reading_the_stream(self):
+        response = self.call(b'{}' + b' ' * 8190)
+        self.assertEqual(response.status_code, 200)
+        self.consult.reset_mock()
+        self.assert_invalid(self.call(b'{}' + b' ' * 8191))
+        multibyte = json.dumps({'asset': '\U0001f600' * 200, 'question': '\U0001f600' * 2000}, ensure_ascii=False).encode()
+        self.assert_invalid(self.call(multibyte))
+        self.assert_invalid(self.call(chunks=[b' ' * 4096, b' ' * 4097, b'{}']))
+        self.assertEqual(self.received, 2)
+
+    def test_internal_failure_has_no_exception_details(self):
+        self.consult.side_effect = RuntimeError('SYNTHETIC_PRIVATE_PROVIDER_TEXT')
+        response = self.call()
+        self.assertEqual((response.status_code, json.loads(response.body)), (500, {'error': 'CONSULT_ASSET_FAILED'}))

@@ -193,7 +193,7 @@
   function upcoming(macro, now = Date.now(), limit = 6) {
     return (Array.isArray(macro) ? macro : [])
       .map((item) => ({id: item.id, name: item.name, country: item.country, at: Date.parse(item.next_release_kst)}))
-      .filter((item) => Number.isFinite(item.at) && item.at >= now - DAY_MS / 2)
+      .filter((item) => Number.isFinite(item.at) && item.at >= now)
       .sort((a, b) => a.at - b.at)
       .slice(0, limit)
       .map((item) => ({...item, days: daysUntil(item.at, now)}));
@@ -253,6 +253,14 @@
       });
     });
     return map;
+  }
+
+  // 선택한 가격에 다른 원천의 등락·시각을 붙이지 않는다.
+  function stockSnapshot(quote, card, info) {
+    if (num(quote?.price) > 0) return {price: num(quote.price), changePercent: Number.isFinite(quote.changePercent) ? quote.changePercent : null, at: quote.at || null};
+    if (card?.quote?.status === 'AVAILABLE' && num(card.quote.price) > 0) return {price: num(card.quote.price), changePercent: null, at: card.quote.as_of || null};
+    if (num(info?.price) > 0) return {price: num(info.price), changePercent: Number.isFinite(info.change_rate) ? info.change_rate : null, at: null};
+    return null;
   }
 
   // /api/live-quotes 응답(보유 종목 전용)을 같은 Map 모양으로.
@@ -326,7 +334,7 @@
 
   const api = {
     num, cut2, direction, signed, diffText, percentText, wonText, priceText, sessions, reprice, savedPortfolio, sparkPoints, historyValues,
-    trendOf, gauge, upcoming, daysUntil, ddayText, ageText, validRank, quoteMap, liveQuoteMap, searchCompanies, savingsPlan, averageDown,
+    trendOf, gauge, upcoming, daysUntil, ddayText, ageText, validRank, quoteMap, liveQuoteMap, stockSnapshot, searchCompanies, savingsPlan, averageDown,
     RANK_KINDS, RANK_MARKETS
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

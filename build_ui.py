@@ -27,6 +27,7 @@ def build(source, checkout=None):
     output = OUT.resolve()
     filter_source = None
     chart_sources = {}
+    public_modules = {}
     if checkout:
         filter_source = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/trend_filter.py'],
                                        capture_output=True, check=True, encoding='utf-8').stdout
@@ -42,7 +43,7 @@ def build(source, checkout=None):
     source_html = (source / 'index.html').read_text(encoding='utf-8')
     if 'data-zero-hosted="true"' not in source_html:
         raise ValueError('HOSTED_FLAG_MISSING')
-    # Reject invalid configuration and missing committed inputs before replacing the UI.
+    # Reject invalid inputs before replacing the UI or generated modules.
     api = os.environ.get('ZERO_LOBBY_API', '').strip().rstrip('/')
     if api and not re.fullmatch(r'https?://[A-Za-z0-9.:-]+', api):
         raise SystemExit('ZERO_LOBBY_API_INVALID')
@@ -54,17 +55,41 @@ def build(source, checkout=None):
         for name in ('macro_sources.py', 'market_gauges.py', 'briefing_sources.py', 'research_desk.py', 'company_research.py', 'data/briefing_sources.json'):
             public[name] = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/' + name],
                                           capture_output=True, check=True, encoding='utf-8').stdout
+        # Ship only the pure statistics used by public collectors, excluding owner file/ledger APIs.
+        statistics = ['from datetime import date', 'from decimal import Decimal, localcontext', 'import re',
+                      "INVALID = 'RESEARCH_DESK_INVALID'",
+                      'ERRORS = (OSError, ValueError, TypeError, KeyError, UnicodeError, ArithmeticError, RecursionError)']
+        for name, selected in (('company_research.py', {'_object', '_day'}),
+                               ('research_desk.py', {'_list', '_normal', '_decimal', '_period', '_history', '_cutoff', 'descriptive_statistics'})):
+            for item in ast.parse(public[name]).body:
+                if isinstance(item, ast.FunctionDef) and item.name in selected:
+                    statistics.append(ast.get_source_segment(public[name], item))
+        public_modules['zero_statistics.py'] = '\n\n'.join(statistics) + '\n'
+        for name, target in (('macro_sources.py', 'zero_macro.py'), ('market_gauges.py', 'zero_gauges.py'), ('briefing_sources.py', 'zero_reports.py')):
+            code = public[name].split('\ndef main(', 1)[0]
+            code = code.replace('from zero.research_desk import descriptive_statistics', 'from zero_statistics import descriptive_statistics')
+            if name == 'macro_sources.py':
+                code = code.replace('    at = now or datetime.now(timezone.utc)', '    from zero_research import read_bls\n    at = now or datetime.now(timezone.utc)')
+                code = code.replace('client.read(BLS_URL, payload=', 'read_bls(client, payload=')
+            code = code.replace('from zero.company_sources import NoRedirect', 'from zero_discovery import _NoRedirect as NoRedirect')
+            code = code.replace('from zero.manager_journal import _url\n', '').replace('canonical = _url(url)', 'canonical = public_url(url)')
+            code = code.replace("files('zero').joinpath('data/briefing_sources.json')", "Path(__file__).with_name('briefing_sources.json')")
+            code = code.replace('from importlib.resources import files\n', '').replace('import argparse\n', '')
+            public_modules[target] = code.rstrip() + '\n'
+        public_modules['briefing_sources.json'] = public['data/briefing_sources.json']
+    scripts = {js.name: relative(js.read_text(encoding='utf-8'))
+               for js in (source / 'assets').glob('*.js') if not js.name.startswith('vendor-')}
+    styles = {css.name: re.sub(r"""url\((['"]?)/assets/""", r'url(\1', css.read_text(encoding='utf-8'))
+              for css in (source / 'assets').glob('*.css')}
     if OUT.exists():
         shutil.rmtree(output)
     shutil.copytree(source / 'assets', OUT / 'assets')
-    for js in (OUT / 'assets').glob('*.js'):
-        # Reviewed vendor bytes and licenses are copied intact, including line endings.
-        if js.name.startswith('vendor-'):
-            continue
-        js.write_text(relative(js.read_text(encoding='utf-8')), encoding='utf-8')
+    # Reviewed vendor bytes and licenses are copied intact, including line endings.
+    for name, content in scripts.items():
+        (OUT / 'assets' / name).write_text(content, encoding='utf-8')
     # CSS and the manifest resolve URLs against their own location (assets/).
-    for css in (OUT / 'assets').glob('*.css'):
-        css.write_text(re.sub(r"""url\((['"]?)/assets/""", r'url(\1', css.read_text(encoding='utf-8')), encoding='utf-8')
+    for name, content in styles.items():
+        (OUT / 'assets' / name).write_text(content, encoding='utf-8')
     manifest = OUT / 'assets' / 'manifest.webmanifest'
     text = manifest_source.replace('"/assets/', '"')
     manifest.write_text(re.sub(r'"(id|start_url|scope)":"/"', r'"\1":"../"', text), encoding='utf-8')
@@ -89,30 +114,8 @@ def build(source, checkout=None):
     for name, content in chart_sources.items():
         target = 'zero_streamlit_chart.py' if name.endswith('.py') else name
         (Path(__file__).parent / target).write_text(content, encoding='utf-8')
-    if checkout:
-        # Ship only the pure statistics used by public collectors, excluding owner file/ledger APIs.
-        statistics = ['from datetime import date', 'from decimal import Decimal, localcontext', 'import re',
-                      "INVALID = 'RESEARCH_DESK_INVALID'",
-                      'ERRORS = (OSError, ValueError, TypeError, KeyError, UnicodeError, ArithmeticError, RecursionError)']
-        for name, selected in (('company_research.py', {'_object', '_day'}),
-                               ('research_desk.py', {'_list', '_normal', '_decimal', '_period', '_history', '_cutoff', 'descriptive_statistics'})):
-            for item in ast.parse(public[name]).body:
-                if isinstance(item, ast.FunctionDef) and item.name in selected:
-                    statistics.append(ast.get_source_segment(public[name], item))
-        root = Path(__file__).parent
-        (root / 'zero_statistics.py').write_text('\n\n'.join(statistics) + '\n', encoding='utf-8')
-        for name, target in (('macro_sources.py', 'zero_macro.py'), ('market_gauges.py', 'zero_gauges.py'), ('briefing_sources.py', 'zero_reports.py')):
-            code = public[name].split('\ndef main(', 1)[0]
-            code = code.replace('from zero.research_desk import descriptive_statistics', 'from zero_statistics import descriptive_statistics')
-            if name == 'macro_sources.py':
-                code = code.replace('    at = now or datetime.now(timezone.utc)', '    from zero_research import read_bls\n    at = now or datetime.now(timezone.utc)')
-                code = code.replace('client.read(BLS_URL, payload=', 'read_bls(client, payload=')
-            code = code.replace('from zero.company_sources import NoRedirect', 'from zero_discovery import _NoRedirect as NoRedirect')
-            code = code.replace('from zero.manager_journal import _url\n', '').replace('canonical = _url(url)', 'canonical = public_url(url)')
-            code = code.replace("files('zero').joinpath('data/briefing_sources.json')", "Path(__file__).with_name('briefing_sources.json')")
-            code = code.replace('from importlib.resources import files\n', '').replace('import argparse\n', '')
-            (root / target).write_text(code.rstrip() + '\n', encoding='utf-8')
-        (root / 'briefing_sources.json').write_text(public['data/briefing_sources.json'], encoding='utf-8')
+    for name, content in public_modules.items():
+        (Path(__file__).parent / name).write_text(content, encoding='utf-8')
     print('built', sum(1 for _ in OUT.rglob('*') if _.is_file()), 'files')
 
 
