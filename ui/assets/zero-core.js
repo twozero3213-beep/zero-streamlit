@@ -4,6 +4,7 @@
   'use strict';
 
   const DAY_MS = 86400000;
+  const YAHOO_DAILY_CLOSE_BASIS = 'YAHOO_SPLIT_ADJUSTED_DAILY_CLOSE_EX_DIVIDENDS';
 
   function num(value) {
     if (value === null || value === undefined || value === '') return NaN;
@@ -348,8 +349,11 @@
   function chartDrawdown(data) {
     if (data?.status !== 'AVAILABLE' || data.range !== '1Y' || data.interval !== '1d' || !Array.isArray(data.bars)) return {state: 'UNAVAILABLE', reason: 'HISTORY_UNAVAILABLE'};
     const checked = Date.parse(data.checked_at), market = typeof data.identity === 'string' ? data.identity.split(':')[0] : null;
-    if (!Number.isFinite(checked) || !['US', 'KR'].includes(market) || data.market !== market || data.currency !== (market === 'US' ? 'USD' : 'KRW') || data.basis !== 'UNADJUSTED_PROVIDER_COMPLETED_OHLCV'
-        || typeof data.source_url !== 'string' || !/^https:\/\/query[12]\.finance\.yahoo\.com\/v8\/finance\/chart\//.test(data.source_url)) return {state: 'UNAVAILABLE', reason: 'HISTORY_INVALID'};
+    const basis = market === 'US' ? YAHOO_DAILY_CLOSE_BASIS : 'UNADJUSTED_PROVIDER_COMPLETED_OHLCV';
+    const source = typeof data.source_url === 'string' && data.source_url.match(/^https:\/\/query[12]\.finance\.yahoo\.com\/v8\/finance\/chart\/([A-Z0-9.-]+)\?range=1y&interval=1d&includePrePost=false$/);
+    const identityMatches = source && (market === 'US' ? /^US:[A-Z][A-Z0-9.-]{0,14}$/.test(data.identity) && source[1] === data.identity.slice(3).replace(/\./g, '-')
+      : /^KR:\d{6}$/.test(data.identity) && new RegExp('^' + data.identity.slice(3) + '\\.(KS|KQ)$').test(source[1]));
+    if (!Number.isFinite(checked) || !['US', 'KR'].includes(market) || data.market !== market || data.currency !== (market === 'US' ? 'USD' : 'KRW') || data.basis !== basis || !identityMatches) return {state: 'UNAVAILABLE', reason: 'HISTORY_INVALID'};
     const today = Math.floor(checked / DAY_MS) * DAY_MS, prior = new Date(today);
     prior.setUTCFullYear(prior.getUTCFullYear() - 1);
     const start = prior.getTime();
@@ -360,19 +364,13 @@
     if (!result || rows.some((point, index) => index > 0 && Math.floor(point.time / DAY_MS) === Math.floor(rows[index - 1].time / DAY_MS))) return {state: 'UNAVAILABLE', reason: 'HISTORY_INVALID'};
     if (rows.length < 200 || result.endAt - result.startAt < 350 * DAY_MS || result.startAt - start > 7 * DAY_MS || today - result.endAt > 7 * DAY_MS) return {state: 'UNAVAILABLE', reason: 'HISTORY_TOO_SHORT'};
     if (rows.some((point, index) => index > 0 && Math.floor(point.time / DAY_MS) - Math.floor(rows[index - 1].time / DAY_MS) > 7)) return {state: 'UNAVAILABLE', reason: 'HISTORY_GAP'};
-    const splits = {
-      'US:TQQQ': {at: Date.UTC(2025, 10, 20), source: 'https://www.proshares.com/globalassets/proshares/form-8937/tqqq-form-8937.pdf'},
-      'US:SCHD': {at: Date.UTC(2024, 9, 11), source: 'https://www.schwabassetmanagement.com/products/schd'}
-    };
-    const split = splits[data.identity];
-    if (split && result.startAt <= split.at && split.at <= result.endAt) return {state: 'UNAVAILABLE', reason: 'SPLIT_UNVERIFIED', sourceUrl: split.source};
-    return {state: 'AVAILABLE', ...result, currency: data.currency, sourceUrl: data.source_url, checkedAt: data.checked_at};
+    return {state: 'AVAILABLE', ...result, currency: data.currency, sourceUrl: data.source_url, checkedAt: data.checked_at, splitAdjusted: market === 'US'};
   }
 
   const api = {
     num, cut2, direction, signed, diffText, percentText, wonText, priceText, sessions, reprice, savedPortfolio, sparkPoints, historyValues,
     maximumDrawdown, chartDrawdown, trendOf, gauge, upcoming, daysUntil, ddayText, ageText, validRank, quoteMap, liveQuoteMap, stockSnapshot, searchCompanies, savingsPlan, averageDown,
-    RANK_KINDS, RANK_MARKETS
+    RANK_KINDS, RANK_MARKETS, YAHOO_DAILY_CLOSE_BASIS
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZeroCore = api;

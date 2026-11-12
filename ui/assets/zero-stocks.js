@@ -94,10 +94,10 @@
       const risk = lastRisks[index], name = id.split(':')[1];
       const detail = !risk ? '일봉을 확인하는 중이에요.' : risk.state === 'AVAILABLE'
         ? riskDate(risk.startAt) + ' ~ ' + riskDate(risk.endAt) + ', ' + risk.count + '개 종가 · ' + risk.currency + '\n고점 ' + riskDate(risk.peakAt) + ', 저점 ' + riskDate(risk.troughAt)
-        : risk.reason === 'SPLIT_UNVERIFIED' ? '기간 안에 주식 분할이 있어 분할 보정을 확인할 때까지 표시를 보류해요.' : '1년 일봉의 기간·누락을 확인하지 못해 표시를 보류해요.';
+        : '1년 일봉의 기준·기간·누락을 확인하지 못해 표시를 보류해요.';
       return el('li', {class: 'row'}, el('span', {class: 'row-main stacked'},
         el('strong', {text: name}), el('small', {text: detail}),
-        risk?.sourceUrl ? el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: risk.state === 'AVAILABLE' ? 'Yahoo Finance 일봉 출처' : '분할 공지'}) : null),
+        risk?.sourceUrl ? el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Yahoo Finance 일봉 출처'}) : null),
       risk?.state === 'AVAILABLE' ? el('strong', {class: 'tone-down', text: C.percentText(-risk.percent)}) : null);
     });
     return U.section('1년 최대 낙폭',
@@ -105,7 +105,7 @@
       el('p', {text: '현재 제공되는 자료에는 입출금을 구분한 일별 총자산 이력이 없어 1년 낙폭과 관측기간 낙폭 모두 계산할 수 없어요.'}),
       start || observed ? U.note([start ? '참고 시작 ' + start : null, observed ? '마지막 저장 관측 ' + observed : null].filter(Boolean).join(' · ')) : null,
       el('h3', {class: 'sub-title', text: '비교 종목의 관측기간 낙폭'}), el('ul', {class: 'rows'}, rows),
-      U.note('각 관측기간에서 고점 뒤 가장 많이 떨어진 폭이에요. 수신 종가 기준이며 배당·환율·세금·수수료는 반영하지 않았어요. 거래일 일부가 빠질 수 있어 실제 장중 낙폭이나 총수익률과 달라요.'));
+      U.note('각 관측기간에서 고점 뒤 가장 많이 떨어진 폭이에요. 주식 분할을 반영한 수신 종가 기준이며 배당·환율·세금·수수료는 반영하지 않았어요. 거래일 일부가 빠질 수 있어 실제 장중 낙폭이나 총수익률과 달라요.'));
   }
 
   async function loadDrawdowns(token) {

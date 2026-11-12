@@ -6,8 +6,8 @@ from pathlib import Path
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import threading
-import time
 import unittest
 from unittest import mock
 import xml.etree.ElementTree as ET
@@ -139,24 +139,43 @@ class HeadlineLanguageTests(unittest.TestCase):
 
     def test_deadline_snapshot_retains_only_korean_and_cached_translations(self):
         entered, release = threading.Event(), threading.Event()
+        clock, workers, wait_timeouts = [100.0], [], []
+        class DeadlineFuture(headlines.Future):
+            def result(pending, timeout=None):
+                wait_timeouts.append(timeout)
+                if len(wait_timeouts) == 1 and timeout != 0:
+                    raise AssertionError('expired deadline must not receive a new wait budget')
+                return super().result(timeout=timeout)
+        class TranslationStageThread(threading.Thread):
+            def start(worker):
+                super().start()
+                workers.append(worker)
+                if not entered.wait(timeout=2):
+                    raise AssertionError('synthetic translation stage was not reached')
+                # Expire the same budget only after the intended operation is blocked.
+                clock[0] += 0.08
         def translate(row):
             entered.set()
-            release.wait(timeout=2)
+            release.wait()
             return '늦게 도착한 번역'
         try:
-            with mock.patch.object(headlines, 'COLLECT_SECONDS', 0.08):
+            with mock.patch.object(headlines, 'COLLECT_SECONDS', 0.08), \
+                 mock.patch.object(headlines, 'time', SimpleNamespace(monotonic=lambda: clock[0])), \
+                 mock.patch.object(headlines, 'Future', DeadlineFuture), \
+                 mock.patch.object(headlines.threading, 'Thread', TranslationStageThread):
                 value = self.collect('Congress approves budget', '정부 경제 대책 발표', 'Oil demand slumps',
                                      translate=translate,
                                      cached=lambda row: (True, '원유 수요 하락') if row['title'] == 'Oil demand slumps' else (False, None))
             self.assertTrue(entered.is_set())
+            self.assertEqual(wait_timeouts, [0, None], 'expired wait returns the already completed safe snapshot')
+            self.assertTrue(headlines._collect_lock.locked(), 'translation remains blocked after the response deadline')
             self.assertEqual({row['title'] for row in value['items']}, {'정부 경제 대책 발표', 'Oil demand slumps'})
             before = json.dumps(value, ensure_ascii=False)
         finally:
             release.set()
-            for _ in range(200):
-                if not headlines._collect_lock.locked():
-                    break
-                time.sleep(0.005)
+            for worker in workers:
+                worker.join(timeout=2)
+                self.assertFalse(worker.is_alive(), 'synthetic worker must finish after release')
         self.assertFalse(headlines._collect_lock.locked())
         self.assertEqual(json.dumps(value, ensure_ascii=False), before)
 

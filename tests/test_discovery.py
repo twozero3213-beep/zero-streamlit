@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
@@ -389,29 +390,47 @@ class DiscoveryTests(unittest.TestCase):
         for partial in (False, True):
             with self.subTest(partial=partial):
                 entered, release = threading.Event(), threading.Event()
+                clock, workers, calls, wait_timeouts = [100.0], [], [], []
+                class DeadlineFuture(headlines.Future):
+                    def result(pending, timeout=None):
+                        wait_timeouts.append(timeout)
+                        if len(wait_timeouts) == 1 and timeout != 0:
+                            raise AssertionError('expired deadline must not receive a new wait budget')
+                        return super().result(timeout=timeout)
+                class TranslationStageThread(threading.Thread):
+                    def start(worker):
+                        super().start()
+                        workers.append(worker)
+                        if not entered.wait(timeout=2):
+                            raise AssertionError('synthetic translation stage was not reached')
+                        # Expire the same budget only after the intended operation is blocked.
+                        clock[0] += 0.2
                 def fetch(url):
-                    time.sleep(0.02)
+                    calls.append(url)
                     if partial and 'gl=KR' in url:
                         raise OSError('synthetic feed unavailable')
                     return body
                 def translate(row):
-                    entered.set(); release.wait(timeout=2)
+                    entered.set(); release.wait()
                     return '늦게 도착한 번역'
                 try:
-                    with mock.patch.object(headlines, 'COLLECT_SECONDS', 0.2):
-                        start = time.monotonic()
+                    with mock.patch.object(headlines, 'COLLECT_SECONDS', 0.2), \
+                         mock.patch.object(headlines, 'time', SimpleNamespace(monotonic=lambda: clock[0])), \
+                         mock.patch.object(headlines, 'Future', DeadlineFuture), \
+                         mock.patch.object(headlines.threading, 'Thread', TranslationStageThread):
                         value = headlines.collect(NOW, fetch=fetch, translate=translate, cached=lambda row: (False,None))
                     self.assertTrue(entered.is_set())
-                    self.assertLess(time.monotonic()-start, 0.7)
+                    self.assertEqual(len(calls), len(headlines.QUERIES))
+                    self.assertEqual(wait_timeouts, [0, None], 'expired wait returns the already completed safe snapshot')
                     self.assertTrue(headlines._collect_lock.locked(), 'HTTP worker remains alive after deadline')
                     self.assertEqual(value['failed'], ['한국'] if partial else [])
                     self.assertEqual(value['items'], [])
                     before = json.dumps(value,ensure_ascii=False)
                 finally:
                     release.set()
-                    for _ in range(200):
-                        if not headlines._collect_lock.locked(): break
-                        time.sleep(0.005)
+                    for worker in workers:
+                        worker.join(timeout=2)
+                        self.assertFalse(worker.is_alive(), 'synthetic worker must finish after release')
                 self.assertFalse(headlines._collect_lock.locked())
                 self.assertEqual(json.dumps(value,ensure_ascii=False),before,'late translation must not mutate returned/cached snapshot')
 

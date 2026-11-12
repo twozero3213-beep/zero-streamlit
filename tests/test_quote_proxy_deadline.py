@@ -63,20 +63,22 @@ class QuoteProxyDeadlineTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_expired_deadline_reaches_worker_without_a_new_budget(self):
         observed = []
+        clock = mock.Mock(monotonic=mock.Mock(return_value=100.0))
 
         async def delayed(function, *args, **kwargs):
-            await asyncio.sleep(.07)
+            clock.monotonic.return_value = 100.07
             return function(*args, **kwargs)
 
         def worker(*args, **kwargs):
             observed.append(kwargs.get('deadline'))
             return 503, {'error': 'QUOTE_DEADLINE'}
 
-        with mock.patch.object(quotes, 'get_quote_response', side_effect=worker), mock.patch.object(zero_proxy, 'run_in_threadpool', delayed):
+        with mock.patch.object(zero_proxy, 'time', clock), mock.patch.object(quotes, 'get_quote_response', side_effect=worker), mock.patch.object(zero_proxy, 'run_in_threadpool', delayed):
             self.assert_deadline(await zero_proxy.api(self.request()))
-        self.assertEqual(len(observed), 1)
-        self.assertIsInstance(observed[0], float)
-        self.assertLess(observed[0], time.monotonic())
+        self.assertEqual(observed, [100.05])
+        self.assertLess(observed[0], clock.monotonic())
+        self.assertTrue(self.slots.acquire(blocking=False))
+        self.slots.release()
 
     async def test_saturated_admission_does_not_queue_another_job(self):
         self.assertTrue(self.slots.acquire(blocking=False))
