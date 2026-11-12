@@ -224,10 +224,15 @@
       link.classList.toggle('active', active);
       if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
     });
-    if (!current || current.name !== route.name || current.arg !== route.arg) window.scrollTo(0, 0);
+    const changed = !current || current.name !== route.name || current.arg !== route.arg;
+    const moving = Boolean(current) && changed;
+    if (changed) window.scrollTo(0, 0);
     current = route;
     document.title = (handler.title ? handler.title(route.arg) + ' | ' : '') + 'ZERO';
     handler.show(route.arg);
+    if (moving) document.getElementById('main')?.focus({preventScroll: true});
+    const status = document.getElementById('route-status');
+    if (changed && status) status.textContent = document.title.replace(/ \| ZERO$/, '') + ' 화면을 열었어요.';
   }
 
   function route(name, handler) { routes.set(name, handler); }
@@ -248,7 +253,7 @@
 
   // 종목 한 줄: 이름, 보조 글, 오른쪽 값과 등락.
   function stockRow({id, name, sub, value, percent, extra, heart = false}) {
-    const main = el('a', {class: 'row-main', href: '#stock/' + id},
+    const main = el('a', {class: 'row-main stock-row-main', href: '#stock/' + id},
       el('span', {class: 'row-name'}, el('strong', {text: name}), sub ? el('small', {text: sub}) : null),
       extra || null,
       el('span', {class: 'row-value'}, el('strong', {text: value || '시세 미확인'}), percent === undefined ? null : change(percent)));
@@ -276,6 +281,7 @@
     dialog.querySelector('#sheet-body').replaceChildren(...[body].flat());
     if (!dialog.open) dialog.showModal();
     dialog.querySelector('#sheet-body').scrollTop = 0;
+    dialog.querySelector('#sheet-title').focus({preventScroll: true});
   }
 
   // 제공처가 보낸 제목의 HTML 문자 표기(&quot; 등)를 글자로 바꾼다. 태그는 버린다.

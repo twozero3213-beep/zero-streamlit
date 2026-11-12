@@ -42,14 +42,18 @@
     </nav>
     <div class="search" role="search">
       <label class="sr-only" for="search">종목 검색</label>
-      <input id="search" type="search" placeholder="종목 이름이나 코드" autocomplete="off" role="combobox" aria-controls="search-results" aria-expanded="false">
+      <input id="search" type="search" placeholder="종목 이름이나 코드" autocomplete="off" role="combobox" aria-controls="search-results" aria-expanded="false" aria-describedby="search-hint search-status">
+      <span id="search-hint" class="sr-only">방향키로 결과를 고르고 Enter로 열 수 있어요.</span>
+      <span id="search-status" class="sr-only" role="status" aria-atomic="true"></span>
       <ul id="search-results" class="search-results" role="listbox" aria-label="검색 결과" hidden></ul>
     </div>
-    <button id="theme-toggle" class="icon-button" type="button" aria-label="화면 색 바꾸기"></button>
+    <button id="theme-toggle" class="icon-button" type="button" aria-label="화면 색 바꾸기" aria-describedby="theme-state"></button>
+    <span id="theme-state" class="sr-only"></span>
   </div>
 </header>
 
-<main id="main">
+<p id="route-status" class="sr-only" role="status" aria-atomic="true"></p>
+<main id="main" tabindex="-1">
   <section id="view-home" class="view"><p class="empty loading" role="status">불러오는 중이에요</p></section>
   <section id="view-stocks" class="view" hidden></section>
   <section id="view-discover" class="view" hidden></section>
@@ -71,7 +75,7 @@
 
 <dialog id="sheet" class="sheet" aria-labelledby="sheet-title">
   <header class="sheet-head">
-    <h2 id="sheet-title"></h2>
+    <h2 id="sheet-title" tabindex="-1"></h2>
     <button class="icon-button" type="button" data-close-dialog aria-label="닫기"></button>
   </header>
   <div id="sheet-body" class="sheet-body"></div>

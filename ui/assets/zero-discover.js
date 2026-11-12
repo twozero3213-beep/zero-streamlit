@@ -8,9 +8,16 @@
 
   // ---- 검색(머리의 검색창) --------------------------------------------------------------------
   const input = document.getElementById('search'), results = document.getElementById('search-results');
-  let searchTimer = null, searchToken = 0;
+  const searchStatus = document.getElementById('search-status');
+  let searchTimer = null, searchToken = 0, activeSearch = -1;
 
-  function closeSearch() { ++searchToken; clearTimeout(searchTimer); results.hidden = true; results.replaceChildren(); input.setAttribute('aria-expanded', 'false'); }
+  function closeSearch() {
+    ++searchToken; clearTimeout(searchTimer); activeSearch = -1;
+    results.hidden = true; results.replaceChildren();
+    input.setAttribute('aria-expanded', 'false'); input.setAttribute('aria-busy', 'false');
+    input.removeAttribute('aria-activedescendant');
+    if (searchStatus) searchStatus.textContent = '';
+  }
 
   async function runSearch() {
     const token = ++searchToken;
@@ -20,18 +27,29 @@
     if (token !== searchToken || query !== input.value.trim()) return;
     const found = C.searchCompanies(research?.companies, query);
     results.replaceChildren(...(found.length
-      ? found.map((company) => el('li', {role: 'option'}, el('a', {href: '#stock/' + company.id, onclick: () => { input.value = ''; closeSearch(); }},
+      ? found.map((company, index) => el('li', {role: 'presentation'}, el('a', {id: 'search-option-' + index, role: 'option', 'aria-selected': 'false', tabindex: '-1', href: '#stock/' + company.id, onclick: () => { input.value = ''; closeSearch(); }},
         el('strong', {text: company.name}), el('small', {text: company.symbol + ', ' + (company.market === 'US' ? '미국' : '한국')}))))
       : [el('li', {class: 'empty', text: '찾는 종목이 목록에 없어요. 이름이나 코드를 다시 확인해 주세요.'})]));
     results.hidden = false;
-    input.setAttribute('aria-expanded', 'true');
+    input.setAttribute('aria-expanded', 'true'); input.setAttribute('aria-busy', 'false');
+    if (searchStatus) searchStatus.textContent = '검색 결과 ' + found.length + '개예요.';
   }
 
-  input.addEventListener('input', () => { closeSearch(); searchTimer = setTimeout(runSearch, 150); });
+  input.addEventListener('input', () => { closeSearch(); if (input.value.trim()) input.setAttribute('aria-busy', 'true'); searchTimer = setTimeout(runSearch, 150); });
   input.addEventListener('keydown', (event) => {
     if (event.isComposing || event.keyCode === 229) return;
     if (event.key === 'Escape') { input.value = ''; closeSearch(); }
-    if (event.key === 'Enter') { event.preventDefault(); results.querySelector('a')?.click(); }
+    if (event.key === 'Tab') closeSearch();
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      const options = [...results.querySelectorAll('a')];
+      if (results.hidden || !options.length) return;
+      event.preventDefault();
+      activeSearch = event.key === 'ArrowDown' ? (activeSearch + 1) % options.length : (activeSearch < 0 ? options.length - 1 : (activeSearch - 1 + options.length) % options.length);
+      options.forEach((option, index) => option.setAttribute('aria-selected', String(index === activeSearch)));
+      input.setAttribute('aria-activedescendant', 'search-option-' + activeSearch);
+      options[activeSearch].scrollIntoView({block: 'nearest'});
+    }
+    if (event.key === 'Enter') { event.preventDefault(); const options = [...results.querySelectorAll('a')]; (options[activeSearch] || options[0])?.click(); }
   });
   document.addEventListener('click', (event) => { if (!event.target.closest('.search')) closeSearch(); });
   document.addEventListener('keydown', (event) => {
@@ -129,6 +147,24 @@
     chartHandle.timeScale().fitContent();
   }
 
+  async function drawStockDrawdown(host, id, token) {
+    const data = await U.api('api/chart?identity=' + encodeURIComponent(id) + '&range=1Y', 300);
+    if (token !== stockToken || !host.isConnected) return;
+    const risk = data?.identity === id ? C.chartDrawdown(data) : {state: 'UNAVAILABLE'};
+    if (risk.state !== 'AVAILABLE') {
+      host.replaceChildren(U.section('1년 최대 낙폭', U.note(risk.reason === 'SPLIT_UNVERIFIED'
+        ? '기간 안에 주식 분할이 있어 분할 보정을 확인할 때까지 표시를 보류해요.' : '1년 일봉의 기간·누락을 확인하지 못해 표시를 보류해요.'),
+      risk.sourceUrl ? el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: '분할 공지'}) : null));
+      return;
+    }
+    const date = (at) => new Date(at).toISOString().slice(0, 10);
+    host.replaceChildren(U.section('1년 최대 낙폭', el('p', {class: 'stock-price tone-down', text: C.percentText(-risk.percent)}),
+      el('p', {text: date(risk.startAt) + ' ~ ' + date(risk.endAt) + ', ' + risk.count + '개 종가 · ' + risk.currency}),
+      el('p', {text: '고점 ' + date(risk.peakAt) + ', 저점 ' + date(risk.troughAt)}),
+      U.note('관측기간에서 고점 뒤 가장 많이 떨어진 폭이에요. 수신 종가 기준이며 배당·환율·세금·수수료는 반영하지 않았어요. 거래일 일부가 빠질 수 있어 실제 장중 낙폭이나 총수익률과 달라요.'),
+      el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Yahoo Finance 일봉 출처'})));
+  }
+
   function fact(label, value) { return value === null || value === undefined ? null : el('div', {}, el('dt', {text: label}), el('dd', {text: value})); }
 
   // 52주 최저~최고 사이에서 지금 가격의 위치.
@@ -217,6 +253,7 @@
     const stamp = U.timeText(snapshot?.at);
 
     const chartHost = el('div', {class: 'slot'});
+    const drawdownHost = el('div', {}, U.section('1년 최대 낙폭', U.loading('일봉을 확인하는 중이에요')));
     let range = '3M';
     const chartBlock = el('section', {class: 'block'},
       U.segmented(RANGES, range, (next) => { range = next; drawChart(chartHost, id, range); }, '차트 기간'), chartHost);
@@ -245,9 +282,10 @@
       head, priceLine,
       U.note(stamp ? stamp + ' 기준, 공개 시세라 조금 늦을 수 있어요.' : '시세 기준 시각을 확인하지 못했어요.'),
       el('div', {class: 'columns'},
-        el('div', {class: 'column'}, chartBlock, factBlock, investorBlock(info?.investors)),
+        el('div', {class: 'column'}, chartBlock, drawdownHost, factBlock, investorBlock(info?.investors)),
         el('div', {class: 'column'}, companyBlock(company), newsHost, peerBlock)));
     drawChart(chartHost, id, range);
+    drawStockDrawdown(drawdownHost, id, token);
 
     const [stockNews, companyNews] = await Promise.all([
       kr ? U.api('api/stock-news?code=' + code, 300) : null,

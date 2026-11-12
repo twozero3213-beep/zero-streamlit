@@ -8,10 +8,10 @@
 
   // 지수 대신 지수를 따라가는 ETF 가격을 쓴다(지수 자체의 무료 실시간 값은 연결돼 있지 않다).
   const MARKET = [
-    ['KR:069500', '코스피 200', 'KODEX 200'],
-    ['KR:229200', '코스닥 150', 'KODEX 코스닥150'],
-    ['US:SPY', 'S&P 500', 'SPY'],
-    ['US:QQQ', '나스닥 100', 'QQQ']
+    ['KR:069500', '코스피 200', 'KODEX 200', false],
+    ['KR:229200', '코스닥 150', 'KODEX 코스닥150', false],
+    ['US:SPY', 'S&P 500', 'SPY', true],
+    ['US:QQQ', '나스닥 100', 'QQQ', true]
   ];
 
   const slots = {};
@@ -71,9 +71,10 @@
     const now = C.sessions();
     const chips = el('div', {class: 'chips'}, sessionChip('국내 장', now.kr), sessionChip('미국 장', now.us));
     const quoteMap = await U.quotes(MARKET.map(([id]) => id));
-    const rows = MARKET.filter(([id]) => quoteMap.has(id)).map(([id, label, product]) => {
+    const rows = MARKET.filter(([id]) => quoteMap.has(id)).map(([id, label, product, chartSupported]) => {
       const quote = quoteMap.get(id), holder = el('span', {class: 'row-spark'});
-      D.closes(id).then((values) => { const line = values && U.sparkline(values, C.direction(quote.changePercent)); if (line) holder.append(line); });
+      // 서버 기본 차트 목록의 SPY·QQQ만 요청하고 미등록 국내 ETF는 시세만 보여 준다.
+      if (chartSupported) D.closes(id).then((values) => { const line = values && U.sparkline(values, C.direction(quote.changePercent)); if (line) holder.append(line); });
       return U.stockRow({id, name: label, sub: product, value: C.priceText(quote.price, quote.currency), percent: quote.changePercent, extra: holder});
     });
     if (!rows.length) { fill('market', chips, U.empty('시세를 불러오지 못했어요.')); return; }
@@ -165,11 +166,12 @@
       el('div', {class: 'block-head'}, el('h2', {class: 'block-title', text: '내 자산'}), el('span', {class: 'block-tools'}, hide, refresh)),
       slot('assets'));
     root.replaceChildren(
-      el('h1', {class: 'sr-only', text: '홈'}),
+      el('div', {class: 'home-heading'}, el('h1', {text: '홈'}),
+        el('a', {class: 'home-research', href: '#more/reports'}, U.icon('report', 20), '기관 리서치')),
       // 넓은 화면은 두 단, 휴대폰은 한 줄로 풀고 data-order 순서로 놓는다.
       el('div', {class: 'columns home-grid'},
-        el('div', {class: 'column'}, ordered(1, assets), ordered(3, U.section('오늘 시장', slot('market'))), ordered(6, U.section('다가오는 발표', slot('calendar')))),
-        el('div', {class: 'column'}, ordered(2, U.section('10년 전 1억원을 넣었다면', slot('decade'))), ordered(4, U.section('관심 종목', slot('watch'))), ordered(5, U.section('실시간 순위', slot('rank'))))));
+        el('div', {class: 'column'}, ordered(1, assets), ordered(2, U.section('오늘 시장', slot('market'))), ordered(6, U.section('다가오는 발표', slot('calendar')))),
+        el('div', {class: 'column'}, ordered(3, U.section('10년 전 1억원을 넣었다면', slot('decade'))), ordered(4, U.section('관심 종목', slot('watch'))), ordered(5, U.section('실시간 순위', slot('rank'))))));
     document.addEventListener('zero-watch-changed', paintWatch);
     built = true;
   }

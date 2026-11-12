@@ -332,9 +332,46 @@
     };
   }
 
+  function maximumDrawdown(points) {
+    if (!Array.isArray(points) || points.length < 2 || points.some((point) => !Number.isFinite(point?.time) || point.time <= 0 || !Number.isFinite(point.value) || point.value <= 0)) return null;
+    const rows = [...points].sort((a, b) => a.time - b.time);
+    if (rows.some((point, index) => index > 0 && point.time === rows[index - 1].time)) return null;
+    let peak = rows[0], peakAt = peak.time, troughAt = peak.time, percent = 0;
+    for (const point of rows) {
+      if (point.value > peak.value) peak = point;
+      const loss = (peak.value - point.value) / peak.value * 100;
+      if (loss > percent) { percent = loss; peakAt = peak.time; troughAt = point.time; }
+    }
+    return {percent, peakAt, troughAt, startAt: rows[0].time, endAt: rows[rows.length - 1].time, count: rows.length};
+  }
+
+  function chartDrawdown(data) {
+    if (data?.status !== 'AVAILABLE' || data.range !== '1Y' || data.interval !== '1d' || !Array.isArray(data.bars)) return {state: 'UNAVAILABLE', reason: 'HISTORY_UNAVAILABLE'};
+    const checked = Date.parse(data.checked_at), market = typeof data.identity === 'string' ? data.identity.split(':')[0] : null;
+    if (!Number.isFinite(checked) || !['US', 'KR'].includes(market) || data.market !== market || data.currency !== (market === 'US' ? 'USD' : 'KRW') || data.basis !== 'UNADJUSTED_PROVIDER_COMPLETED_OHLCV'
+        || typeof data.source_url !== 'string' || !/^https:\/\/query[12]\.finance\.yahoo\.com\/v8\/finance\/chart\//.test(data.source_url)) return {state: 'UNAVAILABLE', reason: 'HISTORY_INVALID'};
+    const today = Math.floor(checked / DAY_MS) * DAY_MS, prior = new Date(today);
+    prior.setUTCFullYear(prior.getUTCFullYear() - 1);
+    const start = prior.getTime();
+    const points = data.bars.map((bar) => ({time: num(bar?.time) * 1000, value: num(bar?.close)}));
+    if (points.some((point) => !Number.isFinite(point.time) || point.time <= 0 || point.time > checked || !Number.isFinite(point.value) || point.value <= 0)) return {state: 'UNAVAILABLE', reason: 'HISTORY_INVALID'};
+    const rows = points.filter((point) => point.time >= start).sort((a, b) => a.time - b.time);
+    const result = maximumDrawdown(rows);
+    if (!result || rows.some((point, index) => index > 0 && Math.floor(point.time / DAY_MS) === Math.floor(rows[index - 1].time / DAY_MS))) return {state: 'UNAVAILABLE', reason: 'HISTORY_INVALID'};
+    if (rows.length < 200 || result.endAt - result.startAt < 350 * DAY_MS || result.startAt - start > 7 * DAY_MS || today - result.endAt > 7 * DAY_MS) return {state: 'UNAVAILABLE', reason: 'HISTORY_TOO_SHORT'};
+    if (rows.some((point, index) => index > 0 && Math.floor(point.time / DAY_MS) - Math.floor(rows[index - 1].time / DAY_MS) > 7)) return {state: 'UNAVAILABLE', reason: 'HISTORY_GAP'};
+    const splits = {
+      'US:TQQQ': {at: Date.UTC(2025, 10, 20), source: 'https://www.proshares.com/globalassets/proshares/form-8937/tqqq-form-8937.pdf'},
+      'US:SCHD': {at: Date.UTC(2024, 9, 11), source: 'https://www.schwabassetmanagement.com/products/schd'}
+    };
+    const split = splits[data.identity];
+    if (split && result.startAt <= split.at && split.at <= result.endAt) return {state: 'UNAVAILABLE', reason: 'SPLIT_UNVERIFIED', sourceUrl: split.source};
+    return {state: 'AVAILABLE', ...result, currency: data.currency, sourceUrl: data.source_url, checkedAt: data.checked_at};
+  }
+
   const api = {
     num, cut2, direction, signed, diffText, percentText, wonText, priceText, sessions, reprice, savedPortfolio, sparkPoints, historyValues,
-    trendOf, gauge, upcoming, daysUntil, ddayText, ageText, validRank, quoteMap, liveQuoteMap, stockSnapshot, searchCompanies, savingsPlan, averageDown,
+    maximumDrawdown, chartDrawdown, trendOf, gauge, upcoming, daysUntil, ddayText, ageText, validRank, quoteMap, liveQuoteMap, stockSnapshot, searchCompanies, savingsPlan, averageDown,
     RANK_KINDS, RANK_MARKETS
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

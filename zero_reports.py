@@ -10,7 +10,7 @@ from http.client import HTTPException
 import json
 from pathlib import Path
 import re
-from urllib.parse import parse_qsl, urljoin, urlsplit
+from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit
 from urllib.request import ProxyHandler, Request, build_opener
 from xml.etree import ElementTree
 
@@ -18,7 +18,7 @@ from zero_discovery import _NoRedirect as NoRedirect
 
 LIMIT = 2_000_000
 RECORD_LIMIT = 12
-HOSTS = {'www.bok.or.kr', 'toss.im', 'www.federalreserve.gov', 'www.bis.org'}
+HOSTS = {'www.bok.or.kr', 'toss.im', 'www.federalreserve.gov', 'www.bis.org', 'www.kcmi.re.kr', 'insight.factset.com'}
 TOP_KEYS = {'schema_version', 'as_of', 'sources', 'review_candidates', 'learning_authority',
             'full_text_review_count', 'model_training', 'orders'}
 RECORD_KEYS = {'id', 'source_id', 'kind', 'title', 'url', 'published_at', 'published_date',
@@ -44,6 +44,21 @@ def public_url(value):
         if not query or len(query) > 2 or len({k for k, _ in query}) != len(query):
             raise ValueError('PUBLIC_SOURCE_URL_INVALID')
         if any(k not in {'menuNo', 'nttId'} or not re.fullmatch(r'\d{1,12}', v) for k, v in query):
+            raise ValueError('PUBLIC_SOURCE_URL_INVALID')
+    elif p.hostname == 'www.kcmi.re.kr':
+        query = parse_qsl(p.query, keep_blank_values=True); parameters = dict(query)
+        valid = (not query and p.path in {'/report/report_list', '/publications/publications_list'})
+        if len(parameters) == len(query):
+            if p.path == '/report/report_view' and set(parameters) == {'report_no'}:
+                valid = bool(re.fullmatch(r'\d{1,12}', parameters['report_no']))
+            elif p.path == '/publications/pub_detail_view' and set(parameters) == {'cno', 'syear', 'zcd', 'zno'}:
+                valid = (parameters['zcd'] == '002001016' and bool(re.fullmatch(r'\d{4}', parameters['syear']))
+                         and all(re.fullmatch(r'\d{1,12}', parameters[key]) for key in ('cno', 'zno')))
+        if not valid: raise ValueError('PUBLIC_SOURCE_URL_INVALID')
+        return 'https://www.kcmi.re.kr' + p.path + ('?' + urlencode(sorted(query)) if query else '')
+    elif p.hostname == 'insight.factset.com':
+        if p.query or not (p.path == '/author/john-butters/rss.xml'
+                           or re.fullmatch(r'/[a-z0-9]+(?:-[a-z0-9]+)*', p.path)):
             raise ValueError('PUBLIC_SOURCE_URL_INVALID')
     elif p.query:
         raise ValueError('PUBLIC_SOURCE_URL_INVALID')
@@ -216,6 +231,46 @@ class _TossIndex(HTMLParser):
             self.rows.append(self.active); self.active = None; self.field = None
 
 
+class _KcmiIndex(HTMLParser):
+    def __init__(self, reports):
+        super().__init__(); self.reports = reports; self.rows = []; self.stack = []
+        self.active = None; self.depth = 0; self.issue_date = ''
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs); classes = set(attrs.get('class', '').split())
+        if tag in {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}:
+            return
+        if len(self.stack) >= 100:
+            raise ValueError('PUBLIC_SOURCE_HTML_INVALID')
+        self.stack.append((tag, classes))
+        if self.active is None:
+            report = re.fullmatch(r'rsidx_(\d{1,12})', attrs.get('id', '')) if tag == 'div' and self.reports else None
+            href = attrs.get('href', '')
+            if report or (not self.reports and tag == 'a' and href.startswith('pub_detail_view?')):
+                self.active = dict(url='/report/report_view?report_no=' + report[1] if report else href, title='', date='')
+                self.depth = len(self.stack)
+
+    def handle_data(self, data):
+        if any(tag in {'script', 'style'} for tag, _ in self.stack): return
+        classes = set().union(*(classes for _, classes in self.stack))
+        tags = [tag for tag, _ in self.stack]
+        if (not self.reports and 'sign_select' in classes and tags[-1:] == ['em']
+                and re.fullmatch(r'\d{4}\.\d{2}\.\d{2}', data.strip())):
+            self.issue_date = data.strip()
+        if self.active is not None:
+            if 'strong' in tags and (not self.reports or 'rpt_title' in classes):
+                self.active['title'] += data
+            elif self.reports and 'rpt_title' in classes and tags[-1:] == ['span']:
+                self.active['date'] += data
+
+    def handle_endtag(self, tag):
+        index = next((i for i in range(len(self.stack) - 1, -1, -1) if self.stack[i][0] == tag), None)
+        if index is None: return
+        if self.active is not None and self.depth >= index + 1:
+            self.rows.append(self.active); self.active = None
+        del self.stack[index:]
+
+
 def _records(spec, body, now):
     if not isinstance(body, bytes) or len(body) > LIMIT:
         raise ValueError('PUBLIC_SOURCE_BODY_INVALID')
@@ -246,7 +301,10 @@ def _records(spec, body, now):
                 except ValueError: pass
             candidates.append((item.findtext(namespace + 'title') or '', item.findtext(namespace + 'link') or '', published, day))
     else:
-        parser = _TossIndex(); parser.feed(text)
+        parser = _KcmiIndex(spec['format'] == 'KCMI_REPORTS_HTML') if spec['format'].startswith('KCMI_') else _TossIndex()
+        parser.feed(text)
+        if spec['format'] == 'KCMI_FOCUS_HTML':
+            for row in parser.rows: row['date'] = parser.issue_date
         for row in parser.rows[:100]:
             raw = row['date'].strip(); day = None
             if re.fullmatch(r'\d{4}\.\d{2}\.\d{2}', raw):
@@ -258,6 +316,12 @@ def _records(spec, body, now):
         try:
             url = public_url(url.strip()); title = ' '.join(unescape(title).split())[:200]
             _text(title, 200)
+            if spec['format'].startswith('KCMI_') and day is None:
+                continue
+            if spec['id'] == 'factset-earnings' and (published is None
+                    or not re.search(r'\bs&p\s*500\b', title, re.IGNORECASE)
+                    or not re.search(r'\b(?:earnings|eps)\b', title, re.IGNORECASE)):
+                continue
             if (urlsplit(url).hostname != urlsplit(spec['url']).hostname or url in seen
                     or (published and published > now)
                     or (day and day > now.astimezone(timezone(timedelta(hours=9))).date().isoformat())):

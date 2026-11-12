@@ -84,23 +84,60 @@
     return el('details', {class: 'block details'}, el('summary', {text: '이 숫자는 어떻게 계산했나요'}), ...lines.map((line) => el('p', {text: line})));
   }
 
-  let lastView = null, lastCompare = null, paintToken = 0;
+  const RISK_IDS = ['US:SPY', 'US:SCHD', 'US:TQQQ', 'US:SOXL'];
+  const riskDate = (value) => { if (value == null) return null; const date = new Date(value); return Number.isFinite(date.getTime()) && date.getTime() > 0 ? date.toISOString().slice(0, 10) : null; };
+  let lastView = null, lastCompare = null, lastRisks = [], referenceAt = null, riskHost = null, paintToken = 0;
+
+  function drawdown(view) {
+    const start = riskDate(view.startAt), observed = riskDate(referenceAt);
+    const rows = RISK_IDS.map((id, index) => {
+      const risk = lastRisks[index], name = id.split(':')[1];
+      const detail = !risk ? '일봉을 확인하는 중이에요.' : risk.state === 'AVAILABLE'
+        ? riskDate(risk.startAt) + ' ~ ' + riskDate(risk.endAt) + ', ' + risk.count + '개 종가 · ' + risk.currency + '\n고점 ' + riskDate(risk.peakAt) + ', 저점 ' + riskDate(risk.troughAt)
+        : risk.reason === 'SPLIT_UNVERIFIED' ? '기간 안에 주식 분할이 있어 분할 보정을 확인할 때까지 표시를 보류해요.' : '1년 일봉의 기간·누락을 확인하지 못해 표시를 보류해요.';
+      return el('li', {class: 'row'}, el('span', {class: 'row-main stacked'},
+        el('strong', {text: name}), el('small', {text: detail}),
+        risk?.sourceUrl ? el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: risk.state === 'AVAILABLE' ? 'Yahoo Finance 일봉 출처' : '분할 공지'}) : null),
+      risk?.state === 'AVAILABLE' ? el('strong', {class: 'tone-down', text: C.percentText(-risk.percent)}) : null);
+    });
+    return U.section('1년 최대 낙폭',
+      el('h3', {class: 'sub-title', text: 'ZERO 포트폴리오: 자료 부족'}),
+      el('p', {text: '현재 제공되는 자료에는 입출금을 구분한 일별 총자산 이력이 없어 1년 낙폭과 관측기간 낙폭 모두 계산할 수 없어요.'}),
+      start || observed ? U.note([start ? '참고 시작 ' + start : null, observed ? '마지막 저장 관측 ' + observed : null].filter(Boolean).join(' · ')) : null,
+      el('h3', {class: 'sub-title', text: '비교 종목의 관측기간 낙폭'}), el('ul', {class: 'rows'}, rows),
+      U.note('각 관측기간에서 고점 뒤 가장 많이 떨어진 폭이에요. 수신 종가 기준이며 배당·환율·세금·수수료는 반영하지 않았어요. 거래일 일부가 빠질 수 있어 실제 장중 낙폭이나 총수익률과 달라요.'));
+  }
+
+  async function loadDrawdowns(token) {
+    for (let offset = 0; offset < RISK_IDS.length; offset += 2) {
+      const ids = RISK_IDS.slice(offset, offset + 2);
+      const data = await Promise.all(ids.map((id) => U.api('api/chart?identity=' + encodeURIComponent(id) + '&range=1Y', 300)));
+      if (token !== paintToken) return;
+      data.forEach((item, index) => { lastRisks[offset + index] = item?.identity === ids[index] ? C.chartDrawdown(item) : {state: 'UNAVAILABLE'}; });
+      if (lastView) riskHost?.replaceChildren(drawdown(lastView));
+    }
+  }
+
   function render() {
+    riskHost = el('div', {}, drawdown(lastView));
     root.replaceChildren(
       el('h1', {class: 'page-title', text: '내 주식'}),
       el('div', {class: 'columns'},
         el('div', {class: 'column'}, summary(lastView), allocation(lastView), lastCompare),
-        el('div', {class: 'column'}, holdings(lastView), basis(lastView))));
+        el('div', {class: 'column'}, holdings(lastView), riskHost, basis(lastView))));
   }
 
   async function paint() {
     const token = ++paintToken;
-    lastCompare = null;
+    lastCompare = null; lastRisks = []; referenceAt = null;
+    let risksStarted = false;
     if (lastView) render(); else root.replaceChildren(el('h1', {class: 'page-title', text: '내 주식'}), U.loading());
     const show = (view) => {
       if (token !== paintToken) return;
       lastView = view;
+      if (view && !view.live) referenceAt = view.pricedAt;
       if (view) render(); else root.replaceChildren(el('h1', {class: 'page-title', text: '내 주식'}), U.empty('내 주식 자료를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'));
+      if (view && !risksStarted) { risksStarted = true; loadDrawdowns(token); }
     };
     const view = await D.portfolio(show);
     if (token !== paintToken) return;

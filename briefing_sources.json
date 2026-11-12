@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_on": "2026-10-11",
+  "reviewed_on": "2026-11-12",
   "index_only": true,
   "sources": [
     {"id":"bok-issues","label":"한국은행 BOK 이슈노트","kind":"MACRO_RESEARCH","format":"RSS","url":"https://www.bok.or.kr/portal/bbs/P0002353/news.rss?menuNo=200433"},
@@ -13,13 +13,19 @@
     {"id":"bis-releases","label":"국제결제은행 보도자료","kind":"GLOBAL_RESEARCH","format":"RSS","url":"https://www.bis.org/doclist/all_pressrels.rss"},
     {"id":"toss-us-insights","label":"토스증권 미국 투자 인사이트","kind":"INVESTMENT_EDUCATION","format":"TOSS_HTML","url":"https://toss.im/tossfeed/series/US-Investment-Insights"},
     {"id":"toss-everyday-economics","label":"토스피드 에브리데이 경제학","kind":"MICRO_EDUCATION","format":"TOSS_HTML","url":"https://toss.im/tossfeed/series/everyday-economics"},
-    {"id":"toss-economic-terms","label":"토스피드 경제 용어","kind":"ECONOMIC_EDUCATION","format":"TOSS_HTML","url":"https://toss.im/tossfeed/series/this-week-economic-terms"}
+    {"id":"toss-economic-terms","label":"토스피드 경제 용어","kind":"ECONOMIC_EDUCATION","format":"TOSS_HTML","url":"https://toss.im/tossfeed/series/this-week-economic-terms"},
+    {"id":"kcmi-reports","label":"자본시장연구원 최신보고서","kind":"EQUITY_RESEARCH","format":"KCMI_REPORTS_HTML","url":"https://www.kcmi.re.kr/report/report_list"},
+    {"id":"kcmi-focus","label":"자본시장연구원 자본시장포커스","kind":"EQUITY_RESEARCH","format":"KCMI_FOCUS_HTML","url":"https://www.kcmi.re.kr/publications/publications_list"},
+    {"id":"factset-earnings","label":"FactSet S&P 500 실적 리서치","kind":"EQUITY_RESEARCH","format":"RSS","url":"https://insight.factset.com/author/john-butters/rss.xml"}
   ],
   "provenance": [
     "https://www.bok.or.kr/static/view/popup/rss_popup.html",
     "https://toss.im/tossfeed/series",
     "https://www.federalreserve.gov/feeds/press_monetary.xml",
-    "https://www.bis.org/doclist/all_pressrels.rss"
+    "https://www.bis.org/doclist/all_pressrels.rss",
+    "https://www.kcmi.re.kr/report/report_view?report_no=2350",
+    "https://www.kcmi.re.kr/publications/pub_detail_view?cno=6883&syear=2026&zcd=002001016&zno=1944",
+    "https://insight.factset.com/sp-500-earnings-season-update-november-6-2026"
   ],
   "limits": [
     "색인 수집은 본문 열람·공시 검증·모델 학습이 아니다.",
@@ -28,6 +34,8 @@
     "토스 교육 자료는 과거 배경 자료이며 당일 경제뉴스로 취급하지 않는다.",
     "content_digest는 색인 메타데이터 지문이며 본문 수정은 별도 열람으로 확인한다.",
     "해외경제포커스는 2026년 3월 폐간 공지를 확인해 신규 자동 점검에서 제외했다.",
-    "BIS RDF 피드의 자정 표시는 정확한 발표 시각으로 사용하지 않고 날짜만 보존한다."
+    "BIS RDF 피드의 자정 표시는 정확한 발표 시각으로 사용하지 않고 날짜만 보존한다.",
+    "기관의 발행 주기와 별개로 매일 새 목록을 확인하며, 새 보고서가 없는 날은 기존 발행일을 유지한다.",
+    "FactSet 저자 RSS 중 S&P 500 실적·EPS 제목만 포함하며 유료 서비스나 원문 본문은 수집하지 않는다."
   ]
 }

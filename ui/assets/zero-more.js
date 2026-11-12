@@ -9,7 +9,7 @@
   const MENU = [
     ['macro', 'globe', '경제 지표', '물가, 고용, 금리가 평소보다 높은지 낮은지'],
     ['news', 'news', '뉴스', '지금 올라오는 경제 기사와 핵심 정리'],
-    ['reports', 'report', '보고서', '한국은행, 연준 등 기관이 낸 자료'],
+    ['reports', 'report', '기관 리서치', '주식·자본시장 보고서와 경제·정책 자료'],
     ['study', 'book', '주식 공부', '입문 학교와 계산기'],
     ['ask', 'chat', 'ZERO에게 물어보기', '주식 용어와 사용법을 AI에게 질문'],
     ['settings', 'settings', '설정', '화면 색, 금액 가리기, 자료 기준']
@@ -106,32 +106,62 @@
   }
 
   // ---- 보고서 ---------------------------------------------------------------------------------
-  const INSTITUTIONS = [['ALL', '전체'], ['bok-', '한국은행'], ['fed-', '미국 연준'], ['bis-', '국제결제은행'], ['toss-', '토스']];
-  let reportFilter = 'ALL';
+  let reportFilter = null;
 
   async function reports(token) {
-    page('보고서', U.loading());
+    page('기관 리서치', U.loading());
     const desk = await D.desk();
     if (token !== pageToken) return;
     const library = desk?.briefing_sources;
-    const records = [];
-    (library?.sources || []).forEach((source) => (source.records || []).forEach((record) => {
-      if (record?.access === 'INDEX_ONLY' && record.title && /^https:\/\//.test(record.url || '')) records.push({...record, sourceId: String(source.id || ''), sourceLabel: source.label || ''});
-    }));
-    if (!records.length) { page('보고서', U.empty('보고서 목록을 불러오지 못했어요.')); return; }
-    records.sort((a, b) => String(b.published_date || '').localeCompare(String(a.published_date || '')));
-    const host = el('div', {});
-    const paint = () => {
-      const shown = records.filter((record) => reportFilter === 'ALL' || record.sourceId.startsWith(reportFilter)).slice(0, 40);
-      host.replaceChildren(shown.length ? el('ul', {class: 'rows'}, shown.map((record) => el('li', {class: 'row'},
-        el('a', {class: 'row-main stacked', href: record.url, target: '_blank', rel: 'noopener noreferrer'},
-          el('strong', {text: U.plain(record.title)}),
-          el('small', {text: [record.sourceLabel, record.published_date, C.ageText(record.published_date)].filter(Boolean).join(', ')}))))) : U.empty('이 기관의 자료가 없어요.'));
-    };
+    const sources = (library?.sources || []).filter(source => source?.id && source.label);
+    if (!sources.length) { page('기관 리서치', U.empty('기관 자료 목록을 불러오지 못했어요.')); return; }
+
+    const hasEquity = sources.some(source => source.kind === 'EQUITY_RESEARCH');
+    const choices = [['ALL', '모든 자료집'], ...(hasEquity ? [['EQUITY', '주식·자본시장 리서치']] : []),
+      ...sources.map(source => [source.id, source.label])];
+    if (!choices.some(([id]) => id === reportFilter)) reportFilter = hasEquity ? 'EQUITY' : 'ALL';
+    const select = el('select', {id: 'report-source'}, choices.map(([value, text]) => el('option', {value, text})));
+    select.value = reportFilter;
+    const status = el('p', {class: 'note', role: 'status'});
+    const rows = el('ul', {class: 'rows'});
+    const more = el('button', {type: 'button', class: 'button ghost', text: '자료 더 보기'});
+    let records = [], shown = 0;
+    function appendPage(moveFocus) {
+      const batch = records.slice(shown, shown + 15);
+      const links = batch.map(({record, source}) => el('a', {class: 'row-main stacked', href: record.url, target: '_blank', rel: 'noopener noreferrer'},
+        el('strong', {text: U.plain(record.title)}),
+        el('small', {text: [source.label, record.published_date || '발행일 미확인',
+          source.status === 'RETAINED' ? '이전 수집본' : null].filter(Boolean).join(' · ')})));
+      for (const link of links) rows.append(el('li', {class: 'row'}, link));
+      shown += batch.length;
+      more.hidden = shown >= records.length;
+      if (moveFocus) links[0]?.focus();
+    }
+    function paint() {
+      const selected = sources.filter(source => reportFilter === 'ALL' || source.id === reportFilter ||
+        (reportFilter === 'EQUITY' && source.kind === 'EQUITY_RESEARCH'));
+      const seen = new Set();
+      records = selected.flatMap(source => (source.records || []).filter(record => {
+        if (record?.access !== 'INDEX_ONLY' || !record.title || !/^https:\/\//.test(record.url || '') || seen.has(record.url)) return false;
+        seen.add(record.url); return true;
+      }).map(record => ({record, source})));
+      records.sort((a, b) => String(b.record.published_date || '').localeCompare(String(a.record.published_date || '')));
+      const retained = selected.filter(source => source.status === 'RETAINED').length;
+      const unavailable = selected.filter(source => source.status === 'UNAVAILABLE').length;
+      status.textContent = [records.length ? '자료 ' + records.length + '건' : '표시할 자료가 없어요.',
+        retained ? '이전 목록 유지 ' + retained + '곳' : null, unavailable ? '수집 실패 ' + unavailable + '곳' : null].filter(Boolean).join(' · ');
+      shown = 0; rows.replaceChildren(); appendPage(false);
+    }
+    select.addEventListener('change', () => { reportFilter = select.value; paint(); });
+    more.addEventListener('click', () => appendPage(true));
     paint();
-    page('보고서',
-      el('section', {class: 'block'}, U.segmented(INSTITUTIONS, reportFilter, (value) => { reportFilter = value; paint(); }, '기관'), host),
-      U.note('제목과 발표일만 모은 목록이에요. 누르면 기관 원문이 새 창으로 열려요. ZERO가 본문을 읽고 검토한 것은 아니에요.'));
+    const checked = Date.parse(library.as_of);
+    const lastCheck = Number.isFinite(checked) ? new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short'
+    }).format(checked) + ' (한국 시간)' : null;
+    page('기관 리서치', el('section', {class: 'block report-library'},
+      el('label', {for: 'report-source', text: '자료집 선택'}), select, status, rows, more),
+      U.note((lastCheck ? '목록 확인 ' + lastCheck + '. ' : '목록을 확인한 시각이 없어요. ') + '제목을 누르면 기관 원문이 새 창으로 열려요.'));
   }
 
   // ---- 주식 공부 ------------------------------------------------------------------------------

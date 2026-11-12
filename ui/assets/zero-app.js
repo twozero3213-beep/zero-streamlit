@@ -8,11 +8,26 @@
     button.replaceChildren(U.icon('close'));
     button.addEventListener('click', () => button.closest('dialog').close());
   });
-  // 창 바깥(어두운 부분)을 누르면 닫는다.
-  document.querySelectorAll('dialog').forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
+  // 창의 여백과 실제 바깥 영역을 구분한다.
+  document.querySelectorAll('dialog').forEach((dialog) => dialog.addEventListener('click', (event) => {
+    if (event.target !== dialog) return;
+    const box = dialog.getBoundingClientRect();
+    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close();
+  }));
+  document.querySelector('.skip-link')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    document.getElementById('main').focus({preventScroll: false});
+  });
 
   const toggle = document.getElementById('theme-toggle');
-  const paintToggle = () => toggle.replaceChildren(U.icon(U.theme.resolved() === 'dark' ? 'sun' : 'moon'));
+  const paintToggle = () => {
+    const dark = U.theme.resolved() === 'dark';
+    toggle.replaceChildren(U.icon(dark ? 'sun' : 'moon'));
+    toggle.setAttribute('aria-pressed', String(dark));
+    toggle.title = dark ? '밝은 화면으로 바꾸기' : '어두운 화면으로 바꾸기';
+    const state = document.getElementById('theme-state');
+    if (state) state.textContent = dark ? '현재 어두운 화면이에요.' : '현재 밝은 화면이에요.';
+  };
   toggle.addEventListener('click', () => U.theme.set(U.theme.resolved() === 'dark' ? 'light' : 'dark'));
   document.addEventListener('zero-theme-changed', paintToggle);
   U.theme.apply();
