@@ -192,7 +192,12 @@
   let current = null;
 
   function parseHash() {
-    const raw = decodeURIComponent(location.hash.replace(/^#/, ''));
+    let raw;
+    try { raw = decodeURIComponent(location.hash.replace(/^#/, '')); }
+    catch (error) {
+      if (!(error instanceof URIError)) throw error;
+      return {name: 'home', arg: ''};
+    }
     const [name, ...rest] = raw.split('/');
     return routes.has(name) ? {name, arg: rest.join('/')} : {name: 'home', arg: ''};
   }

@@ -8,14 +8,16 @@
 
   // ---- 검색(머리의 검색창) --------------------------------------------------------------------
   const input = document.getElementById('search'), results = document.getElementById('search-results');
-  let searchTimer = null;
+  let searchTimer = null, searchToken = 0;
 
-  function closeSearch() { results.hidden = true; results.replaceChildren(); input.setAttribute('aria-expanded', 'false'); }
+  function closeSearch() { ++searchToken; clearTimeout(searchTimer); results.hidden = true; results.replaceChildren(); input.setAttribute('aria-expanded', 'false'); }
 
   async function runSearch() {
+    const token = ++searchToken;
     const query = input.value.trim();
     if (!query) { closeSearch(); return; }
     const research = await D.research();
+    if (token !== searchToken || query !== input.value.trim()) return;
     const found = C.searchCompanies(research?.companies, query);
     results.replaceChildren(...(found.length
       ? found.map((company) => el('li', {role: 'option'}, el('a', {href: '#stock/' + company.id, onclick: () => { input.value = ''; closeSearch(); }},
@@ -25,7 +27,7 @@
     input.setAttribute('aria-expanded', 'true');
   }
 
-  input.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 150); });
+  input.addEventListener('input', () => { closeSearch(); searchTimer = setTimeout(runSearch, 150); });
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') { input.value = ''; closeSearch(); }
     if (event.key === 'Enter') { event.preventDefault(); results.querySelector('a')?.click(); }
@@ -92,13 +94,15 @@
 
   // ---- 종목 화면 ------------------------------------------------------------------------------
   const RANGES = [['1M', '1개월'], ['3M', '3개월'], ['1Y', '1년'], ['5Y', '5년']];
-  let chartHandle = null, stockToken = 0;
+  let chartHandle = null, stockToken = 0, chartToken = 0, redrawChart = null;
 
   function cssColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
   async function drawChart(host, id, range) {
+    const token = ++chartToken;
     host.replaceChildren(U.loading('차트를 불러오는 중이에요'));
     const data = await U.api('api/chart?identity=' + encodeURIComponent(id) + '&range=' + range, 300);
+    if (token !== chartToken || !host.isConnected) return;
     const bars = (data?.bars || []).filter((bar) => Number.isFinite(bar?.time) && C.num(bar.close) > 0);
     if (chartHandle) { chartHandle.remove(); chartHandle = null; }
     if (data?.status !== 'AVAILABLE' || bars.length < 2 || !window.LightweightCharts) { host.replaceChildren(U.empty('이 기간의 차트 자료가 없어요.')); return; }
@@ -184,6 +188,9 @@
 
   async function showStock(id) {
     const token = ++stockToken;
+    redrawChart = null;
+    ++chartToken;
+    if (chartHandle) { chartHandle.remove(); chartHandle = null; }
     if (!/^(KR:[0-9A-Z]{6}|US:[A-Z][A-Z0-9.-]{0,14})$/.test(id)) { stockRoot.replaceChildren(U.empty('종목을 찾지 못했어요.')); return; }
     const [market, code] = id.split(':'), kr = market === 'KR';
     stockRoot.replaceChildren(el('a', {class: 'back', href: '#discover'}, U.icon('back', 18), '발견'), U.loading());
@@ -211,6 +218,7 @@
     let range = '3M';
     const chartBlock = el('section', {class: 'block'},
       U.segmented(RANGES, range, (next) => { range = next; drawChart(chartHost, id, range); }, '차트 기간'), chartHost);
+    redrawChart = () => drawChart(chartHost, id, range);
 
     const facts = info?.facts;
     const factBlock = facts ? U.section('핵심 숫자',
@@ -233,7 +241,7 @@
     stockRoot.replaceChildren(
       el('a', {class: 'back', href: '#discover'}, U.icon('back', 18), '발견'),
       head, priceLine,
-      stamp ? U.note(stamp + ' 기준, 공개 시세라 조금 늦을 수 있어요.') : null,
+      U.note(stamp ? stamp + ' 기준, 공개 시세라 조금 늦을 수 있어요.' : '시세 기준 시각을 확인하지 못했어요.'),
       el('div', {class: 'columns'},
         el('div', {class: 'column'}, chartBlock, factBlock, investorBlock(info?.investors)),
         el('div', {class: 'column'}, companyBlock(company), newsHost, peerBlock)));
@@ -250,7 +258,7 @@
     ].filter(Boolean));
   }
 
-  document.addEventListener('zero-theme-changed', () => { if (!stockRoot.hidden && chartHandle) U.go(location.hash.slice(1)); });
+  document.addEventListener('zero-theme-changed', () => { if (!stockRoot.hidden && chartHandle) redrawChart?.(); });
 
   U.route('discover', {title: () => '발견', show: showDiscover});
   U.route('stock', {tab: 'discover', title: (arg) => arg.split(':')[1] || '종목', show: showStock});
