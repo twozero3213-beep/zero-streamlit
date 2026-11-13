@@ -305,6 +305,10 @@ a.row-main:hover strong, button.row-main:hover strong { text-decoration: underli
 .radar-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .radar-name a, .note a { display: inline-flex; align-items: center; min-height: 44px; }
 .note a + a { margin-left: 12px; }
+.radar-level { display: inline-flex; align-items: center; gap: 8px; }
+.step-meter { display: inline-flex; gap: 3px; }
+.step-meter i { width: 14px; height: 8px; border-radius: 2px; background: var(--field); border: 1px solid var(--line); }
+.step-meter i.on { background: var(--sub); border-color: var(--sub); }
 /* 오름·내림 색(빨강·파랑)과 헷갈리지 않게 금액 크기 막대는 중립색. */
 .bars.neutral .bar-fill { background: var(--sub); }
 
@@ -476,7 +480,7 @@ button, a, input, select, summary { scroll-margin-block: 1rem 7rem; }
 .sheet-body { overscroll-behavior: contain; padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
 .outlook-bar span { min-width: 0; white-space: normal; text-align: center; padding-block: 6px; }
 /* 브라우저 기본 small(한 단계 작게)은 14px 칸 안에서 11.7px가 된다. 13px 아래로 내려가지 않게 한다. */
-.chip small, .flow small, .field-box small { font-size: 0.8125rem; }
+small { font-size: 0.8125rem; }
 /* 출처 링크와 입력 칸도 손가락으로 누를 수 있는 44px 높이를 준다. */
 .stacked > a, .block > a:not(.button), .slot .note a, .details p > a { display: inline-flex; align-items: center; min-height: 44px; }
 .field-box input { align-self: stretch; min-height: 44px; }

@@ -82,7 +82,20 @@
   }
 
   // ---- 장 전 점검표 ----------------------------------------------------------------------------
-  // 예측하지 않고, '내일 장 어떻게 되냐'에 사람들이 실제로 확인하는 밤사이 숫자와 기준 시각만 보여 준다.
+  // 예측하지 않고, '내일 장 어떻게 되냐'에 사람들이 실제로 확인하는 해외 숫자와 기준 시각만 보여 준다.
+  // 다음 국내 장: 평일 09:00(한국). 공휴일은 모르니 그렇게 적는다.
+  function nextKoreanOpen(now = Date.now()) {
+    const kst = new Date(now + 9 * 3600000);
+    for (let add = 0; add < 8; add++) {
+      const day = new Date(Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate() + add, 0, 0));
+      const weekday = day.getUTCDay();
+      if (weekday === 0 || weekday === 6) continue;
+      if (add === 0 && kst.getUTCHours() * 60 + kst.getUTCMinutes() >= 9 * 60) continue;
+      return new Intl.DateTimeFormat('ko-KR', {timeZone: 'UTC', month: 'long', day: 'numeric', weekday: 'short'}).format(day);
+    }
+    return null;
+  }
+
   let premarketBlock = null;
   async function paintPremarket() {
     const data = await D.premarket();
@@ -90,15 +103,20 @@
     if (!items.length) { premarketBlock.hidden = true; return; }
     premarketBlock.hidden = false;
     const value = (item) => item.unit === 'yield' ? item.price.toFixed(2) + '%'
-      : item.price.toLocaleString('en-US', {maximumFractionDigits: 2}) + (item.unit === 'fx' ? '원' : '');
+      : item.price.toLocaleString('en-US', {maximumFractionDigits: 2}) + (item.unit === 'fx' ? '원' : item.unit === 'oil' ? '달러' : '');
     const move = (item) => item.unit === 'yield'
       ? el('span', {class: 'change tone-' + C.direction(item.change), text: (item.change > 0 ? '+' : '') + item.change.toFixed(2) + '%p'})
       : U.change(item.change_percent);
+    const size = (item) => Number.isFinite(item.rarity_percent)
+      ? el('small', {text: '최근 1년 하루 움직임 중 상위 ' + Math.max(1, Math.round(item.rarity_percent)) + '%'}) : null;
+    const us = C.sessions().us, open = nextKoreanOpen();
     const latest = items.map((item) => item.market_time).sort().pop();
-    fill('premarket', el('ul', {class: 'rows'}, items.map((item) => el('li', {class: 'row'},
-      el('span', {class: 'row-main stacked'}, el('strong', {text: item.name}), el('small', {text: item.why})),
-      el('span', {class: 'row-value'}, el('strong', {text: value(item)}), move(item))))),
-      U.note('밤사이 해외 시장이에요. 내일 장을 맞히는 지표가 아니라 장 열기 전에 미리 볼 숫자예요. 전 거래일 종가와 비교했어요.'),
+    fill('premarket',
+      el('p', {class: 'hero-line', text: (us.open ? '미국 장이 열려 있어서 숫자가 계속 바뀌어요.' : '미국 장이 닫혀 있어요. 마지막 값이에요.') + (open ? ' 다음 국내 장은 ' + open + ' 09:00예요.' : '')}),
+      el('ul', {class: 'rows'}, items.map((item) => el('li', {class: 'row'},
+        el('span', {class: 'row-main stacked'}, el('strong', {text: item.name}), el('small', {text: item.why})),
+        el('span', {class: 'row-value'}, el('strong', {text: value(item)}), move(item), size(item))))),
+      U.note('국내 장을 맞히는 지표가 아니라 장 열기 전에 미리 볼 숫자예요. 전 거래일 종가와 비교했고, 상위 %가 작을수록 드물게 큰 움직임이에요. 공휴일은 반영하지 않았어요.'),
       U.note('자료: Yahoo Finance 공개 일봉' + (latest ? ', ' + (U.timeText(latest) || latest) + ' 기준' : '') + '. 조금 늦을 수 있어요.'));
   }
 

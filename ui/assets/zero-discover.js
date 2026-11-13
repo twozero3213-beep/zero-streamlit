@@ -109,15 +109,24 @@
     ['한미사이언스', '2024년 1월 12일, 최대주주 변경 계약과 제3자배정 증자가 공시됐어요.', '2024년 1월 17일 가처분 보도', 5],
     ['한진칼', '2018년 11월 15일, 그레이스홀딩스가 경영 참여 목적으로 9%를 보고했어요.', '보도', 0]
   ];
-  const hot = (level) => level === '경보' || level === '분쟁 진행';
+  const SIDES = {company: '회사', insider: '최대주주 쪽', holder: '주주'};
+  const kstDay = (ms) => new Date(ms + 9 * 3600000).toISOString().slice(0, 10);
 
   function signalRow(signal) {
+    const at = Date.parse(signal.at), today = Number.isFinite(at) && kstDay(at) === kstDay(Date.now());
+    const when = [today ? '오늘' : null, U.timeText(signal.at) || '시각 미확인', '접수', signal.after_close ? '(장 시간 밖)' : null].filter(Boolean).join(' ');
     return el('li', {class: 'row'}, el('span', {class: 'row-main stacked'},
       el('strong', {text: signal.label}),
       el('small', {text: signal.report}),
-      el('small', {text: (signal.outside ? '제출: ' + signal.filer + '(회사가 아닌 주주)' : '제출: 회사') + ', ' + (U.timeText(signal.at) || '시각 미확인') + ' 접수'}),
+      el('small', {text: '제출: ' + (signal.side === 'company' ? '회사' : signal.filer + '(' + SIDES[signal.side] + ')') + ', ' + when}),
       el('a', {href: signal.url, target: '_blank', rel: 'noopener noreferrer', text: 'DART 원문 보기'})),
-      el('span', {class: 'chip chip-off', text: '+' + signal.points}));
+      signal.points ? el('span', {class: 'chip chip-off', text: '+' + signal.points + '점'}) : null);
+  }
+
+  // 단계를 막대 세 칸으로 보여 주고, 다음 단계까지 몇 점 남았는지 적는다.
+  function stepMeter(entry) {
+    return el('span', {class: 'step-meter', role: 'img', 'aria-label': '3단계 중 ' + entry.step + '단계'},
+      ...[1, 2, 3].map((n) => el('i', {class: n <= entry.step ? 'on' : ''})));
   }
 
   function radarCompany(entry, limit = 4) {
@@ -125,32 +134,38 @@
     const related = (entry.related || []).filter((item) => item.stock_code);
     return el('div', {class: 'radar-company'},
       el('div', {class: 'radar-head'}, el('strong', {class: 'radar-name'}, name),
-        el('span', {class: 'chip ' + (hot(entry.level) ? 'chip-on' : 'chip-off'), text: entry.level + ' ' + entry.score + '점'})),
+        el('span', {class: 'radar-level'}, stepMeter(entry), el('strong', {text: entry.level}))),
+      el('p', {class: 'note', text: entry.score + '점' + (entry.next_points ? ', 다음 단계까지 ' + entry.next_points + '점' : '')}),
       el('ul', {class: 'rows'}, entry.signals.slice(0, limit).map(signalRow)),
       related.length ? el('p', {class: 'note'}, '함께 볼 회사: ', ...related.map((item) => el('a', {href: '#stock/KR:' + item.stock_code, text: item.name}))) : null);
   }
 
   function radarRules(data) {
     return [
-      el('details', {class: 'details'}, el('summary', {text: '점수는 이렇게 매겨요'}),
-        el('p', {text: '최근 ' + data.window_days + '일 공시에서 아래 신호를 더해요. 30점 관찰, 60점 경보, 90점 분쟁 진행이에요.'}),
-        el('p', {text: '공개매수 50, 법원에 주총 소집 신청 40, 경영 참여 목적 5% 보고 35, 경영권 소송 35, 최대주주 변경 30, 위임장 권유 25, 소송 판결 15, 주주제안 15, 해명 공시 10, 증자와 자사주 5점이에요.'}),
-        el('p', {text: '5% 보고와 위임장은 회사가 아닌 주주가 냈을 때만 세요. 최대주주의 가족이 낸 보고도 여기에 들어갈 수 있어요.'}),
-        el('p', {text: '점수는 지난 사례 4건으로 맞춘 초안이라 틀릴 수 있어요. 지켜보는 회사는 ' + (data.watch || []).map((item) => item.name).join(', ') + '이고, 오늘 공시된 모든 회사도 함께 봐요.'})),
-      el('details', {class: 'details'}, el('summary', {text: '지난 분쟁은 뉴스보다 공시가 먼저였어요'}),
-        ...CASES.map(([name, first, headline, days]) => el('p', {}, el('strong', {text: name + ': '}), first + ' ' + (days ? headline + '보다 ' + days + '일 먼저였어요.' : headline + '와 같은 날이었어요.'))))
+      el('details', {class: 'details'}, el('summary', {text: '단계와 점수는 이렇게 정해요'}),
+        el('p', {text: '최근 ' + data.window_days + '일 공시의 점수를 더해 30점이면 지켜볼 신호, 60점이면 신호 겹침, 90점이면 분쟁 확인이에요.'}),
+        el('p', {text: '점수와 상관없이 분쟁 확인으로 보는 경우: 경영권 소송 공시와 판결 공시가 함께 있을 때, 회사 밖에서 공개매수를 할 때, 법원에 주총 소집을 신청했을 때예요. 경영권 소송 공시가 있으면 신호 겹침 아래로 내리지 않아요.'}),
+        el('p', {text: '공개매수 50, 주총 소집 신청 40, 경영권 영향 목적 5% 보고 35, 경영권 소송 35, 경영권 소송 판결 35(다른 판결 15), 최대주주 변경 30, 위임장 권유 25, 주주제안 15, 해명 공시 10, 증자와 자사주 5점이에요.'}),
+        el('p', {text: '5% 보고와 위임장은 회사가 아닌 사람이 냈을 때만 세고, 최대주주 쪽으로 알려진 사람이면 5점만 줘요. 이 명단은 손으로 관리해서 틀릴 수 있어요. 고친 공시(정정)는 새 사건으로 세지 않아요.'}),
+        el('p', {text: '점수는 지난 사례 4건으로 맞춘 초안이에요. 오늘 전체 공시와 지켜보는 ' + (data.watch || []).length + '개 회사(' + (data.watch || []).map((item) => item.name).join(', ') + ')의 최근 약 1주만 봐요. 그보다 오래된 공시나 공시 본문은 읽지 않아요.'})),
+      el('details', {class: 'details'}, el('summary', {text: '지난 분쟁의 첫 공시와 보도'}),
+        ...CASES.map(([name, first, headline, days]) => el('p', {}, el('strong', {text: name + ': '}), first + ' ' + (days ? headline + '보다 ' + days + '일 먼저였어요.' : headline + '와 같은 날이었어요.'))),
+        el('p', {text: '한미 건에서는 소송 공시가 보도보다 6일 늦었어요. 법원 판단 공시도 보도보다 늦을 수 있어요.'}))
     ];
   }
 
   async function radarBlock(host, section) {
     const data = await D.governance();
     if (data?.scope !== 'GOVERNANCE_RADAR') { section.hidden = true; return; }
-    const companies = data.companies || [];
+    const companies = (data.companies || []).filter((entry) => entry.step > 0);
+    const quiet = (data.companies || []).filter((entry) => entry.step === 0);
     host.replaceChildren(
-      el('p', {text: '경영권·지분 다툼의 첫 신호는 뉴스보다 DART 공시에 먼저 떠요. 고려아연 분쟁은 공개매수 보도보다 205일 먼저 위임장 공시가 있었어요.'}),
-      ...(companies.length ? companies.slice(0, 6).map((entry) => radarCompany(entry)) : [U.empty('최근 ' + data.window_days + '일 동안 분쟁 신호가 된 공시가 없어요.')]),
+      el('p', {class: 'note', text: (U.timeText(data.retrieved_at) || '') + ' 확인. 오늘 전체 공시와 지켜보는 회사의 최근 약 1주만 봐요.'}),
+      el('p', {text: '지난 분쟁 4건에서 첫 공시는 보도와 같은 날이거나 5~344일 앞섰어요. 경영권 소송, 공개매수, 5% 보고처럼 지분 다툼이 되는 공시만 골라 회사별로 묶었어요.'}),
+      ...(companies.length ? companies.slice(0, 6).map((entry) => radarCompany(entry)) : [U.empty('최근 ' + data.window_days + '일 동안 지분 다툼으로 볼 만한 공시가 없어요.')]),
+      quiet.length ? el('details', {class: 'details'}, el('summary', {text: '점수가 낮은 공시 ' + quiet.length + '곳'}), ...quiet.map((entry) => radarCompany(entry, 2))) : null,
       ...radarRules(data),
-      U.note('자료: ' + data.source + ', ' + (U.timeText(data.retrieved_at) || '') + ' 확인. 공시 원문은 DART에서 보세요. 투자 권유가 아니에요.'));
+      U.note('자료: ' + data.source + '. 공시 원문은 DART에서 보세요. 투자 권유가 아니에요.'));
   }
 
   function showDiscover() {
@@ -344,7 +359,7 @@
 
     // 이 회사에 최근 분쟁 신호가 있으면 종목 화면 위쪽에 묶어 보여 준다(카카오 검토의 '종목 머리 배지').
     const dispute = kr && radar?.scope === 'GOVERNANCE_RADAR' ? (radar.companies || []).find((entry) => entry.stock_code === code || entry.company === name) : null;
-    const disputeBlock = dispute ? U.section('분쟁 신호', radarCompany(dispute, 3), el('a', {class: 'button ghost', href: '#discover', text: '분쟁 레이더 전체 보기'})) : null;
+    const disputeBlock = dispute && dispute.step > 0 ? U.section('분쟁 신호', radarCompany(dispute, 3), el('a', {class: 'button ghost', href: '#discover', text: '분쟁 레이더 전체 보기'})) : null;
     // 증권사 리포트는 모아 오지 않는다. 목록 사이트들이 자동 수집을 금지해서 원문 사이트로만 연결한다.
     const researchLinks = kr ? U.section('증권사 리포트',
       el('ul', {class: 'rows'}, [['네이버페이 증권 리서치', 'https://stock.naver.com/research/company'], ['한경 컨센서스', 'https://consensus.hankyung.com/analysis/list'], ['한국IR협의회 기업리서치(무료 보고서)', 'https://www.kirs.or.kr/research/research.html']]

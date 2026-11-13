@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 import re
 import threading
@@ -37,18 +37,25 @@ TRIGGERS = (
     ('TENDER_VIEW', r'공개매수에관한의견표명서', 30, 30, '공개매수에 대한 회사 의견이 나왔어요.'),
     ('MEETING_COURT', r'소집허가', 40, 40, '법원에 주주총회를 열게 해 달라고 신청했어요.'),
     ('CONTROL_SUIT', r'경영권분쟁', 35, 35, '경영권을 두고 소송이 걸렸어요.'),
-    ('STAKE_ACTIVE', r'대량보유상황보고서\(일반\)', 35, 0, '5% 넘게 가진 주주가 경영에 영향을 주려는 목적으로 보고했어요.'),
+    ('STAKE_ACTIVE', r'대량보유상황보고서\(일반\)', 35, 0, '5% 넘게 가진 주주가 경영권에 영향을 줄 수 있는 목적으로 보고했어요. 원문에서 누구 편인지 확인하세요.'),
     ('PROXY', r'의결권대리행사권유', 25, 0, '주주총회 표를 모으려고 위임장을 받기 시작했어요.'),
-    ('RULING', r'소송등의판결', 15, 15, '소송의 판결이나 결정이 나왔어요. 경영권 소송이면 지분 구도가 바뀔 수 있어요.'),
+    ('RULING', r'소송등의판결', 15, 15, '소송의 판결이나 결정이 나왔어요. 결과는 원문에 있어요.'),
     ('CONTROL_CHANGE', r'최대주주변경', 30, 30, '최대주주가 바뀌거나 바뀌는 계약을 했어요.'),
     ('PROPOSAL', r'주주제안', 15, 15, '주주가 안건을 직접 냈어요.'),
     ('RUMOR', r'풍문또는보도에대한해명|조회공시', 10, 10, '보도나 소문에 대해 회사가 답했어요.'),
     ('NEW_SHARES', r'유상증자결정|전환사채권발행결정', 5, 5, '새 주식이나 전환사채를 발행해요. 분쟁 중이면 지분 구도가 바뀔 수 있어요.'),
     ('BUYBACK', r'자기주식취득', 5, 5, '회사가 자기 주식을 사요. 분쟁 중이면 방어 수단일 수 있어요.'),
 )
-LEVELS = ((90, '분쟁 진행'), (60, '경보'), (30, '관찰'))
+# 매도·매수 신호처럼 읽히지 않게 '무엇이 보이는지'로 이름을 붙인다(2026-11-14 페르소나 검토).
+LEVELS = ((90, '분쟁 확인'), (60, '신호 겹침'), (30, '지켜볼 신호'))
+# 최대주주 쪽으로 널리 알려진 보고자. 이들의 5% 보고(일반)는 흔한 일이라 5점만 준다. 가족끼리 다투면 의미가 커질 수 있어 문구로 알린다.
+# ponytail: 손으로 관리하는 명단이다. OpenDART 최대주주 현황(hyslrSttus)을 쓸 수 있게 되면 자동으로 바꾼다.
+INSIDERS = {'한미사이언스': ('송영숙', '임주현', '임종윤', '임종훈'), '고려아연': ('최윤범',), '영풍': ('장형진',),
+            '한진칼': ('조원태',), '금호석유화학': ('박찬구',), '한국앤컴퍼니': ('조현범',), '태광산업': ('이호진',)}
+_CORRECTED = re.compile(r'^\[[^\]]*정정\]')
 _TITLE = re.compile(r'^\((유가|코스닥|코넥스|기타)\)\s*(.+?)\s+-\s+(.+)$')
 _RCP = re.compile(r'rcpNo=(\d{14})')
+KST = timezone(timedelta(hours=9))
 _cache = {'at': 0.0, 'body': None}
 _lock = threading.Lock()
 
@@ -89,18 +96,43 @@ def parse(body):
 
 
 def classify(item):
-    """분쟁 신호면 (코드, 점수, 설명, 외부 제출 여부), 아니면 None. 정정 공시도 같은 신호로 본다."""
+    """분쟁 신호면 dict(코드, 점수, 설명, 제출인 구분, 정정 여부), 아니면 None.
+
+    제출인 구분: company(회사 자신), insider(최대주주 쪽으로 알려진 사람), holder(그 밖의 주주).
+    정정 공시는 새 사건이 아니라 이미 있는 사건의 증거라 점수를 주지 않는다. 경영권 소송 정정은 단계 판단에만 쓴다.
+    """
     report = re.sub(r'\s', '', item['report'])
-    outside = bool(item['filer']) and _plain(item['filer']) != _plain(item['company'])
+    filer = _plain(item['filer'])
+    side = 'company' if not filer or filer == _plain(item['company']) else (
+        'insider' if filer in INSIDERS.get(item['company'], ()) else 'holder')
+    corrected = bool(_CORRECTED.match(report))
     for code, pattern, outside_points, own_points, label in TRIGGERS:
-        if re.search(pattern, report):
-            points = outside_points if outside else own_points
-            return (code, points, label, outside) if points else None
+        if not re.search(pattern, report):
+            continue
+        points = own_points if side == 'company' else outside_points
+        if side == 'insider' and code in ('STAKE_ACTIVE', 'PROXY'):
+            points, label = 5, '최대주주 쪽으로 알려진 사람의 보고예요. 흔한 보고지만 가족끼리 다투는 중이면 의미가 커져요.'
+        if corrected:
+            points = 0
+            label = '진행 중인 경영권 소송 공시를 고쳐 냈어요.' if code == 'CONTROL_SUIT' else '이미 낸 공시를 고쳐 냈어요. ' + label
+        if not points and not (corrected and code == 'CONTROL_SUIT'):
+            return None
+        return {'trigger': code, 'points': points, 'label': label, 'side': side, 'corrected': corrected}
     return None
 
 
+def _after_close(iso):
+    # 한국 장(09:00~15:30) 밖에서 접수되면 다음 장에 반영된다는 뜻이라 따로 알린다.
+    at = datetime.fromisoformat(iso).astimezone(KST)
+    return at.weekday() >= 5 or not (9 * 60 <= at.hour * 60 + at.minute < 15 * 60 + 30)
+
+
 def score(items, now=None):
-    """회사별로 신호를 모아 점수·단계를 매긴다. 같은 접수번호는 한 번만 센다."""
+    """회사별로 신호를 모아 점수·단계를 매긴다. 같은 접수번호는 한 번만 센다.
+
+    단계는 점수로 정하되 다음은 점수와 상관없이 '분쟁 확인'으로 올린다: 경영권 소송 공시와 판결 공시가 함께 있음,
+    회사 밖의 공개매수, 법원에 주총 소집 신청. 경영권 소송 정정 공시만 있어도 '신호 겹침' 아래로는 두지 않는다.
+    """
     now = now or datetime.now(timezone.utc)
     stock_codes = {name: stock for name, _, stock in WATCH}
     seen, companies = set(), {}
@@ -111,18 +143,29 @@ def score(items, now=None):
         signal = classify(item)
         if not signal:
             continue
-        code, points, label, outside = signal
         entry = companies.setdefault(item['company'], {'company': item['company'], 'market': item['market'],
-                                                       'stock_code': stock_codes.get(item['company']), 'score': 0, 'signals': [],
+                                                       'stock_code': stock_codes.get(item['company']), 'signals': [],
                                                        'related': [{'name': name, 'stock_code': stock_codes.get(name)} for name in RELATED.get(item['company'], ())]})
-        entry['score'] += points
-        entry['signals'].append({'at': item['at'], 'report': item['report'], 'filer': item['filer'], 'outside': outside,
-                                 'trigger': code, 'points': points, 'label': label, 'url': item['url']})
+        entry['signals'].append({'at': item['at'], 'report': item['report'], 'filer': item['filer'], 'after_close': _after_close(item['at']),
+                                 'url': item['url'], **signal})
+    floors = [floor for floor, _ in LEVELS]
     rows = []
     for entry in companies.values():
-        entry['level'] = next((name for floor, name in LEVELS if entry['score'] >= floor), '참고')
+        codes = {signal['trigger'] for signal in entry['signals']}
+        if 'CONTROL_SUIT' in codes:
+            for signal in entry['signals']:
+                if signal['trigger'] == 'RULING' and not signal['corrected']:
+                    signal['points'], signal['label'] = 35, '경영권 소송에서 법원 판단이 나왔어요. 누가 이겼는지는 원문에 있어요.'
+        entry['score'] = sum(signal['points'] for signal in entry['signals'])
+        step = sum(entry['score'] >= floor for floor in floors)
+        confirmed = ({'CONTROL_SUIT', 'RULING'} <= codes or 'MEETING_COURT' in codes
+                     or any(s['trigger'] == 'TENDER' and s['side'] != 'company' for s in entry['signals']))
+        step = 3 if confirmed else max(step, 2 if 'CONTROL_SUIT' in codes else step)
+        entry['step'] = step
+        entry['level'] = LEVELS[3 - step][1] if step else '참고'
+        entry['next_points'] = None if step == 3 else max(0, floors[2 - step] - entry['score'])
         rows.append(entry)
-    return sorted(rows, key=lambda row: (-row['score'], row['company']))
+    return sorted(rows, key=lambda row: (-row['step'], -row['score'], row['company']))
 
 
 def build(fetch=None, now=None):
