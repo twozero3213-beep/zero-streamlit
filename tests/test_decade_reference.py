@@ -78,6 +78,18 @@ class DecadeReferenceTests(unittest.TestCase):
         fx = list(zip(self.days, [1000.0] * 60 + [500.0] * 60))
         self.assertAlmostEqual(decade.lump_sum(prices, fx)['max_drawdown_percent_krw'], 50.0)
 
+    def test_trailing_dividend_yield_counts_only_the_last_year(self):
+        last = 1_800_000_000
+        payload = {'chart': {'result': [{'timestamp': [last - 86400 * 30, last], 'indicators': {'quote': [{'close': [24.0, 25.0]}]},
+                   'events': {'dividends': {'a': {'amount': 0.25, 'date': last - 86400 * 400}, 'b': {'amount': 0.25, 'date': last - 86400 * 300},
+                                            'c': {'amount': 0.25, 'date': last - 86400 * 200}, 'd': {'amount': 0.25, 'date': last - 86400 * 100},
+                                            'e': {'amount': 0.25, 'date': last}}}}]}}
+        # 1년 안의 배당 네 번(1.00달러) / 마지막 종가 25달러 = 4%. 400일 전 배당은 넣지 않는다.
+        self.assertAlmostEqual(decade.trailing_dividend_yield(payload), 4.0)
+        payload['chart']['result'][0]['events'] = {}
+        self.assertIsNone(decade.trailing_dividend_yield(payload), '배당 기록이 없으면 0%라고 하지 않는다')
+        self.assertIsNone(decade.trailing_dividend_yield({'chart': {'result': []}}))
+
     def test_broken_fx_point_is_ignored(self):
         # 2026-11-14 실측: KRW=X 2017-08-31이 0.115원으로 와서 네 종목 모두 '가장 깊게 -99.98%'가 됐다.
         prices = list(zip(self.days, [100.0] * 120))

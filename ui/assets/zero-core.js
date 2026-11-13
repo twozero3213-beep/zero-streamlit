@@ -367,9 +367,21 @@
     return {state: 'AVAILABLE', ...result, currency: data.currency, sourceUrl: data.source_url, checkedAt: data.checked_at, splitAdjusted: market === 'US'};
   }
 
+  // 같은 날 넣은 돈의 지금 원화 수익률: 시작일(그날 또는 그 앞 거래일) 종가와 마지막 종가, 시작·지금 환율로.
+  // bars는 /api/chart 일봉({time: 초, close}). 시작일이 기록 밖이거나 값이 비면 null.
+  function sinceReturn(bars, startDate, fxStart, fxNow) {
+    if (!Array.isArray(bars) || !/^\d{4}-\d{2}-\d{2}$/.test(String(startDate)) || !(fxStart > 0) || !(fxNow > 0)) return null;
+    const rows = bars.filter((bar) => Number.isFinite(bar?.time) && bar.close > 0)
+      .map((bar) => ({date: new Date(bar.time * 1000).toISOString().slice(0, 10), close: bar.close}));
+    if (rows.length < 2 || rows[0].date > startDate) return null;
+    const start = rows.filter((row) => row.date <= startDate).pop(), end = rows[rows.length - 1];
+    if (end.date <= start.date) return null;
+    return {percent: (end.close / start.close * fxNow / fxStart - 1) * 100, startDate: start.date, date: end.date};
+  }
+
   const api = {
     num, cut2, direction, signed, diffText, percentText, wonText, priceText, sessions, reprice, savedPortfolio, sparkPoints, historyValues,
-    maximumDrawdown, chartDrawdown, trendOf, gauge, upcoming, daysUntil, ddayText, ageText, validRank, quoteMap, liveQuoteMap, stockSnapshot, searchCompanies, savingsPlan, averageDown,
+    maximumDrawdown, chartDrawdown, trendOf, gauge, upcoming, daysUntil, ddayText, ageText, validRank, quoteMap, liveQuoteMap, stockSnapshot, searchCompanies, savingsPlan, averageDown, sinceReturn,
     RANK_KINDS, RANK_MARKETS, YAHOO_DAILY_CLOSE_BASIS
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

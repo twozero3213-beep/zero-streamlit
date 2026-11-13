@@ -148,8 +148,9 @@
 
   // ---- 다가오는 발표 --------------------------------------------------------------------------
   async function paintCalendar() {
-    const desk = await D.desk();
-    const items = C.upcoming(desk?.macro);
+    // 공개 앱은 발표일만 담은 가벼운 목록(calendar 경로)을 준다. 없는 곳(소유자 사이트)은 전체 지표 묶음에서 꺼낸다.
+    const light = await U.api('api/calendar', 600);
+    const items = C.upcoming(light?.scope === 'MACRO_RELEASE_CALENDAR' ? light.items : (await D.desk())?.macro);
     if (!items.length) { fill('calendar', U.empty('발표일이 확인된 일정이 없어요.')); return; }
     const format = new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'});
     fill('calendar', el('ul', {class: 'rows'}, items.map((item) => el('li', {class: 'row'},

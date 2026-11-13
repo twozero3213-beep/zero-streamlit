@@ -129,7 +129,7 @@
     const tone = cssColor(dir === 'down' ? '--down' : '--up');
     const box = el('div', {class: 'chart-box'});
     host.replaceChildren(
-      el('p', {class: 'chart-summary'}, RANGES.find(([key]) => key === range)[1] + ' 동안 ', U.change((last / first - 1) * 100)),
+      el('p', {class: 'chart-summary'}, RANGES.find(([key]) => key === range)[1] + ' 동안 ', U.change((last / first - 1) * 100), el('small', {text: ' 배당 제외 가격 기준'})),
       box,
       el('p', {class: 'note'}, data.basis === C.YAHOO_DAILY_CLOSE_BASIS ? '주식 분할을 반영한 종가 기준이고 배당 보정은 하지 않았어요. 차트 그리기: '
         : '공급자가 보낸 종가 기준이고 배당 보정은 하지 않았어요. 이 구간의 주식 분할 반영 여부는 별도로 확인하지 않았어요. 차트 그리기: ', el('a', {href: 'https://www.tradingview.com/', target: '_blank', rel: 'noopener noreferrer', text: 'TradingView Lightweight Charts'})));
@@ -239,10 +239,11 @@
     const [market, code] = id.split(':'), kr = market === 'KR';
     stockRoot.replaceChildren(el('a', {class: 'back', href: '#discover'}, U.icon('back', 18), '발견'), U.loading());
 
-    const [quoteMap, research, info, card] = await Promise.all([
+    const [quoteMap, research, info, card, decade] = await Promise.all([
       U.quotes([id]), D.research(),
       kr ? U.api('api/stock-info?code=' + code, 60) : null,
-      U.api('api/market-card?identity=' + encodeURIComponent(id), 120)
+      U.api('api/market-card?identity=' + encodeURIComponent(id), 120),
+      kr ? null : D.decade()
     ]);
     if (token !== stockToken) return;
     const company = research?.companies?.find((item) => item.id === id);
@@ -279,6 +280,12 @@
         fact('거래대금', facts.trading_value ? facts.trading_value + '원' : null)),
       U.note((info.source?.label || '공개 시세') + ' 기준이에요. PER은 주가가 이익의 몇 배인지, PBR은 순자산의 몇 배인지를 뜻해요.')) : null;
 
+    // 미국 종목은 공개 숫자 자료가 없어 10년 비교 계산에서 함께 얻은 최근 1년 배당수익률만 보여 준다.
+    const dividend = C.num(decade?.items?.find((item) => item.symbol === code)?.dividend_yield_percent);
+    const usFacts = !kr && Number.isFinite(dividend) ? U.section('핵심 숫자',
+      el('dl', {class: 'facts'}, fact('배당수익률(최근 1년)', C.cut2(dividend) + '%')),
+      U.note('최근 1년 동안 받은 주당 배당을 지금 가격으로 나눈 값이에요. 자료: Yahoo Finance.')) : null;
+
     const peers = (info?.peers || []).filter((peer) => /^[0-9A-Z]{6}$/.test(peer?.code));
     const peerBlock = peers.length ? U.section('같은 업종 종목', el('ul', {class: 'rows'}, peers.map((peer) => U.stockRow({
       id: 'KR:' + peer.code, name: peer.name, sub: peer.market || '', value: C.priceText(C.num(peer.price), 'KRW'), percent: Number.isFinite(peer.change_rate) ? peer.change_rate : undefined
@@ -290,7 +297,7 @@
       head, priceLine,
       U.note(stamp ? stamp + ' 기준, 공개 시세라 조금 늦을 수 있어요.' : '시세 기준 시각을 확인하지 못했어요.'),
       el('div', {class: 'columns'},
-        el('div', {class: 'column'}, chartBlock, factBlock, drawdownHost, investorBlock(info?.investors)),
+        el('div', {class: 'column'}, chartBlock, factBlock || usFacts, drawdownHost, investorBlock(info?.investors)),
         el('div', {class: 'column'}, companyBlock(company), newsHost, peerBlock)));
     drawChart(chartHost, id, range);
     drawStockDrawdown(drawdownHost, id, token);

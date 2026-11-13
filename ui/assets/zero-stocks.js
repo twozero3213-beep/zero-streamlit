@@ -49,14 +49,22 @@
     return U.section('보유 종목 ' + view.rows.length + '개', el('ul', {class: 'rows'}, rows), U.note('오른쪽 숫자는 산 가격 대비 수익률이에요. 수수료와 세금은 넣지 않았어요.'));
   }
 
-  // 같은 날 같은 돈을 지수에 넣었다면: 저장된 참고 계산(원화 기준)만 쓴다.
+  // 같은 날 같은 돈을 지수에 넣었다면(원화 기준). 저장된 비교값은 계산한 날에 멈춰 있어서, 같은 시작일·시작 환율에
+  // 1년 일봉의 마지막 종가와 지금 환율을 넣어 다시 계산한다. 일봉을 못 받으면 저장된 값을 그 날짜와 함께 보여 준다.
   async function comparison(view) {
     const entries = [{name: 'ZERO', percent: view.returnPercent, date: riskDate(view.pricedAt)}];
-    const sp = C.num(view.benchmark?.krw_common?.return_percent);
-    if (view.benchmark?.state === 'AVAILABLE' && Number.isFinite(sp)) entries.push({name: 'S&P 500', percent: sp, date: view.benchmark.krw_common.market_date});
-    const tqqq = await U.api('api/tqqq', 1800);
-    const tq = C.num(tqqq?.krw_common?.return_percent);
-    if (tqqq?.state === 'AVAILABLE' && Number.isFinite(tq)) entries.push({name: 'TQQQ', percent: tq, date: tqqq.krw_common.market_date});
+    const [tqqq, spyBars, tqqqBars] = await Promise.all([U.api('api/tqqq', 1800),
+      U.api('api/chart?identity=US%3ASPY&range=1Y', 300), U.api('api/chart?identity=US%3ATQQQ&range=1Y', 300)]);
+    let fresh = 0;
+    const pick = (name, saved, bars) => {
+      if (saved?.state !== 'AVAILABLE') return;
+      const common = saved.krw_common, stored = C.num(common?.return_percent);
+      const live = bars?.status === 'AVAILABLE' ? C.sinceReturn(bars.bars, saved.start?.market_date, C.num(common?.start_usd_krw), view.fx) : null;
+      if (live) { fresh += 1; entries.push({name, percent: live.percent, date: live.date}); }
+      else if (Number.isFinite(stored)) entries.push({name, percent: stored, date: common.market_date});
+    };
+    pick('S&P 500', view.benchmark, spyBars);
+    pick('TQQQ', tqqq, tqqqBars);
     if (entries.length < 2) return null;
     const widest = Math.max(...entries.map((entry) => Math.abs(entry.percent)), 0.01);
     const list = el('ul', {class: 'bars'}, entries.map((entry) => {
@@ -69,7 +77,8 @@
     }));
     const start = view.benchmark?.start?.market_date;
     return U.section('같은 돈을 지수에 넣었다면', list,
-      U.note((start ? start + '부터 ' : '') + '줄마다 적힌 날까지 원화 기준으로 비교했어요. 끝 날짜가 서로 다르면 같은 기간 비교가 아니에요. 지수 쪽은 배당·세금·수수료를 뺀 가격 기준이에요.'));
+      U.note((start ? start + '부터 ' : '') + '줄마다 적힌 날까지 원화 기준으로 비교했어요. 끝 날짜가 서로 다르면 같은 기간 비교가 아니에요. 지수 쪽은 배당·세금·수수료를 뺀 가격 기준이에요.'),
+      fresh ? U.note('S&P 500은 같은 지수를 따라가는 SPY의 종가로 다시 계산했어요. 시작 환율은 저장된 값, 지금 환율은 위 총자산과 같은 값이에요.') : null);
   }
 
   function basis(view) {

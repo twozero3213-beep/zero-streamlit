@@ -129,6 +129,17 @@ class BridgeTests(unittest.TestCase):
         for path, query in allowed:
             self.assertTrue(zero_proxy._upstream(path, query)[0].startswith(path))
 
+    def test_calendar_keeps_only_release_dates_from_the_desk(self):
+        desk = {'macro': [{'id': 'CPI', 'name': '소비자물가', 'country': 'KR', 'next_release_kst': '2026-12-02T08:00:00+09:00', 'series': [1] * 500},
+                          {'id': 'VIX', 'name': 'VIX', 'country': 'US', 'next_release_kst': None}, 'broken'],
+                'charts': [{'bars': [1] * 1000}]}
+        with mock.patch.object(zero_proxy, 'get_public', return_value=json.dumps(desk).encode()) as read:
+            response = call(zero_proxy.api, 'GET', 'api/calendar')
+        read.assert_called_once_with('/api/desk', {})
+        self.assertEqual(json.loads(response.body)['items'],
+                         [{'id': 'CPI', 'name': '소비자물가', 'country': 'KR', 'next_release_kst': '2026-12-02T08:00:00+09:00'}])
+        self.assertEqual(call(zero_proxy.api, 'GET', 'api/calendar', b'x=1').status_code, 404)
+
     def test_unlisted_or_malformed_reads_are_refused(self):
         refused = [('/api/refresh', {}), ('/api/office/jobs', {}), ('/internal/objects/x', {}), ('/api/portfolio', {'x': '1'}),
                    ('/api/chart', {'identity': '../x', 'range': '1Y'}), ('/api/chart', {'identity': 'US:AAPL', 'range': '10Y'}),

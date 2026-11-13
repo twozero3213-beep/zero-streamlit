@@ -188,19 +188,30 @@
     return block;
   }
 
+  // 적립식으로 많이 모으는 미국 ETF. 종목 화면과 같은 1년 일봉을 쓴다.
+  const SAVINGS_ETFS = [['US:SPY', 'SPY(S&P 500)'], ['US:SCHD', 'SCHD(미국 배당)'], ['US:TQQQ', 'TQQQ(나스닥 3배)']];
+
   async function savingsCalc() {
-    const desk = await D.desk();
-    const charts = (desk?.charts || []).filter((chart) => chart.interval === '1d' && Array.isArray(chart.bars) && chart.bars.length > 40);
+    const [desk, ...etfs] = await Promise.all([D.desk(), ...SAVINGS_ETFS.map(([id]) => U.api('api/chart?identity=' + encodeURIComponent(id) + '&range=1Y', 300))]);
+    const names = new Map((desk?.companies || []).map((company) => [company.id, company.name]));
+    const charts = [
+      ...(desk?.charts || []).filter((chart) => chart.interval === '1d' && Array.isArray(chart.bars) && chart.bars.length > 40)
+        .map((chart) => ({id: chart.id, name: names.get(chart.id) || chart.id, currency: chart.currency, bars: chart.bars.map((bar) => ({at: String(bar.at || ''), close: C.num(bar.close)}))})),
+      ...etfs.map((data, index) => data?.status === 'AVAILABLE' && data.identity === SAVINGS_ETFS[index][0] && Array.isArray(data.bars) && data.bars.length > 40
+        ? {id: data.identity, name: SAVINGS_ETFS[index][1], currency: data.currency, bars: data.bars.filter((bar) => Number.isFinite(bar?.time)).map((bar) => ({at: new Date(bar.time * 1000).toISOString(), close: C.num(bar.close)}))}
+        : null).filter(Boolean)];
     if (!charts.length) return null;
-    const names = new Map((desk.companies || []).map((company) => [company.id, company.name]));
-    const select = el('select', {id: 'sp-stock', 'aria-label': '종목'}, charts.map((chart) => el('option', {value: chart.id, text: names.get(chart.id) || chart.id})));
+    const select = el('select', {id: 'sp-stock', 'aria-label': '종목'}, charts.map((chart) => el('option', {value: chart.id, text: chart.name})));
     const out = el('div', {class: 'calc-out'});
     const amount = numberField('매달 넣는 돈', 'sp-amount', '100000', ' ');
+    let shownUsd = null;
     const paint = () => {
       const chart = charts.find((item) => item.id === select.value);
-      const bars = chart.bars.map((bar) => ({at: String(bar.at || ''), close: C.num(bar.close)}));
-      const result = C.savingsPlan(bars, C.num(amount.querySelector('input').value));
       const usd = chart.currency === 'USD';
+      // 원·달러가 바뀌면 기본 금액도 그 단위에 맞춘다(10만 원, 100달러).
+      if (shownUsd !== null && shownUsd !== usd) amount.querySelector('input').value = usd ? '100' : '100000';
+      shownUsd = usd;
+      const result = C.savingsPlan(chart.bars, C.num(amount.querySelector('input').value));
       amount.querySelector('small').textContent = usd ? '달러' : '원';
       if (!result) { out.replaceChildren(U.empty('금액을 넣어 주세요. 기록이 두 달 이상 있어야 비교할 수 있어요.')); return; }
       // 다른 화면과 같은 표기: 원은 정수와 '원', 달러는 $와 소수 둘째 자리.
@@ -216,7 +227,7 @@
         el('div', {}, el('dt', {text: '평균 산 가격'}), el('dd', {text: money(result.averageCost)}))));
     };
     const block = U.section('주식 모으기 계산기', el('div', {class: 'fields'}, el('label', {class: 'field', for: 'sp-stock'}, el('span', {text: '종목'}), select), amount), out,
-      U.note('저장된 일봉을 되돌려 본 결과예요. 수수료, 세금, 배당은 넣지 않았고 소수점 매수를 가정했어요. 앞으로도 같다는 뜻은 아니에요.'));
+      U.note('저장된 일봉을 되돌려 본 결과예요. 수수료, 세금, 배당은 넣지 않았고 소수점 매수를 가정했어요. 앞으로도 같다는 뜻은 아니에요. 미국 ETF는 Yahoo Finance 1년 일봉이에요.'));
     block.addEventListener('input', paint);
     paint();
     return block;

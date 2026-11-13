@@ -5,8 +5,15 @@
   const C = window.ZeroCore, U = window.ZeroUI;
 
   // 내 주식: 저장된 참고 포트폴리오에 지금 시세를 입힌다. 시세를 못 받으면 저장된 값 그대로.
+  // 지난번 보유 종목을 기억해 두었다가 포트폴리오를 받는 동안 시세를 함께 요청한다(두 요청이 줄 서지 않게).
+  const HOLDINGS_KEY = 'zero-holding-ids';
+  const IDENTITY = /^(KR:[0-9A-Z]{6}|US:[A-Z][A-Z0-9.-]{0,14})$/;
+
   async function portfolio(onSaved) {
     const deadline = performance.now() + 12000;
+    const remembered = U.store.get(HOLDINGS_KEY, null);
+    const known = Array.isArray(remembered) && remembered.length && remembered.length <= 60 && remembered.every((id) => IDENTITY.test(id)) ? remembered : null;
+    const early = known ? U.quotes(known, deadline) : null;
     const data = await U.api('api/portfolio', 60, deadline);
     const scope = data?.summary?.zero_portfolio;
     if (!scope || performance.now() >= deadline) return null;
@@ -18,7 +25,8 @@
       startAt: scope.start_at || null, benchmark: data.benchmark || null, targets: data.allocations?.target_percent || null
     };
     if (saved) onSaved?.(stored);
-    let quoteMap = await U.quotes(ids, deadline);
+    U.store.set(HOLDINGS_KEY, ids);
+    let quoteMap = early && known.join() === ids.join() ? await early : await U.quotes(ids, deadline);
     let liveFx = null;
     if (ids.some((id) => !quoteMap.has(id))) {
       const live = await U.api('api/live-quotes', 15, deadline);

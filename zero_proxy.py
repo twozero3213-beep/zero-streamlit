@@ -171,6 +171,15 @@ def get_public(path, query):
     return body
 
 
+def get_calendar():
+    """Home needs only release dates; the full desk is about 218 KB on the wire (2026-11-14)."""
+    desk = json.loads(get_public('/api/desk', {}))
+    items = [{key: row.get(key) for key in ('id', 'name', 'country', 'next_release_kst')}
+             for row in desk.get('macro') or [] if isinstance(row, dict) and isinstance(row.get('next_release_kst'), str)]
+    return json.dumps({'schema_version': 1, 'scope': 'MACRO_RELEASE_CALENDAR', 'items': items},
+                      ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+
+
 def get_headlines():
     def load():
         value = zero_headlines.collect()
@@ -308,6 +317,8 @@ async def api(request):
     try:
         if path == '/api/trends' and not query:
             body = await run_in_threadpool(get_public_trends)
+        elif path == '/api/calendar' and not query:
+            body = await run_in_threadpool(get_calendar)
         elif path == '/api/headlines' and not query:
             body = await run_in_threadpool(get_headlines)
         elif path == '/api/stock-info' and set(query) == {'code'} and zero_stockinfo.CODE.fullmatch(query['code']):

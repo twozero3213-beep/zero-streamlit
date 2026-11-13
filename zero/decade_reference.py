@@ -50,6 +50,24 @@ def monthly_series(payload, adjusted=True):
     return rows
 
 
+def trailing_dividend_yield(payload):
+    """마지막 달까지 1년 동안 받은 주당 배당 합계를 마지막 종가(배당 보정 전)로 나눈 %. 자료가 모자라면 None."""
+    try:
+        result = payload['chart']['result'][0]
+        closes = [value for value in result['indicators']['quote'][0]['close'] if isinstance(value, (int, float)) and value > 0]
+        last_stamp = result['timestamp'][-1]
+        events = (result.get('events') or {}).get('dividends') or {}
+    except (KeyError, IndexError, TypeError, AttributeError):
+        return None
+    if not closes or not isinstance(last_stamp, (int, float)) or not isinstance(events, dict):
+        return None
+    paid = [row.get('amount') for row in events.values() if isinstance(row, dict)
+            and isinstance(row.get('date'), (int, float)) and last_stamp - 366 * 86400 < row['date'] <= last_stamp + 31 * 86400]
+    if not paid or not all(isinstance(amount, (int, float)) and amount >= 0 for amount in paid):
+        return None
+    return sum(paid) / closes[-1] * 100
+
+
 def lump_sum(prices, fx, capital=CAPITAL_KRW):
     """prices·fx: (날짜, 값) 과거순 월별 목록. 시작 달에 capital원을 달러로 바꿔 사서 지금까지 들고 있었을 때."""
     if len(prices) < MIN_MONTHS or len(fx) < 2:
@@ -147,7 +165,7 @@ def build(fetch=None, now=None, *, deadline=None):
         if result is None:
             failed.append(symbol)
         else:
-            items.append({'symbol': symbol, 'label': label, **result})
+            items.append({'symbol': symbol, 'label': label, **result, 'dividend_yield_percent': trailing_dividend_yield(histories.get(symbol))})
     if not items:
         return 503, {**base, 'state': 'UNAVAILABLE', 'items': [], 'failed': failed}
     return 200, {**base, 'state': 'AVAILABLE', 'items': items, 'failed': failed}
