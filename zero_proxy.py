@@ -388,7 +388,8 @@ class _UI(StaticFiles):
 
 import zero_lwc
 
-routes = [Route('/', to_ui), *zero_lwc.routes,
+# '/' is left to the Streamlit page: Community Cloud shows the app frame only after that page reports ready.
+routes = [*zero_lwc.routes,
     Route('/zero/status', status),
     Route('/zero/api/{path:path}', api, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
     Route('/zero', to_ui),

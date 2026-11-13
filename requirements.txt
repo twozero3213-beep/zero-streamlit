@@ -3,4 +3,4 @@ feedparser==6.0.14
 lightweight-charts==2.1
 pandas==2.3.3
 
-# Changing this file makes Community Cloud restart the app; bump the date when proxy routes (zero_proxy.py) change: 2026-11-13 (refresh split-adjusted one-year chart caches for TQQQ and SOXL)
+# Changing this file makes Community Cloud restart the app; bump the date when proxy routes (zero_proxy.py) change: 2026-11-13 (root address back to the Streamlit page so the hosted frame is shown)

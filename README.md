@@ -7,8 +7,7 @@ ZERO 포트폴리오 화면(로컬 `127.0.0.1:8765`와 같은 화면)을 Streaml
 
 ## 구조
 - `streamlit_app.py` — 진입점. `st.App`(Streamlit 1.65+)이 아래 경로를 함께 제공한다.
-- `/` — 상대 주소 `zero/`로 이동해 원래 화면을 바로 연다. 중간 Streamlit 화면과 내부 프레임의 기동을 건너뛴다.
-- `zero_page.py` — 기존 Streamlit 화면 경로를 위한 보조 페이지.
+- `zero_page.py` — `/` 페이지. 원래 화면을 전체 크기로 연다. Community Cloud는 이 Streamlit 화면이 준비됐다고 알릴 때까지 앱 틀을 숨기므로 `/`를 화면 파일로 바로 넘기지 않는다.
 - `ui/` — 원래 ZERO 웹 화면(Cloudflare 빌드 `public/`의 사본, 경로만 상대경로로 변환). `/zero/`에서 서빙.
 - `zero_proxy.py` — `/zero/api/*`를 ZERO Cloudflare 사이트에서 서버가 대신 읽는다(허용 목록 GET만, 짧은 캐시).
   `/zero/status`는 키 설정 모양과 연결 결과만 알려준다(키 값 없음, 항상 200).
