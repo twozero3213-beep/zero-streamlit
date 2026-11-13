@@ -300,6 +300,11 @@ a.row-main:hover strong, button.row-main:hover strong { text-decoration: underli
 /* 돈 숫자 옆에 늘 붙는 '모의 계좌' 표시. 처음 보는 사람이 자기 돈으로 읽지 않게 한다. */
 .mock-tag { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 6px; background: var(--field); color: var(--sub); font-size: 0.875rem; font-weight: 600; vertical-align: 2px; }
 .nowrap { white-space: nowrap; }
+/* 분쟁 레이더: 회사마다 가는 구분선 하나로 나눈다(카드 속 카드 없음). */
+.radar-company { padding: 12px 0; border-top: 1px solid var(--line); }
+.radar-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.radar-name a, .note a { display: inline-flex; align-items: center; min-height: 44px; }
+.note a + a { margin-left: 12px; }
 /* 오름·내림 색(빨강·파랑)과 헷갈리지 않게 금액 크기 막대는 중립색. */
 .bars.neutral .bar-fill { background: var(--sub); }
 

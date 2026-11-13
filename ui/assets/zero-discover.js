@@ -100,13 +100,68 @@
     host.replaceChildren(picker, el('ul', {class: 'rows'}, rows), U.note('시가총액이 큰 순서예요' + (day ? '(' + day + ' 수집).' : '.') + ' 순위는 사라는 뜻이 아니에요.'));
   }
 
+  // ---- 분쟁 레이더 ----------------------------------------------------------------------------
+  // 토스·카카오(다음 금융)는 5% 보고·공개매수·경영권 소송을 따로 모아 보여 주지 않는다(검토자료 전략리서치-20261114).
+  // DART 공개 RSS에서 신호가 되는 공시만 골라 회사별 점수로 묶고, 쉬운 설명 아래에 원래 공시명과 접수 시각을 둔다.
+  const CASES = [
+    ['고려아연과 영풍', '2024년 2월 20일, 영풍이 주주총회 위임장을 모으기 시작했어요.', '2024년 9월 공개매수 보도', 205],
+    ['SM엔터테인먼트', '2022년 2월 28일, 얼라인파트너스가 위임장을 모으기 시작했어요.', '2023년 2월 하이브·카카오 인수전', 344],
+    ['한미사이언스', '2024년 1월 12일, 최대주주 변경 계약과 제3자배정 증자가 공시됐어요.', '2024년 1월 17일 가처분 보도', 5],
+    ['한진칼', '2018년 11월 15일, 그레이스홀딩스가 경영 참여 목적으로 9%를 보고했어요.', '보도', 0]
+  ];
+  const hot = (level) => level === '경보' || level === '분쟁 진행';
+
+  function signalRow(signal) {
+    return el('li', {class: 'row'}, el('span', {class: 'row-main stacked'},
+      el('strong', {text: signal.label}),
+      el('small', {text: signal.report}),
+      el('small', {text: (signal.outside ? '제출: ' + signal.filer + '(회사가 아닌 주주)' : '제출: 회사') + ', ' + (U.timeText(signal.at) || '시각 미확인') + ' 접수'}),
+      el('a', {href: signal.url, target: '_blank', rel: 'noopener noreferrer', text: 'DART 원문 보기'})),
+      el('span', {class: 'chip chip-off', text: '+' + signal.points}));
+  }
+
+  function radarCompany(entry, limit = 4) {
+    const name = entry.stock_code ? el('a', {href: '#stock/KR:' + entry.stock_code, text: entry.company}) : el('span', {text: entry.company});
+    const related = (entry.related || []).filter((item) => item.stock_code);
+    return el('div', {class: 'radar-company'},
+      el('div', {class: 'radar-head'}, el('strong', {class: 'radar-name'}, name),
+        el('span', {class: 'chip ' + (hot(entry.level) ? 'chip-on' : 'chip-off'), text: entry.level + ' ' + entry.score + '점'})),
+      el('ul', {class: 'rows'}, entry.signals.slice(0, limit).map(signalRow)),
+      related.length ? el('p', {class: 'note'}, '함께 볼 회사: ', ...related.map((item) => el('a', {href: '#stock/KR:' + item.stock_code, text: item.name}))) : null);
+  }
+
+  function radarRules(data) {
+    return [
+      el('details', {class: 'details'}, el('summary', {text: '점수는 이렇게 매겨요'}),
+        el('p', {text: '최근 ' + data.window_days + '일 공시에서 아래 신호를 더해요. 30점 관찰, 60점 경보, 90점 분쟁 진행이에요.'}),
+        el('p', {text: '공개매수 50, 법원에 주총 소집 신청 40, 경영 참여 목적 5% 보고 35, 경영권 소송 35, 최대주주 변경 30, 위임장 권유 25, 소송 판결 15, 주주제안 15, 해명 공시 10, 증자와 자사주 5점이에요.'}),
+        el('p', {text: '5% 보고와 위임장은 회사가 아닌 주주가 냈을 때만 세요. 최대주주의 가족이 낸 보고도 여기에 들어갈 수 있어요.'}),
+        el('p', {text: '점수는 지난 사례 4건으로 맞춘 초안이라 틀릴 수 있어요. 지켜보는 회사는 ' + (data.watch || []).map((item) => item.name).join(', ') + '이고, 오늘 공시된 모든 회사도 함께 봐요.'})),
+      el('details', {class: 'details'}, el('summary', {text: '지난 분쟁은 뉴스보다 공시가 먼저였어요'}),
+        ...CASES.map(([name, first, headline, days]) => el('p', {}, el('strong', {text: name + ': '}), first + ' ' + (days ? headline + '보다 ' + days + '일 먼저였어요.' : headline + '와 같은 날이었어요.'))))
+    ];
+  }
+
+  async function radarBlock(host, section) {
+    const data = await D.governance();
+    if (data?.scope !== 'GOVERNANCE_RADAR') { section.hidden = true; return; }
+    const companies = data.companies || [];
+    host.replaceChildren(
+      el('p', {text: '경영권·지분 다툼의 첫 신호는 뉴스보다 DART 공시에 먼저 떠요. 고려아연 분쟁은 공개매수 보도보다 205일 먼저 위임장 공시가 있었어요.'}),
+      ...(companies.length ? companies.slice(0, 6).map((entry) => radarCompany(entry)) : [U.empty('최근 ' + data.window_days + '일 동안 분쟁 신호가 된 공시가 없어요.')]),
+      ...radarRules(data),
+      U.note('자료: ' + data.source + ', ' + (U.timeText(data.retrieved_at) || '') + ' 확인. 공시 원문은 DART에서 보세요. 투자 권유가 아니에요.'));
+  }
+
   function showDiscover() {
-    const rankHost = el('div', {class: 'slot'}, U.loading()), universeHost = el('div', {class: 'slot'}, U.loading());
+    const rankHost = el('div', {class: 'slot'}, U.loading()), universeHost = el('div', {class: 'slot'}, U.loading()), radarHost = el('div', {class: 'slot'}, U.loading());
+    const radar = U.section('분쟁 레이더', radarHost);
     discoverRoot.replaceChildren(
       el('h1', {class: 'page-title', text: '발견'}),
       el('div', {class: 'columns'},
-        el('div', {class: 'column'}, U.section('실시간 순위', rankHost)),
+        el('div', {class: 'column'}, radar, U.section('실시간 순위', rankHost)),
         el('div', {class: 'column'}, U.section('시가총액 순', universeHost))));
+    radarBlock(radarHost, radar);
     rankBlock(rankHost);
     universeBlock(universeHost);
   }
@@ -239,11 +294,12 @@
     const [market, code] = id.split(':'), kr = market === 'KR';
     stockRoot.replaceChildren(el('a', {class: 'back', href: '#discover'}, U.icon('back', 18), '발견'), U.loading());
 
-    const [quoteMap, research, info, card, decade] = await Promise.all([
+    const [quoteMap, research, info, card, decade, radar] = await Promise.all([
       U.quotes([id]), D.research(),
       kr ? U.api('api/stock-info?code=' + code, 60) : null,
       U.api('api/market-card?identity=' + encodeURIComponent(id), 120),
-      kr ? null : D.decade()
+      kr ? null : D.decade(),
+      kr ? D.governance() : null
     ]);
     if (token !== stockToken) return;
     const company = research?.companies?.find((item) => item.id === id);
@@ -286,6 +342,15 @@
       el('dl', {class: 'facts'}, fact('배당수익률(최근 1년)', C.cut2(dividend) + '%')),
       U.note('최근 1년 동안 받은 주당 배당을 지금 가격으로 나눈 값이에요. 자료: Yahoo Finance.')) : null;
 
+    // 이 회사에 최근 분쟁 신호가 있으면 종목 화면 위쪽에 묶어 보여 준다(카카오 검토의 '종목 머리 배지').
+    const dispute = kr && radar?.scope === 'GOVERNANCE_RADAR' ? (radar.companies || []).find((entry) => entry.stock_code === code || entry.company === name) : null;
+    const disputeBlock = dispute ? U.section('분쟁 신호', radarCompany(dispute, 3), el('a', {class: 'button ghost', href: '#discover', text: '분쟁 레이더 전체 보기'})) : null;
+    // 증권사 리포트는 모아 오지 않는다. 목록 사이트들이 자동 수집을 금지해서 원문 사이트로만 연결한다.
+    const researchLinks = kr ? U.section('증권사 리포트',
+      el('ul', {class: 'rows'}, [['네이버페이 증권 리서치', 'https://stock.naver.com/research/company'], ['한경 컨센서스', 'https://consensus.hankyung.com/analysis/list'], ['한국IR협의회 기업리서치(무료 보고서)', 'https://www.kirs.or.kr/research/research.html']]
+        .map(([label, href]) => el('li', {class: 'row'}, el('a', {class: 'row-main', href, target: '_blank', rel: 'noopener noreferrer', text: label})))),
+      U.note('ZERO는 리포트를 모아 오지 않고 원문 사이트로 연결해요. 종목 이름으로 찾아보세요.')) : null;
+
     const peers = (info?.peers || []).filter((peer) => /^[0-9A-Z]{6}$/.test(peer?.code));
     const peerBlock = peers.length ? U.section('같은 업종 종목', el('ul', {class: 'rows'}, peers.map((peer) => U.stockRow({
       id: 'KR:' + peer.code, name: peer.name, sub: peer.market || '', value: C.priceText(C.num(peer.price), 'KRW'), percent: Number.isFinite(peer.change_rate) ? peer.change_rate : undefined
@@ -297,8 +362,8 @@
       head, priceLine,
       U.note(stamp ? stamp + ' 기준, 공개 시세라 조금 늦을 수 있어요.' : '시세 기준 시각을 확인하지 못했어요.'),
       el('div', {class: 'columns'},
-        el('div', {class: 'column'}, chartBlock, factBlock || usFacts, drawdownHost, investorBlock(info?.investors)),
-        el('div', {class: 'column'}, companyBlock(company), newsHost, peerBlock)));
+        el('div', {class: 'column'}, disputeBlock, chartBlock, factBlock || usFacts, drawdownHost, investorBlock(info?.investors)),
+        el('div', {class: 'column'}, companyBlock(company), newsHost, researchLinks, peerBlock)));
     drawChart(chartHost, id, range);
     drawStockDrawdown(drawdownHost, id, token);
 

@@ -140,6 +140,13 @@ class BridgeTests(unittest.TestCase):
                          [{'id': 'CPI', 'name': '소비자물가', 'country': 'KR', 'next_release_kst': '2026-12-02T08:00:00+09:00'}])
         self.assertEqual(call(zero_proxy.api, 'GET', 'api/calendar', b'x=1').status_code, 404)
 
+    def test_governance_and_premarket_routes_use_their_builders(self):
+        from zero import governance_radar, premarket
+        with mock.patch.object(governance_radar, 'get_governance_radar', return_value=(200, {'scope': 'GOVERNANCE_RADAR'})),              mock.patch.object(premarket, 'get_premarket', return_value=(503, {'scope': 'PREMARKET_CHECKLIST', 'state': 'UNAVAILABLE'})):
+            self.assertEqual(json.loads(call(zero_proxy.api, 'GET', 'api/governance').body)['scope'], 'GOVERNANCE_RADAR')
+            self.assertEqual(call(zero_proxy.api, 'GET', 'api/premarket').status_code, 503)
+        self.assertEqual(call(zero_proxy.api, 'GET', 'api/governance', b'x=1').status_code, 404)
+
     def test_unlisted_or_malformed_reads_are_refused(self):
         refused = [('/api/refresh', {}), ('/api/office/jobs', {}), ('/internal/objects/x', {}), ('/api/portfolio', {'x': '1'}),
                    ('/api/chart', {'identity': '../x', 'range': '1Y'}), ('/api/chart', {'identity': 'US:AAPL', 'range': '10Y'}),

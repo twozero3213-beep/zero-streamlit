@@ -81,6 +81,27 @@
     fill('market', chips, el('ul', {class: 'rows'}, rows), U.note('지수를 따라가는 ETF의 가격이에요. 한국 시간 기준이고 공휴일 휴장은 반영하지 않았어요.'));
   }
 
+  // ---- 장 전 점검표 ----------------------------------------------------------------------------
+  // 예측하지 않고, '내일 장 어떻게 되냐'에 사람들이 실제로 확인하는 밤사이 숫자와 기준 시각만 보여 준다.
+  let premarketBlock = null;
+  async function paintPremarket() {
+    const data = await D.premarket();
+    const items = data?.scope === 'PREMARKET_CHECKLIST' ? (data.items || []).filter((item) => Number.isFinite(item.price)) : [];
+    if (!items.length) { premarketBlock.hidden = true; return; }
+    premarketBlock.hidden = false;
+    const value = (item) => item.unit === 'yield' ? item.price.toFixed(2) + '%'
+      : item.price.toLocaleString('en-US', {maximumFractionDigits: 2}) + (item.unit === 'fx' ? '원' : '');
+    const move = (item) => item.unit === 'yield'
+      ? el('span', {class: 'change tone-' + C.direction(item.change), text: (item.change > 0 ? '+' : '') + item.change.toFixed(2) + '%p'})
+      : U.change(item.change_percent);
+    const latest = items.map((item) => item.market_time).sort().pop();
+    fill('premarket', el('ul', {class: 'rows'}, items.map((item) => el('li', {class: 'row'},
+      el('span', {class: 'row-main stacked'}, el('strong', {text: item.name}), el('small', {text: item.why})),
+      el('span', {class: 'row-value'}, el('strong', {text: value(item)}), move(item))))),
+      U.note('밤사이 해외 시장이에요. 내일 장을 맞히는 지표가 아니라 장 열기 전에 미리 볼 숫자예요. 전 거래일 종가와 비교했어요.'),
+      U.note('자료: Yahoo Finance 공개 일봉' + (latest ? ', ' + (U.timeText(latest) || latest) + ' 기준' : '') + '. 조금 늦을 수 있어요.'));
+  }
+
   // ---- 10년 전 1억을 넣었다면 ------------------------------------------------------------------
   async function paintDecade() {
     const data = await D.decade();
@@ -182,8 +203,8 @@
         el('a', {class: 'home-research', href: '#more/reports'}, U.icon('report', 20), '기관 리서치')),
       // 넓은 화면은 두 단, 휴대폰은 한 줄로 풀고 data-order 순서로 놓는다.
       el('div', {class: 'columns home-grid'},
-        el('div', {class: 'column'}, ordered(1, assets), ordered(2, U.section('오늘 시장', slot('market'))), ordered(6, U.section('다가오는 발표', slot('calendar')))),
-        el('div', {class: 'column'}, ordered(3, U.section('10년 전 1억원을 넣었다면', slot('decade'))), ordered(4, U.section('관심 종목', slot('watch'))), ordered(5, U.section('실시간 순위', slot('rank'))))));
+        el('div', {class: 'column'}, ordered(1, assets), ordered(2, U.section('오늘 시장', slot('market'))), ordered(3, premarketBlock = U.section('장 전 점검표', slot('premarket'))), ordered(7, U.section('다가오는 발표', slot('calendar')))),
+        el('div', {class: 'column'}, ordered(4, U.section('10년 전 1억원을 넣었다면', slot('decade'))), ordered(5, U.section('관심 종목', slot('watch'))), ordered(6, U.section('실시간 순위', slot('rank'))))));
     document.addEventListener('zero-watch-changed', paintWatch);
     built = true;
   }
@@ -193,7 +214,7 @@
   U.route('home', {
     title: () => '홈',
     show() {
-      if (!built) { build(); paintDecade(); paintCalendar(); }
+      if (!built) { build(); paintDecade(); paintCalendar(); paintPremarket(); }
       paintAll();
     }
   });

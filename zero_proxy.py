@@ -339,6 +339,14 @@ async def api(request):
         elif path == '/api/market/recommendations':
             from zero.market_intelligence import get_daily_25_recommendations
             return JSONResponse(get_daily_25_recommendations())
+        elif path in ('/api/governance', '/api/premarket') and not query:
+            # 분쟁 레이더(DART 공개 RSS)와 장 전 점검표(Yahoo 일봉). 둘 다 키 없이 서버에서 모아 짧게 캐시한다.
+            if path == '/api/governance':
+                from zero.governance_radar import get_governance_radar as build_view
+            else:
+                from zero.premarket import get_premarket as build_view
+            status_code, body = await run_in_threadpool(build_view)
+            return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=120'})
         elif path == '/api/decade' and not query:
             from zero.decade_reference import get_decade_reference
             status_code, body = await run_in_threadpool(get_decade_reference)
