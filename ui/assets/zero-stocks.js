@@ -15,7 +15,7 @@
       el('div', {}, el('dt', {text: '주식 평가액'}), el('dd', {text: U.amounts.text(C.wonText(view.held))})),
       el('div', {}, el('dt', {text: '남은 현금'}), el('dd', {text: U.amounts.text(C.wonText(view.cash))})));
     return el('section', {class: 'block hero'},
-      el('h2', {class: 'block-title', text: '총자산'}),
+      el('h2', {class: 'block-title'}, '총자산 ', el('span', {class: 'mock-tag', text: '모의 계좌'})),
       el('p', {class: 'hero-total', text: U.amounts.text(C.wonText(view.total))}),
       today, facts);
   }
@@ -51,7 +51,7 @@
 
   // 같은 날 같은 돈을 지수에 넣었다면: 저장된 참고 계산(원화 기준)만 쓴다.
   async function comparison(view) {
-    const entries = [{name: 'ZERO', percent: view.returnPercent}];
+    const entries = [{name: 'ZERO', percent: view.returnPercent, date: riskDate(view.pricedAt)}];
     const sp = C.num(view.benchmark?.krw_common?.return_percent);
     if (view.benchmark?.state === 'AVAILABLE' && Number.isFinite(sp)) entries.push({name: 'S&P 500', percent: sp, date: view.benchmark.krw_common.market_date});
     const tqqq = await U.api('api/tqqq', 1800);
@@ -69,7 +69,7 @@
     }));
     const start = view.benchmark?.start?.market_date;
     return U.section('같은 돈을 지수에 넣었다면', list,
-      U.note((start ? start + '부터 ' : '') + '원화 기준으로 비교했어요. 지수 쪽은 배당·세금·수수료를 뺀 가격 기준이고 기준일이 서로 다를 수 있어요.'));
+      U.note((start ? start + '부터 ' : '') + '줄마다 적힌 날까지 원화 기준으로 비교했어요. 끝 날짜가 서로 다르면 같은 기간 비교가 아니에요. 지수 쪽은 배당·세금·수수료를 뺀 가격 기준이에요.'));
   }
 
   function basis(view) {
@@ -81,7 +81,7 @@
       '오늘 손익은 종목마다 가장 최근 거래일의 변동을 더한 값이에요. 미국 종목은 지난밤 장 기준이에요.',
       '남은 현금은 계획과 체결 기록으로 계산한 값이고 실제 결제 현금과 다를 수 있어요.'
     ].filter(Boolean);
-    return el('details', {class: 'block details'}, el('summary', {text: '이 숫자는 어떻게 계산했나요'}), ...lines.map((line) => el('p', {text: line})));
+    return el('details', {class: 'block details basis'}, el('summary', {text: '이 숫자는 어떻게 계산했나요'}), ...lines.map((line) => el('p', {text: line})));
   }
 
   const RISK_IDS = ['US:SPY', 'US:SCHD', 'US:TQQQ', 'US:SOXL'];
@@ -90,22 +90,27 @@
 
   function drawdown(view) {
     const start = riskDate(view.startAt), observed = riskDate(referenceAt);
+    // 한 줄에는 종목·고점과 저점 날짜·낙폭만. 기간·종가 수·출처는 접어 둔 '기준 보기'에 한 번씩만 적는다.
+    const day = (value) => el('span', {class: 'nowrap', text: riskDate(value)});
     const rows = RISK_IDS.map((id, index) => {
-      const risk = lastRisks[index], name = id.split(':')[1];
-      const detail = !risk ? '일봉을 확인하는 중이에요.' : risk.state === 'AVAILABLE'
-        ? riskDate(risk.startAt) + ' ~ ' + riskDate(risk.endAt) + ', ' + risk.count + '개 종가 · ' + risk.currency + '\n고점 ' + riskDate(risk.peakAt) + ', 저점 ' + riskDate(risk.troughAt)
-        : '1년 일봉의 기준·기간·누락을 확인하지 못해 표시를 보류해요.';
-      return el('li', {class: 'row'}, el('span', {class: 'row-main stacked'},
-        el('strong', {text: name}), el('small', {text: detail}),
-        risk?.sourceUrl ? el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Yahoo Finance 일봉 출처'}) : null),
-      risk?.state === 'AVAILABLE' ? el('strong', {class: 'tone-down', text: C.percentText(-risk.percent)}) : null);
+      const risk = lastRisks[index], name = id.split(':')[1], ok = risk?.state === 'AVAILABLE';
+      const sub = !risk ? el('small', {text: '일봉을 확인하는 중이에요.'}) : ok
+        ? el('small', {}, '고점 ', day(risk.peakAt), ', 저점 ', day(risk.troughAt))
+        : el('small', {text: '1년 일봉을 확인하지 못해 비워 뒀어요.'});
+      return el('li', {class: 'row'}, el('span', {class: 'row-main stacked'}, el('strong', {text: name}), sub),
+        ok ? el('strong', {class: 'tone-down', text: C.percentText(-risk.percent)}) : null);
     });
+    const ready = RISK_IDS.map((id, index) => [id.split(':')[1], lastRisks[index]]).filter(([, risk]) => risk?.state === 'AVAILABLE');
+    const more = el('details', {class: 'details'}, el('summary', {text: '기준 보기'}),
+      ...ready.map(([name, risk]) => el('p', {}, el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: name + ' 일봉(Yahoo Finance)'}),
+        ' ', day(risk.startAt), '부터 ', day(risk.endAt), '까지 종가 ' + risk.count + '개, ' + risk.currency + ' 기준, ' + (risk.splitAdjusted ? '주식 분할을 반영했어요.' : '받은 종가 그대로예요.'))),
+      el('p', {text: '배당·환율·세금·수수료는 넣지 않았어요. 장중 가격이나 빠진 거래일 때문에 실제 낙폭과 조금 다를 수 있어요.'}),
+      el('p', {text: 'ZERO 포트폴리오 자체의 낙폭은 날마다의 총자산 기록이 쌓이면 보여 드려요. 지금은 그 기록이 없어 계산하지 않았어요.' +
+        ([start ? ' 참고 시작 ' + start + '.' : '', observed ? ' 마지막 저장 ' + observed + '.' : ''].join(''))}));
+    if (riskHost?.querySelector('details')?.open) more.open = true;
     return U.section('1년 최대 낙폭',
-      el('h3', {class: 'sub-title', text: 'ZERO 포트폴리오: 자료 부족'}),
-      el('p', {text: '현재 제공되는 자료에는 입출금을 구분한 일별 총자산 이력이 없어 1년 낙폭과 관측기간 낙폭 모두 계산할 수 없어요.'}),
-      start || observed ? U.note([start ? '참고 시작 ' + start : null, observed ? '마지막 저장 관측 ' + observed : null].filter(Boolean).join(' · ')) : null,
-      el('h3', {class: 'sub-title', text: '비교 종목의 관측기간 낙폭'}), el('ul', {class: 'rows'}, rows),
-      U.note('각 관측기간에서 고점 뒤 가장 많이 떨어진 폭이에요. 주식 분할을 반영한 수신 종가 기준이며 배당·환율·세금·수수료는 반영하지 않았어요. 거래일 일부가 빠질 수 있어 실제 장중 낙폭이나 총수익률과 달라요.'));
+      el('p', {text: '1년 동안 가장 비쌌을 때보다 얼마나 떨어졌었는지예요. 숫자가 클수록 많이 흔들린 종목이에요.'}),
+      el('ul', {class: 'rows'}, rows), more);
   }
 
   async function loadDrawdowns(token) {

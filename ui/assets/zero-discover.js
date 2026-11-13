@@ -156,12 +156,15 @@
       host.replaceChildren(U.section('1년 최대 낙폭', U.note('1년 일봉의 기준·기간·누락을 확인하지 못해 표시를 보류해요.')));
       return;
     }
-    const date = (at) => new Date(at).toISOString().slice(0, 10);
-    host.replaceChildren(U.section('1년 최대 낙폭', el('p', {class: 'stock-price tone-down', text: C.percentText(-risk.percent)}),
-      el('p', {text: date(risk.startAt) + ' ~ ' + date(risk.endAt) + ', ' + risk.count + '개 종가 · ' + risk.currency}),
-      el('p', {text: '고점 ' + date(risk.peakAt) + ', 저점 ' + date(risk.troughAt)}),
-      U.note('관측기간에서 고점 뒤 가장 많이 떨어진 폭이에요. ' + (risk.splitAdjusted ? '주식 분할을 반영한 수신 종가' : '수신 종가') + ' 기준이며 배당·환율·세금·수수료는 반영하지 않았어요. 거래일 일부가 빠질 수 있어 실제 장중 낙폭이나 총수익률과 달라요.'),
-      el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Yahoo Finance 일봉 출처'})));
+    const day = (at) => el('span', {class: 'nowrap', text: new Date(at).toISOString().slice(0, 10)});
+    // 먼저 쉬운 한 문장, 기간·종가 수·출처는 '기준 보기'에 접어 둔다.
+    host.replaceChildren(U.section('1년 최대 낙폭',
+      el('p', {class: 'hero-line'}, '1년 동안 가장 비쌌을 때와 비교해 최대 ', el('strong', {class: 'tone-down', text: C.percentText(-risk.percent)}), '까지 내려갔었어요.'),
+      el('p', {class: 'note'}, '고점 ', day(risk.peakAt), ', 저점 ', day(risk.troughAt)),
+      el('details', {class: 'details'}, el('summary', {text: '기준 보기'}),
+        el('p', {}, day(risk.startAt), '부터 ', day(risk.endAt), '까지 종가 ' + risk.count + '개, ' + risk.currency + ' 기준이에요.'),
+        el('p', {text: (risk.splitAdjusted ? '주식 분할을 반영한 종가로' : '받은 종가 그대로') + ' 계산했고 배당·환율·세금·수수료는 넣지 않았어요. 장중 가격이나 빠진 거래일 때문에 실제 낙폭과 조금 다를 수 있어요.'}),
+        el('p', {}, el('a', {href: risk.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Yahoo Finance 일봉 출처'})))));
   }
 
   function fact(label, value) { return value === null || value === undefined ? null : el('div', {}, el('dt', {text: label}), el('dd', {text: value})); }
@@ -207,7 +210,10 @@
     if (!company) return null;
     const parts = [];
     // 자료 앞에 붙은 분류 표시("업종 기반 검토: ")는 떼고 문장만 보여 준다.
-    const sentence = (text) => String(text).replace(/^[가-힣 ]{2,12}: /, '');
+    // 공시 말투 '동사는'은 '이 회사는'으로 바꾼다.
+    const sentence = (text) => String(text).replace(/^[가-힣 ]{2,12}: /, '').replace(/^동사(는|의|가)/, (_, josa) => '이 회사' + josa);
+    // 원문에서 쉼표로 끊겨 들어온 문장은 뜻이 반쯤 잘려 보여서 뺀다.
+    const whole = (line) => !/[,，]\s*$/.test(String(line));
     if (company.overview && !/확인하지 못했/.test(company.overview)) parts.push(el('p', {text: sentence(company.overview)}));
     const financials = company.financials;
     if (financials?.status === 'AVAILABLE') {
@@ -217,7 +223,8 @@
     const etf = company.kind === 'ETF';
     const lists = [[etf ? '무엇을 따라가나요' : '돈을 버는 방식', company.business_model], [etf ? '값을 움직이는 것' : '실적을 움직이는 것', company.drivers], ['조심할 점', company.risks]];
     lists.forEach(([label, lines]) => {
-      if (Array.isArray(lines) && lines.length) parts.push(el('h3', {class: 'sub-title', text: label}), ...lines.slice(0, 2).map((line) => el('p', {text: sentence(line)})));
+      const kept = Array.isArray(lines) ? lines.filter(whole).slice(0, 2) : [];
+      if (kept.length) parts.push(el('h3', {class: 'sub-title', text: label}), ...kept.map((line) => el('p', {text: sentence(line)})));
     });
     if (!parts.length) return null;
     return U.section(etf ? '어떤 상품인가요' : '어떤 회사인가요', ...parts, U.note((company.industry ? company.industry + (etf ? '. ' : ' 업종. ') : '') + '공개 자료를 정리한 설명이고 독립 검증 전이에요.'));
@@ -241,6 +248,7 @@
     const company = research?.companies?.find((item) => item.id === id);
     const quote = quoteMap.get(id);
     const name = quote?.name || info?.name || company?.name || code;
+    document.title = name + ' | ZERO';
     const snapshot = C.stockSnapshot(quote, card, info);
     const price = snapshot?.price ?? NaN;
     const currency = kr ? 'KRW' : 'USD';
@@ -282,7 +290,7 @@
       head, priceLine,
       U.note(stamp ? stamp + ' 기준, 공개 시세라 조금 늦을 수 있어요.' : '시세 기준 시각을 확인하지 못했어요.'),
       el('div', {class: 'columns'},
-        el('div', {class: 'column'}, chartBlock, drawdownHost, factBlock, investorBlock(info?.investors)),
+        el('div', {class: 'column'}, chartBlock, factBlock, drawdownHost, investorBlock(info?.investors)),
         el('div', {class: 'column'}, companyBlock(company), newsHost, peerBlock)));
     drawChart(chartHost, id, range);
     drawStockDrawdown(drawdownHost, id, token);

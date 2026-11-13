@@ -63,8 +63,14 @@ def lump_sum(prices, fx, capital=CAPITAL_KRW):
     multiple_krw = multiple_usd * fx_end / fx_start
     # 그림용: 해마다 1월(과 마지막 달)의 원화 평가액.
     points = []
+    # 10년 사이 가장 크게 떨어진 폭: 원화 월말 평가액의 고점 대비. 달 중간의 더 깊은 바닥은 놓친다.
+    peak, drawdown = 0.0, 0.0
     for day, price in prices:
         rate = fx_by_month.get(day[:7])
+        if rate:
+            value = price * rate
+            peak = max(peak, value)
+            drawdown = max(drawdown, (1 - value / peak) * 100)
         if rate and (day[5:7] == '01' or day == end_day or day == start_day):
             points.append({'date': day, 'value_krw': round(capital * price / start_price * rate / fx_start)})
     return {
@@ -72,6 +78,7 @@ def lump_sum(prices, fx, capital=CAPITAL_KRW):
         'return_percent_usd': (multiple_usd - 1) * 100,
         'return_percent_krw': (multiple_krw - 1) * 100,
         'value_krw': round(capital * multiple_krw),
+        'max_drawdown_percent_krw': drawdown,
         'fx_start': fx_start, 'fx_end': fx_end, 'points': points,
     }
 

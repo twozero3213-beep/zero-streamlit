@@ -87,17 +87,27 @@
     const items = (data?.items || []).filter((item) => Number.isFinite(item.value_krw) && Number.isFinite(item.return_percent_krw));
     if (data?.scope !== 'DECADE_LUMP_SUM_REFERENCE' || !items.length) { fill('decade', U.empty('10년 비교 자료를 불러오지 못했어요.')); return; }
     const top = Math.max(...items.map((item) => item.value_krw));
-    const list = el('ul', {class: 'bars'}, items.map((item) => {
+    const month = (day) => day.slice(0, 7).replace('-', '년 ') + '월';
+    // 큰 수익률만 보이지 않게 해마다 몇 %씩이었는지와 그 사이 가장 깊게 떨어진 폭을 같이 적는다.
+    const detail = (item) => {
+      const years = (Date.parse(item.end_date) - Date.parse(item.start_date)) / (365.25 * 864e5);
+      const yearly = years > 1 ? (Math.pow(1 + item.return_percent_krw / 100, 1 / years) - 1) * 100 : NaN;
+      const drop = C.num(item.max_drawdown_percent_krw);
+      return [Number.isFinite(yearly) ? '해마다 ' + C.percentText(yearly) : null, Number.isFinite(drop) && drop > 0 ? '가장 깊게 ' + C.percentText(-drop) : null].filter(Boolean).join(', ');
+    };
+    const list = el('ul', {class: 'bars neutral'}, items.map((item) => {
       const bar = el('span', {class: 'bar-fill'});
       bar.style.setProperty('width', Math.max(3, item.value_krw / top * 100).toFixed(1) + '%');
+      const sub = detail(item);
       return el('li', {class: 'bar-row'},
-        el('span', {class: 'bar-name'}, el('strong', {text: item.label}), item.label === item.symbol ? null : el('small', {text: item.symbol})),
+        el('span', {class: 'bar-name'}, el('strong', {text: item.label}), sub ? el('small', {text: sub}) : null),
         el('span', {class: 'bar-track'}, bar),
         el('span', {class: 'bar-value'}, el('strong', {text: C.wonText(item.value_krw)}), el('span', {class: 'tone-' + C.direction(item.return_percent_krw), text: C.percentText(item.return_percent_krw)})));
     }));
-    const start = items[0].start_date.slice(0, 7).replace('-', '년 ') + '월';
+    const ends = items.map((item) => item.end_date).sort();
     fill('decade', list,
-      U.note(start + '에 1억원을 한 번에 넣고 지금까지 들고 있었을 때예요. 배당은 다시 넣었고 환율 변화도 반영했어요. 세금과 수수료는 계산에 넣지 않았어요. 지난 기록이라 앞으로도 같다는 뜻은 아니에요.'));
+      U.note(month(items[0].start_date) + '에 1억원을 한 번에 넣고 ' + month(ends[ends.length - 1]) + '까지 들고 있었을 때예요. 배당은 다시 넣었고 환율 변화도 반영했어요. 세금과 수수료는 넣지 않았어요.'),
+      U.note('가장 깊게 떨어진 폭은 그 사이 가장 높았던 달보다 원화 평가액이 얼마나 줄었는지예요(월말 기준). 지난 기록이라 앞으로도 같다는 뜻은 아니에요. 자료: Yahoo Finance 월봉과 원·달러 환율.'));
   }
 
   // ---- 관심 종목 ------------------------------------------------------------------------------
@@ -106,7 +116,8 @@
     const token = ++watchToken;
     const list = U.watch.list();
     if (!list.length) {
-      fill('watch', U.empty('아직 담은 종목이 없어요. 종목 화면에서 하트를 누르면 여기에 모여요.'), el('a', {class: 'button ghost', href: '#discover', text: '종목 찾아보기'}));
+      fill('watch', U.empty('아직 담은 종목이 없어요. 종목 화면에서 하트를 누르면 여기에 모여요.'),
+        el('div', {class: 'button-row'}, el('a', {class: 'button ghost', href: '#discover', text: '종목 찾아보기'}), el('a', {class: 'button ghost', href: '#more/study', text: '주식 입문 학교'})));
       return;
     }
     const quoteMap = await U.quotes(list.map((item) => item.id));
@@ -163,7 +174,7 @@
     document.addEventListener('zero-theme-changed', () => { if (lastAssets) renderAssets(lastAssets); });
     const refresh = el('button', {type: 'button', class: 'icon-button', 'aria-label': '시세 새로고침', onclick: () => { U.forget('api/market/quote'); U.forget('api/live-quotes'); U.forget('api/market-rank'); paintAll(); }}, U.icon('refresh'));
     const assets = el('section', {class: 'block hero'},
-      el('div', {class: 'block-head'}, el('h2', {class: 'block-title', text: '내 자산'}), el('span', {class: 'block-tools'}, hide, refresh)),
+      el('div', {class: 'block-head'}, el('h2', {class: 'block-title'}, '내 자산 ', el('span', {class: 'mock-tag', text: '모의 계좌'})), el('span', {class: 'block-tools'}, hide, refresh)),
       slot('assets'));
     root.replaceChildren(
       el('div', {class: 'home-heading'}, el('h1', {text: '홈'}),

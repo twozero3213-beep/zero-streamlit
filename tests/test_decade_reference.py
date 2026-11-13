@@ -66,6 +66,17 @@ class DecadeReferenceTests(unittest.TestCase):
         self.assertEqual(result['points'][0], {'date': self.days[0], 'value_krw': 100_000_000})
         self.assertEqual(result['points'][-1]['value_krw'], 480_000_000)
         self.assertEqual(len(result['points']), 12)  # 시작 달, 2017~2026년 1월 10번, 마지막 달
+        self.assertEqual(result['max_drawdown_percent_krw'], 0.0, '계속 오르기만 한 기록')
+
+    def test_drawdown_uses_krw_month_end_values(self):
+        # 원화 평가액: 100 -> 200 -> 50 -> 300. 고점 200에서 50까지 75% 하락.
+        prices = list(zip(self.days, [100.0] * 30 + [200.0] * 30 + [50.0] * 30 + [300.0] * 30))
+        fx = list(zip(self.days, [1000.0] * 120))
+        self.assertAlmostEqual(decade.lump_sum(prices, fx)['max_drawdown_percent_krw'], 75.0)
+        # 달러 값은 그대로여도 환율이 반으로 떨어지면 원화 기준 50% 하락이다.
+        prices = list(zip(self.days, [100.0] * 120))
+        fx = list(zip(self.days, [1000.0] * 60 + [500.0] * 60))
+        self.assertAlmostEqual(decade.lump_sum(prices, fx)['max_drawdown_percent_krw'], 50.0)
 
     def test_short_or_unmatched_history_is_refused(self):
         prices = list(zip(self.days, [100.0] * 120))

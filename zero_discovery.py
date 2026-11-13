@@ -206,7 +206,15 @@ def _save_state(store, state):
             json.dump(state, output, ensure_ascii=False, allow_nan=False)
             output.flush()
             os.fsync(output.fileno())
-        os.replace(name, store)
+        # Windows refuses to replace a file another thread is reading; Linux never does. Retry briefly.
+        for attempt in range(20):
+            try:
+                os.replace(name, store)
+                break
+            except PermissionError:
+                if attempt == 19:
+                    raise
+                time.sleep(0.005)
         name = None
     finally:
         if name is not None:

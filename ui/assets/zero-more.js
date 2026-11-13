@@ -200,11 +200,16 @@
       const chart = charts.find((item) => item.id === select.value);
       const bars = chart.bars.map((bar) => ({at: String(bar.at || ''), close: C.num(bar.close)}));
       const result = C.savingsPlan(bars, C.num(amount.querySelector('input').value));
-      amount.querySelector('small').textContent = chart.currency || '';
+      const usd = chart.currency === 'USD';
+      amount.querySelector('small').textContent = usd ? '달러' : '원';
       if (!result) { out.replaceChildren(U.empty('금액을 넣어 주세요. 기록이 두 달 이상 있어야 비교할 수 있어요.')); return; }
-      const money = (value) => C.cut2(value).toLocaleString('ko-KR') + ' ' + (chart.currency || '');
+      // 다른 화면과 같은 표기: 원은 정수와 '원', 달러는 $와 소수 둘째 자리.
+      const money = (value) => C.priceText(value, usd ? 'USD' : 'KRW');
+      const first = result.points[0]?.at?.slice(0, 10), last = result.points[result.points.length - 1]?.at?.slice(0, 10);
       const winner = {plan: '이 기간에는 매달 모으는 쪽이 앞섰어요.', lump: '이 기간에는 한 번에 사는 쪽이 앞섰어요.', tie: '두 방법이 비슷했어요.'}[result.winner];
-      out.replaceChildren(el('p', {class: 'hero-line', text: winner}), el('dl', {class: 'facts'},
+      out.replaceChildren(el('p', {class: 'hero-line', text: winner}),
+        first && last ? el('p', {class: 'note'}, el('span', {class: 'nowrap', text: first}), '부터 ', el('span', {class: 'nowrap', text: last}), '까지, ' + (usd ? '달러 그대로 계산했어요(환율 미반영).' : '원화로 계산했어요.')) : null,
+        el('dl', {class: 'facts'},
         el('div', {}, el('dt', {text: '넣은 돈(' + result.months + '번)'}), el('dd', {text: money(result.invested)})),
         el('div', {}, el('dt', {text: '매달 모았다면'}), el('dd', {}, money(result.planValue), ' ', U.change(result.planReturn))),
         el('div', {}, el('dt', {text: '한 번에 샀다면'}), el('dd', {}, money(result.lumpValue), ' ', U.change(result.lumpReturn))),
