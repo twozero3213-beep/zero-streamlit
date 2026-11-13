@@ -385,7 +385,7 @@ button, a, input, select, summary { scroll-margin-block: 1rem 7rem; }
 .field-box input { align-self: stretch; min-height: 44px; }
 /* Streamlit 공개 앱 안에서 열리면 바깥 틀의 배지가 오른쪽 아래를 덮는다. 그때만 탭 줄을 배지 위로 올린다. */
 @media (max-width: 760px) {
-  html.framed .tabbar { bottom: var(--host-badge, 48px); }
+  html.framed .tabbar { padding-bottom: calc(var(--host-badge, 48px) + env(safe-area-inset-bottom, 0px)); }
   html.framed .foot { padding-bottom: calc(6rem + var(--host-badge, 48px) + env(safe-area-inset-bottom, 0px)); }
 }
 
