@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, TimeoutError as FutureTimeout, wait
 from datetime import datetime, timezone
+import statistics
 import threading
 import time
 import urllib.request
@@ -53,7 +54,9 @@ def lump_sum(prices, fx, capital=CAPITAL_KRW):
     """prices·fx: (날짜, 값) 과거순 월별 목록. 시작 달에 capital원을 달러로 바꿔 사서 지금까지 들고 있었을 때."""
     if len(prices) < MIN_MONTHS or len(fx) < 2:
         return None
-    fx_by_month = {day[:7]: value for day, value in fx}
+    # Yahoo KRW=X에는 깨진 점이 섞여 온다(2017-08-31 1달러 0.115원). 10년 중앙값의 절반~두 배 밖은 버린다.
+    middle = statistics.median(value for _, value in fx)
+    fx_by_month = {day[:7]: value for day, value in fx if middle / 2 <= value <= middle * 2}
     start_day, start_price = prices[0]
     end_day, end_price = prices[-1]
     fx_start, fx_end = fx_by_month.get(start_day[:7]), fx_by_month.get(end_day[:7])

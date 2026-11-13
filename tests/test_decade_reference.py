@@ -78,6 +78,17 @@ class DecadeReferenceTests(unittest.TestCase):
         fx = list(zip(self.days, [1000.0] * 60 + [500.0] * 60))
         self.assertAlmostEqual(decade.lump_sum(prices, fx)['max_drawdown_percent_krw'], 50.0)
 
+    def test_broken_fx_point_is_ignored(self):
+        # 2026-11-14 실측: KRW=X 2017-08-31이 0.115원으로 와서 네 종목 모두 '가장 깊게 -99.98%'가 됐다.
+        prices = list(zip(self.days, [100.0] * 120))
+        fx = list(zip(self.days, [1100.0] * 120))
+        fx[8] = (self.days[8], 0.115)
+        result = decade.lump_sum(prices, fx)
+        self.assertEqual(result['max_drawdown_percent_krw'], 0.0)
+        self.assertEqual(result['value_krw'], 100_000_000)
+        fx[0] = (self.days[0], 0.115)
+        self.assertIsNone(decade.lump_sum(prices, fx), '시작 달 환율이 깨졌으면 계산하지 않는다')
+
     def test_short_or_unmatched_history_is_refused(self):
         prices = list(zip(self.days, [100.0] * 120))
         fx = list(zip(self.days, [1000.0] * 120))

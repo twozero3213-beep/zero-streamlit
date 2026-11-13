@@ -3,4 +3,4 @@ feedparser==6.0.14
 lightweight-charts==2.1
 pandas==2.3.3
 
-# Changing this file makes Community Cloud restart the app; bump the date when proxy routes (zero_proxy.py) change: 2026-11-14 (ten-year drawdown field and Windows-safe translation cache writes)
+# Changing this file makes Community Cloud restart the app; bump the date when proxy routes (zero_proxy.py) change: 2026-11-14 (drop broken KRW=X points in the ten-year reference)
