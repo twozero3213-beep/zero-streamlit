@@ -214,12 +214,13 @@
       const money = (value) => { const n = C.num(value); return Number.isFinite(n) ? (financials.currency === 'USD' ? '$' + (n / 1e9).toLocaleString('en-US', {maximumFractionDigits: 1}) + 'B' : C.wonText(n)) : null; };
       parts.push(el('dl', {class: 'facts'}, fact('매출(' + (financials.fiscal_year || '최근') + '년)', money(financials.revenue)), fact('영업이익', money(financials.operating_income))));
     }
-    const lists = [['돈을 버는 방식', company.business_model], ['실적을 움직이는 것', company.drivers], ['조심할 점', company.risks]];
+    const etf = company.kind === 'ETF';
+    const lists = [[etf ? '무엇을 따라가나요' : '돈을 버는 방식', company.business_model], [etf ? '값을 움직이는 것' : '실적을 움직이는 것', company.drivers], ['조심할 점', company.risks]];
     lists.forEach(([label, lines]) => {
       if (Array.isArray(lines) && lines.length) parts.push(el('h3', {class: 'sub-title', text: label}), ...lines.slice(0, 2).map((line) => el('p', {text: sentence(line)})));
     });
     if (!parts.length) return null;
-    return U.section('어떤 회사인가요', ...parts, U.note((company.industry ? company.industry + ' 업종. ' : '') + '공개 자료를 정리한 설명이고 독립 검증 전이에요.'));
+    return U.section(etf ? '어떤 상품인가요' : '어떤 회사인가요', ...parts, U.note((company.industry ? company.industry + (etf ? '. ' : ' 업종. ') : '') + '공개 자료를 정리한 설명이고 독립 검증 전이에요.'));
   }
 
   async function showStock(id) {
