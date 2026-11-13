@@ -286,9 +286,11 @@
     drawChart(chartHost, id, range);
     drawStockDrawdown(drawdownHost, id, token);
 
+    // 회사 뉴스는 연구 자료의 회사(미국은 GOOG 같은 다른 기호 포함)에만 있다. ETF를 물으면 서버가 거절한다.
+    const listed = research?.companies?.some((item) => item.kind === 'COMPANY' && (item.id === id || (!kr && item.symbols?.includes(code))));
     const [stockNews, companyNews] = await Promise.all([
       kr ? U.api('api/stock-news?code=' + code, 300) : null,
-      U.api('api/company-news?identity=' + encodeURIComponent(id), 600)
+      listed ? U.api('api/company-news?identity=' + encodeURIComponent(id), 600) : null
     ]);
     if (token !== stockToken) return;
     newsHost.replaceChildren(...[

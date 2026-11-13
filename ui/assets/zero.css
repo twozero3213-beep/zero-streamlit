@@ -378,6 +378,16 @@ button, a, input, select, summary { scroll-margin-block: 1rem 7rem; }
 .sheet-head h2, .sheet-head > div { min-width: 0; }
 .sheet-body { overscroll-behavior: contain; padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
 .outlook-bar span { min-width: 0; white-space: normal; text-align: center; padding-block: 6px; }
+/* 브라우저 기본 small(한 단계 작게)은 14px 칸 안에서 11.7px가 된다. 13px 아래로 내려가지 않게 한다. */
+.chip small, .flow small, .field-box small { font-size: 0.8125rem; }
+/* 출처 링크와 입력 칸도 손가락으로 누를 수 있는 44px 높이를 준다. */
+.stacked > a, .block > a:not(.button), .slot .note a { display: inline-flex; align-items: center; min-height: 44px; }
+.field-box input { align-self: stretch; min-height: 44px; }
+/* Streamlit 공개 앱 안에서 열리면 바깥 틀의 배지가 오른쪽 아래를 덮는다. 그때만 탭 줄을 배지 위로 올린다. */
+@media (max-width: 760px) {
+  html.framed .tabbar { bottom: var(--host-badge, 48px); }
+  html.framed .foot { padding-bottom: calc(6rem + var(--host-badge, 48px) + env(safe-area-inset-bottom, 0px)); }
+}
 
 @media (max-width: 760px) {
   .top-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: calc(6px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
