@@ -189,7 +189,9 @@
 
   function ownershipRow(row, selectCompany, detailed = false) {
     const code = /^[0-9A-Z]{6}$/.test(row.stock_code || '') ? row.stock_code : null;
-    const metrics = el('dl', {class: 'facts'},
+    const metrics = detailed && ['ratio', 'ratio_change', 'shares', 'shares_change'].every((key) => row[key] === null || row[key] === undefined)
+      ? U.note('보유 비율·증감과 주식 수·증감은 제공 자료에서 확인되지 않았어요.')
+      : el('dl', {class: 'facts'},
       fact('보고서 기준 비율', ownershipNumber(row.ratio, '%')),
       fact('비율 증감', ownershipNumber(row.ratio_change, '%p', true)),
       fact('보고서 기준 주식수', ownershipNumber(row.shares, '주')),
