@@ -248,10 +248,12 @@ def _safe(fetch, url):
         return None
 
 
-def get_governance_radar():
+def get_governance_radar(*, deadline=None):
     """캐시는 3분, 같은 miss는 병합한다. 네트워크 작업 중에는 잠금을 잡지 않는다."""
     global _pending
-    deadline = time.monotonic() + DEADLINE_SECONDS
+    deadline = time.monotonic() + DEADLINE_SECONDS if deadline is None else min(deadline, time.monotonic() + DEADLINE_SECONDS)
+    if time.monotonic() >= deadline:
+        return _response([], len(WATCH) + 1, 0, datetime.now(timezone.utc))
     with _lock:
         age = time.monotonic() - _cache['at']
         if _cache['body'] is not None and 0 <= age < CACHE_SECONDS:

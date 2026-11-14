@@ -132,13 +132,14 @@ class ModernMorningReportBuilder:
             lines.append("| 종목명 (티커) | 현재가 | 전일 대비 | 등락률 | 수신 출처 |")
             lines.append("|---|---|---|---|---|")
             for stk in d["stock_quotes"]:
-                chg = stk.get("change", 0.0)
-                rate = stk.get("change_percent", 0.0)
-                sign = "+" if chg > 0 else ""
+                chg, rate = stk.get("change"), stk.get("change_percent")
+                chg_known, rate_known = chg not in (None, ""), rate not in (None, "")
+                chg_text = (("+" if chg > 0 else "") + f"{chg:,.2f}") if chg_known else "미확인"
+                rate_text = (("+" if rate > 0 else "") + f"{rate:.2f}%") if rate_known else "미확인"
                 curr_symbol = "원" if stk.get("currency") == "KRW" else "$"
-                status = "🟢 상승" if chg > 0 else "🔴 하락" if chg < 0 else "⚪ 보합"
+                status = "미확인" if not chg_known else "🟢 상승" if chg > 0 else "🔴 하락" if chg < 0 else "⚪ 보합"
                 src = stk.get("source", "LIVE")
-                lines.append(f"| {sanitize_text(stk['name'])} ({stk['symbol']}) | {stk['current_price']:,.2f}{curr_symbol} | {sign}{chg:,.2f} | {sign}{rate:.2f}% | {src} ({status}) |")
+                lines.append(f"| {sanitize_text(stk['name'])} ({stk['symbol']}) | {stk['current_price']:,.2f}{curr_symbol} | {chg_text} | {rate_text} | {src} ({status}) |")
             lines.append("")
 
         # 3. 긴급 · 속보 · 단독 하이라이트
@@ -211,16 +212,25 @@ class ModernMorningReportBuilder:
         indices_html = indices_html or "<p>지수 자료와 기준 시각을 확인하지 못했습니다.</p>"
         fx_html = fx_html or "<p>환율 자료와 기준 시각을 확인하지 못했습니다.</p>"
 
-        stocks_html = "".join(f"""
+        stocks = []
+        for stk in d.get("stock_quotes", []):
+            chg, rate = stk.get("change"), stk.get("change_percent")
+            chg_known, rate_known = chg not in (None, ""), rate not in (None, "")
+            chg_text = (("+" if chg > 0 else "") + f"{chg:,.2f}") if chg_known else "미확인"
+            rate_text = (("+" if rate > 0 else "") + f"{rate:.2f}%") if rate_known else "미확인"
+            tone = "up" if chg_known and chg > 0 else "down" if chg_known and chg < 0 else "flat"
+            status = "미확인" if not chg_known else "상승" if chg > 0 else "하락" if chg < 0 else "보합"
+            stocks.append(f"""
             <div class="matrix-card">
                 <div class="card-label">{html.escape(sanitize_text(stk['name']))} <span class="curr">({stk['symbol']})</span></div>
                 <div class="card-val">{stk['current_price']:,.2f} <span class="curr">{stk['currency']}</span></div>
-                <div class="card-delta {'up' if stk.get('change', 0) > 0 else 'down' if stk.get('change', 0) < 0 else 'flat'}">
-                    {'+' if stk.get('change', 0) > 0 else ''}{stk.get('change', 0):,.2f} ({'+' if stk.get('change_percent', 0) > 0 else ''}{stk.get('change_percent', 0):.2f}%)
+                <div class="card-delta {tone}">
+                    {chg_text} ({rate_text}) · {status}
                 </div>
                 <div class="card-sub">{stk.get('source', 'LIVE')}</div>
             </div>
-        """ for stk in d.get("stock_quotes", []))
+        """)
+        stocks_html = "".join(stocks)
 
         news_html = "".join(f"""
             <div class="news-item-card">

@@ -70,6 +70,7 @@ class MarketRoutesTests(unittest.TestCase):
 class MarketRouteDeadlineTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         import zero
+        self.production_slots = zero_proxy._signal_slots
         self.slots = threading.BoundedSemaphore(1)
         for name, function in (('governance_radar', 'get_governance_radar'),
                                ('market_watch', 'get_market_watch'), ('premarket', 'get_premarket')):
@@ -103,11 +104,12 @@ class MarketRouteDeadlineTests(unittest.IsolatedAsyncioTestCase):
             for status, state in ((200, 'AVAILABLE'), (200, 'PARTIAL'), (503, 'UNAVAILABLE')):
                 payload = {'state': state, 'orders_authorized': False}
                 with self.subTest(path=path, state=state), patch.object(module, name, return_value=(status, payload)) as collect, \
-                        patch.object(zero_proxy, 'run_in_threadpool', immediate):
+                        patch.object(zero_proxy, 'run_in_threadpool', immediate), patch.object(zero_proxy, 'SIGNAL_DEADLINE_SECONDS', 2):
                     response = await zero_proxy.api(self.request(path))
                     self.assertEqual((response.status_code, json.loads(response.body)), (status, payload))
                     self.assertEqual(response.headers['cache-control'], 'public, max-age=120' if status == 200 else 'no-store')
-                    collect.assert_called_once_with()
+                    collect.assert_called_once()
+                    self.assertEqual(set(collect.call_args.kwargs), {'deadline'})
 
     async def test_saturated_signal_admission_never_queues_a_job(self):
         from zero import market_watch
@@ -122,6 +124,34 @@ class MarketRouteDeadlineTests(unittest.IsolatedAsyncioTestCase):
                 collect.assert_not_called()
         finally:
             self.slots.release()
+
+    async def test_three_supported_signal_routes_run_together_and_fourth_is_rejected(self):
+        from zero import governance_radar, market_watch, premarket
+        release = asyncio.Event()
+        scheduled = []
+        async def queued(function, *args, **kwargs):
+            scheduled.append(1)
+            await release.wait()
+            return function(*args, **kwargs)
+        with patch.object(zero_proxy, '_signal_slots', self.production_slots), \
+                patch.object(zero_proxy, 'SIGNAL_DEADLINE_SECONDS', 2), \
+                patch.object(zero_proxy, 'run_in_threadpool', queued), \
+                patch.object(governance_radar, 'get_governance_radar', return_value=(200, {'state': 'PARTIAL'})), \
+                patch.object(market_watch, 'get_market_watch', return_value=(200, {'state': 'AVAILABLE'})), \
+                patch.object(premarket, 'get_premarket', return_value=(200, {'state': 'AVAILABLE'})):
+            tasks = [asyncio.create_task(zero_proxy.api(self.request(path)))
+                     for path in ('governance', 'market-watch', 'premarket')]
+            try:
+                done, _ = await asyncio.wait(tasks, timeout=.05)
+                self.assertFalse(done, 'all three supported routes must be admitted together')
+                self.assertEqual(len(scheduled), 3)
+                self.assert_deadline(await zero_proxy.api(self.request()))
+                self.assertEqual(len(scheduled), 3, 'a fourth request must not enqueue work')
+            finally:
+                release.set()
+                responses = await asyncio.gather(*tasks)
+            self.assertEqual([response.status_code for response in responses], [200, 200, 200])
+            self.assertEqual(json.loads(responses[0].body)['state'], 'PARTIAL')
 
     async def test_pool_queue_timeout_returns_without_starting_collector(self):
         from zero import market_watch
@@ -183,7 +213,7 @@ class MarketRouteDeadlineTests(unittest.IsolatedAsyncioTestCase):
         release, entered, finished = threading.Event(), threading.Event(), threading.Event()
         async def pool(function, *args, **kwargs):
             return await asyncio.to_thread(function, *args, **kwargs)
-        def collect():
+        def collect(*, deadline):
             entered.set()
             try:
                 release.wait(1.5)
@@ -200,7 +230,7 @@ class MarketRouteDeadlineTests(unittest.IsolatedAsyncioTestCase):
                 self.assert_deadline(task.result())
                 self.assertFalse(self.slots.acquire(blocking=False))
                 self.assert_deadline(await zero_proxy.api(self.request()))
-                worker.assert_called_once_with()
+                worker.assert_called_once()
             finally:
                 release.set()
                 await asyncio.to_thread(finished.wait, .5)
@@ -246,3 +276,37 @@ class MarketRouteDeadlineTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(self.slots.acquire(blocking=False))
         self.assertFalse(self.slots.acquire(blocking=False))
         self.slots.release()
+
+    async def test_pool_delay_preserves_the_original_collector_deadline(self):
+        from zero import market_watch
+        clock = type('Clock', (), {'monotonic': lambda self: self.now})()
+        clock.now = 100.0
+        async def delayed(function, *args, **kwargs):
+            clock.now = 105.0
+            return function(*args, **kwargs)
+        with patch.object(zero_proxy, 'time', clock), patch.object(zero_proxy, 'SIGNAL_DEADLINE_SECONDS', 9), \
+                patch.object(market_watch, 'get_market_watch', return_value=(200, {'state': 'PARTIAL'})) as collect, \
+                patch.object(zero_proxy, 'run_in_threadpool', delayed):
+            response = await zero_proxy.api(self.request())
+        self.assertEqual(response.status_code, 200)
+        collect.assert_called_once_with(deadline=108.75)
+
+    async def test_partial_collected_at_its_deadline_reaches_the_route(self):
+        from zero import governance_radar
+        clock = type('Clock', (), {'monotonic': lambda self: self.now})()
+        clock.now = 100.0
+        observed = []
+        async def immediate(function, *args, **kwargs):
+            return function(*args, **kwargs)
+        def collect(*, deadline):
+            observed.append(deadline)
+            clock.now = deadline + .0001
+            return 200, {'state': 'PARTIAL', 'orders_authorized': False}
+        with patch.object(zero_proxy, 'time', clock), patch.object(zero_proxy, 'SIGNAL_DEADLINE_SECONDS', 9), \
+                patch.object(governance_radar, 'get_governance_radar', side_effect=collect), \
+                patch.object(zero_proxy, 'run_in_threadpool', immediate):
+            response = await zero_proxy.api(self.request('governance'))
+        self.assertEqual((response.status_code, json.loads(response.body)),
+                         (200, {'state': 'PARTIAL', 'orders_authorized': False}))
+        self.assertEqual(observed, [108.75])
+        self.assertEqual(response.headers['cache-control'], 'public, max-age=120')

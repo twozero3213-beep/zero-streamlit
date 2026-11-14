@@ -272,6 +272,30 @@ class GovernanceBoundaryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             radar.parse(rss(*[('유가', '가', '공개매수신고서', '나', '20261113000010', DAY)] * 101))
 
+    def test_caller_deadline_is_capped_and_late_partial_is_preserved(self):
+        clock = [100.0]
+        partial = (200, {'state': 'PARTIAL', 'companies': [{'company': '합성'}]})
+        def build(*, deadline):
+            clock[0] = deadline
+            return partial
+        for supplied, expected in ((None, 100 + radar.DEADLINE_SECONDS), (102.0, 102.0), (1000.0, 100 + radar.DEADLINE_SECONDS)):
+            clock[0] = 100.0
+            with self.subTest(deadline=supplied), mock.patch.multiple(radar, _cache={'at': 0.0, 'body': None}, _pending=None), mock.patch.object(radar, 'time', SimpleNamespace(monotonic=lambda: clock[0])), mock.patch.object(radar, 'build', side_effect=build) as collect:
+                self.assertEqual(radar.get_governance_radar() if supplied is None else radar.get_governance_radar(deadline=supplied), partial)
+                collect.assert_called_once_with(deadline=expected)
+                self.assertIsNone(radar._cache['body'])
+        with mock.patch.object(radar, 'time', SimpleNamespace(monotonic=lambda: 100.0)), mock.patch.object(radar, 'build') as collect:
+            self.assertEqual(radar.get_governance_radar(deadline=99.0)[0], 503)
+            collect.assert_not_called()
+
+    def test_singleflight_waiter_uses_the_shorter_caller_budget(self):
+        pending = mock.Mock()
+        pending.result.side_effect = radar.FutureTimeout
+        with mock.patch.multiple(radar, _cache={'at': 0.0, 'body': None}, _pending=pending), mock.patch.object(radar, 'time', SimpleNamespace(monotonic=lambda: 100.0)), mock.patch.object(radar, 'build') as collect:
+            self.assertEqual(radar.get_governance_radar(deadline=100.5)[0], 503)
+            pending.result.assert_called_once_with(timeout=0.5)
+            collect.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -104,6 +104,29 @@ class ModernMorningReportTests(unittest.TestCase):
                 self.assertNotIn(false_claim, text)
         self.assertIn('<!DOCTYPE html>', html_doc)
 
+    def test_missing_quote_changes_are_unknown_while_real_zero_stays_flat(self):
+        builder = ModernMorningReportBuilder(at=AT)
+        with mock.patch.object(RealtimeMarketPulse, 'get_market_pulse_summary', return_value={'indices': [], 'fx_rates': []}), mock.patch('zero.realtime_stock_quote.fetch_multiple_quotes', return_value={}):
+            data = builder.gather_data(news_items=[], macro_data=[], custom_indices=[], custom_fx=[])
+        base = {'symbol': 'SYNTH', 'name': '합성 종목', 'current_price': 100.0, 'currency': 'USD', 'source': 'SYNTHETIC'}
+        for kind, changes in (('null', {'change': None, 'change_percent': None}), ('missing', {}),
+                              ('empty', {'change': '', 'change_percent': ''}), ('zero', {'change': 0.0, 'change_percent': 0.0})):
+            data['stock_quotes'] = [{**base, **changes}]
+            for render in (builder.render_markdown, builder.render_html):
+                with self.subTest(kind=kind, render=render.__name__):
+                    text = render(data)
+                    if kind == 'zero':
+                        self.assertIn('0.00%', text)
+                        self.assertIn('보합', text)
+                    else:
+                        self.assertIn('미확인', text)
+                        self.assertNotIn('0.00%', text)
+                        self.assertNotIn('보합', text)
+                    if render.__name__ == 'render_html':
+                        self.assertIn('class="card-delta flat"', text)
+                        self.assertNotIn('class="card-delta up"', text)
+                        self.assertNotIn('class="card-delta down"', text)
+
 
 if __name__ == "__main__":
     unittest.main()

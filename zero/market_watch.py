@@ -14,7 +14,7 @@ from urllib.parse import urlencode, urlsplit
 from urllib.request import Request
 from xml.etree import ElementTree as ET
 
-from zero.realtime_stock_quote import _read_body
+from zero.realtime_stock_quote import PROVIDER_TIMEOUT_SECONDS, _read_body
 
 DEADLINE_SECONDS = 8
 CACHE_SECONDS = 300
@@ -54,7 +54,7 @@ def _fetch(url, *, deadline):
     if url not in {source['url'] for source in SOURCES}:
         raise ValueError(SOURCE_ERROR)
     request = Request(url, headers={'User-Agent': 'ZERO-Public-Market-Watch/0.7', 'Accept': 'application/json, application/rss+xml, application/xml'})
-    return _read_body(request, deadline=deadline, limit=BODY_LIMIT)
+    return _read_body(request, deadline=min(deadline, time.monotonic() + PROVIDER_TIMEOUT_SECONDS), limit=BODY_LIMIT)
 
 
 def _body(body):
@@ -228,10 +228,12 @@ def build(fetch=None, now=None, *, deadline=None):
     return _response(results, checked)
 
 
-def get_market_watch():
+def get_market_watch(*, deadline=None):
     """Single-flight snapshots; the caller's common deadline includes admission and queue time."""
     global _pending
-    deadline = time.monotonic() + DEADLINE_SECONDS
+    deadline = time.monotonic() + DEADLINE_SECONDS if deadline is None else min(deadline, time.monotonic() + DEADLINE_SECONDS)
+    if time.monotonic() >= deadline:
+        return _response({}, datetime.now(timezone.utc))
     with _lock:
         if _cache['result'] is not None and time.monotonic() < _cache['expires_at']:
             return deepcopy(_cache['result'])

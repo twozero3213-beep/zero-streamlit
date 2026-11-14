@@ -6,6 +6,7 @@ from importlib import import_module
 import json
 import threading
 import time
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -117,7 +118,7 @@ class MarketWatchTests(unittest.TestCase):
         url = self.api.COMMUNITIES[0]['url']
         with mock.patch.object(self.api, 'time', clock), mock.patch.object(self.api, '_read_body', return_value=community()) as read:
             self.assertEqual(self.api._fetch(url, deadline=103.0), community())
-            self.assertEqual(read.call_args.kwargs, {'deadline': 103.0, 'limit': 1_000_000})
+            self.assertEqual(read.call_args.kwargs, {'deadline': 102.0, 'limit': 1_000_000})
             request = read.call_args.args[0]
             self.assertEqual(request.full_url, url)
             self.assertNotIn('Authorization', request.headers)
@@ -259,6 +260,30 @@ class MarketWatchTests(unittest.TestCase):
         self.assertEqual((status, body['state']), (200, 'AVAILABLE'))
         self.assertEqual(body['news'], ['COLLECTED_BEFORE_DEADLINE'])
         self.assertIsNone(self.api._cache['result']); self.assertIsNone(self.api._pending)
+
+    def test_caller_deadline_is_capped_and_late_partial_is_preserved(self):
+        api, clock = self.api, [100.0]
+        partial = (200, {'state': 'PARTIAL', 'items': [{'title': '합성'}]})
+        def build(*, deadline):
+            clock[0] = deadline
+            return partial
+        for supplied, expected in ((None, 100 + api.DEADLINE_SECONDS), (102.0, 102.0), (1000.0, 100 + api.DEADLINE_SECONDS)):
+            clock[0] = 100.0
+            with self.subTest(deadline=supplied), mock.patch.object(api, '_cache', {'expires_at': 0.0, 'result': None}), mock.patch.object(api, 'time', SimpleNamespace(monotonic=lambda: clock[0])), mock.patch.object(api, 'build', side_effect=build) as collect:
+                self.assertEqual(api.get_market_watch() if supplied is None else api.get_market_watch(deadline=supplied), partial)
+                collect.assert_called_once_with(deadline=expected)
+                self.assertIsNone(api._cache['result'])
+        with mock.patch.object(api, 'time', SimpleNamespace(monotonic=lambda: 100.0)), mock.patch.object(api, 'build') as collect:
+            self.assertEqual(api.get_market_watch(deadline=99.0)[0], 503)
+            collect.assert_not_called()
+
+    def test_singleflight_waiter_uses_the_shorter_caller_budget(self):
+        api, pending = self.api, mock.Mock()
+        pending.result.side_effect = api.FutureTimeout
+        with mock.patch.object(api, '_pending', pending), mock.patch.object(api, 'time', SimpleNamespace(monotonic=lambda: 100.0)), mock.patch.object(api, 'build') as collect:
+            self.assertEqual(api.get_market_watch(deadline=100.5)[0], 503)
+            pending.result.assert_called_once_with(timeout=0.5)
+            collect.assert_not_called()
 
 
 if __name__ == '__main__': unittest.main()

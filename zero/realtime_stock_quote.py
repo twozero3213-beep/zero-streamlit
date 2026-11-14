@@ -129,7 +129,7 @@ def _read_json(request, *, deadline):
 def _read_body(request, *, deadline, limit=MAX_QUOTE_BODY_BYTES):
     if type(limit) is not int or not 0 < limit <= 4_194_304:
         raise ValueError("QUOTE_SOURCE_INVALID")
-    end = min(deadline, time.monotonic() + PROVIDER_TIMEOUT_SECONDS)
+    end = deadline
     _reap_quote_http()
     if end <= time.monotonic() or not _HTTP_SLOTS.acquire(blocking=False):
         raise TimeoutError("QUOTE_DEADLINE")

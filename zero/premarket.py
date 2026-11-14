@@ -110,9 +110,11 @@ def build(fetch=None, now=None, *, deadline=None):
     return _response(rows, failed, now)
 
 
-def get_premarket():
+def get_premarket(*, deadline=None):
     """잠금 대기도 같은 9초 안에 포함한다. 실패 응답은 원래 시각 그대로 30초만 재사용한다."""
-    deadline = time.monotonic() + DEADLINE_SECONDS
+    deadline = time.monotonic() + DEADLINE_SECONDS if deadline is None else min(deadline, time.monotonic() + DEADLINE_SECONDS)
+    if time.monotonic() >= deadline:
+        return _response([], [item[0] for item in ITEMS], datetime.now(timezone.utc))
     if not _lock.acquire(timeout=max(0, deadline - time.monotonic())):
         return _response([], [item[0] for item in ITEMS], datetime.now(timezone.utc))
     try:

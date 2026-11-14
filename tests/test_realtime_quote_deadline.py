@@ -103,6 +103,23 @@ class QuoteDeadlineTests(unittest.TestCase):
         self.assertAlmostEqual(process.calls[0][1], 0.3)
         self.assert_slots_free()
 
+    def test_raw_feed_uses_its_deadline_while_quote_json_keeps_two_seconds(self):
+        for raw_reader in (True, False):
+            clock = Clock()
+            def respond(process, input, timeout):
+                clock.advance(3)
+                return b"{}", b""
+            process = Process(communicate=respond)
+            with patch.object(rq.time, "monotonic", clock.now), patch.object(subprocess, "Popen", return_value=process):
+                if raw_reader:
+                    self.assertEqual(rq._read_body(rq.urllib.request.Request("https://synthetic.invalid/rss"), deadline=105), b"{}")
+                    self.assertEqual(process.calls[0][1], 5)
+                else:
+                    with self.assertRaisesRegex(TimeoutError, "^QUOTE_DEADLINE$"):
+                        self.read(deadline=105)
+                    self.assertEqual(process.calls[0][1], 2)
+            self.assert_slots_free()
+
     def test_token_and_price_share_one_provider_budget(self):
         env = {"TOSS_APP_KEY": "SYNTHETIC", "TOSS_SECRET_KEY": "SYNTHETIC",
                "KIS_MOCK_APP_KEY": "SYNTHETIC", "KIS_MOCK_APP_SECRET": "SYNTHETIC"}

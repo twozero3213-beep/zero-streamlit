@@ -50,7 +50,7 @@ HEADLINES_SECONDS = 60  # live news-search titles; collected here, not on the Cl
 _cache, _pending, _lock = {}, {}, threading.Lock()
 _upstream_slots = threading.BoundedSemaphore(4)
 _quote_slots = threading.BoundedSemaphore(8)
-_signal_slots = threading.BoundedSemaphore(2)
+_signal_slots = threading.BoundedSemaphore(3)
 SIGNAL_DEADLINE_SECONDS = 9
 
 
@@ -301,7 +301,7 @@ async def _signal_response(function):
         try:
             if time.monotonic() >= deadline:
                 return 503, {'error': 'SIGNAL_DEADLINE'}
-            return function()
+            return function(deadline=deadline - .25)
         finally:
             with lock:
                 if not state['released']:
@@ -398,14 +398,14 @@ async def api(request):
             return JSONResponse(get_daily_25_recommendations())
         elif path in ('/api/governance', '/api/premarket', '/api/market-watch') and not query:
             # 분쟁 레이더(DART 공개 RSS)와 장 전 점검표(Yahoo 일봉). 둘 다 키 없이 서버에서 모아 짧게 캐시한다.
-            def build_view():
+            def build_view(*, deadline):
                 if path == '/api/governance':
                     from zero.governance_radar import get_governance_radar as collect
                 elif path == '/api/market-watch':
                     from zero.market_watch import get_market_watch as collect
                 else:
                     from zero.premarket import get_premarket as collect
-                return collect()
+                return collect(deadline=deadline)
             return await _signal_response(build_view)
         elif path == '/api/decade' and not query:
             from zero.decade_reference import get_decade_reference

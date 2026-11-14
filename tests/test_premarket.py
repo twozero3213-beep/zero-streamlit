@@ -111,6 +111,31 @@ class PremarketBoundaryTests(unittest.TestCase):
             self.assertIs(premarket._cache['body'], old)
             self.assertEqual(old['retrieved_at'], 'old observation')
 
+    def test_caller_deadline_is_capped_and_late_partial_is_preserved(self):
+        clock = [100.0]
+        partial = (200, {'state': 'AVAILABLE', 'items': [{'symbol': '^SOX'}], 'failed': ['^VIX']})
+        def build(*, deadline):
+            clock[0] = deadline
+            return partial
+        for supplied, expected in ((None, 100 + premarket.DEADLINE_SECONDS), (102.0, 102.0), (1000.0, 100 + premarket.DEADLINE_SECONDS)):
+            clock[0] = 100.0
+            with self.subTest(deadline=supplied), mock.patch.multiple(premarket, _cache={'at': 0.0, 'body': None}, _failure={'at': 0.0, 'body': None}), mock.patch.object(premarket, 'time', SimpleNamespace(monotonic=lambda: clock[0])), mock.patch.object(premarket, 'build', side_effect=build) as collect:
+                self.assertEqual(premarket.get_premarket() if supplied is None else premarket.get_premarket(deadline=supplied), partial)
+                collect.assert_called_once_with(deadline=expected)
+                self.assertIsNone(premarket._cache['body'])
+        with mock.patch.object(premarket, 'time', SimpleNamespace(monotonic=lambda: 100.0)), mock.patch.object(premarket, 'build') as collect:
+            self.assertEqual(premarket.get_premarket(deadline=99.0)[0], 503)
+            collect.assert_not_called()
+
+    def test_lock_wait_uses_the_shorter_caller_budget(self):
+        lock = mock.Mock()
+        lock.acquire.return_value = False
+        with mock.patch.object(premarket, '_lock', lock), mock.patch.object(premarket, 'time', SimpleNamespace(monotonic=lambda: 100.0)), mock.patch.object(premarket, 'build') as collect:
+            self.assertEqual(premarket.get_premarket(deadline=100.5)[0], 503)
+            lock.acquire.assert_called_once_with(timeout=0.5)
+            lock.release.assert_not_called()
+            collect.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()
