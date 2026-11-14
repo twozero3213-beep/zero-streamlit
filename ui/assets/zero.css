@@ -313,6 +313,12 @@ a.row-main:hover strong, button.row-main:hover strong { text-decoration: underli
 .market-item-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
 .market-item-head span { color: var(--sub); font-size: 0.875rem; }
 .market-news strong { font-weight: 600; }
+.ownership-search { display: grid; gap: 8px; min-width: 0; }
+.ownership-search input { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--field); font: inherit; }
+.ownership-company { width: 100%; text-align: left; overflow-wrap: anywhere; }
+.ownership-item { display: grid; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--line); min-width: 0; overflow-wrap: anywhere; }
+.ownership-pages { align-items: center; }
+
 /* 오름·내림 색(빨강·파랑)과 헷갈리지 않게 금액 크기 막대는 중립색. */
 .bars.neutral .bar-fill { background: var(--sub); }
 

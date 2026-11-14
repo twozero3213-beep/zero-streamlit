@@ -175,6 +175,155 @@
     renderRadar(host, data);
   }
 
+  // 전 상장회사 명부와 저장 이력은 최근 RSS의 제한된 관찰 목록과 구분한다.
+  const OWNERSHIP_CORRECTIONS = {ORIGINAL: '원 공시', CORRECTED: '정정 공시', HAS_CORRECTION: '후속 정정 있음', WITHDRAWN: '철회 공시'};
+  const OWNERSHIP_PROGRESS = {REGISTRY_INCOMPLETE: '상장회사 명부 연결 미완료', BACKFILLING: '과거 구간 수집 중', COMPLETE: '요청 구간 수집 상태 확인', LATEST_INCOMPLETE: '최신 구간 수집 미완료', UNAVAILABLE: '수집 자료 미준비', BUSY: '수집 진행 중'};
+  const ownershipCount = (value) => Number.isSafeInteger(value) && value >= 0 ? value.toLocaleString('ko-KR') : '미확인';
+  function ownershipTime(iso) {
+    const stamp = typeof iso === 'string' && /T.*(?:Z|[+-]\d{2}:\d{2})$/.test(iso) ? Date.parse(iso) : NaN;
+    return Number.isFinite(stamp) ? new Intl.DateTimeFormat('ko-KR', {timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).format(new Date(stamp)) + ' (한국 시각)' : '미확인';
+  }
+  function ownershipNumber(value, unit, signed = false) {
+    return typeof value === 'number' && Number.isFinite(value) ? (signed && value > 0 ? '+' : '') + value.toLocaleString('ko-KR', {maximumFractionDigits: 12}) + unit : '미확인';
+  }
+
+  function ownershipRow(row, selectCompany, detailed = false) {
+    const code = /^[0-9A-Z]{6}$/.test(row.stock_code || '') ? row.stock_code : null;
+    const metrics = el('dl', {class: 'facts'},
+      fact('보고서 기준 비율', ownershipNumber(row.ratio, '%')),
+      fact('비율 증감', ownershipNumber(row.ratio_change, '%p', true)),
+      fact('보고서 기준 주식수', ownershipNumber(row.shares, '주')),
+      fact('주식수 증감', ownershipNumber(row.shares_change, '주', true)));
+    return el('li', {class: 'ownership-item'},
+      el('strong', {text: row.company || code || '회사명 미확인'}),
+      el('p', {text: row.report || '공시명 미확인'}),
+      U.note('접수일: ' + (row.received_date || '미확인') + ', 최초 탐지: ' + ownershipTime(row.detected_at) + '.'),
+      U.note(OWNERSHIP_CORRECTIONS[row.correction_status] || '정정 상태 미확인'),
+      detailed ? metrics : el('details', {class: 'details'}, el('summary', {text: '보고서 수치 보기'}), metrics),
+      row.holder ? U.note('보고자: ' + row.holder) : null,
+      row.reason ? U.note('변동 사유: ' + row.reason) : null,
+      row.body_verified === false ? U.note('공시 본문은 확인하지 않았어요. 수치는 보고서 기준이며 실시간 지분을 뜻하지 않아요.') : null,
+      el('div', {class: 'button-row'}, publicLink(row.url, 'DART 원문 보기', ['dart.fss.or.kr']),
+        code && selectCompany ? el('button', {class: 'button ghost', type: 'button', text: '회사 장기 이력 보기', onclick: () => selectCompany(code, row.company || code)}) : null));
+  }
+
+  function ownershipHistory(host, code, name, isCurrent = () => true) {
+    let token = 0, revision = null;
+    const status = el('div', {role: 'status'}), content = el('div', {class: 'slot'});
+    host.replaceChildren(status, content);
+    async function load(page = 1) {
+      const current = ++token, requestedRevision = revision;
+      status.replaceChildren(U.loading('장기 공시 이력을 확인하는 중이에요'));
+      const data = await U.api('api/ownership?code=' + encodeURIComponent(code) + '&page=' + page + (requestedRevision ? '&revision=' + requestedRevision : ''), 120);
+      if (current !== token || !host.isConnected || !isCurrent()) return false;
+      if (data?.scope !== 'OWNERSHIP_HISTORY' || data.stock_code !== code || data.page !== page || !/^[0-9a-f]{64}$/.test(data.revision || '') ||
+          requestedRevision && data.revision !== requestedRevision || !Array.isArray(data.items) || data.items.length > 100) {
+        status.replaceChildren(U.empty('장기 이력을 확인하지 못했거나 자료 판본이 바뀌었어요. 처음부터 다시 조회해 주세요.'),
+          el('button', {class: 'button ghost', type: 'button', text: '처음부터 다시 조회', onclick: () => { revision = null; load(1); }}));
+        return false;
+      }
+      revision = data.revision;
+      const totalPages = Number.isSafeInteger(data.total_pages) && data.total_pages > 0 ? data.total_pages : 0;
+      status.replaceChildren(U.note((data.company || name || code) + ' 장기 공시 이력을 확인했어요.'));
+      content.replaceChildren(...[
+        el('h3', {text: (data.company || name || code) + ' 장기 공시 이력'}),
+        U.note('요청 기간: ' + (data.requested_from || '미확인') + ' ~ ' + (data.requested_to || '미확인') + '. 저장 공시 ' + ownershipCount(data.total_count) + '건.'),
+        U.note('저장된 공시 이력이며 요청 기간 전체의 수집 완료를 뜻하지 않아요. 수집 범위를 함께 확인해 주세요.'),
+        data.stale === true ? el('p', {class: 'note', role: 'status', text: '저장 자료가 오래됐거나 갱신 범위를 확인하지 못했어요. 마지막 수집 성공 시각을 확인해 주세요.'}) : null,
+        data.items.length ? el('ul', {class: 'rows'}, list(data.items).map((row) => ownershipRow(row, null, true))) : U.empty('이 회사의 저장된 공시 이력이 없어요. 미수집 구간이 있을 수 있어요.'),
+        totalPages ? el('div', {class: 'button-row ownership-pages'},
+          el('button', {class: 'button ghost', type: 'button', text: '이전 페이지', disabled: page <= 1, onclick: () => load(page - 1)}),
+          el('span', {text: page + ' / ' + totalPages + ' 페이지'}),
+          el('button', {class: 'button ghost', type: 'button', text: '다음 페이지', disabled: page >= totalPages, onclick: () => load(page + 1)})) : null,
+        el('button', {class: 'button ghost', type: 'button', text: '최신 판본으로 다시 조회', onclick: () => { revision = null; load(1); }})
+      ].filter(Boolean));
+      return true;
+    }
+    return {load};
+  }
+
+  async function ownershipRssFallback(host) {
+    const rss = el('div', {class: 'slot'});
+    host.replaceChildren(U.empty('전 상장회사 장기 감시 자료가 아직 준비되지 않았거나 조회에 실패했어요.'),
+      U.note('아래는 제한된 RSS 자료예요. 전 상장회사나 장기 이력을 확인한 결과가 아니에요.'), rss);
+    await radarBlock(rss);
+  }
+
+  function ownershipMonitor(host) {
+    let token = 0, ready = false, registry = [], choices = [], selection = 0, chosenSearch = '';
+    const refreshError = el('p', {class: 'note', role: 'status'});
+    const status = el('div', {class: 'slot'}), latest = el('div', {class: 'slot'});
+    const search = el('input', {id: 'ownership-search', type: 'search', placeholder: '회사명이나 6자리 종목코드', autocomplete: 'off', 'aria-controls': 'ownership-results'});
+    const results = el('ul', {id: 'ownership-results', class: 'rows'}), searchStatus = el('p', {class: 'note', role: 'status'});
+    const historyHost = el('div', {id: 'ownership-history', class: 'slot'});
+    function selectCompany(code, name) {
+      if (!/^[0-9A-Z]{6}$/.test(code)) return;
+      const selected = ++selection;
+      search.value = name + ' (' + code + ')'; chosenSearch = search.value; results.replaceChildren(); choices = [];
+      searchStatus.replaceChildren(name + '의 장기 이력을 조회해요.');
+      ownershipHistory(historyHost, code, name, () => selected === selection).load(1);
+    }
+    function findCompanies() {
+      chosenSearch = '';
+      const query = search.value.trim().toLowerCase(), queryCode = query.toUpperCase();
+      choices = query ? registry.filter((company) => company.stock_code === queryCode || company.stock_code.startsWith(queryCode) || company.company.toLowerCase().includes(query))
+        .sort((a, b) => Number(b.stock_code === queryCode) - Number(a.stock_code === queryCode)).slice(0, 10) : [];
+      if (!choices.length && /^[0-9A-Z]{6}$/.test(queryCode)) choices = [{stock_code: queryCode, company: queryCode}];
+      results.replaceChildren(...choices.map((company) => el('li', {class: 'row'}, el('button', {class: 'row-main ownership-company', type: 'button', text: company.company + ' (' + company.stock_code + ')', onclick: () => selectCompany(company.stock_code, company.company)}))));
+      searchStatus.replaceChildren(query ? (choices.length ? '검색 결과 ' + choices.length + '개예요. 최대 10개를 표시해요.' : '일치하는 회사를 찾지 못했어요. 회사명이나 코드를 확인해 주세요.') : '전 상장회사 명부에서 회사명이나 종목코드로 찾아보세요.');
+    }
+    search.addEventListener('input', findCompanies);
+    search.addEventListener('keydown', (event) => {
+      if (event.isComposing || event.keyCode === 229) return;
+      if (event.key === 'Escape') { results.replaceChildren(); choices = []; }
+      if (event.key === 'ArrowDown') { const first = results.querySelectorAll('button')[0]; if (first) { event.preventDefault(); first.focus(); } }
+      if (event.key === 'Enter' && choices[0]) { event.preventDefault(); selectCompany(choices[0].stock_code, choices[0].company); }
+    });
+    async function refresh() {
+      const current = ++token, data = await U.api('api/ownership', 120);
+      if (current !== token || !host.isConnected) return;
+      if (data?.scope !== 'OWNERSHIP_MONITOR') {
+        if (!ready) await ownershipRssFallback(host);
+        else {
+          refreshError.replaceChildren('전 상장회사 감시 자료를 다시 확인하지 못했어요. 앞서 받은 수집 시각과 이력을 유지해요.');
+          if (!refreshError.isConnected) status.append(refreshError);
+        }
+        return;
+      }
+      if (!ready) {
+        ready = true;
+        host.replaceChildren(status, el('div', {class: 'ownership-search'}, el('label', {for: 'ownership-search', text: '상장회사 찾기'}), search, searchStatus, results), historyHost, latest);
+        searchStatus.replaceChildren('상장회사 명부를 불러오는 중이에요.');
+      }
+      if (!registry.length) D.ownershipCompanies().then((data) => {
+        if (!host.isConnected) return;
+        registry = data?.scope === 'OWNERSHIP_COMPANIES' ? list(data.companies).filter((company) => /^[0-9A-Z]{6}$/.test(company.stock_code || '') && typeof company.company === 'string') : [];
+        if (registry.length) { if (!chosenSearch || search.value !== chosenSearch) findCompanies(); }
+        else if (!chosenSearch) searchStatus.replaceChildren('상장회사 명부를 확인하지 못했어요. 6자리 종목코드로 직접 조회할 수 있어요.');
+      });
+      status.replaceChildren(...[
+        ...deliveryNotes(data),
+        data.stale === true ? el('p', {class: 'note', role: 'status', text: '저장 자료가 오래됐거나 갱신 범위를 확인하지 못했어요. 마지막 수집 성공 시각을 확인해 주세요.'}) : null,
+        U.note('공식 상장회사 ' + ownershipCount(data.registry_total) + '곳, 감시 연결 ' + ownershipCount(data.listed_companies) + '곳, 미연결 ' + ownershipCount(data.registry_missing) + '곳.'),
+        U.note('명부 기준: ' + ownershipTime(data.registry_as_of) + '.'),
+        U.note('목표 기간: ' + (data.requested_from || '미확인') + ' ~ ' + (data.requested_to || '미확인') + '.'),
+        U.note('수집 완료 구간: ' + ownershipCount(data.history_windows_completed) + ' / ' + ownershipCount(data.history_windows_total) + ', 미완료 구간: ' + ownershipCount(data.incomplete_windows) + '.'),
+        U.note('최신 수집 완료 범위: ' + (data.latest_complete_from || '미확인') + ' ~ ' + (data.latest_complete_to || '미확인') + '.'),
+        U.note('마지막 수집 시도: ' + ownershipTime(data.last_attempt_at) + '. 마지막 수집 성공: ' + ownershipTime(data.last_success_at) + '.'),
+        U.note(OWNERSHIP_PROGRESS[data.progress_state] || '수집 완료 여부를 확인할 수 없어요. 미완료 구간을 확인해 주세요.'),
+        data.source_error_code ? el('p', {class: 'note', role: 'status', text: data.source_error_code === 'OWNERSHIP_REGISTRY_INCOMPLETE' ? '상장회사와 공시코드가 아직 모두 연결되지 않았어요. 미연결 회사는 현재 감시 범위에서 빠져 있어요.' : '자료원 조회에 문제가 있어요. 마지막 성공 자료와 미완료 구간을 확인해 주세요.'}) : null,
+        ...(Array.isArray(data.limitations) ? data.limitations.filter((item) => typeof item === 'string').map((item) => U.note(item)) : []),
+        U.note('화면을 열어 둔 동안 5분마다 상태를 다시 확인해요. 화면 조회와 수집 작업의 성공 시각은 별개예요.')
+      ].filter(Boolean));
+      if (data.state === 'UNAVAILABLE' && !data.last_success_at) { await ownershipRssFallback(latest); return; }
+      const rows = list(data.latest).slice(0, 50);
+      latest.replaceChildren(el('h3', {text: '최신 접수 공시'}), U.note('저장 공시 ' + ownershipCount(data.disclosures) + '건. 접수일과 최초 탐지 시각은 서로 달라요.'),
+        ...(rows.length ? [el('ul', {class: 'rows'}, rows.slice(0, 10).map((row) => ownershipRow(row, selectCompany))),
+          ...(rows.length > 10 ? [el('details', {class: 'details'}, el('summary', {text: '나머지 최신 공시 ' + (rows.length - 10) + '건'}), el('ul', {class: 'rows'}, rows.slice(10).map((row) => ownershipRow(row, selectCompany))))] : [])] : [U.empty('저장된 최신 공시가 없어요. 미완료 구간이 있으면 공시 유무를 판단할 수 없어요.')]));
+    }
+    return {refresh};
+  }
+
   function communityBlock(community, index) {
     const items = list(community.items), status = SOURCE_STATES[community.status] || '확인 실패';
     return el('details', {class: 'details market-community', open: index === 0},
@@ -229,7 +378,7 @@
     clearTimeout(discoverTimer); discoverTimer = null;
     if (!discoverView?.market.isConnected || discoverRoot.hidden || document.visibilityState === 'hidden') return;
     discoverCheckedAt = performance.now();
-    radarBlock(discoverView.radar); marketWatchBlock(discoverView.market);
+    discoverView.ownership.refresh(); marketWatchBlock(discoverView.market);
     discoverTimer = setTimeout(refreshDiscover, DISCOVER_REFRESH_MS);
   }
   document.addEventListener('visibilitychange', () => {
@@ -243,9 +392,9 @@
     discoverRoot.replaceChildren(
       el('h1', {class: 'page-title', text: '발견'}),
       el('div', {class: 'columns'},
-        el('div', {class: 'column'}, U.section('지분·경영권 관련 공시', radarHost), U.section('시장 관심과 주요 소식', marketHost)),
+        el('div', {class: 'column'}, U.section('전 상장회사 지분 감시', radarHost), U.section('시장 관심과 주요 소식', marketHost)),
         el('div', {class: 'column'}, U.section('실시간 순위', rankHost), U.section('시가총액 순', universeHost))));
-    discoverView = {radar: radarHost, market: marketHost};
+    discoverView = {ownership: ownershipMonitor(radarHost), market: marketHost};
     refreshDiscover(); rankBlock(rankHost); universeBlock(universeHost);
   }
 
@@ -425,7 +574,7 @@
       U.note('최근 1년 동안 받은 주당 배당을 지금 가격으로 나눈 값이에요. 자료: Yahoo Finance.')) : null;
 
     const radarHost = kr ? el('div', {}, U.loading('관련 공시를 확인하는 중이에요')) : null;
-    const disputeBlock = kr ? U.section('지분·경영권 관련 공시', radarHost, el('a', {class: 'button ghost', href: '#discover', text: '수집 범위와 전체 공시 목록 보기'})) : null;
+    const disputeBlock = kr ? U.section('회사별 지분·경영권 공시', radarHost, el('a', {class: 'button ghost', href: '#discover', text: '전 상장회사 감시 범위와 목록 보기'})) : null;
     // 증권사 리포트는 모아 오지 않는다. 목록 사이트들이 자동 수집을 금지해서 원문 사이트로만 연결한다.
     const researchLinks = kr ? U.section('증권사 리포트',
       el('ul', {class: 'rows'}, [['네이버페이 증권 리서치', 'https://stock.naver.com/research/company'], ['한경 컨센서스', 'https://consensus.hankyung.com/analysis/list'], ['한국IR협의회 기업리서치(무료 보고서)', 'https://www.kirs.or.kr/research/research.html']]
@@ -448,9 +597,13 @@
     drawChart(chartHost, id, range);
     drawStockDrawdown(drawdownHost, id, token);
     // 부가 공시 수집이 늦어도 먼저 확보한 시세와 차트를 표시한다.
-    if (kr) D.governance().then((data) => {
+    if (kr) ownershipHistory(radarHost, code, name, () => token === stockToken).load(1).then(async (ok) => {
+      if (ok || token !== stockToken || !radarHost.isConnected) return;
+      const data = await D.governance();
       if (token !== stockToken || !radarHost.isConnected) return;
-      renderRadar(radarHost, data, list(data?.companies).filter((entry) => entry.stock_code === code || entry.company === name));
+      const rss = el('div', {class: 'slot'});
+      radarHost.replaceChildren(U.note('장기 이력을 확인하지 못해 제한된 RSS 자료만 표시해요. 전 상장회사·전체 기간을 조사한 결과가 아니에요.'), rss);
+      renderRadar(rss, data, list(data?.companies).filter((entry) => entry.stock_code === code || entry.company === name));
     });
 
     // 회사 뉴스는 연구 자료의 회사(미국은 GOOG 같은 다른 기호 포함)에만 있다. ETF를 물으면 서버가 거절한다.

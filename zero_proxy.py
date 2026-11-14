@@ -90,9 +90,14 @@ def fetch(path):
     except (ValueError, UnicodeError):
         raise Unavailable('BAD_SITE') from None
     try:
-        with urllib.request.build_opener(_NoRedirect()).open(request, timeout=40) as response:
-            body = response.read(MAX_BYTES + 1)
-            gzipped = response.headers.get('Content-Encoding') == 'gzip'
+        if path.startswith('/api/ownership'):
+            from zero.realtime_stock_quote import _read_body
+            body = _read_body(request, deadline=time.monotonic() + 8, limit=2_000_000)
+            gzipped = body.startswith(b'\x1f\x8b')
+        else:
+            with urllib.request.build_opener(_NoRedirect()).open(request, timeout=40) as response:
+                body = response.read(MAX_BYTES + 1)
+                gzipped = response.headers.get('Content-Encoding') == 'gzip'
     except urllib.error.HTTPError as error:
         # 3xx = Access refused the token (login redirect); others are the site's own status.
         raise Unavailable('ACCESS_REFUSED' if 300 <= error.code < 400 else f'SITE_HTTP_{error.code}') from None
@@ -117,6 +122,15 @@ def fetch(path):
 
 def _upstream(path, query):
     """Map an allowed request to (upstream path, cache seconds) or raise."""
+    if path in ('/api/ownership', '/api/ownership/companies'):
+        if not query:
+            return path, 3600 if path.endswith('/companies') else 60
+        if path == '/api/ownership' and 'code' in query and set(query) <= {'code', 'page', 'revision'}:
+            code, page, revision = query['code'], query.get('page', '1'), query.get('revision')
+            if (re.fullmatch(r'[0-9A-Z]{6}', code) and re.fullmatch(r'[1-9]\d{0,3}', page)
+                    and (revision is None or re.fullmatch(r'[a-f0-9]{64}', revision))):
+                return f"/api/ownership?code={code}&page={page}" + (f"&revision={revision}" if revision else ''), 60
+        raise Unavailable('NOT_PUBLIC')
     if path in PLAIN and not query:
         return path, PLAIN[path]
     if path == '/api/team' and set(query) == {'event'} and EVENT.fullmatch(query['event']):
@@ -130,7 +144,7 @@ def _upstream(path, query):
     raise Unavailable('NOT_PUBLIC')
 
 
-def _cached(key, seconds, load):
+def _cached(key, seconds, load, *, wait_seconds=60):
     with _lock:
         hit = _cache.get(key)
         if hit and hit[0] > time.monotonic():
@@ -141,7 +155,7 @@ def _cached(key, seconds, load):
             waiting = _pending[key] = Future()
     if not owner:
         try:
-            return waiting.result(timeout=60)
+            return waiting.result(timeout=wait_seconds)
         except FutureTimeout:
             raise Unavailable('BRIDGE_BUSY') from None
     try:
@@ -167,7 +181,7 @@ def _cached(key, seconds, load):
 
 def get_public(path, query):
     upstream, seconds = _upstream(path, query)
-    body = _cached(upstream, seconds, lambda: json.dumps(fetch(upstream), ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
+    body = _cached(upstream, seconds, lambda: json.dumps(fetch(upstream), ensure_ascii=False, separators=(',', ':')).encode('utf-8'), wait_seconds=10 if path.startswith('/api/ownership') else 60)
     if path == '/api/desk':
         return json.dumps(zero_research.overlay(json.loads(body), copy=False), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     return body

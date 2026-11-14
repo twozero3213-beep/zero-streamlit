@@ -108,6 +108,10 @@
       "FREE_TIER_KEY",
       "Korean statistics"
     ],
+    "kind.krx.co.kr": [
+      "FREE_NO_KEY",
+      "KRX official listed-company export; normalized company name, market and stock code only"
+    ],
     "opendart.fss.or.kr": [
       "FREE_TIER_KEY",
       "Korean disclosures"

@@ -50,9 +50,17 @@
   const research = () => U.api('api/research', 1800);
   const decade = () => U.api('api/decade', 3600);
   const rank = async () => C.validRank(await U.api('api/market-rank', 60));
-  // 공개 앱 전용(소유자 사이트에는 없는 경로라 null이 오고 화면은 그 칸을 숨긴다).
+  // 공개 자료의 수집 상태와 소유자 사이트의 저장본을 화면에서 구분한다.
   const premarket = () => U.api('api/premarket', 300);
   const governance = () => U.api('api/governance', 120);
+  let ownershipCompaniesRequest = null;
+  async function ownershipCompanies() {
+    if (!ownershipCompaniesRequest) ownershipCompaniesRequest = U.api('api/ownership/companies', 3600);
+    const request = ownershipCompaniesRequest, data = await request;
+    if ((data?.scope !== 'OWNERSHIP_COMPANIES' || !Array.isArray(data.companies) || !data.companies.length) && ownershipCompaniesRequest === request) ownershipCompaniesRequest = null;
+    return data;
+  }
+
 
   // 차트 종가 배열(추세선용).
   async function closes(id, range = '3M') {
@@ -62,5 +70,5 @@
     return values.length >= 2 ? values : null;
   }
 
-  window.ZeroData = {portfolio, desk, research, decade, rank, closes, premarket, governance};
+  window.ZeroData = {portfolio, desk, research, decade, rank, closes, premarket, governance, ownershipCompanies};
 })();
