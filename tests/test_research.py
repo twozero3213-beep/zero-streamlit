@@ -94,3 +94,18 @@ class PublicResearchTests(unittest.TestCase):
         self.assertEqual((value['mean'],value['median'],value['p25'],value['p75']), ('2','2','1.5','2.5'))
         for url in ('http://www.bok.or.kr/', 'https://evil.test/', 'https://www.bok.or.kr/portal/bbs/P0002353/view.do?token=private'):
             with self.assertRaises(ValueError):zero_research.zero_reports.public_url(url)
+
+    def test_empty_desk_never_becomes_synthetic_macro_history(self):
+        data = zero_research.overlay({"macro": [], "coverage": {"macro_count": 0}})
+        self.assertEqual(data["macro"], [])
+        self.assertEqual(data["coverage"]["macro_count"], 0)
+
+    def test_macro_route_filters_actual_desk_observations(self):
+        from tests.test_app import call
+        item = {"id": "SYNTHETIC", "name": "Synthetic", "country": "US", "category": "RATE", "latest_value": "2"}
+        for rows, query, expected in (([], b"", []), ([item], b"country=US", [item]), ([item], b"country=KR", [])):
+            with mock.patch.object(zero_proxy, "get_public", return_value=json.dumps({"macro": rows}).encode()) as read:
+                response = call(zero_proxy.api, "GET", "api/macro", query)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.body)["macro"], expected)
+            read.assert_called_once_with("/api/desk", {})

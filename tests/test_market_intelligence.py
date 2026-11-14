@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """Unit tests for Macro Indicators and Market Intelligence (Chief Director Verdict, 100-Investor Daily Debate, 25 Recommendations)."""
+from dataclasses import asdict
+import json
 import unittest
+from unittest import mock
+from zero import market_intelligence as intelligence
 from zero.macro_indicators import VERIFIED_MACRO_ITEMS, get_macro_indicators
 from zero.market_intelligence import (
     get_chief_director_verdict,
@@ -12,93 +16,94 @@ from zero.market_intelligence import (
 
 class TestMarketIntelligence(unittest.TestCase):
     def test_verified_macro_indicators_structure_and_stats(self):
-        self.assertGreaterEqual(len(VERIFIED_MACRO_ITEMS), 8)
-        ids = {item["id"] for item in VERIFIED_MACRO_ITEMS}
-        expected_ids = {
-            "US_DGS10", "US_FEDFUNDS", "GLOBAL_VIX", "KR_USD_KRW",
-            "US_CPI", "KR_BASE_RATE", "US_UNEMPLOYMENT", "GLOBAL_WTI_CRUDE"
-        }
-        self.assertTrue(expected_ids.issubset(ids))
-
-        for item in VERIFIED_MACRO_ITEMS:
-            self.assertIn("id", item)
-            self.assertIn("name", item)
-            self.assertIn("latest_value", item)
-            self.assertIn("statistics", item)
-            stats = item["statistics"]
-            self.assertTrue(stats.get("available"))
-            self.assertIn("p25", stats)
-            self.assertIn("p75", stats)
-            self.assertIn("median", stats)
-            self.assertGreaterEqual(len(item.get("history", [])), 3)
+        self.assertEqual(VERIFIED_MACRO_ITEMS, [])
+        self.assertEqual(get_macro_indicators(), [], '검증된 입력 없이 현재 지표를 만들어 넣지 않는다')
 
     def test_macro_indicators_filtering(self):
-        us_items = get_macro_indicators(country="US")
-        self.assertTrue(all(item["country"] == "US" for item in us_items))
-        self.assertGreater(len(us_items), 0)
-
-        vix_items = get_macro_indicators(search="VIX")
-        self.assertEqual(len(vix_items), 1)
-        self.assertEqual(vix_items[0]["id"], "GLOBAL_VIX")
+        items = [
+            {'id': 'US_SYNTH', 'name': 'Synthetic US rate', 'country': 'US', 'category': 'rate'},
+            {'id': 'KR_SYNTH', 'name': 'Synthetic KR price', 'country': 'KR', 'category': 'price'},
+        ]
+        self.assertEqual(get_macro_indicators(country='US', items=items), items[:1])
+        self.assertEqual(get_macro_indicators(search='KR price', items=items), items[1:])
+        self.assertEqual(get_macro_indicators(category='rate', items=items), items[:1])
+        self.assertEqual(get_macro_indicators(search='missing', items=items), [])
 
     def test_chief_director_verdict_probabilities_and_reasoning(self):
-        verdict = get_chief_director_verdict()
-        self.assertIn(verdict.verdict, ["BUY", "SELL"])
-        self.assertNotEqual(verdict.verdict, "HOLD")  # Never HOLD
-        self.assertAlmostEqual(verdict.buy_prob + verdict.sell_prob, 100.0, places=1)
-        self.assertEqual(verdict.buy_prob, 62.0)
-        self.assertEqual(verdict.sell_prob, 38.0)
-
-        # Economic outlook probabilities
-        economy = verdict.economy_outlook
-        self.assertAlmostEqual(economy["positive_prob"] + economy["negative_prob"], 100.0, places=1)
-        self.assertEqual(economy["positive_prob"], 68.0)
-        self.assertEqual(economy["negative_prob"], 32.0)
-        self.assertGreaterEqual(len(economy["indicator_breakdown"]), 5)
-        self.assertTrue(len(verdict.summary_reasoning) > 30)
+        for target in ('MARKET_OVERALL', 'NVDA', '005930'):
+            verdict = get_chief_director_verdict(target)
+            self.assertEqual((verdict.verdict, verdict.verdict_kr), ('HOLD', '보류'))
+            self.assertIsNone(verdict.buy_prob)
+            self.assertIsNone(verdict.sell_prob)
+            self.assertIsNone(verdict.experience_years)
+            self.assertIsNone(verdict.evaluated_at)
+            self.assertEqual(verdict.state, 'UNAVAILABLE')
+            self.assertIs(verdict.ai_used, False)
+            self.assertIs(verdict.orders_authorized, False)
+            self.assertIn('가상', verdict.director_name)
+            self.assertEqual(verdict.economy_outlook['direction'], 'UNKNOWN')
+            for key in ('positive_prob', 'negative_prob', 'positive_probability_pct', 'negative_probability_pct'):
+                self.assertIsNone(verdict.economy_outlook[key])
+            self.assertEqual(verdict.economy_outlook['indicator_breakdown'], [])
+            self.assertEqual(verdict.economy_outlook['key_indicators_analysis'], [])
+            self.assertEqual(verdict.to_dict()['buy_prob'], None)
+            json.dumps(asdict(verdict), allow_nan=False)
 
     def test_daily_council_debate(self):
         debate = generate_daily_council_debate()
-        self.assertIn("date", debate)
-        self.assertIn("macro_debate", debate)
-        self.assertIn("micro_debate", debate)
-        self.assertGreaterEqual(len(debate["strong_sectors"]), 2)
-        self.assertGreaterEqual(len(debate["weak_sectors"]), 2)
-
-        # Check strong sectors have winners and losers
-        for sector in debate["strong_sectors"]:
-            self.assertTrue(len(sector["strong_companies"]) > 0)
-            self.assertTrue(len(sector["weak_companies"]) > 0)
+        self.assertIsNone(debate['date'])
+        self.assertEqual(debate['macro_debate']['dialogue'], [])
+        self.assertEqual(debate['micro_debate']['dialogue'], [])
+        self.assertEqual(debate['strong_sectors'], [])
+        self.assertEqual(debate['weak_sectors'], [])
+        self.assertEqual(debate.chief_verdict['verdict_call'], 'HOLD')
+        self.assertEqual(debate.to_dict()['state'], 'UNAVAILABLE')
+        self.assertEqual(debate.economy_outlook['direction'], 'UNKNOWN')
+        self.assertEqual(generate_daily_council_debate('2026-11-14')['date'], '2026-11-14', '명시한 요청 날짜는 관측 시각과 구분한다')
 
     def test_daily_25_recommendations(self):
         data = get_daily_25_recommendations()
-        picks = data["recommendations"]
-        self.assertEqual(len(picks), 25)
-
-        categories = [p["category"] for p in picks]
-        self.assertEqual(categories.count("NASDAQ"), 10)
-        self.assertEqual(categories.count("KOSPI"), 5)
-        self.assertEqual(categories.count("KOSDAQ"), 5)
-        self.assertEqual(categories.count("ETF"), 5)
-
-        for pick in picks:
-            self.assertIn("symbol", pick)
-            self.assertIn("name_kr", pick)
-            self.assertIn("reason", pick)
-            self.assertIn("conviction_weight", pick)
+        for key in ('nasdaq_10', 'kospi_5', 'kosdaq_5', 'etf_5', 'recommendations'):
+            self.assertEqual(data[key], [])
+        self.assertEqual(data['count'], 0)
+        self.assertEqual(data['state'], 'UNAVAILABLE')
+        self.assertIs(data['orders_authorized'], False)
 
     def test_consult_investor_on_specific_asset(self):
-        # Warren Buffett on Samsung Electronics
-        res_buffett = consult_investor_on_specific_asset("warren-buffett", "삼성전자")
-        self.assertIn("워런 버핏", res_buffett["investor_name_kr"])
-        self.assertEqual(res_buffett["asset"], "삼성전자")
-        self.assertTrue(len(res_buffett["opinion"]) > 20)
+        person = {'id': 'WARREN_BUFFETT', 'name_kr': '워런 버핏', 'name': 'Warren Buffett', 'organization': 'unverified', 'famous_quote': 'unverified quote'}
+        with mock.patch.object(intelligence, 'get_investor_by_id', return_value=person):
+            value = consult_investor_on_specific_asset('warren-buffett', '삼성전자', '검증 자료가 있나요')
+        self.assertIn('워런 버핏', value['investor_name_kr'])
+        self.assertIn('가상', value['investor_name_kr'])
+        self.assertEqual(value['asset'], '삼성전자')
+        self.assertEqual((value['verdict'], value['verdict_kr'], value['state']), ('HOLD', '보류', 'UNAVAILABLE'))
+        self.assertIsNone(value['recommended_weight'])
+        self.assertIsNone(value['organization'])
+        self.assertIsNone(value['famous_quote'])
+        self.assertIs(value['ai_used'], False)
+        self.assertIs(value['orders_authorized'], False)
+        with mock.patch.object(intelligence, 'get_investor_by_id', return_value=None), mock.patch.object(intelligence, 'get_all_investors', return_value=[]):
+            unknown = consult_investor_on_specific_asset('unknown', 'SPY')
+        self.assertIn('가상', unknown['name_kr'])
+        self.assertNotIn('전설', unknown['opinion'])
 
-        # Jim Simons on SPY ETF
-        res_simons = consult_investor_on_specific_asset("jim-simons", "SPY")
-        self.assertIn("짐 사이먼스", res_simons["investor_name_kr"])
-        self.assertEqual(res_simons["asset"], "SPY")
-        self.assertIn("정량적", res_simons["opinion"])
+    def test_unavailable_results_do_not_stamp_a_new_analysis_or_call_ai(self):
+        with mock.patch.object(intelligence, 'datetime') as clock:
+            clock.now.side_effect = AssertionError('unverified observation clock')
+            first = asdict(get_chief_director_verdict())
+            second = asdict(get_chief_director_verdict())
+            self.assertEqual(first, second)
+            self.assertIsNone(generate_daily_council_debate().date_str)
+            self.assertEqual(get_daily_25_recommendations()['count'], 0)
+        text = json.dumps(first, ensure_ascii=False)
+        for fabricated in ('40년', '62.0', '4.88%', '4.25%', 'POSITIVE_EXPANSION'):
+            self.assertNotIn(fabricated, text)
+
+    def test_missing_role_catalog_still_returns_hold_without_private_details(self):
+        with mock.patch.object(intelligence, 'get_investor_by_id', side_effect=FileNotFoundError('PRIVATE_PATH')):
+            value = consult_investor_on_specific_asset('unknown', 'SPY')
+        self.assertEqual((value['state'], value['verdict']), ('UNAVAILABLE', 'HOLD'))
+        self.assertNotIn('PRIVATE_PATH', json.dumps(value))
 
 
 if __name__ == "__main__":

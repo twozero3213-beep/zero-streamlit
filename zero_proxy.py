@@ -50,6 +50,8 @@ HEADLINES_SECONDS = 60  # live news-search titles; collected here, not on the Cl
 _cache, _pending, _lock = {}, {}, threading.Lock()
 _upstream_slots = threading.BoundedSemaphore(4)
 _quote_slots = threading.BoundedSemaphore(8)
+_signal_slots = threading.BoundedSemaphore(2)
+SIGNAL_DEADLINE_SECONDS = 9
 
 
 class Unavailable(Exception):
@@ -279,6 +281,60 @@ async def _quote_response(function, *args):
     return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=15'})
 
 
+async def _signal_response(function):
+    deadline = time.monotonic() + SIGNAL_DEADLINE_SECONDS
+    headers = {'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
+
+    def expired():
+        return JSONResponse({'error': 'SIGNAL_DEADLINE'}, status_code=503, headers=headers)
+
+    slots = _signal_slots
+    if not slots.acquire(blocking=False):
+        return expired()
+    state, lock = {'started': False, 'released': False}, threading.Lock()
+
+    def run():
+        with lock:
+            if state['released']:
+                return 503, {'error': 'SIGNAL_DEADLINE'}
+            state['started'] = True
+        try:
+            if time.monotonic() >= deadline:
+                return 503, {'error': 'SIGNAL_DEADLINE'}
+            return function()
+        finally:
+            with lock:
+                if not state['released']:
+                    state['released'] = True
+                    slots.release()
+
+    def settled(task):
+        with lock:
+            if not state['started'] and not state['released']:
+                state['released'] = True
+                slots.release()
+        if not task.cancelled():
+            task.exception()
+
+    task = asyncio.create_task(run_in_threadpool(run))
+    task.add_done_callback(settled)
+    try:
+        done, _ = await asyncio.wait({task}, timeout=max(0, deadline + .25 - time.monotonic()))
+    except asyncio.CancelledError:
+        task.cancel()
+        raise
+    if not done:
+        # A thread or cancellation-resistant pool job retains its slot until it exits.
+        task.cancel()
+        return expired()
+    if task.cancelled() or time.monotonic() >= deadline:
+        return expired()
+    status_code, body = task.result()
+    if status_code == 200:
+        headers['Cache-Control'] = 'public, max-age=120'
+    return JSONResponse(body, status_code=status_code, headers=headers)
+
+
 async def api(request):
     path = '/api/' + request.path_params['path']
     if path == '/api/research/consult-asset' and request.method == 'POST':
@@ -329,7 +385,8 @@ async def api(request):
             body = await run_in_threadpool(get_rankings)
         elif path == '/api/macro':
             from zero.macro_indicators import get_macro_indicators
-            return JSONResponse({'macro': get_macro_indicators(search=query.get('q'), country=query.get('country', 'ALL'), category=query.get('category', 'ALL'))})
+            desk = json.loads(await run_in_threadpool(get_public, '/api/desk', {}))
+            return JSONResponse({'macro': get_macro_indicators(search=query.get('q'), country=query.get('country', 'ALL'), category=query.get('category', 'ALL'), items=desk.get('macro', []))})
         elif path == '/api/market/chief-verdict':
             from zero.market_intelligence import get_chief_director_verdict
             return JSONResponse(get_chief_director_verdict(query.get('target', 'MARKET_OVERALL')).to_dict())
@@ -339,14 +396,17 @@ async def api(request):
         elif path == '/api/market/recommendations':
             from zero.market_intelligence import get_daily_25_recommendations
             return JSONResponse(get_daily_25_recommendations())
-        elif path in ('/api/governance', '/api/premarket') and not query:
+        elif path in ('/api/governance', '/api/premarket', '/api/market-watch') and not query:
             # 분쟁 레이더(DART 공개 RSS)와 장 전 점검표(Yahoo 일봉). 둘 다 키 없이 서버에서 모아 짧게 캐시한다.
-            if path == '/api/governance':
-                from zero.governance_radar import get_governance_radar as build_view
-            else:
-                from zero.premarket import get_premarket as build_view
-            status_code, body = await run_in_threadpool(build_view)
-            return JSONResponse(body, status_code=status_code, headers={'Cache-Control': 'public, max-age=120'})
+            def build_view():
+                if path == '/api/governance':
+                    from zero.governance_radar import get_governance_radar as collect
+                elif path == '/api/market-watch':
+                    from zero.market_watch import get_market_watch as collect
+                else:
+                    from zero.premarket import get_premarket as collect
+                return collect()
+            return await _signal_response(build_view)
         elif path == '/api/decade' and not query:
             from zero.decade_reference import get_decade_reference
             status_code, body = await run_in_threadpool(get_decade_reference)

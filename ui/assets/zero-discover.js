@@ -100,85 +100,153 @@
     host.replaceChildren(picker, el('ul', {class: 'rows'}, rows), U.note('시가총액이 큰 순서예요' + (day ? '(' + day + ' 수집).' : '.') + ' 순위는 사라는 뜻이 아니에요.'));
   }
 
-  // ---- 분쟁 레이더 ----------------------------------------------------------------------------
-  // 토스·카카오(다음 금융)는 5% 보고·공개매수·경영권 소송을 따로 모아 보여 주지 않는다(검토자료 전략리서치-20261114).
-  // DART 공개 RSS에서 신호가 되는 공시만 골라 회사별 점수로 묶고, 쉬운 설명 아래에 원래 공시명과 접수 시각을 둔다.
-  const CASES = [
-    ['고려아연과 영풍', '2024년 2월 20일, 영풍이 주주총회 위임장을 모으기 시작했어요.', '2024년 9월 공개매수 보도', 205],
-    ['SM엔터테인먼트', '2022년 2월 28일, 얼라인파트너스가 위임장을 모으기 시작했어요.', '2023년 2월 하이브·카카오 인수전', 344],
-    ['한미사이언스', '2024년 1월 12일, 최대주주 변경 계약과 제3자배정 증자가 공시됐어요.', '2024년 1월 17일 가처분 보도', 5],
-    ['한진칼', '2018년 11월 15일, 그레이스홀딩스가 경영 참여 목적으로 9%를 보고했어요.', '보도', 0]
-  ];
-  const SIDES = {company: '회사', insider: '최대주주 쪽', holder: '주주'};
+  // ---- 공시와 시장 관심 -----------------------------------------------------------------------
+  const SIDES = {company: '회사', insider: '최대주주 쪽', holder: '주주', unknown: '관계 미확인'};
+  const NEWS_CATEGORIES = {TENDER: '공개매수', CONTROL_STAKE: '지분·경영권', EARNINGS: '실적', POLICY: '정책', MARKET: '시장', OTHER: '기타'};
+  const SOURCE_STATES = {AVAILABLE: '확인됨', EMPTY: '해당 자료 없음', UNAVAILABLE: '확인 실패'};
+  const PUBLIC_STATES = ['AVAILABLE', 'EMPTY', 'PARTIAL', 'UNAVAILABLE'];
+  const list = (value) => Array.isArray(value) ? value.filter((item) => item && typeof item === 'object') : [];
   const kstDay = (ms) => new Date(ms + 9 * 3600000).toISOString().slice(0, 10);
+
+  function publicLink(url, label, hosts) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.port || !hosts.includes(parsed.hostname)) return null;
+      return el('a', {class: 'public-link', href: parsed.href, target: '_blank', rel: 'noopener noreferrer', text: label});
+    } catch { return null; }
+  }
+
+  function deliveryNotes(data) {
+    if (data.delivery !== 'SAVED_DAILY') return [];
+    return [U.note('소유자 PC의 일일 갱신 때 저장한 자료예요. 저장 시각: ' + (U.timeText(data.published_at) || '미확인') + '.'),
+      data.stale ? el('p', {class: 'note', role: 'status', text: '저장 자료가 하루 이상 지났어요.'}) : null].filter(Boolean);
+  }
 
   function signalRow(signal) {
     const at = Date.parse(signal.at), today = Number.isFinite(at) && kstDay(at) === kstDay(Date.now());
     const when = [today ? '오늘' : null, U.timeText(signal.at) || '시각 미확인', '접수', signal.after_close ? '(장 시간 밖)' : null].filter(Boolean).join(' ');
     return el('li', {class: 'row'}, el('span', {class: 'row-main stacked'},
-      el('strong', {text: signal.label}),
-      el('small', {text: signal.report}),
-      el('small', {text: '제출: ' + (signal.side === 'company' ? '회사' : signal.filer + '(' + SIDES[signal.side] + ')') + ', ' + when}),
-      el('a', {href: signal.url, target: '_blank', rel: 'noopener noreferrer', text: 'DART 원문 보기'})),
-      signal.points ? el('span', {class: 'chip chip-off', text: '+' + signal.points + '점'}) : null);
+      el('strong', {text: signal.report || '공시명 미확인'}),
+      signal.label ? el('small', {text: signal.label}) : null,
+      signal.corrected || signal.withdrawn ? el('small', {text: [signal.corrected ? '정정 공시' : null, signal.withdrawn ? '철회·취소 공시' : null].filter(Boolean).join(', ')}) : null,
+      el('small', {text: '제출: ' + (signal.filer || '제출인 미확인') + ' (' + (SIDES[signal.side] || SIDES.unknown) + '), ' + when}),
+      publicLink(signal.url, 'DART 원문 보기', ['dart.fss.or.kr'])));
   }
 
-  // 단계를 막대 세 칸으로 보여 주고, 다음 단계까지 몇 점 남았는지 적는다.
-  function stepMeter(entry) {
-    return el('span', {class: 'step-meter', role: 'img', 'aria-label': '3단계 중 ' + entry.step + '단계'},
-      ...[1, 2, 3].map((n) => el('i', {class: n <= entry.step ? 'on' : ''})));
-  }
-
-  function radarCompany(entry, limit = 4) {
-    const name = entry.stock_code ? el('a', {href: '#stock/KR:' + entry.stock_code, text: entry.company}) : el('span', {text: entry.company});
-    const related = (entry.related || []).filter((item) => item.stock_code);
+  function radarCompany(entry) {
+    const signals = list(entry.signals), code = /^[0-9A-Z]{6}$/.test(entry.stock_code || '') ? entry.stock_code : null;
+    const name = code ? el('a', {href: '#stock/KR:' + code, text: entry.company || code}) : el('span', {text: entry.company || '회사명 미확인'});
+    const related = list(entry.related).filter((item) => /^[0-9A-Z]{6}$/.test(item.stock_code || ''));
+    const types = [...new Set(signals.map((signal) => signal.label || signal.report || '유형 미확인'))];
     return el('div', {class: 'radar-company'},
-      el('div', {class: 'radar-head'}, el('strong', {class: 'radar-name'}, name),
-        el('span', {class: 'radar-level'}, stepMeter(entry), el('strong', {text: entry.level}))),
-      el('p', {class: 'note', text: entry.score + '점' + (entry.next_points ? ', 다음 단계까지 ' + entry.next_points + '점' : '')}),
-      el('ul', {class: 'rows'}, entry.signals.slice(0, limit).map(signalRow)),
-      related.length ? el('p', {class: 'note'}, '함께 볼 회사: ', ...related.map((item) => el('a', {href: '#stock/KR:' + item.stock_code, text: item.name}))) : null);
+      el('div', {class: 'radar-head'}, el('strong', {class: 'radar-name'}, name), el('span', {class: 'radar-count', text: '공시 ' + signals.length + '건'})),
+      U.note(types.join(', ') || '공시 유형 미확인'),
+      el('details', {class: 'details'}, el('summary', {text: '공시 ' + signals.length + '건과 원문 보기'}),
+        el('ul', {class: 'rows'}, signals.slice(0, 4).map(signalRow)),
+        signals.length > 4 ? el('details', {class: 'details'}, el('summary', {text: '나머지 공시 ' + (signals.length - 4) + '건'}), el('ul', {class: 'rows'}, signals.slice(4).map(signalRow))) : null,
+        Number.isFinite(entry.score) ? el('details', {class: 'details'}, el('summary', {text: '제목 기반 참고 점수'}), U.note(entry.score + '점. 정정·철회는 새 사건으로 가산하지 않아요. 점수는 분쟁 발생이나 수익을 예측하지 않아요.')) : null),
+      related.length ? el('p', {class: 'note'}, '함께 볼 회사: ', ...related.map((item) => el('a', {href: '#stock/KR:' + item.stock_code, text: item.name || item.stock_code}))) : null);
   }
 
-  function radarRules(data) {
-    return [
-      el('details', {class: 'details'}, el('summary', {text: '단계와 점수는 이렇게 정해요'}),
-        el('p', {text: '최근 ' + data.window_days + '일 공시의 점수를 더해 30점이면 지켜볼 신호, 60점이면 신호 겹침, 90점이면 분쟁 확인이에요.'}),
-        el('p', {text: '점수와 상관없이 분쟁 확인으로 보는 경우: 경영권 소송 공시와 판결 공시가 함께 있을 때, 회사 밖에서 공개매수를 할 때, 법원에 주총 소집을 신청했을 때예요. 경영권 소송 공시가 있으면 신호 겹침 아래로 내리지 않아요.'}),
-        el('p', {text: '공개매수 50, 주총 소집 신청 40, 경영권 영향 목적 5% 보고 35, 경영권 소송 35, 경영권 소송 판결 35(다른 판결 15), 최대주주 변경 30, 위임장 권유 25, 주주제안 15, 해명 공시 10, 증자와 자사주 5점이에요.'}),
-        el('p', {text: '5% 보고와 위임장은 회사가 아닌 사람이 냈을 때만 세고, 최대주주 쪽으로 알려진 사람이면 5점만 줘요. 이 명단은 손으로 관리해서 틀릴 수 있어요. 고친 공시(정정)는 새 사건으로 세지 않아요.'}),
-        el('p', {text: '점수는 지난 사례 4건으로 맞춘 초안이에요. 오늘 전체 공시와 지켜보는 ' + (data.watch || []).length + '개 회사(' + (data.watch || []).map((item) => item.name).join(', ') + ')의 최근 약 1주만 봐요. 그보다 오래된 공시나 공시 본문은 읽지 않아요.'})),
-      el('details', {class: 'details'}, el('summary', {text: '지난 분쟁의 첫 공시와 보도'}),
-        ...CASES.map(([name, first, headline, days]) => el('p', {}, el('strong', {text: name + ': '}), first + ' ' + (days ? headline + '보다 ' + days + '일 먼저였어요.' : headline + '와 같은 날이었어요.'))),
-        el('p', {text: '한미 건에서는 소송 공시가 보도보다 6일 늦었어요. 법원 판단 공시도 보도보다 늦을 수 있어요.'}))
-    ];
+  function renderRadar(host, data, companies) {
+    const source = publicLink('https://dart.fss.or.kr/', 'DART에서 공시 직접 확인', ['dart.fss.or.kr']);
+    if (data?.scope !== 'GOVERNANCE_RADAR' || !PUBLIC_STATES.includes(data.state) || data.state === 'UNAVAILABLE') {
+      host.replaceChildren(...deliveryNotes(data || {}), U.empty('지분·경영권 관련 공시 자료를 확인하지 못했어요. 공시 유무를 판단할 수 없어요.'), source);
+      return;
+    }
+    const entries = companies || list(data.companies);
+    const partial = data.state === 'PARTIAL';
+    host.replaceChildren(...[
+      ...deliveryNotes(data),
+      U.note('수집 시각: ' + (U.timeText(data.retrieved_at) || '미확인') + '.'),
+      U.note(typeof data.coverage === 'string' ? data.coverage : '일부 DART RSS의 공시 제목만 확인해요. 전 종목·전체 공시를 조사한 자료가 아니에요.'),
+      partial ? el('p', {class: 'note', role: 'status', text: '일부 출처를 확인하지 못했어요. 확인된 공시만 표시하므로 공시 유무를 판단할 수 없어요.'}) : null,
+      ...(entries.length ? entries.slice(0, 6).map(radarCompany) : [U.empty(partial ? '확인된 관련 공시를 표시할 수 없어요. DART 원문에서 확인해 주세요.' : '이번에 확인한 수집 범위에서 관련 공시를 찾지 못했어요.')]),
+      entries.length > 6 ? el('details', {class: 'details'}, el('summary', {text: '나머지 회사 ' + (entries.length - 6) + '곳'}), ...entries.slice(6).map(radarCompany)) : null,
+      el('details', {class: 'details'}, el('summary', {text: '자료와 참고 점수의 한계'}),
+        U.note(typeof data.score_note === 'string' ? data.score_note : '제목 기반 참고 점수이며 분쟁 발생 확률이나 투자 판단이 아니에요.'),
+        U.note('공시 제목의 유형을 모은 목록이에요. 소송의 당사자·결론이나 지분 다툼 여부는 원문을 읽어 확인해야 해요. 제출인 관계 분류도 틀릴 수 있어요.')),
+      source].filter(Boolean));
   }
 
-  async function radarBlock(host, section) {
+  async function radarBlock(host) {
     const data = await D.governance();
-    if (data?.scope !== 'GOVERNANCE_RADAR') { section.hidden = true; return; }
-    const companies = (data.companies || []).filter((entry) => entry.step > 0);
-    const quiet = (data.companies || []).filter((entry) => entry.step === 0);
-    host.replaceChildren(
-      el('p', {class: 'note', text: (U.timeText(data.retrieved_at) || '') + ' 확인. 오늘 전체 공시와 지켜보는 회사의 최근 약 1주만 봐요.'}),
-      el('p', {text: '지난 분쟁 4건에서 첫 공시는 보도와 같은 날이거나 5~344일 앞섰어요. 경영권 소송, 공개매수, 5% 보고처럼 지분 다툼이 되는 공시만 골라 회사별로 묶었어요.'}),
-      ...(companies.length ? companies.slice(0, 6).map((entry) => radarCompany(entry)) : [U.empty('최근 ' + data.window_days + '일 동안 지분 다툼으로 볼 만한 공시가 없어요.')]),
-      quiet.length ? el('details', {class: 'details'}, el('summary', {text: '점수가 낮은 공시 ' + quiet.length + '곳'}), ...quiet.map((entry) => radarCompany(entry, 2))) : null,
-      ...radarRules(data),
-      U.note('자료: ' + data.source + '. 공시 원문은 DART에서 보세요. 투자 권유가 아니에요.'));
+    if (!host.isConnected) return;
+    renderRadar(host, data);
   }
+
+  function communityBlock(community, index) {
+    const items = list(community.items), status = SOURCE_STATES[community.status] || '확인 실패';
+    return el('details', {class: 'details market-community', open: index === 0},
+      el('summary', {text: (community.label || '커뮤니티명 미확인') + ', ' + status}),
+      U.note('조회 시각: ' + (U.timeText(community.observed_at) || '미확인') + '.'),
+      ...(community.status === 'UNAVAILABLE' ? [U.empty('이 커뮤니티의 언급 자료를 확인하지 못했어요.')] : items.length ? [el('ul', {class: 'rows'}, items.map((item) => {
+        const comparable = Number.isSafeInteger(item.mentions) && item.mentions >= 0 && Number.isSafeInteger(item.mentions_24h_ago) && item.mentions_24h_ago >= 0;
+        const difference = comparable ? item.mentions - item.mentions_24h_ago : null;
+        return el('li', {class: 'market-item'},
+          el('div', {class: 'market-item-head'}, el('strong', {text: (Number.isInteger(item.rank) ? item.rank + '. ' : '') + (item.symbol || '종목 기호 미확인')}),
+            el('span', {text: Number.isFinite(item.mentions) ? '언급 ' + item.mentions.toLocaleString('ko-KR') + '회' : '언급 수 미확인'})),
+          el('p', {class: 'note', text: (item.name || '') + (item.name ? ', ' : '') + (Number.isFinite(item.upvotes) ? '추천 투표 ' + item.upvotes.toLocaleString('ko-KR') : '추천 투표 수 미확인')}),
+          comparable ? U.note('24시간 전 ' + item.mentions_24h_ago.toLocaleString('ko-KR') + '회, 차이 ' + (difference > 0 ? '+' : '') + difference.toLocaleString('ko-KR') + '회.') : null);
+      }))] : [U.empty('이번 표본에 표시할 종목이 없어요.')]),
+      publicLink(community.source_url, 'ApeWisdom에서 이 표본 보기', ['apewisdom.io']));
+  }
+
+  async function marketWatchBlock(host) {
+    const data = await U.api('api/market-watch', 300);
+    if (!host.isConnected) return;
+    const sources = [publicLink('https://apewisdom.io/', 'ApeWisdom 공개 집계 보기', ['apewisdom.io']), publicLink('https://news.google.com/', 'Google 뉴스에서 직접 확인', ['news.google.com'])];
+    if (data?.scope !== 'MARKET_WATCH' || data.schema_version !== 1 || !PUBLIC_STATES.includes(data.state) || data.state === 'UNAVAILABLE') {
+      host.replaceChildren(...deliveryNotes(data || {}), U.empty('시장 관심 자료를 확인하지 못했어요. 아래 출처에서 직접 확인해 주세요.'), ...sources);
+      return;
+    }
+    const communities = list(data.communities), news = list(data.news), partial = data.state === 'PARTIAL';
+    const newsRows = news.map((item) => el('li', {class: 'market-item'},
+      el('strong', {text: item.title || '제목 미확인'}),
+      el('p', {class: 'note', text: (NEWS_CATEGORIES[item.category] || NEWS_CATEGORIES.OTHER) + ', ' + (item.source || '언론사 미확인') + ', ' + (U.timeText(item.published_at) || '보도 시각 미확인')}),
+      publicLink(item.url, 'Google 뉴스에서 보도 보기', ['news.google.com'])));
+    host.replaceChildren(...[
+      ...deliveryNotes(data),
+      U.note('조회 시각: ' + (U.timeText(data.observed_at) || '미확인') + '. 공급자는 갱신 시각을 제공하지 않아요.'),
+      partial ? el('p', {class: 'note', role: 'status', text: '일부 출처를 확인하지 못했어요. 확인된 자료만 표시해요.'}) : null,
+      el('h3', {text: '커뮤니티에서 언급한 종목'}),
+      U.note('제공사 최근 24시간 집계예요. 공개 게시물·댓글 표본의 종목 언급 횟수이며 커뮤니티별 표본이 겹칠 수 있어 합산하지 않아요. 추천 투표는 게시물·댓글 반응이고 매수 추천이 아니에요.'),
+      ...(communities.length ? communities.map(communityBlock) : [U.empty(partial ? '커뮤니티 자료를 확인하지 못했어요.' : '이번 표본에 표시할 종목이 없어요.')]),
+      el('h3', {text: '주요 소식'}),
+      U.note('아래는 언론 보도이며 공식 공시가 아니에요. Google 뉴스에서 언론사와 원문을 확인해 주세요.'),
+      news.length ? el('div', {}, el('ul', {class: 'rows market-news'}, newsRows.slice(0, 5)),
+        news.length > 5 ? el('details', {class: 'details'}, el('summary', {text: '나머지 보도 ' + (news.length - 5) + '건'}), el('ul', {class: 'rows market-news'}, newsRows.slice(5))) : null) : U.empty(partial ? '확인된 보도를 표시할 수 없어요. 일부 출처가 응답하지 않았어요.' : '이번 조회에서 표시할 보도가 없어요.'),
+      el('details', {class: 'details'}, el('summary', {text: '출처별 상태와 수집 한계'}),
+        ...list(data.sources).map((item) => el('p', {class: 'note'}, (item.label || '출처명 미확인') + ': ' + (SOURCE_STATES[item.status] || '확인 실패') + ', 조회 시각: ' + (U.timeText(item.observed_at) || '미확인') + '. ',
+          publicLink(item.url, '출처 보기', ['apewisdom.io', 'news.google.com']))),
+        ...(Array.isArray(data.limitations) ? data.limitations.filter((item) => typeof item === 'string').map((item) => U.note(item)) : [])),
+      U.note('화면을 열어 둔 동안 5분마다 다시 확인해요. 관심도와 보도는 투자 판단이나 수익 예측이 아니에요.')].filter(Boolean));
+  }
+
+  const DISCOVER_REFRESH_MS = 300000;
+  let discoverTimer = null, discoverView = null, discoverCheckedAt = 0;
+  function refreshDiscover() {
+    clearTimeout(discoverTimer); discoverTimer = null;
+    if (!discoverView?.market.isConnected || discoverRoot.hidden || document.visibilityState === 'hidden') return;
+    discoverCheckedAt = performance.now();
+    radarBlock(discoverView.radar); marketWatchBlock(discoverView.market);
+    discoverTimer = setTimeout(refreshDiscover, DISCOVER_REFRESH_MS);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'hidden' && performance.now() - discoverCheckedAt >= DISCOVER_REFRESH_MS) refreshDiscover();
+  });
 
   function showDiscover() {
-    const rankHost = el('div', {class: 'slot'}, U.loading()), universeHost = el('div', {class: 'slot'}, U.loading()), radarHost = el('div', {class: 'slot'}, U.loading());
-    const radar = U.section('분쟁 레이더', radarHost);
+    clearTimeout(discoverTimer);
+    const rankHost = el('div', {class: 'slot'}, U.loading()), universeHost = el('div', {class: 'slot'}, U.loading());
+    const radarHost = el('div', {class: 'slot'}, U.loading()), marketHost = el('div', {class: 'slot'}, U.loading());
     discoverRoot.replaceChildren(
       el('h1', {class: 'page-title', text: '발견'}),
       el('div', {class: 'columns'},
-        el('div', {class: 'column'}, radar, U.section('실시간 순위', rankHost)),
-        el('div', {class: 'column'}, U.section('시가총액 순', universeHost))));
-    radarBlock(radarHost, radar);
-    rankBlock(rankHost);
-    universeBlock(universeHost);
+        el('div', {class: 'column'}, U.section('지분·경영권 관련 공시', radarHost), U.section('시장 관심과 주요 소식', marketHost)),
+        el('div', {class: 'column'}, U.section('실시간 순위', rankHost), U.section('시가총액 순', universeHost))));
+    discoverView = {radar: radarHost, market: marketHost};
+    refreshDiscover(); rankBlock(rankHost); universeBlock(universeHost);
   }
 
   // ---- 종목 화면 ------------------------------------------------------------------------------
@@ -309,12 +377,11 @@
     const [market, code] = id.split(':'), kr = market === 'KR';
     stockRoot.replaceChildren(el('a', {class: 'back', href: '#discover'}, U.icon('back', 18), '발견'), U.loading());
 
-    const [quoteMap, research, info, card, decade, radar] = await Promise.all([
+    const [quoteMap, research, info, card, decade] = await Promise.all([
       U.quotes([id]), D.research(),
       kr ? U.api('api/stock-info?code=' + code, 60) : null,
       U.api('api/market-card?identity=' + encodeURIComponent(id), 120),
-      kr ? null : D.decade(),
-      kr ? D.governance() : null
+      kr ? null : D.decade()
     ]);
     if (token !== stockToken) return;
     const company = research?.companies?.find((item) => item.id === id);
@@ -357,9 +424,8 @@
       el('dl', {class: 'facts'}, fact('배당수익률(최근 1년)', C.cut2(dividend) + '%')),
       U.note('최근 1년 동안 받은 주당 배당을 지금 가격으로 나눈 값이에요. 자료: Yahoo Finance.')) : null;
 
-    // 이 회사에 최근 분쟁 신호가 있으면 종목 화면 위쪽에 묶어 보여 준다(카카오 검토의 '종목 머리 배지').
-    const dispute = kr && radar?.scope === 'GOVERNANCE_RADAR' ? (radar.companies || []).find((entry) => entry.stock_code === code || entry.company === name) : null;
-    const disputeBlock = dispute && dispute.step > 0 ? U.section('분쟁 신호', radarCompany(dispute, 3), el('a', {class: 'button ghost', href: '#discover', text: '분쟁 레이더 전체 보기'})) : null;
+    const radarHost = kr ? el('div', {}, U.loading('관련 공시를 확인하는 중이에요')) : null;
+    const disputeBlock = kr ? U.section('지분·경영권 관련 공시', radarHost, el('a', {class: 'button ghost', href: '#discover', text: '수집 범위와 전체 공시 목록 보기'})) : null;
     // 증권사 리포트는 모아 오지 않는다. 목록 사이트들이 자동 수집을 금지해서 원문 사이트로만 연결한다.
     const researchLinks = kr ? U.section('증권사 리포트',
       el('ul', {class: 'rows'}, [['네이버페이 증권 리서치', 'https://stock.naver.com/research/company'], ['한경 컨센서스', 'https://consensus.hankyung.com/analysis/list'], ['한국IR협의회 기업리서치(무료 보고서)', 'https://www.kirs.or.kr/research/research.html']]
@@ -381,6 +447,11 @@
         el('div', {class: 'column'}, companyBlock(company), newsHost, researchLinks, peerBlock)));
     drawChart(chartHost, id, range);
     drawStockDrawdown(drawdownHost, id, token);
+    // 부가 공시 수집이 늦어도 먼저 확보한 시세와 차트를 표시한다.
+    if (kr) D.governance().then((data) => {
+      if (token !== stockToken || !radarHost.isConnected) return;
+      renderRadar(radarHost, data, list(data?.companies).filter((entry) => entry.stock_code === code || entry.company === name));
+    });
 
     // 회사 뉴스는 연구 자료의 회사(미국은 GOOG 같은 다른 기호 포함)에만 있다. ETF를 물으면 서버가 거절한다.
     const listed = research?.companies?.some((item) => item.kind === 'COMPANY' && (item.id === id || (!kr && item.symbols?.includes(code))));

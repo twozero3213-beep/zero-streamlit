@@ -4,10 +4,10 @@
 특징:
 1. 오탈자 및 맞춤법 교정 완료 (zero.language_filter)
 2. 한글과 영어만 노출 (타 언어 완전 배제)
-3. 실시간 글로벌 지수 및 환율 보드 연동 (zero.realtime_market_pulse)
+3. 공개 글로벌 지수 및 환율 보드 연동 (zero.realtime_market_pulse)
 4. 긴급·속보·단독 기사 공신력 우선 선별 및 무료 범용 AI 툴 요약 (zero.free_universal_ai)
-5. 40년차 월가 총괄 디렉터(알렉산더 밴스)의 결단(매수 vs 매도 확률, 경기 긍정 vs 부정 전망)
-6. 오늘의 엄선 25선 전략(나스닥 10, 코스피 5, 코스닥 5, ETF 5) 연계
+5. 가상 검토 관점의 자료 확인 상태와 HOLD 안내
+6. 검증된 추천 자료가 없을 때 종목 선정을 보류
 7. 피그마(Figma) 오토레이아웃 및 글래스모피즘 기반 고품격 반응형 HTML & 정제된 Markdown 출력
 """
 from datetime import datetime, timedelta, timezone
@@ -40,8 +40,8 @@ class ModernMorningReportBuilder:
         """보고서 생성에 필요한 전체 데이터셋 취합 및 정제"""
         # 1. 지수 및 환율 수집
         pulse = RealtimeMarketPulse.get_market_pulse_summary()
-        indices = custom_indices or pulse["indices"]
-        fx_rates = custom_fx or pulse["fx_rates"]
+        indices = custom_indices if custom_indices is not None else pulse["indices"]
+        fx_rates = custom_fx if custom_fx is not None else pulse["fx_rates"]
 
         # 1-1. 실시간 주요 종목 시세 (토스·한투·네이버 연동)
         stock_quotes = []
@@ -56,26 +56,7 @@ class ModernMorningReportBuilder:
 
         # 2. 긴급/속보/단독 뉴스 정제 및 무료 범용 AI 요약
         engine = BreakingNewsEngine(max_output_items=10)
-        raw_news = news_items or [
-            {
-                "title": "[속보] 美 연준 기준금리 인하 가시화… 뉴욕증시 나스닥 급등 출발",
-                "publisher": "연합뉴스",
-                "url": "https://finance.naver.com",
-                "summary": "미국 연방준비제도의 연내 금리 인하 기대감이 고조되며 기술주 중심의 나스닥 지수가 큰 폭으로 상승했습니다."
-            },
-            {
-                "title": "[단독] 삼성전자 HBM4 양산 일정 앞당긴다… 엔비디아 공급망 다변화 수혜",
-                "publisher": "한국경제",
-                "url": "https://finance.naver.com",
-                "summary": "차세대 고대역폭메모리 양산 시점이 조기 가시화되면서 글로벌 반도체 밸류체인 내 입지가 더욱 강화될 전망입니다."
-            },
-            {
-                "title": "[특징주] 원·달러 환율 1380원대 안착… 수출 대형주 외국인 매수세 유입",
-                "publisher": "매일경제",
-                "url": "https://finance.naver.com",
-                "summary": "환율 변동성 완화와 함께 코스피 대형 자동차 및 조선 업종에 대한 외국인 순매수가 집중되고 있습니다."
-            }
-        ]
+        raw_news = news_items if news_items is not None else []
 
         parsed_items = [engine.process_raw_item(it) for it in raw_news]
         deduped = engine.deduplicate_and_rank(parsed_items)
@@ -97,19 +78,14 @@ class ModernMorningReportBuilder:
                     "summary_points": ai_res.three_line_summary
                 })
 
-        # 3. 40년차 월가 총괄 디렉터 결단
+        # 3. 가상 검토 관점
         verdict = get_chief_director_verdict("MARKET_OVERALL")
 
-        # 4. 오늘의 엄선 25선
+        # 4. 추천 자료 확인
         rec_data = get_daily_25_recommendations()
 
         # 5. 거시경제 지표
-        macro = macro_data or [
-            {"name": "미국 10년물 국채금리", "latest": "4.24%", "status": "안정세", "impact": "성장주 우호적"},
-            {"name": "원/달러 환율", "latest": "1,386.50원", "status": "박스권", "impact": "수출주 긍정적"},
-            {"name": "VIX 변동성지수", "latest": "14.85pt", "status": "안정", "impact": "위험자산 선호"},
-            {"name": "WTI 국제유가", "latest": "$71.20", "status": "하향안정", "impact": "인플레이션 완화"}
-        ]
+        macro = macro_data if macro_data is not None else []
 
         return {
             "date_str": f"{self.at:%Y년 %m월 %d일}({WEEKDAYS[self.at.weekday()]}) {self.at:%H:%M} KST",
@@ -128,17 +104,17 @@ class ModernMorningReportBuilder:
         lines = []
 
         lines.append(f"# ☀️ ZERO 프리미엄 모닝 인텔리전스 · {d['date_str']}")
-        lines.append("> **피그마(Figma) 스타일의 정제된 UI/UX 구조로 제공되는 실시간 아침 자산 브리핑입니다.**\n")
+        lines.append("> **제공된 공개 자료와 확인 상태를 정리한 아침 자산 브리핑입니다.**\n")
 
         # 1. 30초 핵심 Glance
         lines.append("## ⏱️ 1. 30초 모닝 펄스 (Executive Summary)")
         v = d["verdict"]
-        lines.append(f"- **40년차 월가 총괄 디렉터 결단**: **매수 {v.buy_prob}%** vs 매도 {v.sell_prob}% | 경기 전망: **긍정 {v.economy_outlook['positive_prob']}%**")
+        lines.append("- **가상 검토 관점**: **HOLD · 자료 미검증**. 매수·매도·경기 전망 확률은 산출하지 않았습니다.")
         lines.append(f"- **시장 코어 코멘트**: {sanitize_text(v.summary_reasoning)}")
         lines.append("")
 
         # 2. 글로벌 지수 & 환율 보드
-        lines.append("## 📊 2. 실시간 글로벌 지수 & 외환 매트릭스")
+        lines.append("## 📊 2. 공개 글로벌 지수 & 외환 매트릭스")
         lines.append("| 종목 | 현재가 | 전일 대비 | 등락률 | 상태 |")
         lines.append("|---|---|---|---|---|")
         for idx in d["indices"]:
@@ -152,7 +128,7 @@ class ModernMorningReportBuilder:
         lines.append("")
 
         if d.get("stock_quotes"):
-            lines.append("## 💎 2-1. 실시간 핵심 종목 시세 (토스·한투·네이버 실시간 피드)")
+            lines.append("## 💎 2-1. 공개 종목 시세(자료별 출처·기준 시각 확인 필요)")
             lines.append("| 종목명 (티커) | 현재가 | 전일 대비 | 등락률 | 수신 출처 |")
             lines.append("|---|---|---|---|---|")
             for stk in d["stock_quotes"]:
@@ -177,20 +153,23 @@ class ModernMorningReportBuilder:
                     lines.append(f"  • {pt}")
                 lines.append("")
         else:
-            lines.append("- 현재 시각 수집된 특이 속보가 없습니다.\n")
+            lines.append("- 공개 뉴스 자료가 확인되지 않았습니다.\n")
 
-        # 4. 오늘의 엄선 25선 전략 요약
-        lines.append("## 🎯 4. 오늘의 25선 핵심 전략 포커스")
+        # 4. 추천 자료 확인 전략 요약
+        lines.append("## 🎯 4. 추천 자료 확인 상태")
         recs = d["recommendations"].get("recommendations", [])
         nasdaq = [r for r in recs if r.get("market") == "NASDAQ"][:3]
         kospi = [r for r in recs if r.get("market") == "KOSPI"][:2]
         kosdaq = [r for r in recs if r.get("market") == "KOSDAQ"][:2]
         etf = [r for r in recs if r.get("market") == "ETF"][:2]
 
-        lines.append("- **나스닥(NASDAQ) 주요 픽**: " + ", ".join(f"{r['name']}({r['symbol']})" for r in nasdaq))
-        lines.append("- **코스피(KOSPI) 주요 픽**: " + ", ".join(f"{r['name']}({r['symbol']})" for r in kospi))
-        lines.append("- **코스닥(KOSDAQ) 주요 픽**: " + ", ".join(f"{r['name']}({r['symbol']})" for r in kosdaq))
-        lines.append("- **글로벌 ETF 주요 픽**: " + ", ".join(f"{r['name']}({r['symbol']})" for r in etf))
+        if recs:
+            lines.append("- **나스닥(NASDAQ) 주요 픽**: " + ", ".join(f"{r['name']}({r['symbol']})" for r in nasdaq))
+            lines.append("- **코스피(KOSPI) 주요 픽**: " + ", ".join(f"{r['name']}({r['symbol']})" for r in kospi))
+            lines.append("- **코스닥(KOSDAQ) 주요 픽**: " + ", ".join(f"{r['name']}({r['symbol']})" for r in kosdaq))
+            lines.append("- **글로벌 ETF 주요 픽**: " + ", ".join(f"{r['name']}({r['symbol']})" for r in etf))
+        else:
+            lines.append("- 검증된 추천 자료가 없어 종목 선정을 보류했습니다.")
         lines.append("")
 
         # 5. 거시경제 점검 체크리스트
@@ -200,7 +179,7 @@ class ModernMorningReportBuilder:
         lines.append("")
 
         lines.append("---")
-        lines.append("※ 본 보고서는 무료 범용 AI 툴 및 실시간 공개 데이터에 기반하며, 비영어/비한글 텍스트가 엄격히 필터링된 정제 자료입니다.")
+        lines.append("※ 제공된 자료를 정리한 보고서입니다. 검증된 근거가 없는 관측값·확률·추천은 생성하지 않습니다.")
 
         return "\n".join(lines)
 
@@ -229,6 +208,9 @@ class ModernMorningReportBuilder:
             </div>
         """ for fx in d["fx_rates"])
 
+        indices_html = indices_html or "<p>지수 자료와 기준 시각을 확인하지 못했습니다.</p>"
+        fx_html = fx_html or "<p>환율 자료와 기준 시각을 확인하지 못했습니다.</p>"
+
         stocks_html = "".join(f"""
             <div class="matrix-card">
                 <div class="card-label">{html.escape(sanitize_text(stk['name']))} <span class="curr">({stk['symbol']})</span></div>
@@ -255,6 +237,9 @@ class ModernMorningReportBuilder:
                 </ul>
             </div>
         """ for n in d["news"])
+
+        stocks_html = stocks_html or "<p>종목 시세와 기준 시각을 확인하지 못했습니다.</p>"
+        news_html = news_html or "<p>공개 뉴스 자료를 확인하지 못했습니다.</p>"
 
         return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -330,38 +315,6 @@ body {{
     display: flex;
     flex-direction: column;
     gap: 16px;
-}}
-.verdict-bars {{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}}
-.bar-wrap {{
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 12px;
-    padding: 14px;
-}}
-.bar-labels {{
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    font-weight: 700;
-    margin-bottom: 8px;
-}}
-.progress-bg {{
-    height: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
-    overflow: hidden;
-    display: flex;
-}}
-.progress-fill-up {{
-    background: var(--up);
-    height: 100%;
-}}
-.progress-fill-down {{
-    background: var(--down);
-    height: 100%;
 }}
 .verdict-desc {{
     font-size: 14px;
@@ -476,48 +429,27 @@ body {{
     <div class="header-box">
         <div class="header-tag">FIGMA-DESIGNED MORNING INTELLIGENCE</div>
         <div class="header-title">☀️ ZERO 일일 프리미엄 모닝 리포트</div>
-        <div class="header-date">{d['date_str']} · 언어 정제 및 실시간 무료 AI 파이프라인 가동</div>
+        <div class="header-date">{d['date_str']} · 보고서 작성 시각 · 자료별 기준 시각은 별도 확인 필요</div>
     </div>
 
-    <!-- Wall Street Chief Director Verdict -->
+    <!-- Simulated review role -->
     <div class="verdict-banner">
-        <div class="section-title">🏛️ 40년차 월가 총괄 디렉터 결단 (알렉산더 밴스)</div>
-        <div class="verdict-bars">
-            <div class="bar-wrap">
-                <div class="bar-labels">
-                    <span style="color: var(--up);">매수 {v.buy_prob}%</span>
-                    <span style="color: var(--down);">매도 {v.sell_prob}%</span>
-                </div>
-                <div class="progress-bg">
-                    <div class="progress-fill-up" style="width: {v.buy_prob}%;"></div>
-                    <div class="progress-fill-down" style="width: {v.sell_prob}%;"></div>
-                </div>
-            </div>
-            <div class="bar-wrap">
-                <div class="bar-labels">
-                    <span style="color: var(--up);">경기 긍정 {v.economy_outlook['positive_prob']}%</span>
-                    <span style="color: var(--down);">경기 부정 {v.economy_outlook['negative_prob']}%</span>
-                </div>
-                <div class="progress-bg">
-                    <div class="progress-fill-up" style="width: {v.economy_outlook['positive_prob']}%;"></div>
-                    <div class="progress-fill-down" style="width: {v.economy_outlook['negative_prob']}%;"></div>
-                </div>
-            </div>
-        </div>
+        <div class="section-title">가상 검토 관점</div>
+        <p>HOLD · 자료 미검증. 매수·매도·경기 전망 확률은 산출하지 않았습니다.</p>
         <div class="verdict-desc">{html.escape(sanitize_text(v.summary_reasoning))}</div>
     </div>
 
     <!-- Global Indices & FX -->
     <div>
-        <div class="section-title">📊 실시간 글로벌 주요 지수</div>
+        <div class="section-title">📊 공개 글로벌 주요 지수</div>
         <div class="matrix-grid">{indices_html}</div>
     </div>
     <div>
-        <div class="section-title">💱 실시간 주요 환율 매트릭스</div>
+        <div class="section-title">💱 공개 환율 매트릭스</div>
         <div class="matrix-grid">{fx_html}</div>
     </div>
     <div>
-        <div class="section-title">💎 실시간 핵심 종목 시세 (토스·한투·네이버 실시간 피드)</div>
+        <div class="section-title">💎 공개 종목 시세(자료별 출처·기준 시각 확인 필요)</div>
         <div class="matrix-grid">{stocks_html}</div>
     </div>
 

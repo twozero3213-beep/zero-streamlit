@@ -276,6 +276,21 @@ class QuoteDeadlineTests(unittest.TestCase):
                 self.assert_slots_free()
 
 
+    def test_raw_reader_preserves_rss_and_enforces_its_limit(self):
+        request = rq.urllib.request.Request("https://synthetic.invalid/rss")
+        body = b"<rss><channel/></rss>"
+        child = Process(body)
+        with patch.object(subprocess, "Popen", return_value=child):
+            self.assertEqual(rq._read_body(request, deadline=time.monotonic() + 1, limit=128), body)
+        self.assertEqual(json.loads(child.calls[0][0])["limit"], 128)
+        with patch.object(subprocess, "Popen", return_value=Process(body)):
+            with self.assertRaisesRegex(ValueError, "^QUOTE_SOURCE_INVALID$"):
+                rq._read_body(request, deadline=time.monotonic() + 1, limit=4)
+        for limit in (True, 0, -1, 4_194_305, "128"):
+            with self.subTest(limit=limit), self.assertRaises(ValueError):
+                rq._read_body(request, deadline=time.monotonic() + 1, limit=limit)
+        self.assert_slots_free()
+
     def test_child_enforces_body_limit_without_network_or_partial_stdout(self):
         self.assertIsInstance(getattr(rq, "_QUOTE_HTTP_CHILD", None), str)
         limit, observed = rq.MAX_QUOTE_BODY_BYTES, []

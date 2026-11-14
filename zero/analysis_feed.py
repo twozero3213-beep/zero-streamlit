@@ -166,30 +166,6 @@ class AnalysisFeed:
                 pass
         for ident, row in rows.items():
             self._good[ident] = (row, stamp)
-        # 프로덕션 실환경에서 야후 파이낸스 조회가 막힌 경우 RealtimeMarketPulse로 폴백 주입
-        if not rows and self.fetch_json is _fetch_json:
-            try:
-                from zero.realtime_market_pulse import RealtimeMarketPulse
-                pulse_items = RealtimeMarketPulse.fetch_indices()
-                sym_map = {
-                    'KOSPI': 'KOSPI', 'KOSDAQ': 'KOSDAQ', 'NASDAQ': 'NASDAQ',
-                    'SP500': 'SPX', 'DOW': 'DJI', 'ES_FUTURES': 'SPX', 'NQ_FUTURES': 'NASDAQ'
-                }
-                for spec in SPECS:
-                    target_sym = sym_map.get(spec[0])
-                    m = next((p for p in pulse_items if p.symbol == target_sym or p.name == spec[4]), None)
-                    if m:
-                        prev = round(m.price - m.change, 4) if m.change is not None else m.price
-                        rows[spec[0]] = dict(
-                            id=spec[0], market=spec[1], kind=spec[2], symbol=spec[3], name=spec[4],
-                            state='AVAILABLE', price=m.price, previous_close=prev,
-                            change_percent=round(m.change_percent, 6),
-                            market_time=_iso(stamp),
-                            source_url=('https://query1.finance.yahoo.com/v8/finance/chart/' + urllib.parse.quote(spec[3], safe='')) if spec[3] else None,
-                            reason=None
-                        )
-            except Exception:
-                pass
 
         indices = []
         for spec in SPECS:

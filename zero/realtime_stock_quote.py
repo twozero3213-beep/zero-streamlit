@@ -9,13 +9,15 @@ Integrates:
 
 Features:
 - In-memory thread-safe caching (TTL 15s for quotes, token renewal based on expires_in)
-- Public deployment uses keyless Naver/Yahoo quotes without loading broker credentials
+- Zero credentials leak: Reads from env / zero.env locally, never returns secrets
 - Normalizes output format with market, currency, current_price, change, change_percent, timestamp
 """
 import base64
 from datetime import datetime, timezone
 import json
+import math
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
@@ -116,6 +118,18 @@ def _reap_quote_http():
 
 def _read_json(request, *, deadline):
     end = min(deadline, time.monotonic() + PROVIDER_TIMEOUT_SECONDS)
+    value = json.loads(_read_body(request, deadline=end))
+    if not isinstance(value, dict):
+        raise ValueError("QUOTE_SOURCE_INVALID")
+    if time.monotonic() >= end:
+        raise TimeoutError("QUOTE_DEADLINE")
+    return value
+
+
+def _read_body(request, *, deadline, limit=MAX_QUOTE_BODY_BYTES):
+    if type(limit) is not int or not 0 < limit <= 4_194_304:
+        raise ValueError("QUOTE_SOURCE_INVALID")
+    end = min(deadline, time.monotonic() + PROVIDER_TIMEOUT_SECONDS)
     _reap_quote_http()
     if end <= time.monotonic() or not _HTTP_SLOTS.acquire(blocking=False):
         raise TimeoutError("QUOTE_DEADLINE")
@@ -124,7 +138,7 @@ def _read_json(request, *, deadline):
         payload = json.dumps({"url": request.full_url, "method": request.get_method(),
                               "headers": dict(request.header_items()),
                               "data": None if request.data is None else base64.b64encode(request.data).decode(),
-                              "timeout": max(.001, end - time.monotonic()), "limit": MAX_QUOTE_BODY_BYTES}).encode()
+                              "timeout": max(.001, end - time.monotonic()), "limit": limit}).encode()
         environment = {key: os.environ[key] for key in ("SYSTEMROOT", "WINDIR", "PATH", "TEMP", "TMP") if key in os.environ}
         process = subprocess.Popen([sys.executable, "-I", "-S", "-X", "utf8", "-c", _QUOTE_HTTP_CHILD],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
@@ -138,14 +152,9 @@ def _read_json(request, *, deadline):
             raise TimeoutError("QUOTE_DEADLINE") from None
         if time.monotonic() >= end:
             raise TimeoutError("QUOTE_DEADLINE")
-        if process.returncode != 0 or len(raw) > MAX_QUOTE_BODY_BYTES:
+        if process.returncode != 0 or len(raw) > limit:
             raise ValueError("QUOTE_SOURCE_INVALID")
-        value = json.loads(raw)
-        if not isinstance(value, dict):
-            raise ValueError("QUOTE_SOURCE_INVALID")
-        if time.monotonic() >= end:
-            raise TimeoutError("QUOTE_DEADLINE")
-        return value
+        return raw
     finally:
         if process is not None and process.poll() is None:
             try:
@@ -161,8 +170,7 @@ def _read_json(request, *, deadline):
                 _HTTP_PENDING.append(process)
 
 
-def _get_zero_env() -> dict:
-    """The public deployment uses keyless quotes and never loads broker credentials."""
+def _get_zero_env():
     return {}
 
 
@@ -237,6 +245,35 @@ def _get_toss_token(env: dict, *, deadline=None) -> str | None:
     return None
 
 
+def _quote_number(value):
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        text = str(value)
+        if "," in text and not re.fullmatch(r"[+-]?[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]+)?", text):
+            return None
+        number = float(text.replace(",", ""))
+        return number if math.isfinite(number) else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _market_time(value):
+    try:
+        if type(value) in (int, float) and math.isfinite(value):
+            stamp = datetime.fromtimestamp(value, timezone.utc)
+        elif isinstance(value, str):
+            stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if stamp.tzinfo is None:
+                return None
+        else:
+            return None
+        epoch = stamp.timestamp()
+        return stamp.astimezone(timezone.utc).isoformat() if 0 < epoch <= time.time() + 60 else None
+    except (ValueError, OverflowError, OSError):
+        return None
+
+
 def _fetch_from_toss(symbols: list[str], env: dict, *, deadline=None) -> dict[str, dict]:
     """Fetch live prices for a batch of symbols from Toss Securities."""
     deadline = min(_quote_deadline(deadline), time.monotonic() + PROVIDER_TIMEOUT_SECONDS)
@@ -259,25 +296,23 @@ def _fetch_from_toss(symbols: list[str], env: dict, *, deadline=None) -> dict[st
         )
         data = _read_json(req, deadline=deadline)
         for item in data.get("result", []):
+            if not isinstance(item, dict):
+                continue
             sym = item.get("symbol")
-            last_price_str = item.get("lastPrice")
-            curr = item.get("currency", "KRW" if RE_KR_CODE.fullmatch(sym) else "USD")
-            if sym and last_price_str is not None:
-                try:
-                    price = float(last_price_str)
-                    market = "KR" if curr == "KRW" or RE_KR_CODE.fullmatch(sym) else "US"
-                    results[sym] = {
-                        "symbol": sym,
-                        "identity": f"{market}:{sym}",
-                        "name": _STOCK_NAMES_KR.get(sym) or _STOCK_NAMES_US.get(sym) or sym,
-                        "market": market,
-                        "currency": curr,
-                        "current_price": price,
-                        "market_time": item.get("timestamp") or datetime.now(timezone.utc).isoformat(),
-                        "source": "TOSS_SECURITIES",
-                    }
-                except ValueError:
-                    continue
+            if not isinstance(sym, str) or sym not in symbols:
+                continue
+            market = "KR" if RE_KR_CODE.fullmatch(sym) else "US"
+            currency = "KRW" if market == "KR" else "USD"
+            price = _quote_number(item.get("lastPrice"))
+            if item.get("currency", currency) != currency or price is None or price <= 0:
+                continue
+            results[sym] = {
+                "symbol": sym, "identity": f"{market}:{sym}",
+                "name": _STOCK_NAMES_KR.get(sym) or _STOCK_NAMES_US.get(sym) or sym,
+                "market": market, "currency": currency, "current_price": price,
+                "market_time": _market_time(item.get("timestamp")),
+                "source": "TOSS_SECURITIES",
+            }
     except Exception:
         pass
     return results
@@ -299,12 +334,9 @@ def _fetch_from_naver_kr(code: str, *, deadline=None) -> dict | None:
         datas = payload.get("datas", [])
         if datas:
             d = datas[0]
-            price_str = str(d.get("closePrice", "")).replace(",", "")
-            prev_str = str(d.get("compareToPreviousClosePrice", "")).replace(",", "")
-            rate_str = str(d.get("fluctuationsRatio", "")).replace(",", "")
-            price = float(price_str) if price_str else None
-            diff = float(prev_str) if prev_str else 0.0
-            rate = float(rate_str) if rate_str else 0.0
+            price = _quote_number(d.get("closePrice"))
+            diff = _quote_number(d.get("compareToPreviousClosePrice"))
+            rate = _quote_number(d.get("fluctuationsRatio"))
             name = d.get("stockName") or _STOCK_NAMES_KR.get(code, code)
             if price is not None and price > 0:
                 return {
@@ -316,8 +348,8 @@ def _fetch_from_naver_kr(code: str, *, deadline=None) -> dict | None:
                     "current_price": price,
                     "change": diff,
                     "change_percent": rate,
-                    "previous_close": price - diff,
-                    "market_time": datetime.now(timezone.utc).isoformat(),
+                    "previous_close": _quote_number(price - diff) if diff is not None and price - diff > 0 else None,
+                    "market_time": None,
                     "source": "NAVER_REALTIME",
                 }
     except Exception:
@@ -384,9 +416,11 @@ def _fetch_from_kis_kr(code: str, env: dict, *, deadline=None) -> dict | None:
         out = data.get("output", {})
         prpr = out.get("stck_prpr")
         if prpr:
-            price = float(prpr)
-            vrss = float(out.get("prdy_vrss", 0))
-            ctrt = float(out.get("prdy_ctrt", 0))
+            price = _quote_number(prpr)
+            if price is None or price <= 0:
+                return None
+            vrss = _quote_number(out.get("prdy_vrss"))
+            ctrt = _quote_number(out.get("prdy_ctrt"))
             return {
                 "symbol": code,
                 "identity": f"KR:{code}",
@@ -396,8 +430,8 @@ def _fetch_from_kis_kr(code: str, env: dict, *, deadline=None) -> dict | None:
                 "current_price": price,
                 "change": vrss,
                 "change_percent": ctrt,
-                "previous_close": price - vrss,
-                "market_time": datetime.now(timezone.utc).isoformat(),
+                "previous_close": _quote_number(price - vrss) if vrss is not None and price - vrss > 0 else None,
+                "market_time": None,
                 "source": "KIS_SECURITIES",
             }
     except Exception:
@@ -418,22 +452,25 @@ def _fetch_from_yahoo(symbol: str, market: str, currency: str, *, deadline=None)
         )
         payload = _read_json(req, deadline=deadline)
         meta = payload.get("chart", {}).get("result", [{}])[0].get("meta", {})
-        price = meta.get("regularMarketPrice")
-        prev = meta.get("chartPreviousClose")
+        if meta.get("symbol") != query_sym or meta.get("currency") != currency:
+            return None
+        price = _quote_number(meta.get("regularMarketPrice"))
+        prev = _quote_number(meta.get("chartPreviousClose"))
+        prev = prev if prev is not None and prev > 0 else None
         if price is not None and price > 0:
-            diff = (price - prev) if prev else 0.0
-            rate = (diff / prev * 100) if prev and prev > 0 else 0.0
+            diff = price - prev if prev is not None else None
+            rate = _quote_number(diff / prev * 100) if prev is not None else None
             return {
                 "symbol": symbol,
                 "identity": f"{market}:{symbol}",
                 "name": _STOCK_NAMES_KR.get(symbol) or _STOCK_NAMES_US.get(symbol) or symbol,
                 "market": market,
                 "currency": currency,
-                "current_price": float(price),
-                "change": round(diff, 2),
-                "change_percent": round(rate, 2),
-                "previous_close": float(prev) if prev else price,
-                "market_time": datetime.now(timezone.utc).isoformat(),
+                "current_price": price,
+                "change": round(diff, 2) if diff is not None else None,
+                "change_percent": round(rate, 2) if rate is not None else None,
+                "previous_close": prev,
+                "market_time": _market_time(meta.get("regularMarketTime")),
                 "source": "YAHOO_FINANCE",
             }
     except Exception:
@@ -606,7 +643,7 @@ def get_live_quotes_endpoint(store=None, *, deadline=None) -> tuple[int, dict]:
             'symbol': q['symbol'],
             'currency': q['currency'],
             'price': q['current_price'],
-            'market_time': q.get('market_time', now_iso),
+            'market_time': q.get('market_time'),
         }
         # 변경: 전일 종가를 모르면 현재가로 대신 채우지 않고 키를 뺀다.
         if q.get('previous_close') is not None:
@@ -630,5 +667,5 @@ def get_live_quotes_endpoint(store=None, *, deadline=None) -> tuple[int, dict]:
     # 고정값(1400)을 넣지 않고 뺀다. 클라이언트(livePortfolio)는 fx가 없으면 저장된 화면을 유지한다.
     if 'SPY' in quotes:
         spy = quotes['SPY']
-        payload['benchmarks'] = {'SP500': {'price': spy['current_price'], 'market_time': spy.get('market_time', now_iso)}}
+        payload['benchmarks'] = {'SP500': {'price': spy['current_price'], 'market_time': spy.get('market_time')}}
     return 200, payload

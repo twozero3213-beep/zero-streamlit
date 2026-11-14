@@ -300,15 +300,19 @@ a.row-main:hover strong, button.row-main:hover strong { text-decoration: underli
 /* 돈 숫자 옆에 늘 붙는 '모의 계좌' 표시. 처음 보는 사람이 자기 돈으로 읽지 않게 한다. */
 .mock-tag { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 6px; background: var(--field); color: var(--sub); font-size: 0.875rem; font-weight: 600; vertical-align: 2px; }
 .nowrap { white-space: nowrap; }
-/* 분쟁 레이더: 회사마다 가는 구분선 하나로 나눈다(카드 속 카드 없음). */
+/* 공시와 관심 자료는 중립색과 구분선으로 묶고 숫자를 예측 신호처럼 강조하지 않는다. */
 .radar-company { padding: 12px 0; border-top: 1px solid var(--line); }
 .radar-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .radar-name a, .note a { display: inline-flex; align-items: center; min-height: 44px; }
 .note a + a { margin-left: 12px; }
-.radar-level { display: inline-flex; align-items: center; gap: 8px; }
-.step-meter { display: inline-flex; gap: 3px; }
-.step-meter i { width: 14px; height: 8px; border-radius: 2px; background: var(--field); border: 1px solid var(--line); }
-.step-meter i.on { background: var(--sub); border-color: var(--sub); }
+.radar-count { color: var(--sub); font-size: 0.875rem; }
+.public-link { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; overflow-wrap: anywhere; }
+.market-community { border-top: 1px solid var(--line); }
+.market-community summary { padding: 8px 0; overflow-wrap: anywhere; }
+.market-item { padding: 12px 0; border-bottom: 1px solid var(--line); min-width: 0; overflow-wrap: anywhere; }
+.market-item-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.market-item-head span { color: var(--sub); font-size: 0.875rem; }
+.market-news strong { font-weight: 600; }
 /* 오름·내림 색(빨강·파랑)과 헷갈리지 않게 금액 크기 막대는 중립색. */
 .bars.neutral .bar-fill { background: var(--sub); }
 

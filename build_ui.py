@@ -77,6 +77,22 @@ def build(source, checkout=None):
             code = code.replace('from importlib.resources import files\n', '').replace('import argparse\n', '')
             public_modules[target] = code.rstrip() + '\n'
         public_modules['briefing_sources.json'] = public['data/briefing_sources.json']
+        public_modules['zero/data/external_sources.json'] = subprocess.run(
+            ['git', '-C', str(checkout), 'show', 'HEAD:zero/data/external_sources.json'],
+            capture_output=True, check=True, encoding='utf-8').stdout
+        # Public routes use the same committed collectors and transport as the owner PC.
+        for name in ('governance_radar.py', 'market_watch.py', 'premarket.py', 'realtime_stock_quote.py', 'macro_indicators.py', 'market_intelligence.py', 'morning_report.py', 'analysis_feed.py', 'realtime_market_pulse.py'):
+            code = subprocess.run(['git', '-C', str(checkout), 'show', 'HEAD:zero/' + name],
+                                  capture_output=True, check=True, encoding='utf-8').stdout
+            tree = ast.parse(code)
+            if name == 'realtime_stock_quote.py':
+                boundary = next((item for item in tree.body if isinstance(item, ast.FunctionDef) and item.name == '_get_zero_env'), None)
+                if boundary is None:
+                    raise ValueError('PUBLIC_QUOTE_BOUNDARY_MISSING')
+                lines = code.splitlines(keepends=True)
+                lines[boundary.lineno - 1:boundary.end_lineno] = ['def _get_zero_env():\n    return {}\n']
+                code = ''.join(lines)
+            public_modules['zero/' + name] = code
     scripts = {js.name: relative(js.read_text(encoding='utf-8'))
                for js in (source / 'assets').glob('*.js') if not js.name.startswith('vendor-')}
     styles = {css.name: re.sub(r"""url\((['"]?)/assets/""", r'url(\1', css.read_text(encoding='utf-8'))
@@ -115,7 +131,9 @@ def build(source, checkout=None):
         target = 'zero_streamlit_chart.py' if name.endswith('.py') else name
         (Path(__file__).parent / target).write_text(content, encoding='utf-8')
     for name, content in public_modules.items():
-        (Path(__file__).parent / name).write_text(content, encoding='utf-8')
+        target = Path(__file__).parent / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding='utf-8')
     print('built', sum(1 for _ in OUT.rglob('*') if _.is_file()), 'files')
 
 

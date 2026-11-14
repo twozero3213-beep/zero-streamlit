@@ -26,6 +26,16 @@
     "api.cohere.com"
   ],
   "hosts": {
+    "apewisdom.io": ["FREE_NO_KEY", "Documented public stock-mention aggregates; provider update time unknown; no user posts collected"],
+    "www.reddit.com": ["REFERENCE_LINK", "Community links only; RSS support ended 2026-11-13"],
+    "insight.factset.com": [
+      "FREE_NO_KEY",
+      "FactSet public S&P 500 earnings research RSS"
+    ],
+    "www.kcmi.re.kr": [
+      "FREE_NO_KEY",
+      "Korea Capital Market Institute public report indexes"
+    ],
     "query1.finance.yahoo.com": [
       "FREE_NO_KEY",
       "delayed public quotes and charts"
@@ -326,6 +336,10 @@
       "REFERENCE_LINK",
       "credit in the vendored path-finding file"
     ],
+    "polling.finance.naver.com": [
+      "FREE_NO_KEY",
+      "public Korean stock quotes, fallback in the realtime quote chain"
+    ],
     "finance.naver.com": [
       "FREE_NO_KEY",
       "public Korean stock indices and FX rates"
@@ -341,6 +355,18 @@
     "www.eia.gov": [
       "FREE_NO_KEY",
       "US Energy Information Administration crude oil indicators"
+    ],
+    "dart.fss.or.kr": [
+      "FREE_NO_KEY",
+      "DART public RSS feeds (today and per company) for the governance radar; filing links open in the reader browser"
+    ],
+    "consensus.hankyung.com": [
+      "REFERENCE_LINK",
+      "broker research list the reader opens; never fetched (robots and terms forbid collection)"
+    ],
+    "www.kirs.or.kr": [
+      "REFERENCE_LINK",
+      "Korea IR Service free company research the reader opens"
     ]
   }
 }

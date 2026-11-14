@@ -207,5 +207,74 @@ class TestRealtimeStockQuote(unittest.TestCase):
         with patch("builtins.open", side_effect=AssertionError("PRIVATE_FILE_READ")), patch("pathlib.Path.is_file", side_effect=AssertionError("PRIVATE_FILE_CHECK")), patch.dict("os.environ", {"TOSS_APP_KEY": "SYNTHETIC", "TOSS_SECRET_KEY": "SYNTHETIC", "KIS_MOCK_APP_KEY": "SYNTHETIC", "KIS_MOCK_APP_SECRET": "SYNTHETIC"}, clear=True):
             self.assertEqual(self.original_env_loader(), {})
 
+class ProviderEvidenceTests(unittest.TestCase):
+    def test_yahoo_uses_source_time_and_unknown_previous_stays_unknown(self):
+        meta = {"symbol": "TQQQ", "currency": "USD", "regularMarketPrice": 100,
+                "regularMarketTime": 1794430800}
+        with patch.object(rq, "_read_json", return_value={"chart": {"result": [{"meta": meta}]}}):
+            quote = rq._fetch_from_yahoo("TQQQ", "US", "USD")
+        self.assertEqual(quote["market_time"], "2026-11-11T21:00:00+00:00")
+        self.assertIsNone(quote["previous_close"])
+        self.assertIsNone(quote["change"])
+        self.assertIsNone(quote["change_percent"])
+
+    def test_yahoo_rejects_wrong_identity_currency_and_invalid_price(self):
+        base = {"symbol": "TQQQ", "currency": "USD", "regularMarketPrice": 100}
+        for changes in ({"symbol": "SOXL"}, {"currency": "KRW"},
+                        {"regularMarketPrice": float("inf")}, {"regularMarketPrice": True},
+                        {"regularMarketPrice": -1}):
+            with self.subTest(changes=changes), patch.object(rq, "_read_json",
+                return_value={"chart": {"result": [{"meta": dict(base, **changes)}]}}):
+                self.assertIsNone(rq._fetch_from_yahoo("TQQQ", "US", "USD"))
+
+    def test_unknown_provider_time_and_changes_are_not_filled(self):
+        with patch.object(rq, "_read_json", return_value={"datas": [{"closePrice": "100"}]}):
+            quote = rq._fetch_from_naver_kr("005930")
+        self.assertIsNone(quote["market_time"])
+        self.assertIsNone(quote["previous_close"])
+        self.assertIsNone(quote["change_percent"])
+        with patch.object(rq, "_get_kis_token", return_value=("synthetic", "https://example.invalid", "synthetic")), \
+             patch.object(rq, "_read_json", return_value={"output": {"stck_prpr": "100"}}):
+            quote = rq._fetch_from_kis_kr("005930", {})
+        self.assertIsNone(quote["market_time"])
+        self.assertIsNone(quote["previous_close"])
+
+    def test_toss_skips_unrequested_and_invalid_rows_preserving_valid(self):
+        rows = [{"symbol": None, "lastPrice": 100}, {"symbol": "SOXL", "lastPrice": 100},
+                {"symbol": "TQQQ", "lastPrice": float("inf")},
+                {"symbol": "TQQQ", "currency": "KRW", "lastPrice": 100},
+                {"symbol": "TQQQ", "currency": "USD", "lastPrice": 100}]
+        with patch.object(rq, "_get_toss_token", return_value="synthetic"), \
+             patch.object(rq, "_read_json", return_value={"result": rows}):
+            quotes = rq._fetch_from_toss(["TQQQ"], {})
+        self.assertEqual(list(quotes), ["TQQQ"])
+        self.assertIsNone(quotes["TQQQ"]["market_time"])
+        self.assertEqual(quotes["TQQQ"]["current_price"], 100)
+
+    def test_live_endpoint_keeps_unknown_market_time_separate_from_checked_at(self):
+        quote = _quote("005930", 100)
+        quote.pop("market_time")
+        with patch.object(rq, "fetch_multiple_quotes", return_value={"005930": quote}):
+            status, data = rq.get_live_quotes_endpoint()
+        self.assertEqual(status, 200)
+        self.assertIsNone(data["quotes"][0]["market_time"])
+        self.assertTrue(data["checked_at"])
+
+    def test_malformed_grouping_is_not_normalized_into_a_different_price(self):
+        for raw in ("1,23", "1,,234", "1234,567"):
+            self.assertIsNone(rq._quote_number(raw))
+        self.assertEqual(rq._quote_number("1,234.56"), 1234.56)
+
+    def test_derived_overflow_never_reaches_json(self):
+        meta = {"symbol": "TQQQ", "currency": "USD", "regularMarketPrice": 1e308, "chartPreviousClose": 1e-308}
+        with patch.object(rq, "_read_json", return_value={"chart": {"result": [{"meta": meta}]}}):
+            quote = rq._fetch_from_yahoo("TQQQ", "US", "USD")
+        self.assertIsNone(quote["change_percent"])
+        rq.json.dumps(quote, allow_nan=False)
+        with patch.object(rq, "_read_json", return_value={"datas": [{"closePrice": "1e308", "compareToPreviousClosePrice": "-1e308"}]}):
+            quote = rq._fetch_from_naver_kr("005930")
+        self.assertIsNone(quote["previous_close"])
+        rq.json.dumps(quote, allow_nan=False)
+
 if __name__ == "__main__":
     unittest.main()

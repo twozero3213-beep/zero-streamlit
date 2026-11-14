@@ -5,6 +5,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 """모던 아침 보고서, 언어 필터, 실시간 지수/환율 및 무료 범용 AI 툴 종합 테스트."""
 from datetime import datetime, timezone, timedelta
 import unittest
+from unittest import mock
 
 from zero.language_filter import (
     sanitize_text,
@@ -57,19 +58,16 @@ class LanguageFilterTests(unittest.TestCase):
 
 class RealtimeMarketPulseTests(unittest.TestCase):
     def test_market_pulse_indices_and_fx(self):
-        summary = RealtimeMarketPulse.get_market_pulse_summary()
-        self.assertIn("indices", summary)
-        self.assertIn("fx_rates", summary)
-        self.assertTrue(len(summary["indices"]) >= 4)
-        self.assertTrue(len(summary["fx_rates"]) >= 2)
-
-        kospi = next((i for i in summary["indices"] if "코스피" in i["name"] or i["symbol"] == "KOSPI"), None)
-        self.assertIsNotNone(kospi)
-        self.assertGreater(kospi["price"], 1000)
-
-        usd_krw = next((f for f in summary["fx_rates"] if "USD" in f["pair"] or "달러" in f["name"]), None)
-        self.assertIsNotNone(usd_krw)
-        self.assertGreater(usd_krw["rate"], 1000)
+        indices = [MarketIndexItem('KOSPI', '합성 코스피', 2500.25, 12.25, .49, None)]
+        rates = [FxRateItem('USD/KRW', '합성 원/달러', 1300.25, 2.25, .17, None)]
+        with mock.patch.object(RealtimeMarketPulse, 'fetch_indices', return_value=indices), mock.patch.object(RealtimeMarketPulse, 'fetch_fx_rates', return_value=rates):
+            summary = RealtimeMarketPulse.get_market_pulse_summary()
+        self.assertEqual(summary['state'], 'AVAILABLE')
+        self.assertEqual(summary['indices'][0]['price'], 2500.25)
+        self.assertEqual(summary['fx_rates'][0]['rate'], 1300.25)
+        self.assertIsNone(summary['indices'][0]['updated_at'])
+        self.assertIsNone(summary['fx_rates'][0]['updated_at'])
+        self.assertTrue(summary['checked_at'])
 
 
 class FreeUniversalAIToolTests(unittest.TestCase):
@@ -92,23 +90,19 @@ class FreeUniversalAIToolTests(unittest.TestCase):
 class ModernMorningReportTests(unittest.TestCase):
     def test_render_markdown_and_html(self):
         builder = ModernMorningReportBuilder(at=AT)
-        data = builder.gather_data()
-
-        # 마크다운 렌더링 검증
-        md = builder.render_markdown(data)
-        self.assertIn("ZERO 프리미엄 모닝 인텔리전스", md)
-        self.assertIn("40년차 월가 총괄 디렉터 결단", md)
-        self.assertIn("실시간 글로벌 지수", md)
-        self.assertIn("긴급 · 속보 · 단독 인텔리전스", md)
-        self.assertIn("오늘의 25선 핵심 전략 포커스", md)
-
-        # HTML 렌더링 검증 (피그마 감성 스타일)
-        html_doc = builder.render_html(data)
-        self.assertIn("<!DOCTYPE html>", html_doc)
-        self.assertIn("FIGMA-DESIGNED MORNING INTELLIGENCE", html_doc)
-        self.assertIn("알렉산더 밴스", html_doc)
-        self.assertIn("progress-fill-up", html_doc)
-        self.assertIn("matrix-grid", html_doc)
+        with mock.patch.object(RealtimeMarketPulse, 'get_market_pulse_summary', return_value={'indices': [], 'fx_rates': []}), mock.patch('zero.realtime_stock_quote.fetch_multiple_quotes', return_value={}):
+            data = builder.gather_data(news_items=[], macro_data=[], custom_indices=[], custom_fx=[])
+        self.assertEqual(data['news'], [])
+        self.assertEqual(data['macro'], [])
+        self.assertEqual(data['recommendations']['count'], 0)
+        md, html_doc = builder.render_markdown(data), builder.render_html(data)
+        for text in (md, html_doc):
+            self.assertIn('가상 검토 관점', text)
+            self.assertIn('HOLD', text)
+            self.assertIn('자료', text)
+            for false_claim in ('40년차', '알렉산더 밴스', 'None%', 'width: None', '25선', '실시간 무료 AI 파이프라인 가동', '4.24%', '1,386.50'):
+                self.assertNotIn(false_claim, text)
+        self.assertIn('<!DOCTYPE html>', html_doc)
 
 
 if __name__ == "__main__":
