@@ -124,7 +124,7 @@ def _upstream(path, query):
     """Map an allowed request to (upstream path, cache seconds) or raise."""
     if path in ('/api/ownership', '/api/ownership/companies'):
         if not query:
-            return path, 3600 if path.endswith('/companies') else 60
+            return path, 60
         if path == '/api/ownership' and 'code' in query and set(query) <= {'code', 'page', 'revision'}:
             code, page, revision = query['code'], query.get('page', '1'), query.get('revision')
             if (re.fullmatch(r'[0-9A-Z]{6}', code) and re.fullmatch(r'[1-9]\d{0,3}', page)

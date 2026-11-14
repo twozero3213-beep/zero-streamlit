@@ -12,7 +12,7 @@ class OwnershipRoutesTests(unittest.TestCase):
             ('/api/ownership', {'code':'005930','page':'2','revision':'a'*64}, '/api/ownership?code=005930&page=2&revision='+'a'*64),
         ]:
             with self.subTest(query=query):
-                self.assertEqual(zero_proxy._upstream(path,query),(wanted,60 if not path.endswith('/companies') else 3600))
+                self.assertEqual(zero_proxy._upstream(path,query),(wanted,60))
         for path, query in [
             ('/api/ownership/companies',{'q':'x'}),('/api/ownership',{'page':'1'}),
             ('/api/ownership',{'code':'../005930'}),('/api/ownership',{'code':'0123a0'}),
@@ -21,6 +21,21 @@ class OwnershipRoutesTests(unittest.TestCase):
         ]:
             with self.subTest(query=query), self.assertRaises(zero_proxy.Unavailable):
                 zero_proxy._upstream(path,query)
+
+    def test_company_counts_refresh_after_one_minute(self):
+        path = '/api/ownership/companies'
+        first = {'companies': [{'stock_code': '005930', 'count': 1}]}
+        updated = {'companies': [{'stock_code': '005930', 'count': 2}]}
+        with patch.object(zero_proxy, '_cache', {}), patch.object(zero_proxy, '_pending', {}), \
+             patch.object(zero_proxy.time, 'monotonic', return_value=0) as clock, \
+             patch.object(zero_proxy, 'fetch', side_effect=[first, updated]) as fetch:
+            self.assertEqual(json.loads(zero_proxy.get_public(path, {})), first)
+            clock.return_value = 59
+            self.assertEqual(json.loads(zero_proxy.get_public(path, {})), first)
+            fetch.assert_called_once_with(path)
+            clock.return_value = 61
+            self.assertEqual(json.loads(zero_proxy.get_public(path, {})), updated)
+            self.assertEqual(fetch.call_count, 2)
 
     def test_archive_read_has_a_wall_clock_deadline_and_no_redirect(self):
         import zero.realtime_stock_quote as transport
