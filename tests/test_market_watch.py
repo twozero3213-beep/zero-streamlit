@@ -207,7 +207,8 @@ class MarketWatchTests(unittest.TestCase):
             self.assertTrue(blocked.wait(2))
             clock.monotonic.return_value = 109.0
             return set(), set(pending)
-        with mock.patch.object(self.api, 'time', clock), mock.patch.object(self.api, 'wait', side_effect=staged_wait), mock.patch.object(self.api, '_fetch', side_effect=lambda url, **kwargs: fetch(url)):
+        with mock.patch.object(self.api, 'time', clock), mock.patch.object(self.api, 'wait', side_effect=staged_wait), mock.patch.object(self.api, '_fetch', side_effect=lambda url, **kwargs: fetch(url)), mock.patch.object(self.api, 'datetime', wraps=datetime) as dates:
+            dates.now.return_value = NOW
             try:
                 status, body = self.api.get_market_watch()
                 self.assertEqual((status, body['state']), (200, 'PARTIAL'))

@@ -5,6 +5,8 @@
   const {el} = U;
   const discoverRoot = document.getElementById('view-discover'), stockRoot = document.getElementById('view-stock');
   const UNIVERSES = [['SP500', '미국 100'], ['KOSPI', '코스피 50'], ['KOSDAQ', '코스닥 50'], ['ETF', 'ETF 50']];
+  const STOCK_ID = /^(KR:[0-9A-Z]{6}|US:[A-Z][A-Z0-9.-]{0,14})$/;
+  const RECENT_KEY = 'zero-recent-stocks-v1';
 
   // ---- 검색(머리의 검색창) --------------------------------------------------------------------
   const input = document.getElementById('search'), results = document.getElementById('search-results');
@@ -58,6 +60,27 @@
 
   // ---- 발견 화면 ------------------------------------------------------------------------------
   const state = {kind: 'UP', market: 'KOSPI', universe: 'SP500'};
+
+  function recentStocks() {
+    const saved = U.store.get(RECENT_KEY, []), seen = new Set();
+    if (!Array.isArray(saved)) return [];
+    return saved.filter((item) => item && typeof item.id === 'string' && STOCK_ID.test(item.id)
+      && typeof item.name === 'string' && item.name.trim() && item.name.length <= 120 && !/[\x00-\x1f\x7f]/.test(item.name)
+      && !seen.has(item.id) && seen.add(item.id)).slice(0, 8).map((item) => ({id: item.id, name: item.name.trim()}));
+  }
+
+  function recentBlock() {
+    const items = recentStocks();
+    if (!items.length) return null;
+    const block = U.section(null, el('details', {class: 'details'},
+      el('summary', {text: '최근 본 종목 ' + items.length + '개 보기'}),
+      el('ul', {class: 'rows'}, items.map((item) => U.stockRow({...item, sub: item.id.split(':')[1], value: '다시 보기'}))),
+      U.note('이 브라우저에서 본 종목이에요. 관심 목록과 별도로 최대 8개를 기억해요.'),
+      el('button', {class: 'button ghost', type: 'button', text: '최근 본 기록 지우기', onclick: () => {
+        U.store.set(RECENT_KEY, []); block.replaceChildren(); block.hidden = true;
+      }})));
+    return block;
+  }
 
   async function rankBlock(host) {
     const data = await D.rank();
@@ -396,6 +419,7 @@
     const radarHost = el('div', {class: 'slot'}, U.loading()), marketHost = el('div', {class: 'slot'}, U.loading());
     discoverRoot.replaceChildren(
       el('h1', {class: 'page-title', text: '발견'}),
+      ...[recentBlock()].filter(Boolean),
       el('div', {class: 'columns'},
         el('div', {class: 'column'}, U.section('전 상장회사 지분 감시', radarHost), U.section('시장 관심과 주요 소식', marketHost)),
         el('div', {class: 'column'}, U.section('실시간 순위', rankHost), U.section('시가총액 순', universeHost))));
@@ -527,20 +551,21 @@
     redrawChart = null;
     ++chartToken;
     if (chartHandle) { chartHandle.remove(); chartHandle = null; }
-    if (!/^(KR:[0-9A-Z]{6}|US:[A-Z][A-Z0-9.-]{0,14})$/.test(id)) { stockRoot.replaceChildren(U.empty('종목을 찾지 못했어요.')); return; }
+    if (!STOCK_ID.test(id)) { stockRoot.replaceChildren(U.empty('종목을 찾지 못했어요.')); return; }
     const [market, code] = id.split(':'), kr = market === 'KR';
     stockRoot.replaceChildren(el('a', {class: 'back', href: '#discover'}, U.icon('back', 18), '발견'), U.loading());
 
-    const [quoteMap, research, info, card, decade] = await Promise.all([
+    const [quoteMap, research, info, card] = await Promise.all([
       U.quotes([id]), D.research(),
       kr ? U.api('api/stock-info?code=' + code, 60) : null,
-      U.api('api/market-card?identity=' + encodeURIComponent(id), 120),
-      kr ? null : D.decade()
+      U.api('api/market-card?identity=' + encodeURIComponent(id), 120)
     ]);
-    if (token !== stockToken) return;
+    if (token !== stockToken || stockRoot.hidden) return;
     const company = research?.companies?.find((item) => item.id === id);
     const quote = quoteMap.get(id);
     const name = quote?.name || info?.name || company?.name || code;
+    const knownName = [quote?.name, info?.name, company?.name].find((value) => typeof value === 'string' && value.trim() && value.length <= 120 && !/[\x00-\x1f\x7f]/.test(value));
+    if (knownName) U.store.set(RECENT_KEY, [{id, name: knownName.trim()}, ...recentStocks().filter((item) => item.id !== id)].slice(0, 8));
     document.title = name + ' | ZERO';
     const snapshot = C.stockSnapshot(quote, card, info);
     const price = snapshot?.price ?? NaN;
@@ -572,11 +597,7 @@
         fact('거래대금', facts.trading_value ? facts.trading_value + '원' : null)),
       U.note((info.source?.label || '공개 시세') + ' 기준이에요. PER은 주가가 이익의 몇 배인지, PBR은 순자산의 몇 배인지를 뜻해요.')) : null;
 
-    // 미국 종목은 공개 숫자 자료가 없어 10년 비교 계산에서 함께 얻은 최근 1년 배당수익률만 보여 준다.
-    const dividend = C.num(decade?.items?.find((item) => item.symbol === code)?.dividend_yield_percent);
-    const usFacts = !kr && Number.isFinite(dividend) ? U.section('핵심 숫자',
-      el('dl', {class: 'facts'}, fact('배당수익률(최근 1년)', C.cut2(dividend) + '%')),
-      U.note('최근 1년 동안 받은 주당 배당을 지금 가격으로 나눈 값이에요. 자료: Yahoo Finance.')) : null;
+    const usFacts = kr ? null : el('div', {});
 
     const radarHost = kr ? el('div', {}, U.loading('관련 공시를 확인하는 중이에요')) : null;
     const disputeBlock = kr ? U.section('회사별 지분·경영권 공시', radarHost, el('a', {class: 'button ghost', href: '#discover', text: '전 상장회사 감시 범위와 목록 보기'})) : null;
@@ -601,6 +622,14 @@
         el('div', {class: 'column'}, companyBlock(company), newsHost, researchLinks, peerBlock)));
     drawChart(chartHost, id, range);
     drawStockDrawdown(drawdownHost, id, token);
+    // 배당 보조 자료를 얻는 10년 비교 계산이 시세와 차트 표시를 막지 않게 한다.
+    if (!kr) D.decade().then((decade) => {
+      if (token !== stockToken || stockRoot.hidden || !usFacts.isConnected) return;
+      const dividend = C.num(decade?.items?.find((item) => item.symbol === code)?.dividend_yield_percent);
+      if (Number.isFinite(dividend)) usFacts.replaceChildren(U.section('핵심 숫자',
+        el('dl', {class: 'facts'}, fact('배당수익률(최근 1년)', C.cut2(dividend) + '%')),
+        U.note('최근 1년 동안 받은 주당 배당을 지금 가격으로 나눈 값이에요. 자료: Yahoo Finance.')));
+    });
     // 부가 공시 수집이 늦어도 먼저 확보한 시세와 차트를 표시한다.
     if (kr) ownershipHistory(radarHost, code, name, () => token === stockToken).load(1).then(async (ok) => {
       if (ok || token !== stockToken || !radarHost.isConnected) return;
