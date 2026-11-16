@@ -320,11 +320,15 @@
         host.replaceChildren(status, el('div', {class: 'ownership-search'}, el('label', {for: 'ownership-search', text: '상장회사 찾기'}), search, searchStatus, results), historyHost, latest);
         searchStatus.replaceChildren('상장회사 명부를 불러오는 중이에요.');
       }
-      if (!registry.length) D.ownershipCompanies().then((data) => {
-        if (!host.isConnected) return;
-        registry = data?.scope === 'OWNERSHIP_COMPANIES' ? list(data.companies).filter((company) => /^[0-9A-Z]{6}$/.test(company.stock_code || '') && typeof company.company === 'string') : [];
-        if (registry.length) { if (!chosenSearch || search.value !== chosenSearch) findCompanies(); }
-        else if (!chosenSearch) searchStatus.replaceChildren('상장회사 명부를 확인하지 못했어요. 6자리 종목코드로 직접 조회할 수 있어요.');
+      D.ownershipCompanies(data.registry_as_of).then((data) => {
+        if (current !== token || !host.isConnected || discoverRoot.hidden) return;
+        if (!data) {
+          if (!chosenSearch) searchStatus.replaceChildren(registry.length ? '새 명부를 확인하지 못했어요. 이전 명부로 검색할 수 있어요.' : '상장회사 명부를 확인하지 못했어요. 6자리 종목코드로 직접 조회할 수 있어요.');
+          return;
+        }
+        if (registry === data.companies) return;
+        registry = data.companies;
+        if (!chosenSearch || search.value !== chosenSearch) findCompanies();
       });
       status.replaceChildren(...[
         ...deliveryNotes(data),

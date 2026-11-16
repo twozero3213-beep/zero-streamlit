@@ -53,11 +53,33 @@
   // 공개 자료의 수집 상태와 소유자 사이트의 저장본을 화면에서 구분한다.
   const premarket = () => U.api('api/premarket', 300);
   const governance = () => U.api('api/governance', 120);
-  let ownershipCompaniesRequest = null;
-  async function ownershipCompanies() {
+  let ownershipCompaniesRequest = null, ownershipCompaniesStamp = null, ownershipCompaniesLoaded = false;
+  function ownershipStamp(value) {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value) || !Number.isFinite(Date.parse(value))) return null;
+    if (new Date(value.slice(0, 10) + 'T00:00:00Z').toISOString().slice(0, 10) !== value.slice(0, 10)) return null;
+    return new Date(value).toISOString();
+  }
+  async function ownershipCompanies(asOf) {
+    const stamp = ownershipStamp(asOf);
+    if (stamp && (!ownershipCompaniesStamp || stamp > ownershipCompaniesStamp)) {
+      ownershipCompaniesStamp = stamp;
+      ownershipCompaniesRequest = null;
+      U.forget('api/ownership/companies');
+    }
     if (!ownershipCompaniesRequest) ownershipCompaniesRequest = U.api('api/ownership/companies', 3600);
     const request = ownershipCompaniesRequest, data = await request;
-    if ((data?.scope !== 'OWNERSHIP_COMPANIES' || !Array.isArray(data.companies) || !data.companies.length) && ownershipCompaniesRequest === request) ownershipCompaniesRequest = null;
+    if (ownershipCompaniesRequest !== request) return null;
+    const valid = data?.scope === 'OWNERSHIP_COMPANIES' && Array.isArray(data.companies) && data.companies.length
+      && data.companies.every((company) => typeof company?.stock_code === 'string' && /^[0-9A-Z]{6}$/.test(company.stock_code) && typeof company.company === 'string' && company.company.trim());
+    // 구형 명부는 첫 조회만 허용하고, 바뀐 기준은 중계 서버의 옛 캐시와 구별한다.
+    const matches = !ownershipCompaniesStamp || ownershipStamp(data?.registry_as_of) === ownershipCompaniesStamp
+      || !ownershipCompaniesLoaded && data?.registry_as_of == null;
+    if (!valid || !matches) {
+      ownershipCompaniesRequest = null;
+      U.forget('api/ownership/companies');
+      return null;
+    }
+    ownershipCompaniesLoaded = true;
     return data;
   }
 
