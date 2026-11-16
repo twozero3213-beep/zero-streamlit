@@ -280,6 +280,7 @@
     const status = el('div', {class: 'slot'}), latest = el('div', {class: 'slot'});
     const search = el('input', {id: 'ownership-search', type: 'search', placeholder: '회사명이나 6자리 종목코드', autocomplete: 'off', 'aria-controls': 'ownership-results'});
     const results = el('ul', {id: 'ownership-results', class: 'rows'}), searchStatus = el('p', {class: 'note', role: 'status'});
+    const registryError = el('p', {class: 'note', role: 'status', hidden: true});
     const historyHost = el('div', {id: 'ownership-history', class: 'slot'});
     function selectCompany(code, name) {
       if (!/^[0-9A-Z]{6}$/.test(code)) return;
@@ -317,15 +318,18 @@
       }
       if (!ready) {
         ready = true;
-        host.replaceChildren(status, el('div', {class: 'ownership-search'}, el('label', {for: 'ownership-search', text: '상장회사 찾기'}), search, searchStatus, results), historyHost, latest);
+        host.replaceChildren(status, el('div', {class: 'ownership-search'}, el('label', {for: 'ownership-search', text: '상장회사 찾기'}), search, registryError, searchStatus, results), historyHost, latest);
         searchStatus.replaceChildren('상장회사 명부를 불러오는 중이에요.');
       }
       D.ownershipCompanies(data.registry_as_of).then((data) => {
         if (current !== token || !host.isConnected || discoverRoot.hidden) return;
         if (!data) {
-          if (!chosenSearch) searchStatus.replaceChildren(registry.length ? '새 명부를 확인하지 못했어요. 이전 명부로 검색할 수 있어요.' : '상장회사 명부를 확인하지 못했어요. 6자리 종목코드로 직접 조회할 수 있어요.');
+          registryError.replaceChildren(registry.length ? '새 명부를 확인하지 못했어요. 검색에는 이전 명부를 사용해요.' : '상장회사 명부를 확인하지 못했어요. 6자리 종목코드로 직접 조회할 수 있어요.');
+          registryError.hidden = false;
+          if (!registry.length && !search.value) searchStatus.replaceChildren();
           return;
         }
+        registryError.replaceChildren(); registryError.hidden = true;
         if (registry === data.companies) return;
         registry = data.companies;
         if (!chosenSearch || search.value !== chosenSearch) findCompanies();
@@ -334,7 +338,7 @@
         ...deliveryNotes(data),
         data.stale === true ? el('p', {class: 'note', role: 'status', text: '저장 자료가 오래됐거나 갱신 범위를 확인하지 못했어요. 마지막 수집 성공 시각을 확인해 주세요.'}) : null,
         U.note('공식 상장회사 ' + ownershipCount(data.registry_total) + '곳, 감시 연결 ' + ownershipCount(data.listed_companies) + '곳, 미연결 ' + ownershipCount(data.registry_missing) + '곳.'),
-        U.note('명부 기준: ' + ownershipTime(data.registry_as_of) + '.'),
+        U.note('서버 명부 기준: ' + ownershipTime(data.registry_as_of) + '.'),
         data.execution_origin === 'CLOUDFLARE_CRON' ? U.note('PC와 독립된 서버 자동 갱신. 마지막 실행: ' + ownershipTime(data.cloud_status?.last_run_at) + '. 수집 완료 시각은 아래에서 확인해 주세요.') : null,
         data.cloud_status?.error_code ? el('p', {class: 'note', role: 'status', text: '서버 갱신에 문제가 있어요. 저장된 자료는 유지하며 마지막 성공 시각을 표시해요.'}) : null,
         U.note('목표 기간: ' + (data.requested_from || '미확인') + ' ~ ' + (data.requested_to || '미확인') + '.'),
