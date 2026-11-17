@@ -321,7 +321,7 @@
         host.replaceChildren(status, el('div', {class: 'ownership-search'}, el('label', {for: 'ownership-search', text: '상장회사 찾기'}), search, registryError, searchStatus, results), historyHost, latest);
         searchStatus.replaceChildren('상장회사 명부를 불러오는 중이에요.');
       }
-      D.ownershipCompanies(data.registry_as_of).then((data) => {
+      D.ownershipCompanies(data.registry_as_of, data.listed_companies).then((data) => {
         if (current !== token || !host.isConnected || discoverRoot.hidden) return;
         if (!data) {
           registryError.replaceChildren(registry.length ? '새 명부를 확인하지 못했어요. 검색에는 이전 명부를 사용해요.' : '상장회사 명부를 확인하지 못했어요. 6자리 종목코드로 직접 조회할 수 있어요.');
